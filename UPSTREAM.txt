@@ -1,0 +1,9 @@
+libmem repository: https://github.com/rdbo/libmem
+Pinned commit: a07c9942bf1358dabcc83eb0cd072736c749d7f8
+Pinned on: 2026-09-19
+License: GNU AGPL-3.0-only (see upstream LICENSE)
+
+The wrapper is designed against the public C API in include/libmem/libmem.h at
+the commit above. The third_party/libmem Git submodule records that exact
+revision. Run build.ps1 on Windows to initialize/build it and stage its headers,
+import library, and DLL.
