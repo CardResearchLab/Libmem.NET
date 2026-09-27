@@ -40,13 +40,26 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Check wrapper contract
+        shell: pwsh
+        run: python .\tests\check_sources.py
+
       - name: Build
         shell: pwsh
-        run: .\build.ps1 -Configuration "${{ inputs.configuration }}" -Platform x64
+        run: '.\build.ps1 -Configuration "${{ inputs.configuration }}" -Platform x64'
+
+      - name: Run runtime smoke tests
+        shell: pwsh
+        run: 'dotnet run --project .\tests\LibmemCli.SmokeTests\LibmemCli.SmokeTests.csproj -c "${{ inputs.configuration }}" -p:Platform=x64'
 
       - name: Package runtime
         shell: pwsh
-        run: .\eng\package-runtime.ps1 -Configuration "${{ inputs.configuration }}" -Platform x64
+        run: '.\eng\package-runtime.ps1 -Configuration "${{ inputs.configuration }}" -Platform x64'
 
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
