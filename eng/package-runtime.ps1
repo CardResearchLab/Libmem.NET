@@ -19,6 +19,7 @@ $requiredFiles = @(
     (Join-Path $managed 'LibmemCli.dll'),
     (Join-Path $managed 'Ijwhost.dll'),
     (Join-Path $native 'libmem.dll'),
+    (Join-Path $root 'VERSION'),
     (Join-Path $root 'LICENSE'),
     (Join-Path $root 'THIRD_PARTY_NOTICES.md')
 )
@@ -42,6 +43,9 @@ $pdb = Join-Path $managed 'LibmemCli.pdb'
 if (Test-Path $pdb) {
     Copy-Item $pdb $destination -Force
 }
+
+$manifestScript = Join-Path $PSScriptRoot 'write-manifest.ps1'
+& $manifestScript -Destination $destination -Configuration $Configuration -Platform $Platform
 
 if (Test-Path $archive) {
     Remove-Item $archive -Force
