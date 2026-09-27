@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: HearthstoneModding/Libmem
-          ref: \${{ inputs.ref }}
+          ref: ${{ inputs.ref }}
           submodules: recursive
 
       - name: Setup .NET 8
@@ -42,16 +42,16 @@ jobs:
 
       - name: Build
         shell: pwsh
-        run: .\build.ps1 -Configuration "\${{ inputs.configuration }}" -Platform x64
+        run: .\build.ps1 -Configuration "${{ inputs.configuration }}" -Platform x64
 
       - name: Package runtime
         shell: pwsh
-        run: .\eng\package-runtime.ps1 -Configuration "\${{ inputs.configuration }}" -Platform x64
+        run: .\eng\package-runtime.ps1 -Configuration "${{ inputs.configuration }}" -Platform x64
 
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
         with:
-          name: \${{ inputs.artifact-name }}
+          name: ${{ inputs.artifact-name }}
           path: |
             artifacts/package/LibmemCli-windows-x64/
             artifacts/package/LibmemCli-windows-x64.zip
