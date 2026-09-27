@@ -138,14 +138,14 @@ The repository includes three automation workflows:
 
 You can create the same runtime package locally:
 
-\`\`\`powershell
+```powershell
 .\build.ps1 -Configuration Release
 .\eng\package-runtime.ps1 -Configuration Release
-\`\`\`
+```
 
 Output:
 
-\`\`\`text
+```text
 artifacts/package/LibmemCli-windows-x64/
 ├─ LibmemCli.dll
 ├─ Ijwhost.dll
@@ -156,7 +156,7 @@ artifacts/package/LibmemCli-windows-x64/
 └─ THIRD_PARTY_NOTICES.md
 
 artifacts/package/LibmemCli-windows-x64.zip
-\`\`\`
+```
 
 ## Versioning and automated validation
 
@@ -182,7 +182,7 @@ Hook and VMT operations are intentionally not hard requirements of the baseline 
 
 Another repository can call the reusable workflow directly:
 
-\`\`\`yaml
+```yaml
 jobs:
   build-libmem:
     uses: HearthstoneModding/Libmem/.github/workflows/reusable-build.yml@main
@@ -199,7 +199,7 @@ jobs:
         with:
           name: LibmemCli-windows-x64
           path: external/Libmem
-\`\`\`
+```
 
 The caller does not need to duplicate Libmem's build scripts; the artifact is uploaded directly to the caller's workflow run.
 
