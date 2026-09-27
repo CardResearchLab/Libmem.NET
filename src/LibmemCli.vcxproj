@@ -54,6 +54,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="LibmemCli.h" />
+    <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="LibmemCli.cpp" />
   </ItemGroup>
   <Target Name="BuildLibmemNative" BeforeTargets="PrepareForBuild" Condition="'$(SkipLibmemNativeBuild)' != 'true'">

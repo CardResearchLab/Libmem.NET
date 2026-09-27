@@ -1,40 +1,69 @@
-"""Non-Windows, source-only checks; does not compile mixed-mode C++/CLI."""
+"""Source/contract checks. These run on every platform and do not compile mixed-mode C++/CLI."""
 from pathlib import Path
 import re
 import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[1]
-header = (root / 'src/LibmemCli.h').read_text(encoding='utf-8')
-source = (root / 'src/LibmemCli.cpp').read_text(encoding='utf-8')
-for file in ['src/LibmemCli.vcxproj','samples/Example.csproj']:
+header = (root / "src/LibmemCli.h").read_text(encoding="utf-8")
+source = (root / "src/LibmemCli.cpp").read_text(encoding="utf-8")
+
+for file in [
+    "src/LibmemCli.vcxproj",
+    "samples/Example.csproj",
+    "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj",
+]:
     ET.parse(root / file)
-    print('PASS XML', file)
-for owner in ['Libmem', 'ProcessInfo', 'HookHandle', 'VmtManager']:
-    body = header.split('public ref class ' + owner, 1)[1].split('\n    };', 1)[0]
-    declarations = re.findall(r'(?<!::)\b(\w+)\s*\([^;{}]*\)\s*;', body)
-    declarations = {s for s in declarations if s not in {'get'}}
-    impls = set(re.findall(r'\b' + owner + r'::(\w+)\s*\(', source))
-    assert not (declarations - impls), f'{owner} unimplemented: {declarations - impls}'
-    print('PASS declarations implemented:', owner, len(declarations))
-for upstream in ('LM_EnumProcesses','LM_ReadMemoryEx','LM_WriteMemoryEx','LM_VmtFree','LM_GetArchitecture','LM_FindSymbolAddressDemangled'):
-    assert upstream in source
-    print('PASS native reference:', upstream)
-expected = {
-    'LM_EnumProcesses','LM_GetProcess','LM_GetProcessEx','LM_GetCommandLine','LM_FreeCommandLine',
-    'LM_FindProcess','LM_IsProcessAlive','LM_GetBits','LM_GetSystemBits','LM_EnumThreads',
-    'LM_EnumThreadsEx','LM_GetThread','LM_GetThreadEx','LM_GetThreadProcess','LM_EnumModules',
-    'LM_EnumModulesEx','LM_FindModule','LM_FindModuleEx','LM_LoadModule','LM_LoadModuleEx',
-    'LM_UnloadModule','LM_UnloadModuleEx','LM_EnumSymbols','LM_FindSymbolAddress','LM_DemangleSymbol',
-    'LM_FreeDemangledSymbol','LM_EnumSymbolsDemangled','LM_FindSymbolAddressDemangled','LM_EnumSegments',
-    'LM_EnumSegmentsEx','LM_FindSegment','LM_FindSegmentEx','LM_ReadMemory','LM_ReadMemoryEx',
-    'LM_WriteMemory','LM_WriteMemoryEx','LM_SetMemory','LM_SetMemoryEx','LM_ProtMemory','LM_ProtMemoryEx',
-    'LM_AllocMemory','LM_AllocMemoryEx','LM_FreeMemory','LM_FreeMemoryEx','LM_DeepPointer','LM_DeepPointerEx',
-    'LM_DataScan','LM_DataScanEx','LM_PatternScan','LM_PatternScanEx','LM_SigScan','LM_SigScanEx',
-    'LM_GetArchitecture','LM_Assemble','LM_AssembleEx','LM_FreePayload','LM_Disassemble','LM_DisassembleEx',
-    'LM_FreeInstructions','LM_CodeLength','LM_CodeLengthEx','LM_HookCode','LM_HookCodeEx','LM_UnhookCode',
-    'LM_UnhookCodeEx','LM_VmtNew','LM_VmtHook','LM_VmtUnhook','LM_VmtGetOriginal','LM_VmtReset','LM_VmtFree'
-}
-missing = sorted(name for name in expected if name not in source)
-assert not missing, f'Native API references missing: {missing}'
-print('PASS complete native public API reference set:', len(expected))
-print('SOURCE CHECKS PASS (NOT A WINDOWS BUILD TEST)')
+    print("PASS XML", file)
+
+for owner in ["Libmem", "ProcessInfo", "HookHandle", "VmtManager"]:
+    body = header.split("public ref class " + owner, 1)[1].split("\n    };", 1)[0]
+    declarations = re.findall(r"(?<!::)\b(\w+)\s*\([^;{}]*\)\s*;", body)
+    declarations = {name for name in declarations if name not in {"get"}}
+    implementations = set(re.findall(r"\b" + owner + r"::(\w+)\s*\(", source))
+    missing_implementations = declarations - implementations
+    assert not missing_implementations, f"{owner} unimplemented: {sorted(missing_implementations)}"
+    print("PASS declarations implemented:", owner, len(declarations))
+
+upstream_header_path = root / "third_party/libmem/include/libmem/libmem.h"
+assert upstream_header_path.exists(), (
+    "libmem.h was not found. Initialize submodules first: "
+    "git submodule update --init --recursive"
+)
+upstream_header = upstream_header_path.read_text(encoding="utf-8", errors="replace")
+
+without_comments = re.sub(r"/\*.*?\*/", "", upstream_header, flags=re.S)
+without_comments = re.sub(r"//.*", "", without_comments)
+
+upstream_apis = set(
+    re.findall(
+        r"\bLM_API\b(?:(?!;).)*?\b(LM_[A-Za-z0-9_]+)\s*\(",
+        without_comments,
+        flags=re.S,
+    )
+)
+assert len(upstream_apis) >= 50, (
+    f"Only parsed {len(upstream_apis)} public APIs from libmem.h; "
+    "the parser likely needs to be updated."
+)
+
+wrapper_native_calls = set(re.findall(r"\b(LM_[A-Za-z0-9_]+)\s*\(", source))
+missing_native_apis = sorted(upstream_apis - wrapper_native_calls)
+assert not missing_native_apis, (
+    "Pinned libmem exposes public APIs that LibmemCli does not reference: "
+    + ", ".join(missing_native_apis)
+)
+print("PASS upstream public API coverage:", len(upstream_apis))
+
+version = (root / "VERSION").read_text(encoding="utf-8").strip()
+assert re.fullmatch(r"\d+\.\d+\.\d+", version), (
+    f"VERSION must use MAJOR.MINOR.PATCH format: {version!r}"
+)
+
+assembly_info = (root / "src/AssemblyInfo.cpp").read_text(encoding="utf-8")
+assembly_version = version + ".0"
+assert f'AssemblyVersionAttribute("{assembly_version}")' in assembly_info
+assert f'AssemblyFileVersionAttribute("{assembly_version}")' in assembly_info
+assert f'AssemblyInformationalVersionAttribute("{version}")' in assembly_info
+print("PASS version metadata:", version)
+
+print("SOURCE CONTRACT CHECKS PASS (NOT A WINDOWS RUNTIME TEST)")
