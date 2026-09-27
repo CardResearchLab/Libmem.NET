@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="LibmemCli">
+      <HintPath>..\..\artifacts\managed\x64\$(Configuration)\LibmemCli.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\artifacts\managed\x64\$(Configuration)\Ijwhost.dll"
+          Link="Ijwhost.dll"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\artifacts\managed\x64\$(Configuration)\libmem.dll"
+          Link="libmem.dll"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
