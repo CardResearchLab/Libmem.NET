@@ -1,0 +1,59 @@
+name: Reusable build
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref of HearthstoneModding/Libmem to build
+        required: false
+        default: main
+        type: string
+      configuration:
+        description: Build configuration
+        required: false
+        default: Release
+        type: string
+      artifact-name:
+        description: Uploaded artifact name
+        required: false
+        default: LibmemCli-windows-x64
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build LibmemCli
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout Libmem
+        uses: actions/checkout@v4
+        with:
+          repository: HearthstoneModding/Libmem
+          ref: \${{ inputs.ref }}
+          submodules: recursive
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        shell: pwsh
+        run: .\build.ps1 -Configuration "\${{ inputs.configuration }}" -Platform x64
+
+      - name: Package runtime
+        shell: pwsh
+        run: .\eng\package-runtime.ps1 -Configuration "\${{ inputs.configuration }}" -Platform x64
+
+      - name: Upload runtime artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: \${{ inputs.artifact-name }}
+          path: |
+            artifacts/package/LibmemCli-windows-x64/
+            artifacts/package/LibmemCli-windows-x64.zip
+          if-no-files-found: error
+          retention-days: 14

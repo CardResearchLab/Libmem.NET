@@ -2,6 +2,12 @@
 
 [简体中文](README.md) | [English](README.en.md)
 
+[![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
+![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
+
+
 LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem), intended for Windows x64 / .NET 8 projects.
 
 The wrapper exposes every public function in the pinned libmem header through managed models, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
@@ -10,6 +16,24 @@ The native libmem library is included as a pinned Git submodule and is built aut
 
 - Upstream project: [rdbo/libmem](https://github.com/rdbo/libmem)
 - C API: [include/libmem/libmem.h](https://github.com/rdbo/libmem/blob/master/include/libmem/libmem.h)
+
+
+## Architecture
+
+```mermaid
+flowchart LR
+    App["C# / .NET 8 x64 project"] --> Cli["LibmemCli.dll<br/>C++/CLI managed wrapper"]
+    Cli --> Native["libmem.dll<br/>rdbo/libmem"]
+    Native --> Win["Windows native process / memory APIs"]
+
+    Submodule["third_party/libmem<br/>Git Submodule"] --> NativeBuild["eng/build-native.ps1"]
+    NativeBuild --> Native
+    Native --> Build["build.ps1"]
+    Cli --> Package["Runtime Package"]
+    Native --> Package
+```
+
+The runtime call chain is **C#/.NET → LibmemCli.dll → libmem.dll → Windows Native API**. During builds, the pinned libmem submodule produces the native DLL first, followed by the C++/CLI managed wrapper.
 
 ## Requirements
 
@@ -52,6 +76,28 @@ artifacts/managed/x64/Release/LibmemCli.dll
 artifacts/managed/x64/Release/Ijwhost.dll
 ```
 
+
+## C# quick example
+
+After referencing `LibmemCli.dll`, managed code can access process and module information directly:
+
+```csharp
+using LibmemCli;
+
+var process = Libmem.CurrentProcess();
+
+Console.WriteLine(
+    $"Process: {process.Name}  PID={process.Pid}  Arch={process.Architecture}  Bits={process.Bits}");
+
+foreach (var module in Libmem.EnumModules(process))
+{
+    Console.WriteLine(
+        $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
+}
+```
+
+At runtime, keep `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll` beside the application executable.
+
 ## Consume as a Git submodule
 
 Add this repository to another project as a submodule:
@@ -80,6 +126,62 @@ At runtime, deploy the following files beside the consuming executable:
 - `libmem.dll`
 
 Do not mix outputs from different configurations or commits.
+
+
+## GitHub Actions automation
+
+The repository includes three automation workflows:
+
+- \`.github/workflows/build.yml\`: builds Release x64 on pushes to \`main\`, pull requests, or manual runs, then uploads the \`LibmemCli-windows-x64\` artifact.
+- \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
+- \`.github/workflows/release.yml\`: builds tags matching \`v*\`, creates a GitHub Release, and attaches \`LibmemCli-windows-x64.zip\`.
+
+You can create the same runtime package locally:
+
+\`\`\`powershell
+.\build.ps1 -Configuration Release
+.\eng\package-runtime.ps1 -Configuration Release
+\`\`\`
+
+Output:
+
+\`\`\`text
+artifacts/package/LibmemCli-windows-x64/
+├─ LibmemCli.dll
+├─ Ijwhost.dll
+├─ libmem.dll
+├─ LICENSE
+└─ THIRD_PARTY_NOTICES.md
+
+artifacts/package/LibmemCli-windows-x64.zip
+\`\`\`
+
+### Reuse the build from another repository
+
+Another repository can call the reusable workflow directly:
+
+\`\`\`yaml
+jobs:
+  build-libmem:
+    uses: HearthstoneModding/Libmem/.github/workflows/reusable-build.yml@main
+    with:
+      ref: main
+      configuration: Release
+      artifact-name: LibmemCli-windows-x64
+
+  use-libmem:
+    needs: build-libmem
+    runs-on: windows-2022
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: LibmemCli-windows-x64
+          path: external/Libmem
+\`\`\`
+
+The caller does not need to duplicate Libmem's build scripts; the artifact is uploaded directly to the caller's workflow run.
+
+> While this repository is private, cross-repository reuse requires GitHub Actions access settings that allow the caller repository to use this reusable workflow. If the repository becomes public later, public repositories can reference it directly.
 
 ## API mapping
 

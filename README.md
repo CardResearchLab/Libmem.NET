@@ -2,6 +2,12 @@
 
 [简体中文](README.md) | [English](README.en.md)
 
+[![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
+![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
+
+
 LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装，面向 Windows x64 / .NET 8 项目。
 
 本项目封装了当前固定版本 libmem 头文件中公开的全部函数，并使用托管模型、托管字节数组以及符合 .NET 使用习惯的 API 暴露给 C# / .NET。libmem 中普通函数与 `Ex` 函数通常在托管层对应为一组重载。
@@ -10,6 +16,24 @@ LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复�
 
 - 上游项目：[rdbo/libmem](https://github.com/rdbo/libmem)
 - C API：[include/libmem/libmem.h](https://github.com/rdbo/libmem/blob/master/include/libmem/libmem.h)
+
+
+## 项目架构
+
+```mermaid
+flowchart LR
+    App["C# / .NET 8 x64 项目"] --> Cli["LibmemCli.dll<br/>C++/CLI 托管封装"]
+    Cli --> Native["libmem.dll<br/>rdbo/libmem"]
+    Native --> Win["Windows 原生进程 / 内存 API"]
+
+    Submodule["third_party/libmem<br/>Git Submodule"] --> NativeBuild["eng/build-native.ps1"]
+    NativeBuild --> Native
+    Native --> Build["build.ps1"]
+    Cli --> Package["Runtime Package"]
+    Native --> Package
+```
+
+运行时调用链为 **C#/.NET → LibmemCli.dll → libmem.dll → Windows Native API**。构建时则由仓库固定的 libmem Submodule 生成原生 DLL，再构建 C++/CLI 托管封装。
 
 ## 环境要求
 
@@ -52,6 +76,28 @@ artifacts/managed/x64/Release/LibmemCli.dll
 artifacts/managed/x64/Release/Ijwhost.dll
 ```
 
+
+## C# 快速示例
+
+引用 `LibmemCli.dll` 后，可以直接通过托管 API 获取当前进程与模块信息：
+
+```csharp
+using LibmemCli;
+
+var process = Libmem.CurrentProcess();
+
+Console.WriteLine(
+    $"Process: {process.Name}  PID={process.Pid}  Arch={process.Architecture}  Bits={process.Bits}");
+
+foreach (var module in Libmem.EnumModules(process))
+{
+    Console.WriteLine(
+        $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
+}
+```
+
+运行时请确保 `LibmemCli.dll`、`Ijwhost.dll` 和 `libmem.dll` 位于应用程序可执行文件旁。
+
 ## 作为 Git Submodule 引用
 
 可以在其他项目中将本仓库作为 Submodule 引入：
@@ -80,6 +126,62 @@ external/Libmem/src/LibmemCli.vcxproj
 - `libmem.dll`
 
 请勿混用不同构建配置或不同提交生成的文件。
+
+
+## GitHub Actions 自动构建
+
+仓库内置三套自动化工作流：
+
+- \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64，并上传 \`LibmemCli-windows-x64\` Artifact。
+- \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
+- \`.github/workflows/release.yml\`：推送 \`v*\` 标签时自动构建并创建 GitHub Release，同时附带 \`LibmemCli-windows-x64.zip\`。
+
+本地也可以生成与 CI 相同的 Runtime 包：
+
+\`\`\`powershell
+.\build.ps1 -Configuration Release
+.\eng\package-runtime.ps1 -Configuration Release
+\`\`\`
+
+输出：
+
+\`\`\`text
+artifacts/package/LibmemCli-windows-x64/
+├─ LibmemCli.dll
+├─ Ijwhost.dll
+├─ libmem.dll
+├─ LICENSE
+└─ THIRD_PARTY_NOTICES.md
+
+artifacts/package/LibmemCli-windows-x64.zip
+\`\`\`
+
+### 在其他项目中复用构建工作流
+
+其他仓库可以直接调用本仓库的构建工作流：
+
+\`\`\`yaml
+jobs:
+  build-libmem:
+    uses: HearthstoneModding/Libmem/.github/workflows/reusable-build.yml@main
+    with:
+      ref: main
+      configuration: Release
+      artifact-name: LibmemCli-windows-x64
+
+  use-libmem:
+    needs: build-libmem
+    runs-on: windows-2022
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: LibmemCli-windows-x64
+          path: external/Libmem
+\`\`\`
+
+这样调用方无需复制 Libmem 的编译脚本，构建产物会直接出现在调用方的 Workflow Run 中。
+
+> 当前仓库为私有仓库时，跨仓库复用需要在 GitHub Actions 的仓库/组织访问设置中允许调用方仓库访问该 reusable workflow；如果以后将仓库公开，则公开仓库可直接引用。
 
 ## API 映射
 
