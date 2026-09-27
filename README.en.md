@@ -138,29 +138,51 @@ The repository includes three automation workflows:
 
 You can create the same runtime package locally:
 
-\`\`\`powershell
+```powershell
 .\build.ps1 -Configuration Release
 .\eng\package-runtime.ps1 -Configuration Release
-\`\`\`
+```
 
 Output:
 
-\`\`\`text
+```text
 artifacts/package/LibmemCli-windows-x64/
 ├─ LibmemCli.dll
 ├─ Ijwhost.dll
 ├─ libmem.dll
+├─ VERSION
+├─ manifest.json
 ├─ LICENSE
 └─ THIRD_PARTY_NOTICES.md
 
 artifacts/package/LibmemCli-windows-x64.zip
-\`\`\`
+```
+
+## Versioning and automated validation
+
+The root `VERSION` file is the source of truth for release versioning. The first stable-candidate version is **0.1.0**, and the generated `LibmemCli.dll` carries matching assembly version metadata.
+
+Each runtime package contains a `manifest.json` recording:
+
+- the LibmemCli package version;
+- the repository Git commit;
+- the pinned upstream libmem commit;
+- target framework (`net8.0`);
+- platform (`win-x64`);
+- build configuration (Debug / Release).
+
+CI validates more than compilation:
+
+1. **API Contract Check** parses the pinned submodule's `include/libmem/libmem.h`, extracts every public `LM_API`, and fails if upstream exposes a public API that the C++/CLI wrapper does not reference.
+2. **Runtime Smoke Tests** load `LibmemCli.dll + libmem.dll` and exercise process/module enumeration, memory allocation/read/write/protection, Data/Pattern/Signature scanning, assembly, and disassembly.
+
+Hook and VMT operations are intentionally not hard requirements of the baseline smoke suite yet, avoiding unstable false failures caused by Windows execution-environment or toolchain differences.
 
 ### Reuse the build from another repository
 
 Another repository can call the reusable workflow directly:
 
-\`\`\`yaml
+```yaml
 jobs:
   build-libmem:
     uses: HearthstoneModding/Libmem/.github/workflows/reusable-build.yml@main
@@ -177,7 +199,7 @@ jobs:
         with:
           name: LibmemCli-windows-x64
           path: external/Libmem
-\`\`\`
+```
 
 The caller does not need to duplicate Libmem's build scripts; the artifact is uploaded directly to the caller's workflow run.
 

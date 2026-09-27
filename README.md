@@ -138,29 +138,51 @@ external/Libmem/src/LibmemCli.vcxproj
 
 本地也可以生成与 CI 相同的 Runtime 包：
 
-\`\`\`powershell
+```powershell
 .\build.ps1 -Configuration Release
 .\eng\package-runtime.ps1 -Configuration Release
-\`\`\`
+```
 
 输出：
 
-\`\`\`text
+```text
 artifacts/package/LibmemCli-windows-x64/
 ├─ LibmemCli.dll
 ├─ Ijwhost.dll
 ├─ libmem.dll
+├─ VERSION
+├─ manifest.json
 ├─ LICENSE
 └─ THIRD_PARTY_NOTICES.md
 
 artifacts/package/LibmemCli-windows-x64.zip
-\`\`\`
+```
+
+## 版本与自动验证
+
+项目使用根目录的 `VERSION` 文件作为发布版本来源，当前首个稳定候选版本为 **0.1.0**。构建后的 `LibmemCli.dll` 会写入对应的程序集版本信息。
+
+Runtime 包中的 `manifest.json` 会记录：
+
+- LibmemCli 包版本；
+- 当前仓库 Git commit；
+- 固定的上游 libmem commit；
+- 目标框架（`net8.0`）；
+- 平台（`win-x64`）；
+- 构建配置（Debug / Release）。
+
+CI 不只检查“能否编译”，还会执行两层自动验证：
+
+1. **API Contract Check**：直接解析固定 Submodule 中的 `include/libmem/libmem.h`，提取所有公开 `LM_API`，如果上游新增公开 API 但 C++/CLI wrapper 尚未引用，构建会失败。
+2. **Runtime Smoke Tests**：实际加载 `LibmemCli.dll + libmem.dll`，验证进程/模块枚举、内存申请与读写、内存保护、Data/Pattern/Signature Scan、汇编与反汇编。
+
+Hook / VMT 暂不作为基础 Smoke Test 的硬性门禁，以避免不同 Windows 执行环境和工具链造成不稳定的假失败。
 
 ### 在其他项目中复用构建工作流
 
 其他仓库可以直接调用本仓库的构建工作流：
 
-\`\`\`yaml
+```yaml
 jobs:
   build-libmem:
     uses: HearthstoneModding/Libmem/.github/workflows/reusable-build.yml@main
@@ -177,7 +199,7 @@ jobs:
         with:
           name: LibmemCli-windows-x64
           path: external/Libmem
-\`\`\`
+```
 
 这样调用方无需复制 Libmem 的编译脚本，构建产物会直接出现在调用方的 Workflow Run 中。
 
