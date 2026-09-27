@@ -138,23 +138,25 @@ external/Libmem/src/LibmemCli.vcxproj
 
 本地也可以生成与 CI 相同的 Runtime 包：
 
-\`\`\`powershell
+```powershell
 .\build.ps1 -Configuration Release
 .\eng\package-runtime.ps1 -Configuration Release
-\`\`\`
+```
 
 输出：
 
-\`\`\`text
+```text
 artifacts/package/LibmemCli-windows-x64/
 ├─ LibmemCli.dll
 ├─ Ijwhost.dll
 ├─ libmem.dll
+├─ VERSION
+├─ manifest.json
 ├─ LICENSE
 └─ THIRD_PARTY_NOTICES.md
 
 artifacts/package/LibmemCli-windows-x64.zip
-\`\`\`
+```
 
 ## 版本与自动验证
 
@@ -180,7 +182,7 @@ Hook / VMT 暂不作为基础 Smoke Test 的硬性门禁，以避免不同 Windo
 
 其他仓库可以直接调用本仓库的构建工作流：
 
-\`\`\`yaml
+```yaml
 jobs:
   build-libmem:
     uses: HearthstoneModding/Libmem/.github/workflows/reusable-build.yml@main
@@ -197,7 +199,7 @@ jobs:
         with:
           name: LibmemCli-windows-x64
           path: external/Libmem
-\`\`\`
+```
 
 这样调用方无需复制 Libmem 的编译脚本，构建产物会直接出现在调用方的 Workflow Run 中。
 
