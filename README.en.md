@@ -257,6 +257,7 @@ artifacts/package/LibmemCli-windows-x64/
 └─ THIRD_PARTY_NOTICES.md
 
 artifacts/package/LibmemCli-windows-x64.zip
+artifacts/package/LibmemCli-windows-x64.zip.sha256
 ```
 
 ## Versioning and automated validation
@@ -270,7 +271,10 @@ Each runtime package contains a `manifest.json` recording:
 - the pinned upstream libmem commit;
 - target framework (`net8.0`);
 - platform (`win-x64`);
-- build configuration (Debug / Release).
+- build configuration (Debug / Release);
+- the file name, byte length, and SHA-256 of every packaged file.
+
+Packaging also runs the shared `eng/verify-package.py` verifier. It checks every manifest file entry, byte length, and SHA-256, confirms the ZIP contains exactly the packaged directory contents, and validates the external `.zip.sha256`. Release publication additionally requires the manifest `repositoryCommit` to match the Git commit being released, preventing a correctly versioned package from being published from the wrong commit.
 
 CI validates more than compilation:
 
