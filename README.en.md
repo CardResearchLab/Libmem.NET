@@ -214,11 +214,12 @@ Do not mix outputs from different configurations or commits.
 
 ## GitHub Actions automation
 
-The repository includes three automation workflows:
+The repository includes four automation workflows:
 
 - \`.github/workflows/build.yml\`: builds Release x64 on pushes to \`main\`, pull requests, or manual runs, then uploads the \`LibmemCli-windows-x64\` artifact.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
 - \`.github/workflows/release.yml\`: builds tags matching \`v*\`, creates a GitHub Release, and attaches \`LibmemCli-windows-x64.zip\`.
+- \`.github/workflows/hook-vmt-tests.yml\`: runs dedicated real Hook / trampoline / VMT lifecycle tests separately from the baseline smoke suite.
 
 You can create the same runtime package locally:
 
@@ -260,7 +261,7 @@ CI validates more than compilation:
 1. **API Contract Check** parses the pinned submodule's `include/libmem/libmem.h`, extracts every public `LM_API`, and fails if upstream exposes a public API that the C++/CLI wrapper does not reference.
 2. **Runtime Smoke Tests** load `LibmemCli.dll + libmem.dll` and exercise process/module enumeration, memory allocation/read/write/protection, Data/Pattern/Signature scanning, assembly, and disassembly.
 
-Hook and VMT operations are intentionally not hard requirements of the baseline smoke suite yet, avoiding unstable false failures caused by Windows execution-environment or toolchain differences.
+Hook and VMT operations are intentionally kept out of the baseline smoke gate and validated by the separate `Hook VMT Runtime Tests` workflow. It allocates isolated executable memory in the current process and verifies hook redirection, trampoline execution, Remove, and VMT Hook / Unhook / Reset / Dispose without depending on Hearthstone or any external process.
 
 ### Reuse the build from another repository
 
