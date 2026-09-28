@@ -78,7 +78,7 @@ namespace LibmemCli {
     };
 
     // RemoteAllocation owns one allocation in a target process.
-    // Explicit disposal frees the allocation; finalization never touches process memory.
+    // Explicit disposal deterministically frees it or surfaces failure; finalization never touches process memory.
     public ref class RemoteAllocation sealed : IDisposable {
     private:
         ProcessInfo^ target_;
@@ -172,7 +172,7 @@ namespace LibmemCli {
     };
 
     // One owned LoadLibrary reference in the target process.
-    // Explicit disposal attempts one matching FreeLibrary; finalization never changes the target process.
+    // Explicit disposal releases it or surfaces failure; finalization never changes the target process.
     public ref class InjectedModuleHandle sealed : IDisposable {
     private:
         ProcessInfo^ target_;
