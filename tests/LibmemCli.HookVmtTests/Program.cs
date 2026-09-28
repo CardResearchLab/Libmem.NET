@@ -104,7 +104,7 @@ Check(ReadUInt64(memory, vtablePage.Address) == original0, "VmtManager.Reset did
 Check(ReadUInt64(memory, vtablePage.Address + sizeof(ulong)) == original1, "VmtManager.Reset did not restore slot 1.");
 
 vmt.Hook(0, replacement0);
-vmt.Dispose();
+((IDisposable)vmt).Dispose();
 Check(vmt.IsDisposed, "VmtManager should report disposed after Dispose.");
 Check(ReadUInt64(memory, vtablePage.Address) == original0, "VmtManager.Dispose did not restore an active hook.");
 
