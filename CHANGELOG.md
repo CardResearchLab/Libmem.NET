@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Removed `ProcessSnapshot` / `ModuleSnapshot` and snapshot-specific APIs from LibmemCli. Application-level snapshots and caches belong to wrapper consumers.
+- `HookHandle` now exposes `Destination` in addition to source/trampoline metadata.
+- Explicit `HookHandle.Dispose()` now surfaces restoration failure instead of silently orphaning an active hook; finalization performs best-effort cleanup.
+- Snapshot-specific runtime tests/workflow were removed and Hook lifecycle coverage was strengthened.
+- Clarified that LibmemCli is a reusable libmem wrapper and is not coupled to StandaloneGameMod or any game-specific state model.
+
+
 ## 0.2.0
 
 LibmemCli 0.2.0 turns the wrapper into a session-oriented injection and memory toolkit for .NET 8 / Windows x64.
