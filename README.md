@@ -312,6 +312,18 @@ jobs:
 
 > 当前仓库为私有仓库时，跨仓库复用需要在 GitHub Actions 的仓库/组织访问设置中允许调用方仓库访问该 reusable workflow；如果以后将仓库公开，则公开仓库可直接引用。
 
+## API 稳定性
+
+仓库现在提交了一份 x64 公共 API 基线：`api/LibmemCli.PublicApi.txt`。每次 `tests/check_sources.py` 运行时，都会从 `src/LibmemCli.h` 提取实际公开类型、属性、方法和枚举，并与这份基线比较。
+
+这意味着误删方法、修改参数/返回类型、重命名公开成员或改变公开枚举成员都会直接让 CI 失败。确实需要调整公共 API 时，必须显式运行：
+
+```powershell
+python .\eng\check-public-api.py --write
+```
+
+然后同时审查 API diff、更新 `CHANGELOG.md`，并按变更性质处理版本号。当前仍处于 1.0 之前，因此这不是“永不再有 breaking change”的承诺，而是保证 breaking change 不会悄悄发生。
+
 ## 错误模型
 
 对于能够明确判断为 **native libmem 操作失败** 的情况，LibmemCli 统一抛出 `LibmemException`。它继承自 `InvalidOperationException`，并通过 `Operation` 属性保留对应的原生操作名，例如 `LM_EnumProcesses`、`LM_ProtMemoryEx`、`LM_FreeMemoryEx`。
