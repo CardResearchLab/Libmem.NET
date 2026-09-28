@@ -84,12 +84,16 @@ After referencing `LibmemCli.dll`, managed code can access process and module in
 ```csharp
 using LibmemCli;
 
-var process = Libmem.CurrentProcess();
+var process = Libmem.CurrentProcess()
+    ?? throw new InvalidOperationException("Current process not found");
+
+using var session = Libmem.Attach(process)
+    ?? throw new InvalidOperationException("Attach failed");
 
 Console.WriteLine(
-    $"Process: {process.Name}  PID={process.Pid}  Arch={process.Architecture}  Bits={process.Bits}");
+    $"Process: {session.Name}  PID={session.Pid}  Arch={session.Architecture}  Bits={session.Bits}");
 
-foreach (var module in Libmem.EnumModules(process))
+foreach (var module in Libmem.EnumModules(session.Info))
 {
     Console.WriteLine(
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
@@ -97,6 +101,28 @@ foreach (var module in Libmem.EnumModules(process))
 ```
 
 At runtime, keep `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll` beside the application executable.
+
+## ProcessSession (first v0.2.0 building block)
+
+`ProcessSession` is the long-lived process context for the higher-level injection SDK. It binds to one concrete process identity using **PID + process start time** and gives Attach / Detach an explicit lifetime:
+
+```csharp
+using var target = Libmem.Attach("Hearthstone.exe");
+
+if (target is null)
+    return;
+
+Console.WriteLine($"{target.Name} PID={target.Pid} Arch={target.Architecture}");
+
+if (!target.IsAlive())
+    return;
+
+var latest = target.Refresh();
+```
+
+At this stage, `ProcessSession` owns process identity and lifetime semantics but does not own a native Windows process handle. Future v0.2.0 components such as `MemoryManager`, `ModuleManager`, `HookManager`, and `Injector` will be built on top of this context.
+
+The existing static `Libmem.*` API remains compatible so existing callers do not need an all-at-once migration.
 
 ## Consume as a Git submodule
 

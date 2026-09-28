@@ -84,12 +84,16 @@ artifacts/managed/x64/Release/Ijwhost.dll
 ```csharp
 using LibmemCli;
 
-var process = Libmem.CurrentProcess();
+var process = Libmem.CurrentProcess()
+    ?? throw new InvalidOperationException("Current process not found");
+
+using var session = Libmem.Attach(process)
+    ?? throw new InvalidOperationException("Attach failed");
 
 Console.WriteLine(
-    $"Process: {process.Name}  PID={process.Pid}  Arch={process.Architecture}  Bits={process.Bits}");
+    $"Process: {session.Name}  PID={session.Pid}  Arch={session.Architecture}  Bits={session.Bits}");
 
-foreach (var module in Libmem.EnumModules(process))
+foreach (var module in Libmem.EnumModules(session.Info))
 {
     Console.WriteLine(
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
@@ -97,6 +101,28 @@ foreach (var module in Libmem.EnumModules(process))
 ```
 
 运行时请确保 `LibmemCli.dll`、`Ijwhost.dll` 和 `libmem.dll` 位于应用程序可执行文件旁。
+
+## ProcessSession（v0.2.0 开发路线的第一步）
+
+`ProcessSession` 是面向后续注入 SDK 的长期进程上下文。它通过 **PID + 进程启动时间** 锁定一个具体进程身份，并提供明确的 Attach / Detach 生命周期：
+
+```csharp
+using var target = Libmem.Attach("Hearthstone.exe");
+
+if (target is null)
+    return;
+
+Console.WriteLine($"{target.Name} PID={target.Pid} Arch={target.Architecture}");
+
+if (!target.IsAlive())
+    return;
+
+var latest = target.Refresh();
+```
+
+当前阶段 `ProcessSession` 主要负责进程身份与生命周期，不持有 Windows 原生进程句柄。后续 v0.2.0 的 `MemoryManager`、`ModuleManager`、`HookManager` 和 `Injector` 会逐步挂到这一上下文之上。
+
+现有 `Libmem.*` 静态 API 保持兼容，不需要一次性迁移已有代码。
 
 ## 作为 Git Submodule 引用
 

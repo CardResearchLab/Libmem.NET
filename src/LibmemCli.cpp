@@ -138,6 +138,56 @@ void ProcessInfo::WriteInt32(UInt64 address,Int32 value) {
 }
 UInt64 ProcessInfo::SigScan(String^ signature,UInt64 address,UInt64 size) { return Libmem::SigScan(this,signature,address,size); }
 
+void ProcessSession::ThrowIfDisposed() {
+    if(disposed_) throw gcnew ObjectDisposedException("ProcessSession");
+}
+ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), disposed_(false) {
+    if(input==nullptr) throw gcnew ArgumentNullException("process");
+    identity_=process(proc(input));
+}
+ProcessInfo^ ProcessSession::Target::get() {
+    ThrowIfDisposed();
+    return identity_;
+}
+ProcessInfo^ ProcessSession::Info::get() {
+    ThrowIfDisposed();
+    return process(proc(identity_));
+}
+UInt32 ProcessSession::Pid::get() {
+    ThrowIfDisposed();
+    return identity_->Pid;
+}
+String^ ProcessSession::Name::get() {
+    ThrowIfDisposed();
+    return identity_->Name;
+}
+LibmemCli::Architecture ProcessSession::Architecture::get() {
+    ThrowIfDisposed();
+    return identity_->Architecture;
+}
+UInt64 ProcessSession::Bits::get() {
+    ThrowIfDisposed();
+    return identity_->Bits;
+}
+bool ProcessSession::IsDisposed::get() { return disposed_; }
+bool ProcessSession::IsAlive() {
+    ThrowIfDisposed();
+    return Libmem::IsProcessAlive(identity_);
+}
+ProcessInfo^ ProcessSession::Refresh() {
+    ThrowIfDisposed();
+    auto current=Libmem::GetProcess(identity_->Pid);
+    if(current==nullptr || current->StartTime!=identity_->StartTime) return nullptr;
+    identity_=current;
+    return process(proc(identity_));
+}
+void ProcessSession::Detach() {
+    if(disposed_) return;
+    disposed_=true;
+    identity_=nullptr;
+}
+ProcessSession::~ProcessSession() { Detach(); }
+
 List<ProcessInfo^>^ Libmem::EnumProcesses() {
     std::vector<lm_process_t> native;
     if(!LM_EnumProcesses(cb_process,&native)) throw gcnew InvalidOperationException("LM_EnumProcesses failed.");
@@ -146,6 +196,20 @@ List<ProcessInfo^>^ Libmem::EnumProcesses() {
 ProcessInfo^ Libmem::CurrentProcess() { lm_process_t p{}; return LM_GetProcess(&p) ? process(p) : nullptr; }
 ProcessInfo^ Libmem::GetProcess(UInt32 pid) { lm_process_t p{}; return LM_GetProcessEx(pid,&p) ? process(p) : nullptr; }
 ProcessInfo^ Libmem::FindProcess(String^ name) { lm_process_t p{}; auto n=utf8(name); return LM_FindProcess(n.c_str(),&p) ? process(p) : nullptr; }
+ProcessSession^ Libmem::Attach(UInt32 pid) {
+    auto current=GetProcess(pid);
+    return current==nullptr ? nullptr : gcnew ProcessSession(current);
+}
+ProcessSession^ Libmem::Attach(String^ name) {
+    auto current=FindProcess(name);
+    return current==nullptr ? nullptr : gcnew ProcessSession(current);
+}
+ProcessSession^ Libmem::Attach(ProcessInfo^ input) {
+    if(input==nullptr) throw gcnew ArgumentNullException("process");
+    auto current=GetProcess(input->Pid);
+    if(current==nullptr || current->StartTime!=input->StartTime) return nullptr;
+    return gcnew ProcessSession(current);
+}
 bool Libmem::IsProcessAlive(ProcessInfo^ input) {
     auto expected=proc(input);
     lm_process_t self{};

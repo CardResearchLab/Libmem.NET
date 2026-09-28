@@ -77,6 +77,29 @@ namespace LibmemCli {
         property String^ OperandString;
     };
 
+    // ProcessSession represents an attachment to one concrete process identity (PID + start time).
+    // It does not own an OS process handle; it provides a stable lifetime boundary for higher-level APIs.
+    public ref class ProcessSession sealed : IDisposable {
+    private:
+        ProcessInfo^ identity_;
+        bool disposed_;
+        void ThrowIfDisposed();
+    internal:
+        ProcessSession(ProcessInfo^ process);
+        property ProcessInfo^ Target { ProcessInfo^ get(); }
+    public:
+        property ProcessInfo^ Info { ProcessInfo^ get(); }
+        property UInt32 Pid { UInt32 get(); }
+        property String^ Name { String^ get(); }
+        property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+        property UInt64 Bits { UInt64 get(); }
+        property bool IsDisposed { bool get(); }
+        bool IsAlive();
+        ProcessInfo^ Refresh();
+        void Detach();
+        ~ProcessSession();
+    };
+
     // HookHandle owns a native trampoline. Explicit disposal restores the original code.
     public ref class HookHandle sealed : IDisposable {
     private:
@@ -114,6 +137,10 @@ namespace LibmemCli {
         static ProcessInfo^ CurrentProcess();
         static ProcessInfo^ GetProcess(UInt32 pid);
         static ProcessInfo^ FindProcess(String^ name);
+        // Attach creates a long-lived process context bound to PID + start time.
+        static ProcessSession^ Attach(UInt32 pid);
+        static ProcessSession^ Attach(String^ name);
+        static ProcessSession^ Attach(ProcessInfo^ process);
         static bool IsProcessAlive(ProcessInfo^ process);
         static array<String^>^ GetCommandLine(ProcessInfo^ process);
         static UInt64 GetBits();
