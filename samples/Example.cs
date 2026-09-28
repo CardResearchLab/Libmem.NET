@@ -9,7 +9,7 @@ using var session = Libmem.Attach(self) ?? throw new InvalidOperationException("
 Console.WriteLine($"Self: {session.Name} pid={session.Pid} arch={session.Architecture}");
 Console.WriteLine($"Self modules: {Libmem.EnumModules(session.Info).Count}");
 
-using (var allocation = session.Allocate(4096, MemoryProtection.ReadWrite))
+using (var allocation = session.Memory.Allocate(4096, MemoryProtection.ReadWrite))
 {
     if (allocation is null)
         throw new InvalidOperationException("Remote allocation failed");
