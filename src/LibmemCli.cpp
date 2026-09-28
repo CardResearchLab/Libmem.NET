@@ -122,6 +122,9 @@ namespace {
         for each (UInt64 item in input) result.push_back(static_cast<lm_address_t>(item));
         return result;
     }
+    bool bad_address(UInt64 value) {
+        return static_cast<lm_address_t>(value)==LM_ADDRESS_BAD;
+    }
 }
 
 bool ProcessInfo::IsAlive() { return Libmem::IsProcessAlive(this); }
@@ -141,7 +144,7 @@ UInt64 ProcessInfo::SigScan(String^ signature,UInt64 address,UInt64 size) { retu
 RemoteAllocation::RemoteAllocation(ProcessInfo^ input,UInt64 address,UInt64 size)
     : target_(nullptr),address_(address),size_(size),disposed_(false) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
-    if(address==0 || address==UInt64::MaxValue) throw gcnew ArgumentOutOfRangeException("address");
+    if(address==0 || bad_address(address)) throw gcnew ArgumentOutOfRangeException("address");
     if(size==0) throw gcnew ArgumentOutOfRangeException("size");
     target_=process(proc(input));
 }
@@ -288,7 +291,7 @@ RemoteAllocation^ MemoryManager::Allocate(UInt64 size,MemoryProtection protectio
     auto target=Target();
     if(!Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
     auto address=Libmem::AllocateMemory(target,size,protection);
-    if(address==0 || address==UInt64::MaxValue) return nullptr;
+    if(address==0 || bad_address(address)) return nullptr;
     return gcnew RemoteAllocation(target,address,size);
 }
 bool MemoryManager::Free(UInt64 address,UInt64 size) {
