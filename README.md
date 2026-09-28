@@ -139,6 +139,21 @@ var unity = modules.Find("UnityPlayer.dll");
 
 当前提供 `Enumerate / Find / Load / Unload`。它和 `MemoryManager` 一样遵循 Session 生命周期，Detach 后不可继续操作。
 
+### Injector
+
+`ProcessSession.Injector` 是比 `ModuleManager.Load` 更高一层的 DLL 注入接口，用来表达“这一次 LoadLibrary 引用由谁负责释放”：
+
+```csharp
+using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll")
+    ?? throw new InvalidOperationException("Injection failed");
+
+Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
+```
+
+`InjectLibrary` 会规范化并检查 DLL 路径，并拒绝当前 runtime 与目标进程位宽不同的跨位宽注入。返回的 `InjectedModuleHandle` 保存模块快照与请求路径；`IsActive` 表示**这个 Handle 所拥有的一次加载引用尚未释放**，并不等价于“该 DLL 一定仍是目标进程中的唯一实例”。
+
+显式 `Unload()` 或 `Dispose()` 会尝试执行一次匹配的 `FreeLibrary`。由于 Windows DLL 引用计数以及固定 libmem 上游 `LM_UnloadModuleEx` 的语义，即使调用成功，也不承诺模块一定完全从目标进程消失。GC Finalizer 不会对目标进程执行 `FreeLibrary`。
+
 ### HookManager
 
 `ProcessSession.Hooks` 把 Hook 安装操作绑定到当前目标进程：
@@ -214,12 +229,13 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ## GitHub Actions 自动构建
 
-仓库内置四套自动化工作流：
+仓库内置五套自动化工作流：
 
 - \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64，并上传 \`LibmemCli-windows-x64\` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
 - \`.github/workflows/release.yml\`：推送 \`v*\` 标签时自动构建并创建 GitHub Release，同时附带 \`LibmemCli-windows-x64.zip\`。
 - \`.github/workflows/hook-vmt-tests.yml\`：独立运行真实 Hook / trampoline / VMT 生命周期测试，与基础 Smoke Test 分离。
+- \`.github/workflows/injector-tests.yml\`：独立验证 DLL 注入、模块发现、显式 Unload 与 Dispose 生命周期。
 
 本地也可以生成与 CI 相同的 Runtime 包：
 
@@ -262,6 +278,8 @@ CI 不只检查“能否编译”，还会执行两层自动验证：
 2. **Runtime Smoke Tests**：实际加载 `LibmemCli.dll + libmem.dll`，验证进程/模块枚举、内存申请与读写、内存保护、Data/Pattern/Signature Scan、汇编与反汇编。
 
 Hook / VMT 不作为基础 Smoke Test 的硬性门禁，而是在独立的 `Hook VMT Runtime Tests` 工作流中验证。该测试会在当前进程分配隔离的可执行内存，验证 Hook 重定向、trampoline、Remove，以及 VMT Hook / Unhook / Reset / Dispose，不依赖炉石或其他外部进程。
+
+Injector 同样使用独立的 `Injector Runtime Tests`：测试会复制一份唯一文件名的 `libmem.dll` 作为隔离 fixture，在当前测试进程中实际执行注入、模块枚举、Unload 和 Dispose，避免依赖炉石进程。
 
 ### 在其他项目中复用构建工作流
 
