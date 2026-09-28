@@ -308,6 +308,14 @@ jobs:
 
 > 当前仓库为私有仓库时，跨仓库复用需要在 GitHub Actions 的仓库/组织访问设置中允许调用方仓库访问该 reusable workflow；如果以后将仓库公开，则公开仓库可直接引用。
 
+## 错误模型
+
+对于能够明确判断为 **native libmem 操作失败** 的情况，LibmemCli 统一抛出 `LibmemException`。它继承自 `InvalidOperationException`，并通过 `Operation` 属性保留对应的原生操作名，例如 `LM_EnumProcesses`、`LM_ProtMemoryEx`、`LM_FreeMemoryEx`。
+
+`Find*`、Scan 未命中、以及上游本身用 `null` / `LM_ADDRESS_BAD` 表示正常“未找到”的接口仍保持原有返回语义，不会为了统一异常而把正常未命中改成错误。
+
+参数错误继续使用 .NET 标准的 `ArgumentException` / `ArgumentNullException` / `ArgumentOutOfRangeException`；对象生命周期错误继续使用 `ObjectDisposedException`。
+
 ## API 映射
 
 ### 进程
