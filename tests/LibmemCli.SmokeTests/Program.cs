@@ -20,9 +20,9 @@ Check(session.Architecture == current.Architecture, "ProcessSession architecture
 Check(session.Bits == current.Bits, "ProcessSession bitness does not match.");
 Check(session.IsAlive(), "Attached ProcessSession should report the current process as alive.");
 
-var sessionSnapshot = session.Info;
-sessionSnapshot.Pid = 0;
-Check(session.Pid == current.Pid, "Mutating a returned ProcessInfo snapshot changed ProcessSession identity.");
+var sessionInfoCopy = session.Info;
+sessionInfoCopy.Pid = 0;
+Check(session.Pid == current.Pid, "Mutating a returned ProcessInfo copy changed ProcessSession identity.");
 
 var refreshed = session.Refresh();
 Check(refreshed is not null && refreshed.Pid == current.Pid, "ProcessSession.Refresh failed for the current process.");
@@ -107,7 +107,8 @@ Check(foundModule!.Base == namedModule.Base, "ModuleManager.Find returned a diff
 var memory = pidSession!.Memory;
 var ownedAllocation = memory.Allocate(4096, MemoryProtection.ReadWrite);
 Check(ownedAllocation is not null, "MemoryManager.Allocate returned null.");
-Check(ownedAllocation!.Address != 0 && ownedAllocation.Address != ulong.MaxValue, "RemoteAllocation has an invalid address.");
+var invalidAddress = IntPtr.Size == sizeof(ulong) ? ulong.MaxValue : uint.MaxValue;
+Check(ownedAllocation!.Address != 0 && ownedAllocation.Address != invalidAddress, "RemoteAllocation has an invalid address.");
 Check(ownedAllocation.Size == 4096, "RemoteAllocation did not preserve its requested size.");
 
 byte[] ownedPayload = [0x4C, 0x49, 0x42, 0x4D, 0x45, 0x4D];
@@ -149,7 +150,7 @@ Check(modules.Any(m => m.Base != 0 && m.Size != 0), "EnumModules returned no usa
 
 const ulong allocationSize = 4096;
 var address = Libmem.AllocateMemory(allocationSize, MemoryProtection.ReadWrite);
-Check(address != 0 && address != ulong.MaxValue, "AllocateMemory failed.");
+Check(address != 0 && address != invalidAddress, "AllocateMemory failed.");
 
 try
 {
@@ -182,10 +183,11 @@ try
         Libmem.ProtectMemory(address, allocationSize, oldProtection);
     }
 
-    var machineCode = Libmem.Assemble("nop; ret", Architecture.X64, 0x1000);
+    var testArchitecture = IntPtr.Size == sizeof(ulong) ? Architecture.X64 : Architecture.X86;
+    var machineCode = Libmem.Assemble("nop; ret", testArchitecture, 0x1000);
     Check(machineCode is { Length: > 0 }, "Assemble returned no machine code.");
 
-    var instructions = Libmem.Disassemble(machineCode!, Architecture.X64, 2, 0x1000);
+    var instructions = Libmem.Disassemble(machineCode!, testArchitecture, 2, 0x1000);
     Check(instructions.Count > 0, "Disassemble returned no instructions.");
     Check(instructions[0].Mnemonic.Length > 0, "Disassembled instruction has no mnemonic.");
 }
