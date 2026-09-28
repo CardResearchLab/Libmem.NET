@@ -578,17 +578,58 @@ HookHandle^ Libmem::HookCode(ProcessInfo^ input,UInt64 from,UInt64 to) {
     auto n=LM_HookCodeEx(&p,static_cast<lm_address_t>(from),static_cast<lm_address_t>(to),&trampoline);
     return n ? gcnew HookHandle(input,from,trampoline,n) : nullptr;
 }
-VmtManager::VmtManager(UInt64 address) : native_(new lm_vmt_t{}) {
+VmtManager::VmtManager(UInt64 address) : native_(new lm_vmt_t{}), disposed_(false) {
     if(address==0 || !LM_VmtNew(reinterpret_cast<lm_address_t*>(static_cast<uintptr_t>(address)),native_)) {
-        delete native_; native_=nullptr; throw gcnew InvalidOperationException("LM_VmtNew failed.");
+        delete native_; native_=nullptr; disposed_=true; throw gcnew InvalidOperationException("LM_VmtNew failed.");
     }
 }
+bool VmtManager::IsDisposed::get() { return disposed_; }
+bool VmtManager::ResetNative() {
+    if(!native_) return true;
+
+    // The pinned libmem LM_VmtReset reads entry->index after freeing entry.
+    // Remove tracked entries one by one first so Reset/Free only see an empty list.
+    while(native_->hkentries!=LM_NULLPTR) {
+        auto index=native_->hkentries->index;
+        if(LM_VmtUnhook(native_,index)==LM_FALSE) return false;
+    }
+    return true;
+}
 void VmtManager::Hook(UInt64 index,UInt64 to) {
-    if(!native_) throw gcnew ObjectDisposedException("VmtManager");
+    if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
     if(!LM_VmtHook(native_,static_cast<lm_size_t>(index),static_cast<lm_address_t>(to))) throw gcnew InvalidOperationException("LM_VmtHook failed.");
 }
-bool VmtManager::Unhook(UInt64 index) { if(!native_) throw gcnew ObjectDisposedException("VmtManager"); return LM_VmtUnhook(native_,static_cast<lm_size_t>(index))!=LM_FALSE; }
-UInt64 VmtManager::GetOriginal(UInt64 index) { if(!native_) throw gcnew ObjectDisposedException("VmtManager"); return LM_VmtGetOriginal(native_,static_cast<lm_size_t>(index)); }
-void VmtManager::Reset() { if(!native_) throw gcnew ObjectDisposedException("VmtManager"); LM_VmtReset(native_); }
-VmtManager::~VmtManager() { this->!VmtManager(); }
-VmtManager::!VmtManager() { if(native_) { LM_VmtFree(native_); delete native_; native_=nullptr; } }
+bool VmtManager::Unhook(UInt64 index) {
+    if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
+    return LM_VmtUnhook(native_,static_cast<lm_size_t>(index))!=LM_FALSE;
+}
+UInt64 VmtManager::GetOriginal(UInt64 index) {
+    if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
+    return LM_VmtGetOriginal(native_,static_cast<lm_size_t>(index));
+}
+void VmtManager::Reset() {
+    if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
+    if(!ResetNative()) throw gcnew InvalidOperationException("VMT reset failed; one or more hooks may remain installed.");
+    // Safe after ResetNative: the upstream list is empty, avoiding its reset use-after-free path.
+    LM_VmtReset(native_);
+}
+VmtManager::~VmtManager() {
+    if(disposed_) return;
+    if(native_) {
+        // Explicit Dispose performs best-effort restoration. Only call LM_VmtFree after
+        // all tracked entries were removed, so the pinned upstream reset bug is unreachable.
+        if(ResetNative()) LM_VmtFree(native_);
+        delete native_;
+        native_=nullptr;
+    }
+    disposed_=true;
+}
+VmtManager::!VmtManager() {
+    // Do not rewrite VMT entries from the GC finalizer thread.
+    // If Dispose was skipped while hooks were active, libmem's hook-entry bookkeeping may leak.
+    if(native_) {
+        delete native_;
+        native_=nullptr;
+    }
+    disposed_=true;
+}
