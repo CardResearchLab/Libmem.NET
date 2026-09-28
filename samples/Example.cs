@@ -4,8 +4,10 @@ using LibmemCli;
 
 Console.WriteLine($"Libmem process bits: {Libmem.GetBits()}");
 var self = Libmem.CurrentProcess() ?? throw new InvalidOperationException("Current process not found");
-Console.WriteLine($"Self: {self.Name} pid={self.Pid}");
-Console.WriteLine($"Self modules: {Libmem.EnumModules(self).Count}");
+using var session = Libmem.Attach(self) ?? throw new InvalidOperationException("Could not attach to the current process");
+
+Console.WriteLine($"Self: {session.Name} pid={session.Pid} arch={session.Architecture}");
+Console.WriteLine($"Self modules: {Libmem.EnumModules(session.Info).Count}");
 
 // Safely demonstrate read/write against a buffer in THIS sample process only.
 IntPtr buffer = System.Runtime.InteropServices.Marshal.AllocHGlobal(sizeof(int));
