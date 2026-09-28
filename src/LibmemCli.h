@@ -99,6 +99,7 @@ namespace LibmemCli {
     ref class MemoryManager;
     ref class ModuleManager;
     ref class HookManager;
+    ref class HookHandle;
 
     // ProcessSession represents an attachment to one concrete process identity (PID + start time).
     // It does not own an OS process handle; it provides a stable lifetime boundary for higher-level APIs.
