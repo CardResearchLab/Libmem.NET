@@ -180,11 +180,12 @@ RemoteAllocation::!RemoteAllocation() {
 void ProcessSession::ThrowIfDisposed() {
     if(disposed_) throw gcnew ObjectDisposedException("ProcessSession");
 }
-ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), modules_(nullptr), disposed_(false) {
+ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), modules_(nullptr), hooks_(nullptr), disposed_(false) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
     identity_=process(proc(input));
     memory_=gcnew MemoryManager(this);
     modules_=gcnew ModuleManager(this);
+    hooks_=gcnew HookManager(this);
 }
 ProcessInfo^ ProcessSession::Target::get() {
     ThrowIfDisposed();
@@ -218,6 +219,10 @@ ModuleManager^ ProcessSession::Modules::get() {
     ThrowIfDisposed();
     return modules_;
 }
+HookManager^ ProcessSession::Hooks::get() {
+    ThrowIfDisposed();
+    return hooks_;
+}
 bool ProcessSession::IsDisposed::get() { return disposed_; }
 bool ProcessSession::IsAlive() {
     ThrowIfDisposed();
@@ -240,6 +245,7 @@ void ProcessSession::Detach() {
     identity_=nullptr;
     memory_=nullptr;
     modules_=nullptr;
+    hooks_=nullptr;
 }
 ProcessSession::~ProcessSession() { Detach(); }
 
@@ -508,6 +514,17 @@ List<InstructionInfo^>^ Libmem::Disassemble(array<Byte>^ code,LibmemCli::Archite
 }
 UInt64 Libmem::CodeLength(UInt64 a,UInt64 size) { return LM_CodeLength(static_cast<lm_address_t>(a),static_cast<lm_size_t>(size)); }
 UInt64 Libmem::CodeLength(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_CodeLengthEx(&p,static_cast<lm_address_t>(a),static_cast<lm_size_t>(size)); }
+
+HookManager::HookManager(ProcessSession^ session) : session_(session) {
+    if(session==nullptr) throw gcnew ArgumentNullException("session");
+}
+ProcessInfo^ HookManager::Target() {
+    if(session_==nullptr) throw gcnew ObjectDisposedException("HookManager");
+    return session_->Target;
+}
+HookHandle^ HookManager::Install(UInt64 source,UInt64 destination) {
+    return Libmem::HookCode(Target(),source,destination);
+}
 
 HookHandle::HookHandle(ProcessInfo^ target,UInt64 from,UInt64 trampoline,UInt64 size)
     : target_(nullptr),from_(from),trampoline_(trampoline),size_(size),installed_(true),disposed_(false) {
