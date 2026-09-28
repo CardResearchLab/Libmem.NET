@@ -229,13 +229,14 @@ namespace LibmemCli {
     public ref class HookHandle sealed : IDisposable {
     private:
         ProcessInfo^ target_;
-        UInt64 from_, trampoline_, size_;
+        UInt64 from_, destination_, trampoline_, size_;
         bool installed_;
         bool disposed_;
     internal:
-        HookHandle(ProcessInfo^ target, UInt64 from, UInt64 trampoline, UInt64 size);
+        HookHandle(ProcessInfo^ target, UInt64 from, UInt64 destination, UInt64 trampoline, UInt64 size);
     public:
         property UInt64 Source { UInt64 get(); }
+        property UInt64 Destination { UInt64 get(); }
         property UInt64 Trampoline { UInt64 get(); }
         property UInt64 PatchedBytes { UInt64 get(); }
         property bool IsInstalled { bool get(); }
