@@ -17,6 +17,25 @@ for file in [
     ET.parse(root / file)
     print("PASS XML", file)
 
+solution = (root / "LibmemCli.sln").read_text(encoding="utf-8")
+vcxproj = (root / "src/LibmemCli.vcxproj").read_text(encoding="utf-8")
+build_script = (root / "build.ps1").read_text(encoding="utf-8")
+native_build_script = (root / "eng/build-native.ps1").read_text(encoding="utf-8")
+package_script = (root / "eng/package-runtime.ps1").read_text(encoding="utf-8")
+build_workflow = (root / ".github/workflows/build.yml").read_text(encoding="utf-8")
+hook_workflow = (root / ".github/workflows/hook-vmt-tests.yml").read_text(encoding="utf-8")
+injector_workflow = (root / ".github/workflows/injector-tests.yml").read_text(encoding="utf-8")
+
+assert "Debug|x86" in solution and "Release|x86" in solution
+assert "Debug|Win32" in vcxproj and "Release|Win32" in vcxproj
+assert "LibmemPlatformLabel" in vcxproj and ">x86</LibmemPlatformLabel>" in vcxproj
+for script in [build_script, native_build_script, package_script]:
+    assert "ValidateSet('x64', 'x86')" in script
+for workflow in [build_workflow, hook_workflow, injector_workflow]:
+    assert "platform: [x64, x86]" in workflow
+    assert "architecture: ${{ matrix.platform }}" in workflow
+print("PASS x86/x64 build contract")
+
 for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
     body = header.split("public ref class " + owner, 1)[1].split("\n    };", 1)[0]
     declarations = re.findall(r"(?<!::)\b(\w+)\s*\([^;{}]*\)\s*;", body)
