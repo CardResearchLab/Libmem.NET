@@ -334,6 +334,16 @@ Native assembly-result buffers are freed after being copied into managed memory.
 - `LM_HookCode[Ex]` → `Libmem.HookCode`
 - `LM_UnhookCode[Ex]` → disposable `HookHandle`
 
+`HookHandle` now separates **whether the hook is still installed** from **whether the managed handle is disposed**:
+
+- `Source / Trampoline / PatchedBytes` retain installation metadata;
+- `IsInstalled` reports whether the handle still considers the target code hooked;
+- `IsDisposed` reports whether the managed lifetime has ended;
+- `Remove()` attempts to unhook and clears `IsInstalled` only on success;
+- `Dispose()` performs best-effort cleanup and no longer throws if unhooking fails.
+
+This prevents a failed removal from being reported as a successful unhook. The finalizer still never modifies target-process code from the GC thread.
+
 The native VMT API is wrapped by the disposable `VmtManager`.
 
 ## Important behavior and limitations
