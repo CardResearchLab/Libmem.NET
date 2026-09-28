@@ -15,7 +15,7 @@ for file in [
     ET.parse(root / file)
     print("PASS XML", file)
 
-for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "HookHandle", "VmtManager"]:
+for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "HookManager", "HookHandle", "VmtManager"]:
     body = header.split("public ref class " + owner, 1)[1].split("\n    };", 1)[0]
     declarations = re.findall(r"(?<!::)\b(\w+)\s*\([^;{}]*\)\s*;", body)
     declarations = {name for name in declarations if name not in {"get"}}
@@ -53,6 +53,11 @@ assert not missing_native_apis, (
     + ", ".join(missing_native_apis)
 )
 print("PASS upstream public API coverage:", len(upstream_apis))
+
+assert "HookManager^ ProcessSession::Hooks::get()" in source
+assert "HookHandle^ HookManager::Install(UInt64 source,UInt64 destination)" in source
+assert "return Libmem::HookCode(Target(),source,destination);" in source
+print("PASS HookManager session contract")
 
 assert "bool HookHandle::IsInstalled::get()" in source
 assert "bool HookHandle::IsDisposed::get()" in source
