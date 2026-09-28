@@ -90,10 +90,11 @@ var process = Libmem.CurrentProcess()
 using var session = Libmem.Attach(process)
     ?? throw new InvalidOperationException("Attach failed");
 
+var snapshot = session.Snapshot;
 Console.WriteLine(
-    $"Process: {session.Name}  PID={session.Pid}  Arch={session.Architecture}  Bits={session.Bits}");
+    $"Process: {snapshot.Name}  PID={snapshot.Pid}  Arch={snapshot.Architecture}  Bits={snapshot.Bits}");
 
-foreach (var module in Libmem.EnumModules(session.Info))
+foreach (var module in session.Modules.Snapshot())
 {
     Console.WriteLine(
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
@@ -102,7 +103,7 @@ foreach (var module in Libmem.EnumModules(session.Info))
 
 At runtime, keep `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll` beside the application executable.
 
-## ProcessSession (first v0.2.0 building block)
+## ProcessSession
 
 `ProcessSession` is the long-lived process context for the higher-level injection SDK. It binds to one concrete process identity using **PID + process start time** and gives Attach / Detach an explicit lifetime:
 
@@ -123,6 +124,18 @@ var latest = target.Refresh();
 At this stage, `ProcessSession` owns process identity and lifetime semantics but does not own a native Windows process handle. Future v0.2.0 components such as `MemoryManager`, `ModuleManager`, `HookManager`, and `Injector` will be built on top of this context.
 
 The existing static `Libmem.*` API remains compatible so existing callers do not need an all-at-once migration.
+
+### Immutable snapshots
+
+`ProcessSession.Snapshot` and `ModuleManager.Snapshot()` provide immutable state views separated from operational handles. `ProcessSnapshot` / `ModuleSnapshot` contain descriptive data only, expose no public setters, and own no target-process resources, so existing snapshots remain readable after `ProcessSession.Detach()`.
+
+```csharp
+ProcessSnapshot process = target.Snapshot;
+IReadOnlyList<ModuleSnapshot> modules = target.Modules.Snapshot();
+ModuleSnapshot? unity = target.Modules.FindSnapshot("UnityPlayer.dll");
+```
+
+Snapshots are intended for logging, events, state caches, and cross-layer data transfer. Memory writes, module loading, hooks, and injection remain session-bound operations through the corresponding managers.
 
 ### ModuleManager
 
@@ -229,7 +242,7 @@ Do not mix outputs from different configurations or commits.
 
 ## GitHub Actions automation
 
-The repository includes five automation workflows:
+The repository includes six automation workflows:
 
 - \`.github/workflows/build.yml\`: builds Release x64 on pushes to \`main\`, pull requests, or manual runs, then uploads the \`LibmemCli-windows-x64\` artifact.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
@@ -261,7 +274,7 @@ artifacts/package/LibmemCli-windows-x64.zip
 
 ## Versioning and automated validation
 
-The root `VERSION` file is the source of truth for release versioning. The first stable-candidate version is **0.1.0**, and the generated `LibmemCli.dll` carries matching assembly version metadata.
+The root `VERSION` file is the source of truth for release versioning. The current version is **0.2.0**, and the generated `LibmemCli.dll` carries matching assembly version metadata.
 
 Each runtime package contains a `manifest.json` recording:
 
