@@ -168,8 +168,10 @@ bool RemoteAllocation::Free() {
     return ok;
 }
 RemoteAllocation::~RemoteAllocation() {
-    // Dispose is best-effort and intentionally does not throw.
-    Free();
+    if(disposed_) return;
+    if(!Free())
+        throw gcnew InvalidOperationException(
+            "Failed to free remote allocation during Dispose; the allocation remains active.");
 }
 RemoteAllocation::!RemoteAllocation() {
     // Never modify another process from the GC finalizer thread.
@@ -358,7 +360,9 @@ bool InjectedModuleHandle::Unload() {
 }
 InjectedModuleHandle::~InjectedModuleHandle() {
     if(disposed_) return;
-    if(active_) Unload();
+    if(active_ && !Unload())
+        throw gcnew InvalidOperationException(
+            "Failed to unload injected module during Dispose; the owned load reference remains active.");
     disposed_=true;
     target_=nullptr;
 }
