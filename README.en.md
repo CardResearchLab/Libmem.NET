@@ -124,6 +124,19 @@ At this stage, `ProcessSession` owns process identity and lifetime semantics but
 
 The existing static `Libmem.*` API remains compatible so existing callers do not need an all-at-once migration.
 
+### RemoteAllocation
+
+`ProcessSession.Allocate(...)` now returns a disposable `RemoteAllocation`, making ownership of target-process memory explicit:
+
+```csharp
+using var memory = target.Allocate(4096, MemoryProtection.ReadWrite)
+    ?? throw new InvalidOperationException("Allocation failed");
+
+Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
+```
+
+Calling `Free()` explicitly or leaving the `using` scope attempts to release the allocation. If the target process has already exited, its address space is considered reclaimed by the OS. The finalizer never mutates another process from the GC thread.
+
 ## Consume as a Git submodule
 
 Add this repository to another project as a submodule:
