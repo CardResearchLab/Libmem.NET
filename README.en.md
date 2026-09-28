@@ -10,7 +10,9 @@
 
 LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem), intended for Windows x64 / .NET 8 projects.
 
-The wrapper exposes every public function in the pinned libmem header through managed models, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
+The wrapper exposes every public function in the pinned libmem header through managed types, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
+
+LibmemCli stops at **native libmem → .NET mapping, necessary type conversion, and native-resource lifetime management**. It does not own application state snapshots, game state, process/module caches, or automatic rescanning policies; those belong to callers.
 
 The native libmem library is included as a pinned Git submodule and is built automatically before the C++/CLI wrapper.
 
@@ -90,11 +92,10 @@ var process = Libmem.CurrentProcess()
 using var session = Libmem.Attach(process)
     ?? throw new InvalidOperationException("Attach failed");
 
-var snapshot = session.Snapshot;
 Console.WriteLine(
-    $"Process: {snapshot.Name}  PID={snapshot.Pid}  Arch={snapshot.Architecture}  Bits={snapshot.Bits}");
+    $"Process: {process.Name}  PID={process.Pid}  Arch={process.Architecture}  Bits={process.Bits}");
 
-foreach (var module in session.Modules.Snapshot())
+foreach (var module in session.Modules.Enumerate())
 {
     Console.WriteLine(
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
@@ -105,7 +106,7 @@ At runtime, keep `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll` beside the app
 
 ## ProcessSession
 
-`ProcessSession` is the long-lived process context for the higher-level injection SDK. It binds to one concrete process identity using **PID + process start time** and gives Attach / Detach an explicit lifetime:
+`ProcessSession` is an optional LibmemCli convenience wrapper. It binds to one concrete process identity using **PID + process start time** and gives memory, module, hook, and injection calls for the same target an explicit Attach / Detach lifetime. It does not own application state:
 
 ```csharp
 using var target = Libmem.Attach("Hearthstone.exe");
@@ -121,21 +122,9 @@ if (!target.IsAlive())
 var latest = target.Refresh();
 ```
 
-At this stage, `ProcessSession` owns process identity and lifetime semantics but does not own a native Windows process handle. Future v0.2.0 components such as `MemoryManager`, `ModuleManager`, `HookManager`, and `Injector` will be built on top of this context.
+`ProcessSession` does not own a native Windows process handle. `MemoryManager`, `ModuleManager`, `HookManager`, and `InjectorManager` only add target binding and resource-lifetime constraints around libmem calls.
 
-The existing static `Libmem.*` API remains compatible so existing callers do not need an all-at-once migration.
-
-### Immutable snapshots
-
-`ProcessSession.Snapshot` and `ModuleManager.Snapshot()` provide immutable state views separated from operational handles. `ProcessSnapshot` / `ModuleSnapshot` contain descriptive data only, expose no public setters, and own no target-process resources, so existing snapshots remain readable after `ProcessSession.Detach()`.
-
-```csharp
-ProcessSnapshot process = target.Snapshot;
-IReadOnlyList<ModuleSnapshot> modules = target.Modules.Snapshot();
-ModuleSnapshot? unity = target.Modules.FindSnapshot("UnityPlayer.dll");
-```
-
-Snapshots are intended for logging, events, state caches, and cross-layer data transfer. Memory writes, module loading, hooks, and injection remain session-bound operations through the corresponding managers.
+The static `Libmem.*` API remains directly usable. Applications that need snapshots, caches, event state, or cross-layer state models should build those models themselves from wrapper return values.
 
 ### ModuleManager
 
@@ -163,7 +152,7 @@ using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll
 Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 ```
 
-`InjectLibrary` normalizes and validates the DLL path and rejects cross-bitness injection between the current runtime and target process. The returned `InjectedModuleHandle` preserves a module snapshot and requested path. `IsActive` means **this handle still owns the load reference it created**; it does not claim that the module is the only loaded instance in the process.
+`InjectLibrary` normalizes and validates the DLL path and rejects cross-bitness injection between the current runtime and target process. The returned `InjectedModuleHandle` preserves the managed module description and requested path. `IsActive` means **this handle still owns the load reference it created**; it does not claim that the module is the only loaded instance in the process.
 
 Explicit `Unload()` or `Dispose()` attempts one matching `FreeLibrary`. Because Windows DLLs are reference-counted and the pinned upstream `LM_UnloadModuleEx` only requests a release, a successful call does not guarantee the module disappears completely from the target process. The GC finalizer never calls `FreeLibrary` in the target process.
 
@@ -175,10 +164,10 @@ Explicit `Unload()` or `Dispose()` attempts one matching `FreeLibrary`. Because 
 using var hook = target.Hooks.Install(source, destination)
     ?? throw new InvalidOperationException("Hook failed");
 
-Console.WriteLine($"trampoline=0x{hook.Trampoline:X}");
+Console.WriteLine($"source=0x{hook.Source:X} destination=0x{hook.Destination:X} trampoline=0x{hook.Trampoline:X}");
 ```
 
-`HookManager` does not take ownership of installed hooks. Each returned `HookHandle` owns its own `Remove / Dispose` lifetime. Therefore `ProcessSession.Detach()` prevents new hook installation without silently rewriting target code. A saved `HookManager` rejects use after its session is detached with `ObjectDisposedException`.
+`HookManager` does not take ownership of installed hooks. Each returned `HookHandle` owns its own `Remove / Dispose` lifetime. `Dispose()` deterministically attempts to restore the original code and surfaces a failure instead of silently marking the handle disposed; the finalizer is only a last-resort best-effort cleanup path. `ProcessSession.Detach()` prevents new hook installation without bulk-removing existing hooks.
 
 ### MemoryManager
 
