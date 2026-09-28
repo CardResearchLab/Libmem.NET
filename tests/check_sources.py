@@ -12,6 +12,7 @@ for file in [
     "samples/Example.csproj",
     "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj",
     "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj",
+    "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj",
 ]:
     ET.parse(root / file)
     print("PASS XML", file)
