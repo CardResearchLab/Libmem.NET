@@ -44,6 +44,21 @@ Check(disposedThrows, "ProcessSession members should reject use after Detach.");
 using var pidSession = Libmem.Attach((uint)Environment.ProcessId);
 Check(pidSession is not null && pidSession.Pid == current.Pid, "Attach(pid) failed for the current process.");
 
+var ownedAllocation = pidSession!.Allocate(4096, MemoryProtection.ReadWrite);
+Check(ownedAllocation is not null, "ProcessSession.Allocate returned null.");
+Check(ownedAllocation!.Address != 0 && ownedAllocation.Address != ulong.MaxValue, "RemoteAllocation has an invalid address.");
+Check(ownedAllocation.Size == 4096, "RemoteAllocation did not preserve its requested size.");
+
+byte[] ownedPayload = [0x4C, 0x49, 0x42, 0x4D, 0x45, 0x4D];
+var ownedWritten = Libmem.WriteMemory(pidSession.Info, ownedAllocation.Address, ownedPayload);
+Check(ownedWritten == ownedPayload.Length, "Could not write to RemoteAllocation.");
+var ownedRead = Libmem.ReadMemory(pidSession.Info, ownedAllocation.Address, ownedPayload.Length);
+Check(ownedRead.SequenceEqual(ownedPayload), "RemoteAllocation read-back mismatch.");
+
+Check(ownedAllocation.Free(), "RemoteAllocation.Free failed.");
+Check(ownedAllocation.IsDisposed, "RemoteAllocation should be disposed after Free.");
+Check(ownedAllocation.Free(), "RemoteAllocation.Free should be idempotent.");
+
 var processes = Libmem.EnumProcesses();
 Check(processes.Any(p => p.Pid == current.Pid), "EnumProcesses did not include the current process.");
 

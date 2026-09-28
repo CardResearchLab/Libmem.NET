@@ -9,6 +9,14 @@ using var session = Libmem.Attach(self) ?? throw new InvalidOperationException("
 Console.WriteLine($"Self: {session.Name} pid={session.Pid} arch={session.Architecture}");
 Console.WriteLine($"Self modules: {Libmem.EnumModules(session.Info).Count}");
 
+using (var allocation = session.Allocate(4096, MemoryProtection.ReadWrite))
+{
+    if (allocation is null)
+        throw new InvalidOperationException("Remote allocation failed");
+
+    Console.WriteLine($"Owned allocation: 0x{allocation.Address:X}, size={allocation.Size}");
+}
+
 // Safely demonstrate read/write against a buffer in THIS sample process only.
 IntPtr buffer = System.Runtime.InteropServices.Marshal.AllocHGlobal(sizeof(int));
 try
