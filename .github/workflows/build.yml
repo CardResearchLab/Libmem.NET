@@ -31,6 +31,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+          architecture: ${{ matrix.platform }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
