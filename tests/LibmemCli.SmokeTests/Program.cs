@@ -28,6 +28,7 @@ var refreshed = session.Refresh();
 Check(refreshed is not null && refreshed.Pid == current.Pid, "ProcessSession.Refresh failed for the current process.");
 
 var detachedMemory = session.Memory;
+var detachedModules = session.Modules;
 session.Detach();
 Check(session.IsDisposed, "ProcessSession should be disposed after Detach.");
 
@@ -53,8 +54,28 @@ catch (ObjectDisposedException)
 }
 Check(detachedManagerThrows, "MemoryManager should reject operations after its ProcessSession is detached.");
 
+var detachedModuleManagerThrows = false;
+try
+{
+    _ = detachedModules.Enumerate();
+}
+catch (ObjectDisposedException)
+{
+    detachedModuleManagerThrows = true;
+}
+Check(detachedModuleManagerThrows, "ModuleManager should reject operations after its ProcessSession is detached.");
+
 using var pidSession = Libmem.Attach((uint)Environment.ProcessId);
 Check(pidSession is not null && pidSession.Pid == current.Pid, "Attach(pid) failed for the current process.");
+
+var moduleManager = pidSession!.Modules;
+var sessionModules = moduleManager.Enumerate();
+Check(sessionModules.Count > 0, "ModuleManager.Enumerate returned no modules.");
+var namedModule = sessionModules.FirstOrDefault(m => !string.IsNullOrWhiteSpace(m.Name));
+Check(namedModule is not null, "ModuleManager.Enumerate returned no named module.");
+var foundModule = moduleManager.Find(namedModule!.Name);
+Check(foundModule is not null, "ModuleManager.Find could not find a module returned by Enumerate.");
+Check(foundModule!.Base == namedModule.Base, "ModuleManager.Find returned a different module base.");
 
 var memory = pidSession!.Memory;
 var ownedAllocation = memory.Allocate(4096, MemoryProtection.ReadWrite);
