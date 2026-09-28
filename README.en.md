@@ -1,14 +1,14 @@
-# LibmemCli — libmem 5.x C++/CLI wrapper (Windows x64 / .NET 8)
+# LibmemCli — libmem 5.x C++/CLI wrapper (Windows x86/x64 / .NET 8)
 
 [简体中文](README.md) | [English](README.en.md)
 
 [![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
-![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
+![Windows x86/x64](https://img.shields.io/badge/Windows-x86%20%7C%20x64-0078D4)
 
 
-LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem), intended for Windows x64 / .NET 8 projects.
+LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem), intended for Windows x86/x64 / .NET 8 projects.
 
 The wrapper exposes every public function in the pinned libmem header through managed types, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
 
@@ -24,7 +24,7 @@ The native libmem library is included as a pinned Git submodule and is built aut
 
 ```mermaid
 flowchart LR
-    App["C# / .NET 8 x64 project"] --> Cli["LibmemCli.dll<br/>C++/CLI managed wrapper"]
+    App["C# / .NET 8 x86/x64 project"] --> Cli["LibmemCli.dll<br/>C++/CLI managed wrapper"]
     Cli --> Native["libmem.dll<br/>rdbo/libmem"]
     Native --> Win["Windows native process / memory APIs"]
 
@@ -39,7 +39,7 @@ The runtime call chain is **C#/.NET → LibmemCli.dll → libmem.dll → Windows
 
 ## Requirements
 
-- Windows x64
+- Windows x86 or x64
 - Visual Studio with:
   - **Desktop development with C++**
   - **C++/CLI support for the v143 build tools**
@@ -67,15 +67,15 @@ cd Libmem
 
 `bootstrap.ps1` remains available as a compatibility alias.
 
-You can also open `LibmemCli.sln` directly and build either `Debug|x64` or `Release|x64`. Visual Studio/MSBuild will perform the same native prerequisite build automatically.
+You can also open `LibmemCli.sln` directly and build `Debug|x64`, `Release|x64`, `Debug|x86`, or `Release|x86`. Visual Studio/MSBuild will perform the same native prerequisite build automatically.
 
 Generated files are kept outside the source directories:
 
 ```text
-artifacts/native/x64/Release/bin/libmem.dll
-artifacts/native/x64/Release/lib/libmem.lib
-artifacts/managed/x64/Release/LibmemCli.dll
-artifacts/managed/x64/Release/Ijwhost.dll
+artifacts/native/{x64|x86}/Release/bin/libmem.dll
+artifacts/native/{x64|x86}/Release/lib/libmem.lib
+artifacts/managed/{x64|x86}/Release/LibmemCli.dll
+artifacts/managed/{x64|x86}/Release/Ijwhost.dll
 ```
 
 
@@ -214,7 +214,7 @@ Then add:
 external/Libmem/src/LibmemCli.vcxproj
 ```
 
-to the consuming solution and reference it from the .NET 8 x64 project with a `ProjectReference`.
+to the consuming solution and reference it from the matching-architecture .NET 8 project with a `ProjectReference`.
 
 Build the full solution with Visual Studio MSBuild so the C++/CLI toolchain is available.
 
@@ -231,7 +231,7 @@ Do not mix outputs from different configurations or commits.
 
 ## GitHub Actions automation
 
-The repository includes six automation workflows:
+The repository includes five automation workflows:
 
 - \`.github/workflows/build.yml\`: builds Release x64 on pushes to \`main\`, pull requests, or manual runs, then uploads the \`LibmemCli-windows-x64\` artifact.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
@@ -250,15 +250,10 @@ Output:
 
 ```text
 artifacts/package/LibmemCli-windows-x64/
-├─ LibmemCli.dll
-├─ Ijwhost.dll
-├─ libmem.dll
-├─ VERSION
-├─ manifest.json
-├─ LICENSE
-└─ THIRD_PARTY_NOTICES.md
-
 artifacts/package/LibmemCli-windows-x64.zip
+
+artifacts/package/LibmemCli-windows-x86/
+artifacts/package/LibmemCli-windows-x86.zip
 ```
 
 ## Versioning and automated validation
@@ -271,7 +266,7 @@ Each runtime package contains a `manifest.json` recording:
 - the repository Git commit;
 - the pinned upstream libmem commit;
 - target framework (`net8.0`);
-- platform (`win-x64`);
+- platform (`win-x64` or `win-x86`);
 - build configuration (Debug / Release).
 
 CI validates more than compilation:
@@ -294,6 +289,7 @@ jobs:
     with:
       ref: main
       configuration: Release
+      platform: x64
       artifact-name: LibmemCli-windows-x64
 
   use-libmem:
@@ -382,11 +378,11 @@ The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libm
 
 ## Important behavior and limitations
 
-1. **The current sample project is x64 only.** Address arguments and results use `UInt64`; on x64, libmem's failure sentinel `LM_ADDRESS_BAD` is `UInt64.MaxValue`. `0` is not an error sentinel for every API. The wrapper does not automatically elevate privileges and does not provide remote-architecture translation or kernel-memory support.
+1. **Windows x86 and x64 are supported; the consuming process architecture must match the LibmemCli/libmem runtime being loaded.** Managed APIs continue to use `UInt64` for a uniform address type, while the native pointer width follows the selected build architecture. Not every libmem API uses `0` as its failure sentinel. The wrapper does not automatically elevate privileges and does not provide cross-architecture remote translation or kernel-memory support.
 
 2. `ReadMemory` returns **only the bytes actually read**. `WriteMemory` returns the actual number of bytes written. Callers should check for short reads and partial writes. A zero-byte result may indicate an inaccessible address.
 
-3. `ProcessInfo` and `ModuleInfo` are snapshots, not operating-system handles. A process can exit and module/address information can become stale. `IsProcessAlive` checks the original identity using `pid` plus startup time.
+3. `ProcessInfo` and `ModuleInfo` are managed data descriptions, not operating-system handles. A process can exit and module/address information can become stale. `IsProcessAlive` checks the original identity using `pid` plus startup time.
 
 4. `GetCommandLine` returns UTF-8 strings and frees native allocations. The string helper rejects embedded NUL characters. Enumeration callbacks are synchronous.
 
