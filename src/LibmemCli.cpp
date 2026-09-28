@@ -138,40 +138,6 @@ void ProcessInfo::WriteInt32(UInt64 address,Int32 value) {
 }
 UInt64 ProcessInfo::SigScan(String^ signature,UInt64 address,UInt64 size) { return Libmem::SigScan(this,signature,address,size); }
 
-ProcessSnapshot::ProcessSnapshot(ProcessInfo^ source)
-    : pid_(0),parentPid_(0),architecture_(LibmemCli::Architecture::Generic),bits_(0),startTime_(0),name_(nullptr),path_(nullptr) {
-    if(source==nullptr) throw gcnew ArgumentNullException("source");
-    pid_=source->Pid;
-    parentPid_=source->ParentPid;
-    architecture_=source->Architecture;
-    bits_=source->Bits;
-    startTime_=source->StartTime;
-    name_=source->Name;
-    path_=source->Path;
-}
-UInt32 ProcessSnapshot::Pid::get() { return pid_; }
-UInt32 ProcessSnapshot::ParentPid::get() { return parentPid_; }
-LibmemCli::Architecture ProcessSnapshot::Architecture::get() { return architecture_; }
-UInt64 ProcessSnapshot::Bits::get() { return bits_; }
-UInt64 ProcessSnapshot::StartTime::get() { return startTime_; }
-String^ ProcessSnapshot::Name::get() { return name_; }
-String^ ProcessSnapshot::Path::get() { return path_; }
-
-ModuleSnapshot::ModuleSnapshot(ModuleInfo^ source)
-    : base_(0),end_(0),size_(0),name_(nullptr),path_(nullptr) {
-    if(source==nullptr) throw gcnew ArgumentNullException("source");
-    base_=source->Base;
-    end_=source->End;
-    size_=source->Size;
-    name_=source->Name;
-    path_=source->Path;
-}
-UInt64 ModuleSnapshot::Base::get() { return base_; }
-UInt64 ModuleSnapshot::End::get() { return end_; }
-UInt64 ModuleSnapshot::Size::get() { return size_; }
-String^ ModuleSnapshot::Name::get() { return name_; }
-String^ ModuleSnapshot::Path::get() { return path_; }
-
 RemoteAllocation::RemoteAllocation(ProcessInfo^ input,UInt64 address,UInt64 size)
     : target_(nullptr),address_(address),size_(size),disposed_(false) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
@@ -229,10 +195,6 @@ ProcessInfo^ ProcessSession::Target::get() {
 ProcessInfo^ ProcessSession::Info::get() {
     ThrowIfDisposed();
     return process(proc(identity_));
-}
-ProcessSnapshot^ ProcessSession::Snapshot::get() {
-    ThrowIfDisposed();
-    return gcnew ProcessSnapshot(identity_);
 }
 UInt32 ProcessSession::Pid::get() {
     ThrowIfDisposed();
@@ -364,18 +326,6 @@ ModuleInfo^ ModuleManager::Load(String^ path) {
 bool ModuleManager::Unload(ModuleInfo^ moduleInfo) {
     return Libmem::UnloadModule(Target(),moduleInfo);
 }
-IReadOnlyList<ModuleSnapshot^>^ ModuleManager::Snapshot() {
-    auto modules=Enumerate();
-    auto snapshots=gcnew List<ModuleSnapshot^>(modules->Count);
-    for each(ModuleInfo^ item in modules) {
-        if(item!=nullptr) snapshots->Add(gcnew ModuleSnapshot(item));
-    }
-    return snapshots->AsReadOnly();
-}
-ModuleSnapshot^ ModuleManager::FindSnapshot(String^ name) {
-    auto item=Find(name);
-    return item==nullptr ? nullptr : gcnew ModuleSnapshot(item);
-}
 
 InjectedModuleHandle::InjectedModuleHandle(ProcessInfo^ target,ModuleInfo^ moduleInfo,String^ requestedPath)
     : target_(nullptr),module_(nullptr),requestedPath_(requestedPath),active_(true),disposed_(false) {
@@ -386,9 +336,6 @@ InjectedModuleHandle::InjectedModuleHandle(ProcessInfo^ target,ModuleInfo^ modul
 }
 ModuleInfo^ InjectedModuleHandle::Module::get() {
     return module_==nullptr ? nullptr : module(mod(module_));
-}
-ModuleSnapshot^ InjectedModuleHandle::Snapshot::get() {
-    return module_==nullptr ? nullptr : gcnew ModuleSnapshot(module_);
 }
 String^ InjectedModuleHandle::RequestedPath::get() { return requestedPath_; }
 bool InjectedModuleHandle::IsActive::get() { return active_; }
@@ -683,11 +630,12 @@ HookHandle^ HookManager::Install(UInt64 source,UInt64 destination) {
     return Libmem::HookCode(Target(),source,destination);
 }
 
-HookHandle::HookHandle(ProcessInfo^ target,UInt64 from,UInt64 trampoline,UInt64 size)
-    : target_(nullptr),from_(from),trampoline_(trampoline),size_(size),installed_(true),disposed_(false) {
+HookHandle::HookHandle(ProcessInfo^ target,UInt64 from,UInt64 destination,UInt64 trampoline,UInt64 size)
+    : target_(nullptr),from_(from),destination_(destination),trampoline_(trampoline),size_(size),installed_(true),disposed_(false) {
     if(target!=nullptr) target_=process(proc(target));
 }
 UInt64 HookHandle::Source::get() { return from_; }
+UInt64 HookHandle::Destination::get() { return destination_; }
 UInt64 HookHandle::Trampoline::get() { return trampoline_; }
 UInt64 HookHandle::PatchedBytes::get() { return size_; }
 bool HookHandle::IsInstalled::get() { return installed_; }
@@ -714,13 +662,31 @@ bool HookHandle::Remove() {
 }
 HookHandle::~HookHandle() {
     if(disposed_) return;
-    if(installed_) Remove();
+    if(installed_ && !Remove())
+        throw gcnew InvalidOperationException("Failed to remove hook during Dispose; the hook remains installed.");
     disposed_=true;
     target_=nullptr;
 }
 HookHandle::!HookHandle() {
-    // Never patch process code from the GC finalizer thread.
-    // If explicit disposal was skipped, IsInstalled may have remained true until finalization.
+    if(disposed_) return;
+
+    // Finalization is a last-resort cleanup path. Hook users should still prefer deterministic
+    // disposal, but leaving a live code patch behind is less safe than a best-effort restore.
+    if(installed_) {
+        bool ok=false;
+        if(target_!=nullptr) {
+            if(!Libmem::IsProcessAlive(target_)) {
+                ok=true;
+            } else {
+                auto p=proc(target_);
+                ok=LM_UnhookCodeEx(&p,static_cast<lm_address_t>(from_),static_cast<lm_address_t>(trampoline_),static_cast<lm_size_t>(size_))!=LM_FALSE;
+            }
+        } else {
+            ok=LM_UnhookCode(static_cast<lm_address_t>(from_),static_cast<lm_address_t>(trampoline_),static_cast<lm_size_t>(size_))!=LM_FALSE;
+        }
+        if(ok) installed_=false;
+    }
+
     target_=nullptr;
     disposed_=true;
 }
@@ -728,12 +694,12 @@ HookHandle::!HookHandle() {
 HookHandle^ Libmem::HookCode(UInt64 from,UInt64 to) {
     lm_address_t trampoline=LM_ADDRESS_BAD;
     auto n=LM_HookCode(static_cast<lm_address_t>(from),static_cast<lm_address_t>(to),&trampoline);
-    return n ? gcnew HookHandle(nullptr,from,trampoline,n) : nullptr;
+    return n ? gcnew HookHandle(nullptr,from,to,trampoline,n) : nullptr;
 }
 HookHandle^ Libmem::HookCode(ProcessInfo^ input,UInt64 from,UInt64 to) {
     auto p=proc(input); lm_address_t trampoline=LM_ADDRESS_BAD;
     auto n=LM_HookCodeEx(&p,static_cast<lm_address_t>(from),static_cast<lm_address_t>(to),&trampoline);
-    return n ? gcnew HookHandle(input,from,trampoline,n) : nullptr;
+    return n ? gcnew HookHandle(input,from,to,trampoline,n) : nullptr;
 }
 VmtManager::VmtManager(UInt64 address) : native_(new lm_vmt_t{}), disposed_(false) {
     if(address==0 || !LM_VmtNew(reinterpret_cast<lm_address_t*>(static_cast<uintptr_t>(address)),native_)) {
