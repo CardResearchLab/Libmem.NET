@@ -68,7 +68,7 @@ print("PASS LibmemException core error mapping")
 
 assert "HookManager^ ProcessSession::Hooks::get()" in source
 assert "HookHandle^ HookManager::Install(UInt64 source,UInt64 destination)" in source
-assert "return Libmem::HookCode(Target(),source,destination);" in source
+assert 'LibmemException("LM_HookCodeEx"' in source
 print("PASS HookManager session contract")
 
 remote_dispose = source.split("RemoteAllocation::~RemoteAllocation()", 1)[1].split("\n}", 1)[0]
@@ -90,14 +90,24 @@ inject_finalizer = source.split("InjectedModuleHandle::!InjectedModuleHandle()",
 assert "UnloadModule" not in inject_finalizer
 print("PASS Injector lifecycle contract")
 
+assert "UInt64 HookHandle::Destination::get()" in source
 assert "bool HookHandle::IsInstalled::get()" in source
 assert "bool HookHandle::IsDisposed::get()" in source
-assert 'throw gcnew InvalidOperationException("Unhook failed; hook remains installed.")' not in source
+hook_dispose = source.split("HookHandle::~HookHandle()", 1)[1].split("\n}", 1)[0]
+assert "installed_ && !Remove()" in hook_dispose
+assert "hook remains installed" in hook_dispose
+hook_finalizer = source.split("HookHandle::!HookHandle()", 1)[1].split("\n}", 1)[0]
+assert "LM_UnhookCode" not in hook_finalizer
 print("PASS HookHandle lifecycle contract")
 
 assert "bool VmtManager::IsDisposed::get()" in source
 assert "bool VmtManager::ResetNative()" in source
 assert "while(native_->hkentries!=LM_NULLPTR)" in source
+vmt_dispose = source.split("VmtManager::~VmtManager()", 1)[1].split("\n}", 1)[0]
+assert "if(!ResetNative())" in vmt_dispose
+assert "manager remains active" in vmt_dispose
+assert 'LibmemException("LM_VmtNew"' in source
+assert 'LibmemException("LM_VmtHook"' in source
 vmt_finalizer = source.split("VmtManager::!VmtManager()", 1)[1].split("\n}", 1)[0]
 assert "LM_VmtFree" not in vmt_finalizer
 assert "LM_VmtReset" not in vmt_finalizer
