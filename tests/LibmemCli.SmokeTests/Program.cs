@@ -8,6 +8,11 @@ static void Check(bool condition, string message)
 
 Console.WriteLine("LibmemCli runtime smoke tests");
 
+Check(typeof(InvalidOperationException).IsAssignableFrom(typeof(LibmemException)),
+    "LibmemException must remain compatible with InvalidOperationException catches.");
+var exceptionProbe = new LibmemException("LM_Test", "test");
+Check(exceptionProbe.Operation == "LM_Test", "LibmemException.Operation did not preserve the native operation name.");
+
 var current = Libmem.CurrentProcess();
 Check(current is not null, "CurrentProcess returned null.");
 Check(current!.Pid == (uint)Environment.ProcessId, "CurrentProcess PID does not match the test process.");
