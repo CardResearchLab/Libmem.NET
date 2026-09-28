@@ -90,10 +90,11 @@ var process = Libmem.CurrentProcess()
 using var session = Libmem.Attach(process)
     ?? throw new InvalidOperationException("Attach failed");
 
+var snapshot = session.Snapshot;
 Console.WriteLine(
-    $"Process: {session.Name}  PID={session.Pid}  Arch={session.Architecture}  Bits={session.Bits}");
+    $"Process: {snapshot.Name}  PID={snapshot.Pid}  Arch={snapshot.Architecture}  Bits={snapshot.Bits}");
 
-foreach (var module in Libmem.EnumModules(session.Info))
+foreach (var module in session.Modules.Snapshot())
 {
     Console.WriteLine(
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
@@ -102,7 +103,7 @@ foreach (var module in Libmem.EnumModules(session.Info))
 
 运行时请确保 `LibmemCli.dll`、`Ijwhost.dll` 和 `libmem.dll` 位于应用程序可执行文件旁。
 
-## ProcessSession（v0.2.0 开发路线的第一步）
+## ProcessSession
 
 `ProcessSession` 是面向后续注入 SDK 的长期进程上下文。它通过 **PID + 进程启动时间** 锁定一个具体进程身份，并提供明确的 Attach / Detach 生命周期：
 
@@ -123,6 +124,18 @@ var latest = target.Refresh();
 当前阶段 `ProcessSession` 主要负责进程身份与生命周期，不持有 Windows 原生进程句柄。后续 v0.2.0 的 `MemoryManager`、`ModuleManager`、`HookManager` 和 `Injector` 会逐步挂到这一上下文之上。
 
 现有 `Libmem.*` 静态 API 保持兼容，不需要一次性迁移已有代码。
+
+### 只读 Snapshot
+
+`ProcessSession.Snapshot` 和 `ModuleManager.Snapshot()` 提供与操作句柄分离的不可变状态视图。`ProcessSnapshot` / `ModuleSnapshot` 只包含描述性数据，没有公开 setter，也不承担目标进程资源所有权，因此可以安全保存并在 `ProcessSession.Detach()` 之后继续读取已有快照。
+
+```csharp
+ProcessSnapshot process = target.Snapshot;
+IReadOnlyList<ModuleSnapshot> modules = target.Modules.Snapshot();
+ModuleSnapshot? unity = target.Modules.FindSnapshot("UnityPlayer.dll");
+```
+
+Snapshot 用于日志、事件、状态缓存和跨层传递；需要执行读写、加载、Hook 或注入时，仍通过对应的 Session-bound Manager 完成。
 
 ### ModuleManager
 
@@ -229,7 +242,7 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ## GitHub Actions 自动构建
 
-仓库内置五套自动化工作流：
+仓库内置六套自动化工作流：
 
 - \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64，并上传 \`LibmemCli-windows-x64\` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
@@ -261,7 +274,7 @@ artifacts/package/LibmemCli-windows-x64.zip
 
 ## 版本与自动验证
 
-项目使用根目录的 `VERSION` 文件作为发布版本来源，当前首个稳定候选版本为 **0.1.0**。构建后的 `LibmemCli.dll` 会写入对应的程序集版本信息。
+项目使用根目录的 `VERSION` 文件作为发布版本来源，当前版本为 **0.2.0**。构建后的 `LibmemCli.dll` 会写入对应的程序集版本信息。
 
 Runtime 包中的 `manifest.json` 会记录：
 
