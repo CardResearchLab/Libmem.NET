@@ -90,11 +90,10 @@ var process = Libmem.CurrentProcess()
 using var session = Libmem.Attach(process)
     ?? throw new InvalidOperationException("Attach failed");
 
-var snapshot = session.Snapshot;
 Console.WriteLine(
-    $"Process: {snapshot.Name}  PID={snapshot.Pid}  Arch={snapshot.Architecture}  Bits={snapshot.Bits}");
+    $"Process: {process.Name}  PID={process.Pid}  Arch={process.Architecture}  Bits={process.Bits}");
 
-foreach (var module in session.Modules.Snapshot())
+foreach (var module in session.Modules.Enumerate())
 {
     Console.WriteLine(
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
@@ -105,7 +104,7 @@ foreach (var module in session.Modules.Snapshot())
 
 ## ProcessSession
 
-`ProcessSession` 是面向后续注入 SDK 的长期进程上下文。它通过 **PID + 进程启动时间** 锁定一个具体进程身份，并提供明确的 Attach / Detach 生命周期：
+`ProcessSession` 是可选的通用进程上下文封装。它通过 **PID + 进程启动时间** 锁定一个具体进程身份，并为同一目标的内存、模块、Hook 与注入操作提供明确的 Attach / Detach 生命周期；它不承担应用状态管理：
 
 ```csharp
 using var target = Libmem.Attach("Hearthstone.exe");
@@ -121,21 +120,9 @@ if (!target.IsAlive())
 var latest = target.Refresh();
 ```
 
-当前阶段 `ProcessSession` 主要负责进程身份与生命周期，不持有 Windows 原生进程句柄。后续 v0.2.0 的 `MemoryManager`、`ModuleManager`、`HookManager` 和 `Injector` 会逐步挂到这一上下文之上。
+当前 `ProcessSession` 不持有 Windows 原生进程句柄；`MemoryManager`、`ModuleManager`、`HookManager` 和 `InjectorManager` 只是在 libmem 调用之上增加目标绑定与必要的资源生命周期约束。
 
-现有 `Libmem.*` 静态 API 保持兼容，不需要一次性迁移已有代码。
-
-### 只读 Snapshot
-
-`ProcessSession.Snapshot` 和 `ModuleManager.Snapshot()` 提供与操作句柄分离的不可变状态视图。`ProcessSnapshot` / `ModuleSnapshot` 只包含描述性数据，没有公开 setter，也不承担目标进程资源所有权，因此可以安全保存并在 `ProcessSession.Detach()` 之后继续读取已有快照。
-
-```csharp
-ProcessSnapshot process = target.Snapshot;
-IReadOnlyList<ModuleSnapshot> modules = target.Modules.Snapshot();
-ModuleSnapshot? unity = target.Modules.FindSnapshot("UnityPlayer.dll");
-```
-
-Snapshot 用于日志、事件、状态缓存和跨层传递；需要执行读写、加载、Hook 或注入时，仍通过对应的 Session-bound Manager 完成。
+现有 `Libmem.*` 静态 API 保持直接可用。应用如果需要 Snapshot、缓存、事件状态或游戏状态模型，应在调用方自己构建，而不是放进 LibmemCli。
 
 ### ModuleManager
 
@@ -163,7 +150,7 @@ using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll
 Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 ```
 
-`InjectLibrary` 会规范化并检查 DLL 路径，并拒绝当前 runtime 与目标进程位宽不同的跨位宽注入。返回的 `InjectedModuleHandle` 保存模块快照与请求路径；`IsActive` 表示**这个 Handle 所拥有的一次加载引用尚未释放**，并不等价于“该 DLL 一定仍是目标进程中的唯一实例”。
+`InjectLibrary` 会规范化并检查 DLL 路径，并拒绝当前 runtime 与目标进程位宽不同的跨位宽注入。返回的 `InjectedModuleHandle` 保存模块描述与请求路径；`IsActive` 表示**这个 Handle 所拥有的一次加载引用尚未释放**，并不等价于“该 DLL 一定仍是目标进程中的唯一实例”。
 
 显式 `Unload()` 或 `Dispose()` 会尝试执行一次匹配的 `FreeLibrary`。由于 Windows DLL 引用计数以及固定 libmem 上游 `LM_UnloadModuleEx` 的语义，即使调用成功，也不承诺模块一定完全从目标进程消失。GC Finalizer 不会对目标进程执行 `FreeLibrary`。
 
@@ -242,7 +229,7 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ## GitHub Actions 自动构建
 
-仓库内置六套自动化工作流：
+仓库内置五套自动化工作流：
 
 - \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64，并上传 \`LibmemCli-windows-x64\` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
