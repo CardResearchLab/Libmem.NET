@@ -124,6 +124,23 @@ At this stage, `ProcessSession` owns process identity and lifetime semantics but
 
 The existing static `Libmem.*` API remains compatible so existing callers do not need an all-at-once migration.
 
+### MemoryManager
+
+`ProcessSession.Memory` groups target-process memory operations into one session-bound API:
+
+```csharp
+var memory = target.Memory;
+
+using var buffer = memory.Allocate(4096, MemoryProtection.ReadWrite)
+    ?? throw new InvalidOperationException("Allocation failed");
+
+memory.Write(buffer.Address, payload);
+var copy = memory.Read(buffer.Address, payload.Length);
+var hit = memory.SigScan("48 8B ?? ??", start, size);
+```
+
+The manager currently exposes Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free / DeepPointer / DataScan / PatternScan / SigScan. It is bound to the `ProcessSession` lifetime; calls after the session is detached throw `ObjectDisposedException`.
+
 ### RemoteAllocation
 
 `ProcessSession.Allocate(...)` now returns a disposable `RemoteAllocation`, making ownership of target-process memory explicit:

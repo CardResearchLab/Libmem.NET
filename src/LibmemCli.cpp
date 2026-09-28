@@ -180,9 +180,10 @@ RemoteAllocation::!RemoteAllocation() {
 void ProcessSession::ThrowIfDisposed() {
     if(disposed_) throw gcnew ObjectDisposedException("ProcessSession");
 }
-ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), disposed_(false) {
+ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), disposed_(false) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
     identity_=process(proc(input));
+    memory_=gcnew MemoryManager(this);
 }
 ProcessInfo^ ProcessSession::Target::get() {
     ThrowIfDisposed();
@@ -208,6 +209,10 @@ UInt64 ProcessSession::Bits::get() {
     ThrowIfDisposed();
     return identity_->Bits;
 }
+MemoryManager^ ProcessSession::Memory::get() {
+    ThrowIfDisposed();
+    return memory_;
+}
 bool ProcessSession::IsDisposed::get() { return disposed_; }
 bool ProcessSession::IsAlive() {
     ThrowIfDisposed();
@@ -222,18 +227,67 @@ ProcessInfo^ ProcessSession::Refresh() {
 }
 RemoteAllocation^ ProcessSession::Allocate(UInt64 size,MemoryProtection protection) {
     ThrowIfDisposed();
-    if(size==0) throw gcnew ArgumentOutOfRangeException("size");
-    if(!Libmem::IsProcessAlive(identity_)) throw gcnew InvalidOperationException("Target process is no longer alive.");
-    auto address=Libmem::AllocateMemory(identity_,size,protection);
-    if(address==0 || address==UInt64::MaxValue) return nullptr;
-    return gcnew RemoteAllocation(identity_,address,size);
+    return memory_->Allocate(size,protection);
 }
 void ProcessSession::Detach() {
     if(disposed_) return;
     disposed_=true;
     identity_=nullptr;
+    memory_=nullptr;
 }
 ProcessSession::~ProcessSession() { Detach(); }
+
+MemoryManager::MemoryManager(ProcessSession^ session) : session_(session) {
+    if(session==nullptr) throw gcnew ArgumentNullException("session");
+}
+ProcessInfo^ MemoryManager::Target() {
+    if(session_==nullptr) throw gcnew ObjectDisposedException("MemoryManager");
+    return session_->Target;
+}
+array<Byte>^ MemoryManager::Read(UInt64 address,int count) {
+    return Libmem::ReadMemory(Target(),address,count);
+}
+int MemoryManager::Write(UInt64 address,array<Byte>^ data) {
+    return Libmem::WriteMemory(Target(),address,data);
+}
+Int32 MemoryManager::ReadInt32(UInt64 address) {
+    auto bytes=Read(address,4);
+    if(bytes->Length!=4) throw gcnew InvalidOperationException("ReadInt32: could not read 4 bytes.");
+    return BitConverter::ToInt32(bytes,0);
+}
+void MemoryManager::WriteInt32(UInt64 address,Int32 value) {
+    if(Write(address,BitConverter::GetBytes(value))!=4)
+        throw gcnew InvalidOperationException("WriteInt32: could not write 4 bytes.");
+}
+UInt64 MemoryManager::Set(UInt64 address,Byte value,UInt64 size) {
+    return Libmem::SetMemory(Target(),address,value,size);
+}
+MemoryProtection MemoryManager::Protect(UInt64 address,UInt64 size,MemoryProtection protection) {
+    return Libmem::ProtectMemory(Target(),address,size,protection);
+}
+RemoteAllocation^ MemoryManager::Allocate(UInt64 size,MemoryProtection protection) {
+    if(size==0) throw gcnew ArgumentOutOfRangeException("size");
+    auto target=Target();
+    if(!Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
+    auto address=Libmem::AllocateMemory(target,size,protection);
+    if(address==0 || address==UInt64::MaxValue) return nullptr;
+    return gcnew RemoteAllocation(target,address,size);
+}
+bool MemoryManager::Free(UInt64 address,UInt64 size) {
+    return Libmem::FreeMemory(Target(),address,size);
+}
+UInt64 MemoryManager::DeepPointer(UInt64 baseAddress,array<UInt64>^ offsets) {
+    return Libmem::DeepPointer(Target(),baseAddress,offsets);
+}
+UInt64 MemoryManager::DataScan(array<Byte>^ data,UInt64 address,UInt64 scanSize) {
+    return Libmem::DataScan(Target(),data,address,scanSize);
+}
+UInt64 MemoryManager::PatternScan(array<Byte>^ pattern,String^ mask,UInt64 address,UInt64 scanSize) {
+    return Libmem::PatternScan(Target(),pattern,mask,address,scanSize);
+}
+UInt64 MemoryManager::SigScan(String^ signature,UInt64 address,UInt64 scanSize) {
+    return Libmem::SigScan(Target(),signature,address,scanSize);
+}
 
 List<ProcessInfo^>^ Libmem::EnumProcesses() {
     std::vector<lm_process_t> native;

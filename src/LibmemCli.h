@@ -96,11 +96,14 @@ namespace LibmemCli {
         !RemoteAllocation();
     };
 
+    ref class MemoryManager;
+
     // ProcessSession represents an attachment to one concrete process identity (PID + start time).
     // It does not own an OS process handle; it provides a stable lifetime boundary for higher-level APIs.
     public ref class ProcessSession sealed : IDisposable {
     private:
         ProcessInfo^ identity_;
+        MemoryManager^ memory_;
         bool disposed_;
         void ThrowIfDisposed();
     internal:
@@ -112,12 +115,35 @@ namespace LibmemCli {
         property String^ Name { String^ get(); }
         property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
         property UInt64 Bits { UInt64 get(); }
+        property MemoryManager^ Memory { MemoryManager^ get(); }
         property bool IsDisposed { bool get(); }
         bool IsAlive();
         ProcessInfo^ Refresh();
         RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);
         void Detach();
         ~ProcessSession();
+    };
+
+    // Session-bound memory operations. All calls target the exact process identity held by ProcessSession.
+    public ref class MemoryManager sealed {
+    private:
+        ProcessSession^ session_;
+        ProcessInfo^ Target();
+    internal:
+        MemoryManager(ProcessSession^ session);
+    public:
+        array<Byte>^ Read(UInt64 address, int count);
+        int Write(UInt64 address, array<Byte>^ data);
+        Int32 ReadInt32(UInt64 address);
+        void WriteInt32(UInt64 address, Int32 value);
+        UInt64 Set(UInt64 address, Byte value, UInt64 size);
+        MemoryProtection Protect(UInt64 address, UInt64 size, MemoryProtection protection);
+        RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);
+        bool Free(UInt64 address, UInt64 size);
+        UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
+        UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
+        UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
+        UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
     };
 
     // HookHandle owns a native trampoline. Explicit disposal restores the original code.
