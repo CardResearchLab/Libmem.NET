@@ -214,11 +214,12 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ## GitHub Actions 自动构建
 
-仓库内置三套自动化工作流：
+仓库内置四套自动化工作流：
 
 - \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64，并上传 \`LibmemCli-windows-x64\` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
 - \`.github/workflows/release.yml\`：推送 \`v*\` 标签时自动构建并创建 GitHub Release，同时附带 \`LibmemCli-windows-x64.zip\`。
+- \`.github/workflows/hook-vmt-tests.yml\`：独立运行真实 Hook / trampoline / VMT 生命周期测试，与基础 Smoke Test 分离。
 
 本地也可以生成与 CI 相同的 Runtime 包：
 
@@ -260,7 +261,7 @@ CI 不只检查“能否编译”，还会执行两层自动验证：
 1. **API Contract Check**：直接解析固定 Submodule 中的 `include/libmem/libmem.h`，提取所有公开 `LM_API`，如果上游新增公开 API 但 C++/CLI wrapper 尚未引用，构建会失败。
 2. **Runtime Smoke Tests**：实际加载 `LibmemCli.dll + libmem.dll`，验证进程/模块枚举、内存申请与读写、内存保护、Data/Pattern/Signature Scan、汇编与反汇编。
 
-Hook / VMT 暂不作为基础 Smoke Test 的硬性门禁，以避免不同 Windows 执行环境和工具链造成不稳定的假失败。
+Hook / VMT 不作为基础 Smoke Test 的硬性门禁，而是在独立的 `Hook VMT Runtime Tests` 工作流中验证。该测试会在当前进程分配隔离的可执行内存，验证 Hook 重定向、trampoline、Remove，以及 VMT Hook / Unhook / Reset / Dispose，不依赖炉石或其他外部进程。
 
 ### 在其他项目中复用构建工作流
 
