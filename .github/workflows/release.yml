@@ -30,6 +30,23 @@ jobs:
           name: LibmemCli-windows-x64
           path: dist
 
+      - name: Validate release version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
+            TAG_NAME="${GITHUB_REF_NAME#release/}"
+          else
+            TAG_NAME="$GITHUB_REF_NAME"
+          fi
+
+          PACKAGE_VERSION="$(tr -d '\r\n' < dist/LibmemCli-windows-x64/VERSION)"
+          EXPECTED_VERSION="${TAG_NAME#v}"
+
+          if [[ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]]; then
+            echo "Release ref $TAG_NAME does not match package VERSION $PACKAGE_VERSION" >&2
+            exit 1
+          fi
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
