@@ -1,14 +1,14 @@
-# LibmemCli — libmem 5.x C++/CLI wrapper (Windows x64 / .NET 8)
+# LibmemCli — libmem 5.x C++/CLI wrapper (Windows x86/x64 / .NET 8)
 
 [简体中文](README.md) | [English](README.en.md)
 
 [![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
-![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
+![Windows x86/x64](https://img.shields.io/badge/Windows-x86%20%7C%20x64-0078D4)
 
 
-LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem), intended for Windows x64 / .NET 8 projects.
+LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem), intended for Windows x86/x64 / .NET 8 projects.
 
 The wrapper exposes every public function in the pinned libmem header through managed models, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
 
@@ -22,7 +22,7 @@ The native libmem library is included as a pinned Git submodule and is built aut
 
 ```mermaid
 flowchart LR
-    App["C# / .NET 8 x64 project"] --> Cli["LibmemCli.dll<br/>C++/CLI managed wrapper"]
+    App["C# / .NET 8 x86/x64 project"] --> Cli["LibmemCli.dll<br/>C++/CLI managed wrapper"]
     Cli --> Native["libmem.dll<br/>rdbo/libmem"]
     Native --> Win["Windows native process / memory APIs"]
 
@@ -37,7 +37,7 @@ The runtime call chain is **C#/.NET → LibmemCli.dll → libmem.dll → Windows
 
 ## Requirements
 
-- Windows x64
+- Windows x86 or x64
 - Visual Studio with:
   - **Desktop development with C++**
   - **C++/CLI support for the v143 build tools**
@@ -65,15 +65,15 @@ cd Libmem
 
 `bootstrap.ps1` remains available as a compatibility alias.
 
-You can also open `LibmemCli.sln` directly and build either `Debug|x64` or `Release|x64`. Visual Studio/MSBuild will perform the same native prerequisite build automatically.
+You can also open `LibmemCli.sln` directly and build `Debug|x64`, `Release|x64`, `Debug|x86`, or `Release|x86`. Visual Studio/MSBuild will perform the same native prerequisite build automatically.
 
 Generated files are kept outside the source directories:
 
 ```text
-artifacts/native/x64/Release/bin/libmem.dll
-artifacts/native/x64/Release/lib/libmem.lib
-artifacts/managed/x64/Release/LibmemCli.dll
-artifacts/managed/x64/Release/Ijwhost.dll
+artifacts/native/{x64|x86}/Release/bin/libmem.dll
+artifacts/native/{x64|x86}/Release/lib/libmem.lib
+artifacts/managed/{x64|x86}/Release/LibmemCli.dll
+artifacts/managed/{x64|x86}/Release/Ijwhost.dll
 ```
 
 
@@ -212,7 +212,7 @@ Then add:
 external/Libmem/src/LibmemCli.vcxproj
 ```
 
-to the consuming solution and reference it from the .NET 8 x64 project with a `ProjectReference`.
+to the consuming solution and reference it from a matching-architecture .NET 8 project with a `ProjectReference`.
 
 Build the full solution with Visual Studio MSBuild so the C++/CLI toolchain is available.
 
@@ -248,16 +248,12 @@ Output:
 
 ```text
 artifacts/package/LibmemCli-windows-x64/
-├─ LibmemCli.dll
-├─ Ijwhost.dll
-├─ libmem.dll
-├─ VERSION
-├─ manifest.json
-├─ LICENSE
-└─ THIRD_PARTY_NOTICES.md
-
 artifacts/package/LibmemCli-windows-x64.zip
 artifacts/package/LibmemCli-windows-x64.zip.sha256
+
+artifacts/package/LibmemCli-windows-x86/
+artifacts/package/LibmemCli-windows-x86.zip
+artifacts/package/LibmemCli-windows-x86.zip.sha256
 ```
 
 ## Versioning and automated validation
@@ -270,7 +266,7 @@ Each runtime package contains a `manifest.json` recording:
 - the repository Git commit;
 - the pinned upstream libmem commit;
 - target framework (`net8.0`);
-- platform (`win-x64`);
+- platform (`win-x64` or `win-x86`);
 - build configuration (Debug / Release);
 - the file name, byte length, and SHA-256 of every packaged file.
 
@@ -296,6 +292,7 @@ jobs:
     with:
       ref: main
       configuration: Release
+      platform: x64
       artifact-name: LibmemCli-windows-x64
 
   use-libmem:
@@ -314,7 +311,7 @@ The caller does not need to duplicate Libmem's build scripts; the artifact is up
 
 ## API stability
 
-The repository now commits an x64 public API baseline at `api/LibmemCli.PublicApi.txt`. Every `tests/check_sources.py` run extracts the actual public types, properties, methods, and enum members from `src/LibmemCli.h` and compares them with that baseline.
+The repository now commits a shared x86/x64 public API baseline at `api/LibmemCli.PublicApi.txt`. Every `tests/check_sources.py` run extracts the actual public types, properties, methods, and enum members from `src/LibmemCli.h` and compares them with that baseline.
 
 Accidental removals, signature changes, public-member renames, or enum changes therefore fail CI. An intentional public API change must explicitly run:
 
@@ -404,7 +401,7 @@ The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libm
 
 ## Important behavior and limitations
 
-1. **The current sample project is x64 only.** Address arguments and results use `UInt64`; on x64, libmem's failure sentinel `LM_ADDRESS_BAD` is `UInt64.MaxValue`. `0` is not an error sentinel for every API. The wrapper does not automatically elevate privileges and does not provide remote-architecture translation or kernel-memory support.
+1. **Current builds support Windows x86 and x64.** The managed public API continues to use `UInt64` for addresses/sizes, but conversion to native values is range-checked for the current pointer width. On x86, addresses or sizes above `UInt32.MaxValue` throw `ArgumentOutOfRangeException` instead of being silently truncated. `LM_ADDRESS_BAD` is `UInt64.MaxValue` on x64 and `UInt32.MaxValue` on x86. The wrapper does not provide cross-bitness remote translation; injection still requires the current runtime and target process to have matching bitness.
 
 2. `ReadMemory` returns **only the bytes actually read**. `WriteMemory` returns the actual number of bytes written. Callers should check for short reads and partial writes. A zero-byte result may indicate an inaccessible address.
 
