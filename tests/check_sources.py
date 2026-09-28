@@ -92,6 +92,8 @@ print("PASS Injector lifecycle contract")
 assert "bool HookHandle::IsInstalled::get()" in source
 assert "bool HookHandle::IsDisposed::get()" in source
 assert "UInt64 HookHandle::Destination::get()" in source
+assert "bool bad_address(UInt64 value)" in source
+assert "address==UInt64::MaxValue" not in source
 assert 'throw gcnew InvalidOperationException("Failed to remove hook during Dispose; the hook remains installed.")' in source
 hook_finalizer = source.split("HookHandle::!HookHandle()", 1)[1].split("\n}", 1)[0]
 assert "LM_UnhookCode" in hook_finalizer
