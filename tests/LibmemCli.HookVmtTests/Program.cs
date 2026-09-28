@@ -18,17 +18,21 @@ static byte[] ReturnConstant(int value, int size = 64)
     return code;
 }
 
-static ulong ReadUInt64(MemoryManager memory, ulong address)
+static ulong ReadPointer(MemoryManager memory, ulong address)
 {
-    var bytes = memory.Read(address, sizeof(ulong));
-    Check(bytes.Length == sizeof(ulong), $"Could not read 8 bytes at 0x{address:X}.");
-    return BitConverter.ToUInt64(bytes, 0);
+    var bytes = memory.Read(address, IntPtr.Size);
+    Check(bytes.Length == IntPtr.Size, $"Could not read {IntPtr.Size} pointer bytes at 0x{address:X}.");
+    return IntPtr.Size == sizeof(ulong)
+        ? BitConverter.ToUInt64(bytes, 0)
+        : BitConverter.ToUInt32(bytes, 0);
 }
 
-static void WriteUInt64(MemoryManager memory, ulong address, ulong value)
+static void WritePointer(MemoryManager memory, ulong address, ulong value)
 {
-    var bytes = BitConverter.GetBytes(value);
-    Check(memory.Write(address, bytes) == bytes.Length, $"Could not write 8 bytes at 0x{address:X}.");
+    byte[] bytes = IntPtr.Size == sizeof(ulong)
+        ? BitConverter.GetBytes(value)
+        : BitConverter.GetBytes(checked((uint)value));
+    Check(memory.Write(address, bytes) == bytes.Length, $"Could not write {bytes.Length} pointer bytes at 0x{address:X}.");
 }
 
 static unsafe int CallNoArgs(ulong address)
@@ -88,36 +92,36 @@ Check(CallNoArgs(source.Address) == 1, "HookHandle.Dispose did not restore the o
 using var vtablePage = memory.Allocate(4096, MemoryProtection.ReadWrite)
     ?? throw new InvalidOperationException("Could not allocate VMT test page.");
 
-const ulong original0 = 0x1111222233334444UL;
-const ulong original1 = 0x5555666677778888UL;
-const ulong replacement0 = 0x9999AAAABBBBCCCCUL;
-const ulong replacement1 = 0xDDDDEEEEFFFF0001UL;
+const ulong original0 = 0x11112222UL;
+const ulong original1 = 0x55556666UL;
+const ulong replacement0 = 0x9999AAAAUL;
+const ulong replacement1 = 0xDDDDEEEEUL;
 
-WriteUInt64(memory, vtablePage.Address, original0);
-WriteUInt64(memory, vtablePage.Address + sizeof(ulong), original1);
+WritePointer(memory, vtablePage.Address, original0);
+WritePointer(memory, vtablePage.Address + (ulong)IntPtr.Size, original1);
 
 var vmt = new VmtManager(vtablePage.Address);
 Check(!vmt.IsDisposed, "VmtManager should start undisposed.");
 Check(vmt.GetOriginal(0) == original0, "VmtManager.GetOriginal returned the wrong initial slot value.");
 
 vmt.Hook(0, replacement0);
-Check(ReadUInt64(memory, vtablePage.Address) == replacement0, "VmtManager.Hook did not update slot 0.");
+Check(ReadPointer(memory, vtablePage.Address) == replacement0, "VmtManager.Hook did not update slot 0.");
 Check(vmt.GetOriginal(0) == original0, "VmtManager did not preserve the original slot 0 value.");
 Check(vmt.Unhook(0), "VmtManager.Unhook failed for slot 0.");
-Check(ReadUInt64(memory, vtablePage.Address) == original0, "VmtManager.Unhook did not restore slot 0.");
+Check(ReadPointer(memory, vtablePage.Address) == original0, "VmtManager.Unhook did not restore slot 0.");
 
 vmt.Hook(0, replacement0);
 vmt.Hook(1, replacement1);
-Check(ReadUInt64(memory, vtablePage.Address) == replacement0, "VmtManager.Hook did not update slot 0 before Reset.");
-Check(ReadUInt64(memory, vtablePage.Address + sizeof(ulong)) == replacement1, "VmtManager.Hook did not update slot 1 before Reset.");
+Check(ReadPointer(memory, vtablePage.Address) == replacement0, "VmtManager.Hook did not update slot 0 before Reset.");
+Check(ReadPointer(memory, vtablePage.Address + (ulong)IntPtr.Size) == replacement1, "VmtManager.Hook did not update slot 1 before Reset.");
 vmt.Reset();
-Check(ReadUInt64(memory, vtablePage.Address) == original0, "VmtManager.Reset did not restore slot 0.");
-Check(ReadUInt64(memory, vtablePage.Address + sizeof(ulong)) == original1, "VmtManager.Reset did not restore slot 1.");
+Check(ReadPointer(memory, vtablePage.Address) == original0, "VmtManager.Reset did not restore slot 0.");
+Check(ReadPointer(memory, vtablePage.Address + (ulong)IntPtr.Size) == original1, "VmtManager.Reset did not restore slot 1.");
 
 vmt.Hook(0, replacement0);
 ((IDisposable)vmt).Dispose();
 Check(vmt.IsDisposed, "VmtManager should report disposed after Dispose.");
-Check(ReadUInt64(memory, vtablePage.Address) == original0, "VmtManager.Dispose did not restore an active hook.");
+Check(ReadPointer(memory, vtablePage.Address) == original0, "VmtManager.Dispose did not restore an active hook.");
 
 var disposedVmtThrows = false;
 try
