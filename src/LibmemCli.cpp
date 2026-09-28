@@ -124,17 +124,29 @@ namespace {
     }
 }
 
+LibmemException::LibmemException(String^ operation,String^ message)
+    : InvalidOperationException(message),operation_(operation) {
+    if(String::IsNullOrWhiteSpace(operation))
+        throw gcnew ArgumentException("Operation must not be empty.", "operation");
+}
+LibmemException::LibmemException(String^ operation,String^ message,Exception^ innerException)
+    : InvalidOperationException(message,innerException),operation_(operation) {
+    if(String::IsNullOrWhiteSpace(operation))
+        throw gcnew ArgumentException("Operation must not be empty.", "operation");
+}
+String^ LibmemException::Operation::get() { return operation_; }
+
 bool ProcessInfo::IsAlive() { return Libmem::IsProcessAlive(this); }
 array<Byte>^ ProcessInfo::Read(UInt64 address,int count) { return Libmem::ReadMemory(this,address,count); }
 int ProcessInfo::Write(UInt64 address,array<Byte>^ data) { return Libmem::WriteMemory(this,address,data); }
 Int32 ProcessInfo::ReadInt32(UInt64 address) {
     auto bytes=Read(address,4);
-    if(bytes->Length != 4) throw gcnew InvalidOperationException("ReadInt32: could not read 4 bytes.");
+    if(bytes->Length != 4) throw gcnew LibmemException("LM_ReadMemoryEx", "ReadInt32 could not read 4 bytes.");
     return BitConverter::ToInt32(bytes,0);
 }
 void ProcessInfo::WriteInt32(UInt64 address,Int32 value) {
     if(Write(address,BitConverter::GetBytes(value))!=4)
-        throw gcnew InvalidOperationException("WriteInt32: could not write 4 bytes.");
+        throw gcnew LibmemException("LM_WriteMemoryEx", "WriteInt32 could not write 4 bytes.");
 }
 UInt64 ProcessInfo::SigScan(String^ signature,UInt64 address,UInt64 size) { return Libmem::SigScan(this,signature,address,size); }
 
@@ -170,7 +182,8 @@ bool RemoteAllocation::Free() {
 RemoteAllocation::~RemoteAllocation() {
     if(disposed_) return;
     if(!Free())
-        throw gcnew InvalidOperationException(
+        throw gcnew LibmemException(
+            "LM_FreeMemoryEx",
             "Failed to free remote allocation during Dispose; the allocation remains active.");
 }
 RemoteAllocation::!RemoteAllocation() {
@@ -272,12 +285,12 @@ int MemoryManager::Write(UInt64 address,array<Byte>^ data) {
 }
 Int32 MemoryManager::ReadInt32(UInt64 address) {
     auto bytes=Read(address,4);
-    if(bytes->Length!=4) throw gcnew InvalidOperationException("ReadInt32: could not read 4 bytes.");
+    if(bytes->Length!=4) throw gcnew LibmemException("LM_ReadMemoryEx", "ReadInt32 could not read 4 bytes.");
     return BitConverter::ToInt32(bytes,0);
 }
 void MemoryManager::WriteInt32(UInt64 address,Int32 value) {
     if(Write(address,BitConverter::GetBytes(value))!=4)
-        throw gcnew InvalidOperationException("WriteInt32: could not write 4 bytes.");
+        throw gcnew LibmemException("LM_WriteMemoryEx", "WriteInt32 could not write 4 bytes.");
 }
 UInt64 MemoryManager::Set(UInt64 address,Byte value,UInt64 size) {
     return Libmem::SetMemory(Target(),address,value,size);
@@ -361,7 +374,8 @@ bool InjectedModuleHandle::Unload() {
 InjectedModuleHandle::~InjectedModuleHandle() {
     if(disposed_) return;
     if(active_ && !Unload())
-        throw gcnew InvalidOperationException(
+        throw gcnew LibmemException(
+            "LM_UnloadModuleEx",
             "Failed to unload injected module during Dispose; the owned load reference remains active.");
     disposed_=true;
     target_=nullptr;
@@ -403,7 +417,8 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
     // Ask libmem only to perform the LoadLibrary operation. Its module_out lookup is
     // name/suffix based; resolve the resulting module ourselves by normalized full path
     // so same-named DLLs from different directories cannot be confused.
-    if(LM_LoadModuleEx(&nativeTarget,nativePath.c_str(),nullptr)==LM_FALSE) return nullptr;
+    if(LM_LoadModuleEx(&nativeTarget,nativePath.c_str(),nullptr)==LM_FALSE)
+        throw gcnew LibmemException("LM_LoadModuleEx", "Library injection failed.");
 
     ModuleInfo^ loaded=nullptr;
     for each(ModuleInfo^ candidate in Libmem::EnumModules(target)) {
@@ -423,14 +438,16 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
     }
 
     if(loaded==nullptr)
-        throw gcnew InvalidOperationException("LoadLibrary completed but the injected module could not be resolved by full path.");
+        throw gcnew LibmemException(
+            "LM_EnumModulesEx",
+            "LoadLibrary completed but the injected module could not be resolved by full path.");
 
     return gcnew InjectedModuleHandle(target,loaded,fullPath);
 }
 
 List<ProcessInfo^>^ Libmem::EnumProcesses() {
     std::vector<lm_process_t> native;
-    if(!LM_EnumProcesses(cb_process,&native)) throw gcnew InvalidOperationException("LM_EnumProcesses failed.");
+    if(!LM_EnumProcesses(cb_process,&native)) throw gcnew LibmemException("LM_EnumProcesses", "LM_EnumProcesses failed.");
     auto r=gcnew List<ProcessInfo^>(); for(const auto& p : native) r->Add(process(p)); return r;
 }
 ProcessInfo^ Libmem::CurrentProcess() { lm_process_t p{}; return LM_GetProcess(&p) ? process(p) : nullptr; }
@@ -472,12 +489,12 @@ UInt64 Libmem::GetSystemBits() { return LM_GetSystemBits(); }
 
 List<ThreadInfo^>^ Libmem::EnumThreads() {
     std::vector<lm_thread_t> native;
-    if(!LM_EnumThreads(cb_thread,&native)) throw gcnew InvalidOperationException("LM_EnumThreads failed.");
+    if(!LM_EnumThreads(cb_thread,&native)) throw gcnew LibmemException("LM_EnumThreads", "LM_EnumThreads failed.");
     auto r=gcnew List<ThreadInfo^>(); for(const auto& t : native) r->Add(thread(t)); return r;
 }
 List<ThreadInfo^>^ Libmem::EnumThreads(ProcessInfo^ input) {
     auto p=proc(input); std::vector<lm_thread_t> native;
-    if(!LM_EnumThreadsEx(&p,cb_thread,&native)) throw gcnew InvalidOperationException("LM_EnumThreadsEx failed.");
+    if(!LM_EnumThreadsEx(&p,cb_thread,&native)) throw gcnew LibmemException("LM_EnumThreadsEx", "LM_EnumThreadsEx failed.");
     auto r=gcnew List<ThreadInfo^>(); for(const auto& t : native) r->Add(thread(t)); return r;
 }
 ThreadInfo^ Libmem::CurrentThread() { lm_thread_t t{}; return LM_GetThread(&t) ? thread(t) : nullptr; }
@@ -490,12 +507,12 @@ ProcessInfo^ Libmem::GetThreadProcess(ThreadInfo^ input) {
 
 List<ModuleInfo^>^ Libmem::EnumModules() {
     std::vector<lm_module_t> native;
-    if(!LM_EnumModules(cb_module,&native)) throw gcnew InvalidOperationException("LM_EnumModules failed.");
+    if(!LM_EnumModules(cb_module,&native)) throw gcnew LibmemException("LM_EnumModules", "LM_EnumModules failed.");
     auto r=gcnew List<ModuleInfo^>(); for(const auto& m : native) r->Add(module(m)); return r;
 }
 List<ModuleInfo^>^ Libmem::EnumModules(ProcessInfo^ input) {
     auto p=proc(input); std::vector<lm_module_t> native;
-    if(!LM_EnumModulesEx(&p,cb_module,&native)) throw gcnew InvalidOperationException("LM_EnumModulesEx failed.");
+    if(!LM_EnumModulesEx(&p,cb_module,&native)) throw gcnew LibmemException("LM_EnumModulesEx", "LM_EnumModulesEx failed.");
     auto r=gcnew List<ModuleInfo^>(); for(const auto& m : native) r->Add(module(m)); return r;
 }
 ModuleInfo^ Libmem::FindModule(String^ name) { lm_module_t m{}; auto n=utf8(name); return LM_FindModule(n.c_str(),&m) ? module(m) : nullptr; }
@@ -508,7 +525,9 @@ bool Libmem::UnloadModule(ProcessInfo^ input,ModuleInfo^ m) { auto p=proc(input)
 List<SymbolInfo^>^ Libmem::EnumSymbols(ModuleInfo^ input,bool demangle) {
     auto m=mod(input); std::vector<NativeSymbol> native;
     bool ok=demangle ? LM_EnumSymbolsDemangled(&m,cb_symbol,&native)!=LM_FALSE : LM_EnumSymbols(&m,cb_symbol,&native)!=LM_FALSE;
-    if(!ok) throw gcnew InvalidOperationException("LM_EnumSymbols failed.");
+    if(!ok) throw gcnew LibmemException(
+        demangle ? "LM_EnumSymbolsDemangled" : "LM_EnumSymbols",
+        demangle ? "LM_EnumSymbolsDemangled failed." : "LM_EnumSymbols failed.");
     auto r=gcnew List<SymbolInfo^>(); for(const auto& s : native) {
         auto x=gcnew SymbolInfo(); x->Address=s.address; x->Name=str(s.name.c_str()); r->Add(x);
     } return r;
@@ -524,12 +543,12 @@ String^ Libmem::DemangleSymbol(String^ name) {
 }
 List<SegmentInfo^>^ Libmem::EnumSegments() {
     std::vector<lm_segment_t> native;
-    if(!LM_EnumSegments(cb_segment,&native)) throw gcnew InvalidOperationException("LM_EnumSegments failed.");
+    if(!LM_EnumSegments(cb_segment,&native)) throw gcnew LibmemException("LM_EnumSegments", "LM_EnumSegments failed.");
     auto r=gcnew List<SegmentInfo^>(); for(const auto& s : native) r->Add(segment(s)); return r;
 }
 List<SegmentInfo^>^ Libmem::EnumSegments(ProcessInfo^ input) {
     auto p=proc(input); std::vector<lm_segment_t> native;
-    if(!LM_EnumSegmentsEx(&p,cb_segment,&native)) throw gcnew InvalidOperationException("LM_EnumSegmentsEx failed.");
+    if(!LM_EnumSegmentsEx(&p,cb_segment,&native)) throw gcnew LibmemException("LM_EnumSegmentsEx", "LM_EnumSegmentsEx failed.");
     auto r=gcnew List<SegmentInfo^>(); for(const auto& s : native) r->Add(segment(s)); return r;
 }
 SegmentInfo^ Libmem::FindSegment(UInt64 a) { lm_segment_t s{}; return LM_FindSegment(static_cast<lm_address_t>(a),&s) ? segment(s) : nullptr; }
@@ -543,12 +562,12 @@ UInt64 Libmem::SetMemory(UInt64 a,Byte value,UInt64 size) { return LM_SetMemory(
 UInt64 Libmem::SetMemory(ProcessInfo^ input,UInt64 a,Byte value,UInt64 size) { auto p=proc(input); return LM_SetMemoryEx(&p,static_cast<lm_address_t>(a),value,static_cast<lm_size_t>(size)); }
 MemoryProtection Libmem::ProtectMemory(UInt64 a,UInt64 size,MemoryProtection prot) {
     lm_prot_t old{};
-    if(!LM_ProtMemory(static_cast<lm_address_t>(a),static_cast<lm_size_t>(size),static_cast<lm_prot_t>(prot),&old)) throw gcnew InvalidOperationException("LM_ProtMemory failed.");
+    if(!LM_ProtMemory(static_cast<lm_address_t>(a),static_cast<lm_size_t>(size),static_cast<lm_prot_t>(prot),&old)) throw gcnew LibmemException("LM_ProtMemory", "LM_ProtMemory failed.");
     return static_cast<MemoryProtection>(old);
 }
 MemoryProtection Libmem::ProtectMemory(ProcessInfo^ input,UInt64 a,UInt64 size,MemoryProtection prot) {
     auto p=proc(input); lm_prot_t old{};
-    if(!LM_ProtMemoryEx(&p,static_cast<lm_address_t>(a),static_cast<lm_size_t>(size),static_cast<lm_prot_t>(prot),&old)) throw gcnew InvalidOperationException("LM_ProtMemoryEx failed.");
+    if(!LM_ProtMemoryEx(&p,static_cast<lm_address_t>(a),static_cast<lm_size_t>(size),static_cast<lm_prot_t>(prot),&old)) throw gcnew LibmemException("LM_ProtMemoryEx", "LM_ProtMemoryEx failed.");
     return static_cast<MemoryProtection>(old);
 }
 UInt64 Libmem::AllocateMemory(UInt64 size,MemoryProtection prot) { return LM_AllocMemory(static_cast<lm_size_t>(size),static_cast<lm_prot_t>(prot)); }
