@@ -359,6 +359,12 @@ Assembly/disassembly APIs are exposed through:
 
 Native assembly-result buffers are freed after being copied into managed memory.
 
+### Error mapping
+
+Definite failures reported by native libmem operations are represented by `LibmemException`, whose `Operation` property identifies the native operation (for example `LM_EnumProcesses`, `LM_ProtMemoryEx`, or `LM_VmtHook`). `LibmemException` derives from `InvalidOperationException`, preserving existing catch behavior.
+
+Not-found cases and APIs where libmem itself uses an empty result keep their existing return semantics; the wrapper does not force every `null` or address sentinel into an exception.
+
 ### Hooks
 
 - `LM_HookCode[Ex]` → `Libmem.HookCode`
@@ -366,13 +372,13 @@ Native assembly-result buffers are freed after being copied into managed memory.
 
 `HookHandle` now separates **whether the hook is still installed** from **whether the managed handle is disposed**:
 
-- `Source / Trampoline / PatchedBytes` retain installation metadata;
+- `Source / Destination / Trampoline / PatchedBytes` retain installation metadata;
 - `IsInstalled` reports whether the handle still considers the target code hooked;
 - `IsDisposed` reports whether the managed lifetime has ended;
 - `Remove()` attempts to unhook and clears `IsInstalled` only on success;
-- `Dispose()` performs best-effort cleanup and no longer throws if unhooking fails.
+- `Dispose()` deterministically attempts removal and throws `LibmemException` if the native unhook fails instead of silently disposing an active hook.
 
-This prevents a failed removal from being reported as a successful unhook. The finalizer still never modifies target-process code from the GC thread.
+This prevents a failed removal from being reported as a successful unhook. If explicit disposal is skipped, the finalizer performs one non-throwing best-effort restore as a last resort; it does not replace deterministic `Dispose()`.
 
 The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libmem revision, `LM_VmtReset` reads an entry index again after freeing that entry. `VmtManager.Reset / Dispose` therefore remove tracked entries one-by-one with `LM_VmtUnhook` first, then call the upstream Reset/Free only after the list is empty, avoiding that use-after-free path. The GC finalizer never rewrites VTable entries; if explicit `Dispose` is skipped while hooks remain active, a small amount of native bookkeeping may leak rather than mutating the table from the GC thread.
 
@@ -388,7 +394,7 @@ The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libm
 
 5. `Disassemble(codeAddress, arch, ...)` expects `codeAddress` to point to readable machine code in the **calling process**, not a remote-process address. For remote code, call `ReadMemory` first and pass the resulting byte array to the safe pinned-buffer `Disassemble(byte[], ...)` overload.
 
-6. Hooks require executable native targets and replacements with the correct calling convention, signature, architecture, and lifetime. **A C# delegate address is not automatically a safe detour.** For a remote hook, `destination` must refer to code in the **remote process**; this wrapper does not inject that code for you. Dispose `HookHandle` explicitly while the target code and process are still valid. Its finalizer intentionally does not restore modified code from a GC thread.
+6. Hooks require executable native targets and replacements with the correct calling convention, signature, architecture, and lifetime. **A C# delegate address is not automatically a safe detour.** For a remote hook, `destination` must refer to code in the **remote process**; this wrapper does not inject that code for you. Dispose `HookHandle` explicitly while the target code and process are still valid. Its finalizer only makes a last-resort best-effort restore and is not a substitute for explicit cleanup.
 
 7. The VMT manager is **local-process only**. Dispose it while the original vtable is still valid and do not use arbitrary or untrusted addresses. Internal VMT entries are not automatically synchronized with concurrent modifications.
 
