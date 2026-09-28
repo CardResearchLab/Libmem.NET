@@ -13,7 +13,13 @@ static byte[] PointerBytes(ulong value)
         : BitConverter.GetBytes(checked((uint)value));
 }
 
+static void Stage(string name)
+{
+    Console.WriteLine($"SMOKE STAGE: {name}");
+}
+
 Console.WriteLine("LibmemCli runtime smoke tests");
+Stage("exceptions");
 
 var expectedBits = (ulong)(IntPtr.Size * 8);
 var expectedArchitecture = IntPtr.Size == sizeof(ulong) ? Architecture.X64 : Architecture.X86;
@@ -24,11 +30,13 @@ Check(typeof(InvalidOperationException).IsAssignableFrom(typeof(LibmemException)
 var exceptionProbe = new LibmemException("LM_Test", "test");
 Check(exceptionProbe.Operation == "LM_Test", "LibmemException.Operation did not preserve the native operation name.");
 
+Stage("current-process");
 var current = Libmem.CurrentProcess();
 Check(current is not null, "CurrentProcess returned null.");
 Check(current!.Pid == (uint)Environment.ProcessId, "CurrentProcess PID does not match the test process.");
 Check(current.IsAlive(), "Current process should be alive.");
 
+Stage("process-query");
 var byPid = Libmem.GetProcess(current.Pid);
 Check(byPid is not null && byPid.Pid == current.Pid, "GetProcess could not resolve the current PID.");
 var byName = Libmem.FindProcess(current.Name);
@@ -39,6 +47,7 @@ Check(Libmem.GetBits() == expectedBits, "Libmem.GetBits does not match the runti
 Check(Libmem.GetSystemBits() >= Libmem.GetBits(), "System bitness is smaller than process bitness.");
 Check(Libmem.GetArchitecture() == expectedArchitecture, "Libmem.GetArchitecture does not match the runtime architecture.");
 
+Stage("threads");
 var currentThread = Libmem.CurrentThread();
 Check(currentThread is not null, "CurrentThread returned null.");
 Check(currentThread!.OwnerPid == current.Pid, "CurrentThread owner PID does not match the current process.");
@@ -51,6 +60,7 @@ Check(processThread is not null && processThread.OwnerPid == current.Pid, "GetTh
 var threadOwner = Libmem.GetThreadProcess(currentThread);
 Check(threadOwner is not null && threadOwner.Pid == current.Pid, "GetThreadProcess did not resolve the current process.");
 
+Stage("session");
 var session = Libmem.Attach(current);
 Check(session is not null, "Attach(ProcessInfo) returned null for the current process.");
 Check(session!.Pid == current.Pid, "ProcessSession PID does not match the attached process.");
@@ -65,6 +75,7 @@ Check(session.Pid == current.Pid, "Mutating a returned ProcessInfo snapshot chan
 var refreshed = session.Refresh();
 Check(refreshed is not null && refreshed.Pid == current.Pid, "ProcessSession.Refresh failed for the current process.");
 
+Stage("session-detach");
 var detachedMemory = session.Memory;
 var detachedModules = session.Modules;
 var detachedHooks = session.Hooks;
@@ -127,6 +138,7 @@ catch (ObjectDisposedException)
 }
 Check(detachedInjectorThrows, "InjectorManager should reject operations after its ProcessSession is detached.");
 
+Stage("modules");
 using var pidSession = Libmem.Attach((uint)Environment.ProcessId);
 Check(pidSession is not null && pidSession.Pid == current.Pid, "Attach(pid) failed for the current process.");
 
@@ -147,6 +159,7 @@ Check(staticModules.Count > 0, "EnumModules(process) returned no modules.");
 var staticFoundModule = Libmem.FindModule(current, namedModule.Name);
 Check(staticFoundModule is not null, "FindModule(process, name) could not find a known module.");
 
+Stage("symbols");
 var kernel32 = Libmem.FindModule("kernel32.dll");
 Check(kernel32 is not null, "kernel32.dll was not found in the Windows test process.");
 var kernel32Symbols = Libmem.EnumSymbols(kernel32!, demangle: false);
@@ -155,6 +168,7 @@ var getCurrentProcessId = Libmem.FindSymbolAddress(kernel32!, "GetCurrentProcess
 Check(getCurrentProcessId != 0 && getCurrentProcessId != invalidAddress,
     "FindSymbolAddress could not resolve GetCurrentProcessId.");
 
+Stage("memory-segments");
 var memory = pidSession!.Memory;
 var ownedAllocation = memory.Allocate(4096, MemoryProtection.ReadWrite);
 Check(ownedAllocation is not null, "MemoryManager.Allocate returned null.");
@@ -176,6 +190,7 @@ Check(Libmem.EnumSegments().Any(x => x.Base <= ownedAllocation.Address && ownedA
 Check(Libmem.EnumSegments(current).Any(x => x.Base <= ownedAllocation.Address && ownedAllocation.Address < x.End),
     "EnumSegments(process) did not include the owned allocation.");
 
+Stage("memory-read-write-scan");
 Check(memory.Set(ownedAllocation.Address, 0xA5, 16) == 16, "MemoryManager.Set failed.");
 Check(memory.Read(ownedAllocation.Address, 16).All(x => x == 0xA5),
     "MemoryManager.Set did not fill the requested bytes.");
@@ -195,6 +210,7 @@ var ownedSignature = string.Join(" ", ownedPayload.Select(b => b.ToString("X2"))
 Check(memory.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
     "MemoryManager.SigScan failed.");
 
+Stage("deep-pointer");
 using (var pointerLayer0 = memory.Allocate(4096, MemoryProtection.ReadWrite)
        ?? throw new InvalidOperationException("Could not allocate pointer layer 0."))
 using (var pointerLayer1 = memory.Allocate(4096, MemoryProtection.ReadWrite)
@@ -217,6 +233,7 @@ using (var pointerLayer2 = memory.Allocate(4096, MemoryProtection.ReadWrite)
         "Libmem.DeepPointer(process) returned an unexpected address.");
 }
 
+Stage("ownership-protection");
 var ownedOldProtection = memory.Protect(ownedAllocation.Address, ownedAllocation.Size, MemoryProtection.Read);
 try
 {
@@ -238,6 +255,7 @@ var disposeAllocation = memory.Allocate(4096, MemoryProtection.ReadWrite)
 Check(disposeAllocation.IsDisposed, "RemoteAllocation should report disposed after successful Dispose.");
 Check(disposeAllocation.Free(), "RemoteAllocation.Free should remain idempotent after Dispose.");
 
+Stage("static-enumeration");
 var processes = Libmem.EnumProcesses();
 Check(processes.Any(p => p.Pid == current.Pid), "EnumProcesses did not include the current process.");
 
@@ -245,6 +263,7 @@ var modules = Libmem.EnumModules();
 Check(modules.Count > 0, "EnumModules returned no modules.");
 Check(modules.Any(m => m.Base != 0 && m.Size != 0), "EnumModules returned no usable module.");
 
+Stage("static-memory");
 const ulong allocationSize = 4096;
 var address = Libmem.AllocateMemory(allocationSize, MemoryProtection.ReadWrite);
 Check(address != 0 && address != invalidAddress, "AllocateMemory failed.");
@@ -286,6 +305,7 @@ try
         Libmem.ProtectMemory(address, allocationSize, oldProtection);
     }
 
+    Stage("assembly-disassembly");
     var singleInstruction = Libmem.Assemble("nop");
     Check(singleInstruction is not null && singleInstruction.Size > 0,
         "Single-instruction Assemble returned no instruction.");
@@ -293,7 +313,7 @@ try
     var machineCode = Libmem.Assemble("nop; ret", expectedArchitecture, 0x1000);
     Check(machineCode is { Length: > 0 }, "Assemble returned no machine code.");
 
-    var instructions = Libmem.Disassemble(machineCode!, Architecture.X64, 2, 0x1000);
+    var instructions = Libmem.Disassemble(machineCode!, expectedArchitecture, 2, 0x1000);
     Check(instructions.Count > 0, "Disassemble returned no instructions.");
     Check(instructions[0].Mnemonic.Length > 0, "Disassembled instruction has no mnemonic.");
 
@@ -312,6 +332,7 @@ finally
     Check(Libmem.FreeMemory(address, allocationSize), "FreeMemory failed.");
 }
 
+Stage("x86-overflow");
 if (IntPtr.Size == sizeof(uint))
 {
     var addressOverflowThrows = false;
