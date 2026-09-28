@@ -749,9 +749,13 @@ void VmtManager::Reset() {
 VmtManager::~VmtManager() {
     if(disposed_) return;
     if(native_) {
-        // Explicit Dispose performs best-effort restoration. Only call LM_VmtFree after
-        // all tracked entries were removed, so the pinned upstream reset bug is unreachable.
-        if(ResetNative()) LM_VmtFree(native_);
+        // Explicit Dispose is deterministic: do not discard native bookkeeping if a tracked
+        // entry cannot be restored, otherwise the caller would lose the ability to diagnose it.
+        if(!ResetNative())
+            throw gcnew LibmemException("LM_VmtUnhook",
+                "Failed to restore one or more VMT hooks during Dispose; the manager remains active.");
+        // Safe after ResetNative: the tracked-entry list is empty.
+        LM_VmtFree(native_);
         delete native_;
         native_=nullptr;
     }
