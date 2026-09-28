@@ -18,6 +18,28 @@ Check(current is not null, "CurrentProcess returned null.");
 Check(current!.Pid == (uint)Environment.ProcessId, "CurrentProcess PID does not match the test process.");
 Check(current.IsAlive(), "Current process should be alive.");
 
+var byPid = Libmem.GetProcess(current.Pid);
+Check(byPid is not null && byPid.Pid == current.Pid, "GetProcess could not resolve the current PID.");
+var byName = Libmem.FindProcess(current.Name);
+Check(byName is not null, "FindProcess could not resolve the current process name.");
+var commandLine = Libmem.GetCommandLine(current);
+Check(commandLine.Length > 0, "GetCommandLine returned no arguments for the current process.");
+Check(Libmem.GetBits() == 64, "The x64 smoke suite must execute in a 64-bit process.");
+Check(Libmem.GetSystemBits() >= Libmem.GetBits(), "System bitness is smaller than process bitness.");
+Check(Libmem.GetArchitecture() == Architecture.X64, "The x64 smoke suite did not report x64 architecture.");
+
+var currentThread = Libmem.CurrentThread();
+Check(currentThread is not null, "CurrentThread returned null.");
+Check(currentThread!.OwnerPid == current.Pid, "CurrentThread owner PID does not match the current process.");
+var localThreads = Libmem.EnumThreads();
+Check(localThreads.Any(x => x.Id == currentThread.Id), "EnumThreads did not include the current thread.");
+var processThreads = Libmem.EnumThreads(current);
+Check(processThreads.Any(x => x.Id == currentThread.Id), "EnumThreads(process) did not include the current thread.");
+var processThread = Libmem.GetThread(current);
+Check(processThread is not null && processThread.OwnerPid == current.Pid, "GetThread(process) returned an invalid thread.");
+var threadOwner = Libmem.GetThreadProcess(currentThread);
+Check(threadOwner is not null && threadOwner.Pid == current.Pid, "GetThreadProcess did not resolve the current process.");
+
 var session = Libmem.Attach(current);
 Check(session is not null, "Attach(ProcessInfo) returned null for the current process.");
 Check(session!.Pid == current.Pid, "ProcessSession PID does not match the attached process.");
@@ -109,11 +131,43 @@ var foundModule = moduleManager.Find(namedModule!.Name);
 Check(foundModule is not null, "ModuleManager.Find could not find a module returned by Enumerate.");
 Check(foundModule!.Base == namedModule.Base, "ModuleManager.Find returned a different module base.");
 
+var staticModules = Libmem.EnumModules(current);
+Check(staticModules.Count > 0, "EnumModules(process) returned no modules.");
+var staticFoundModule = Libmem.FindModule(current, namedModule.Name);
+Check(staticFoundModule is not null, "FindModule(process, name) could not find a known module.");
+
+var kernel32 = Libmem.FindModule("kernel32.dll");
+Check(kernel32 is not null, "kernel32.dll was not found in the x64 Windows test process.");
+var kernel32Symbols = Libmem.EnumSymbols(kernel32!, demangle: false);
+Check(kernel32Symbols.Count > 0, "EnumSymbols(kernel32.dll) returned no exports.");
+var getCurrentProcessId = Libmem.FindSymbolAddress(kernel32!, "GetCurrentProcessId", demangle: false);
+Check(getCurrentProcessId != 0 && getCurrentProcessId != ulong.MaxValue,
+    "FindSymbolAddress could not resolve GetCurrentProcessId.");
+
 var memory = pidSession!.Memory;
 var ownedAllocation = memory.Allocate(4096, MemoryProtection.ReadWrite);
 Check(ownedAllocation is not null, "MemoryManager.Allocate returned null.");
 Check(ownedAllocation!.Address != 0 && ownedAllocation.Address != ulong.MaxValue, "RemoteAllocation has an invalid address.");
 Check(ownedAllocation.Size == 4096, "RemoteAllocation did not preserve its requested size.");
+
+var localSegment = Libmem.FindSegment(ownedAllocation.Address);
+Check(localSegment is not null
+      && localSegment.Base <= ownedAllocation.Address
+      && ownedAllocation.Address < localSegment.End,
+    "FindSegment could not resolve the owned allocation.");
+var remoteSegment = Libmem.FindSegment(current, ownedAllocation.Address);
+Check(remoteSegment is not null
+      && remoteSegment.Base <= ownedAllocation.Address
+      && ownedAllocation.Address < remoteSegment.End,
+    "FindSegment(process, address) could not resolve the owned allocation.");
+Check(Libmem.EnumSegments().Any(x => x.Base <= ownedAllocation.Address && ownedAllocation.Address < x.End),
+    "EnumSegments did not include the owned allocation.");
+Check(Libmem.EnumSegments(current).Any(x => x.Base <= ownedAllocation.Address && ownedAllocation.Address < x.End),
+    "EnumSegments(process) did not include the owned allocation.");
+
+Check(memory.Set(ownedAllocation.Address, 0xA5, 16) == 16, "MemoryManager.Set failed.");
+Check(memory.Read(ownedAllocation.Address, 16).All(x => x == 0xA5),
+    "MemoryManager.Set did not fill the requested bytes.");
 
 byte[] ownedPayload = [0x4C, 0x49, 0x42, 0x4D, 0x45, 0x4D];
 var ownedWritten = memory.Write(ownedAllocation.Address, ownedPayload);
@@ -129,6 +183,28 @@ Check(memory.PatternScan(ownedPayload, ownedMask, ownedAllocation.Address, owned
 var ownedSignature = string.Join(" ", ownedPayload.Select(b => b.ToString("X2")));
 Check(memory.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
     "MemoryManager.SigScan failed.");
+
+using (var pointerLayer0 = memory.Allocate(4096, MemoryProtection.ReadWrite)
+       ?? throw new InvalidOperationException("Could not allocate pointer layer 0."))
+using (var pointerLayer1 = memory.Allocate(4096, MemoryProtection.ReadWrite)
+       ?? throw new InvalidOperationException("Could not allocate pointer layer 1."))
+using (var pointerLayer2 = memory.Allocate(4096, MemoryProtection.ReadWrite)
+       ?? throw new InvalidOperationException("Could not allocate pointer layer 2."))
+{
+    Check(memory.Write(pointerLayer0.Address, BitConverter.GetBytes(pointerLayer1.Address)) == sizeof(ulong),
+        "Could not write pointer layer 0.");
+    Check(memory.Write(pointerLayer1.Address + 0xA0, BitConverter.GetBytes(pointerLayer2.Address)) == sizeof(ulong),
+        "Could not write pointer layer 1.");
+
+    ulong[] offsets = [0xA0, 0x10];
+    var expectedDeepPointer = pointerLayer2.Address + 0x10;
+    Check(memory.DeepPointer(pointerLayer0.Address, offsets) == expectedDeepPointer,
+        "MemoryManager.DeepPointer returned an unexpected address.");
+    Check(Libmem.DeepPointer(pointerLayer0.Address, offsets) == expectedDeepPointer,
+        "Libmem.DeepPointer returned an unexpected address.");
+    Check(Libmem.DeepPointer(current, pointerLayer0.Address, offsets) == expectedDeepPointer,
+        "Libmem.DeepPointer(process) returned an unexpected address.");
+}
 
 var ownedOldProtection = memory.Protect(ownedAllocation.Address, ownedAllocation.Size, MemoryProtection.Read);
 try
@@ -171,6 +247,12 @@ try
     var read = Libmem.ReadMemory(address, payload.Length);
     Check(read.SequenceEqual(payload), "ReadMemory did not return the bytes that were written.");
 
+    Check(Libmem.SetMemory(address + 32, 0x5A, 8) == 8, "SetMemory failed.");
+    Check(Libmem.ReadMemory(address + 32, 8).All(x => x == 0x5A), "SetMemory did not fill local memory.");
+    Check(Libmem.SetMemory(current, address + 48, 0x6B, 8) == 8, "SetMemory(process) failed.");
+    Check(Libmem.ReadMemory(current, address + 48, 8).All(x => x == 0x6B),
+        "SetMemory(process) did not fill target memory.");
+
     var dataMatch = Libmem.DataScan(payload, address, allocationSize);
     Check(dataMatch == address, "DataScan did not find the payload at the allocation base.");
 
@@ -193,12 +275,26 @@ try
         Libmem.ProtectMemory(address, allocationSize, oldProtection);
     }
 
+    var singleInstruction = Libmem.Assemble("nop");
+    Check(singleInstruction is not null && singleInstruction.Size > 0,
+        "Single-instruction Assemble returned no instruction.");
+
     var machineCode = Libmem.Assemble("nop; ret", Architecture.X64, 0x1000);
     Check(machineCode is { Length: > 0 }, "Assemble returned no machine code.");
 
     var instructions = Libmem.Disassemble(machineCode!, Architecture.X64, 2, 0x1000);
     Check(instructions.Count > 0, "Disassemble returned no instructions.");
     Check(instructions[0].Mnemonic.Length > 0, "Disassembled instruction has no mnemonic.");
+
+    Check(Libmem.WriteMemory(address, machineCode!) == machineCode!.Length,
+        "Could not place assembled code in the local allocation.");
+    var directInstruction = Libmem.Disassemble(address);
+    Check(directInstruction is not null && directInstruction.Mnemonic.Length > 0,
+        "Direct Disassemble returned no instruction.");
+    var localCodeLength = Libmem.CodeLength(address, 1);
+    Check(localCodeLength >= 1, "CodeLength failed for local memory.");
+    var remoteCodeLength = Libmem.CodeLength(current, address, 1);
+    Check(remoteCodeLength == localCodeLength, "CodeLength(process) disagreed with the local result.");
 }
 finally
 {
