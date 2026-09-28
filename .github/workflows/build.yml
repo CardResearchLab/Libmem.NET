@@ -14,8 +14,12 @@ permissions:
 
 jobs:
   build:
-    name: Release x64
+    name: Release ${{ matrix.platform }}
     runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x64, x86]
 
     steps:
       - name: Checkout
@@ -39,22 +43,22 @@ jobs:
 
       - name: Build LibmemCli
         shell: pwsh
-        run: .\build.ps1 -Configuration Release -Platform x64
+        run: .\build.ps1 -Configuration Release -Platform ${{ matrix.platform }}
 
       - name: Run runtime smoke tests
         shell: pwsh
-        run: dotnet run --project .\tests\LibmemCli.SmokeTests\LibmemCli.SmokeTests.csproj -c Release -p:Platform=x64
+        run: dotnet run --project .\tests\LibmemCli.SmokeTests\LibmemCli.SmokeTests.csproj -c Release -p:Platform=${{ matrix.platform }}
 
       - name: Package runtime
         shell: pwsh
-        run: .\eng\package-runtime.ps1 -Configuration Release -Platform x64
+        run: .\eng\package-runtime.ps1 -Configuration Release -Platform ${{ matrix.platform }}
 
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LibmemCli-windows-x64
+          name: LibmemCli-windows-${{ matrix.platform }}
           path: |
-            artifacts/package/LibmemCli-windows-x64/
-            artifacts/package/LibmemCli-windows-x64.zip
+            artifacts/package/LibmemCli-windows-${{ matrix.platform }}/
+            artifacts/package/LibmemCli-windows-${{ matrix.platform }}.zip
           if-no-files-found: error
           retention-days: 14
