@@ -6,6 +6,8 @@
 
 - Removed `ProcessSnapshot` / `ModuleSnapshot` and snapshot-specific APIs from LibmemCli. Application-level snapshots and caches belong to wrapper consumers.
 - `HookHandle` now exposes `Destination` in addition to source/trampoline metadata.
+- Added `LibmemException : InvalidOperationException` with an `Operation` property for definite native libmem failures.
+- Added Windows x86 alongside x64 across native/C++/CLI builds, tests, packaging, and release artifacts.
 - Explicit `HookHandle.Dispose()` now surfaces restoration failure instead of silently orphaning an active hook; finalization performs best-effort cleanup.
 - Snapshot-specific runtime tests/workflow were removed and Hook lifecycle coverage was strengthened.
 - Clarified that LibmemCli is a reusable libmem wrapper and is not coupled to StandaloneGameMod or any game-specific state model.
