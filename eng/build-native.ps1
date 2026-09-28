@@ -2,7 +2,7 @@
 param(
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
-    [ValidateSet('x64')]
+    [ValidateSet('x64', 'x86')]
     [string]$Platform = 'x64'
 )
 
@@ -25,7 +25,7 @@ if (-not (Test-Path $developerCommand)) {
 }
 $environmentLines = & $env:ComSpec /d /s /c "`"$developerCommand`" -no_logo -arch=$Platform >nul && set"
 if ($LASTEXITCODE -ne 0) {
-    throw 'Failed to initialize the Visual Studio x64 build environment.'
+    throw "Failed to initialize the Visual Studio $Platform build environment."
 }
 foreach ($line in $environmentLines) {
     $separator = $line.IndexOf('=')
