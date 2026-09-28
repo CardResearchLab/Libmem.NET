@@ -357,7 +357,7 @@ Native assembly-result buffers are freed after being copied into managed memory.
 
 This prevents a failed removal from being reported as a successful unhook. The finalizer still never modifies target-process code from the GC thread.
 
-The native VMT API is wrapped by the disposable `VmtManager`.
+The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libmem revision, `LM_VmtReset` reads an entry index again after freeing that entry. `VmtManager.Reset / Dispose` therefore remove tracked entries one-by-one with `LM_VmtUnhook` first, then call the upstream Reset/Free only after the list is empty, avoiding that use-after-free path. The GC finalizer never rewrites VTable entries; if explicit `Dispose` is skipped while hooks remain active, a small amount of native bookkeeping may leak rather than mutating the table from the GC thread.
 
 ## Important behavior and limitations
 
