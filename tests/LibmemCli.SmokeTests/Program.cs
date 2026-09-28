@@ -29,6 +29,7 @@ Check(refreshed is not null && refreshed.Pid == current.Pid, "ProcessSession.Ref
 
 var detachedMemory = session.Memory;
 var detachedModules = session.Modules;
+var detachedHooks = session.Hooks;
 session.Detach();
 Check(session.IsDisposed, "ProcessSession should be disposed after Detach.");
 
@@ -65,10 +66,23 @@ catch (ObjectDisposedException)
 }
 Check(detachedModuleManagerThrows, "ModuleManager should reject operations after its ProcessSession is detached.");
 
+var detachedHookManagerThrows = false;
+try
+{
+    _ = detachedHooks.Install(0, 0);
+}
+catch (ObjectDisposedException)
+{
+    detachedHookManagerThrows = true;
+}
+Check(detachedHookManagerThrows, "HookManager should reject operations after its ProcessSession is detached.");
+
 using var pidSession = Libmem.Attach((uint)Environment.ProcessId);
 Check(pidSession is not null && pidSession.Pid == current.Pid, "Attach(pid) failed for the current process.");
 
-var moduleManager = pidSession!.Modules;
+Check(pidSession!.Hooks is not null, "ProcessSession.Hooks returned null.");
+
+var moduleManager = pidSession.Modules;
 var sessionModules = moduleManager.Enumerate();
 Check(sessionModules.Count > 0, "ModuleManager.Enumerate returned no modules.");
 var namedModule = sessionModules.FirstOrDefault(m => !string.IsNullOrWhiteSpace(m.Name));
