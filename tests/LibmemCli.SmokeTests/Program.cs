@@ -140,6 +140,12 @@ Check(ownedAllocation.Free(), "RemoteAllocation.Free failed.");
 Check(ownedAllocation.IsDisposed, "RemoteAllocation should be disposed after Free.");
 Check(ownedAllocation.Free(), "RemoteAllocation.Free should be idempotent.");
 
+var disposeAllocation = memory.Allocate(4096, MemoryProtection.ReadWrite)
+    ?? throw new InvalidOperationException("MemoryManager.Allocate returned null for Dispose coverage.");
+((IDisposable)disposeAllocation).Dispose();
+Check(disposeAllocation.IsDisposed, "RemoteAllocation should report disposed after successful Dispose.");
+Check(disposeAllocation.Free(), "RemoteAllocation.Free should remain idempotent after Dispose.");
+
 var processes = Libmem.EnumProcesses();
 Check(processes.Any(p => p.Pid == current.Pid), "EnumProcesses did not include the current process.");
 
