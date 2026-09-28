@@ -20,7 +20,9 @@ for file in [
     print("PASS XML", file)
 
 for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
-    body = header.split("public ref class " + owner, 1)[1].split("\n    };", 1)[0]
+    match = re.search(r"\bpublic ref class\s+" + re.escape(owner) + r"\b", header)
+    assert match is not None, f"{owner} public class declaration not found"
+    body = header[match.end():].split("\n    };", 1)[0]
     declarations = re.findall(r"(?<!::)\b(\w+)\s*\([^;{}]*\)\s*;", body)
     declarations = {name for name in declarations if name not in {"get"}}
     implementations = set(re.findall(r"\b" + owner + r"::(\w+)\s*\(", source))
