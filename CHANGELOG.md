@@ -6,6 +6,7 @@
 
 - Removed `ProcessSnapshot` / `ModuleSnapshot` and snapshot-specific APIs from LibmemCli. Application-level snapshots and caches belong to wrapper consumers.
 - `HookHandle` now exposes `Destination` in addition to source/trampoline metadata.
+- Explicit `VmtManager.Dispose()` now surfaces VMT restoration failure instead of discarding active-hook bookkeeping.
 - Added `LibmemException : InvalidOperationException` with an `Operation` property for definite native libmem failures.
 - Added Windows x86 alongside x64 across native/C++/CLI builds, tests, packaging, and release artifacts.
 - Explicit `HookHandle.Dispose()` now surfaces restoration failure instead of silently orphaning an active hook; finalization performs best-effort cleanup.
