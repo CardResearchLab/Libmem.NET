@@ -162,7 +162,7 @@ Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 using var hook = target.Hooks.Install(source, destination)
     ?? throw new InvalidOperationException("Hook failed");
 
-Console.WriteLine($"trampoline=0x{hook.Trampoline:X}");
+Console.WriteLine($"source=0x{hook.Source:X} destination=0x{hook.Destination:X} trampoline=0x{hook.Trampoline:X}");
 ```
 
 `HookManager` 本身不接管已创建 Hook 的所有权；返回的 `HookHandle` 负责自己的 `Remove / Dispose` 生命周期。这样 `ProcessSession.Detach()` 只阻止继续安装新 Hook，不会在调用方没有明确要求时批量修改目标代码。保存下来的 `HookManager` 在 Session Detach 后继续使用会抛出 `ObjectDisposedException`。
@@ -277,7 +277,7 @@ CI 不只检查“能否编译”，还会执行两层自动验证：
 1. **API Contract Check**：直接解析固定 Submodule 中的 `include/libmem/libmem.h`，提取所有公开 `LM_API`，如果上游新增公开 API 但 C++/CLI wrapper 尚未引用，构建会失败。
 2. **Runtime Smoke Tests**：实际加载 `LibmemCli.dll + libmem.dll`，验证进程/模块枚举、内存申请与读写、内存保护、Data/Pattern/Signature Scan、汇编与反汇编。
 
-Hook / VMT 不作为基础 Smoke Test 的硬性门禁，而是在独立的 `Hook VMT Runtime Tests` 工作流中验证。该测试会在当前进程分配隔离的可执行内存，验证 Hook 重定向、trampoline、Remove，以及 VMT Hook / Unhook / Reset / Dispose，不依赖炉石或其他外部进程。
+Hook / VMT 不作为基础 Smoke Test 的硬性门禁，而是在独立的 `Hook VMT Runtime Tests` 工作流中验证。 `VmtManager` 的显式 `Dispose()` 同样采用确定性恢复：若任一已跟踪 VMT 项无法恢复，对象保持未释放状态并抛出 `LibmemException`，不会丢掉剩余 hook bookkeeping。该测试会在当前进程分配隔离的可执行内存，验证 Hook 重定向、trampoline、Remove，以及 VMT Hook / Unhook / Reset / Dispose，不依赖炉石或其他外部进程。
 
 Injector 同样使用独立的 `Injector Runtime Tests`：测试会复制一份唯一文件名的 `libmem.dll` 作为隔离 fixture，在当前测试进程中实际执行注入、模块枚举、Unload 和 Dispose，避免依赖炉石进程。
 
