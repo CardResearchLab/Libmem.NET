@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Hardened Hook/VMT ownership: `HookHandle` now retains `Destination`, explicit hook disposal surfaces unhook failure, and `VmtManager.Dispose()` preserves native bookkeeping when restoration fails.
+- Mapped Hook/VMT setup and restoration failures to `LibmemException` while keeping GC finalizers non-mutating.
+
 - Added `LibmemException` with an `Operation` property for definite native libmem failures while preserving normal not-found/sentinel return semantics.
 - Mapped core enumeration, protection, allocation-release, injection-release, and fixed-size read/write failures to the unified exception type.
 
