@@ -45,6 +45,11 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Setup .NET 8 x86 runtime
+        if: inputs.platform == 'x86'
+        shell: pwsh
+        run: .\eng\setup-dotnet-x86.ps1
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
