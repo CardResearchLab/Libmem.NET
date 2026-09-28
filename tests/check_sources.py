@@ -56,6 +56,16 @@ assert not missing_native_apis, (
 )
 print("PASS upstream public API coverage:", len(upstream_apis))
 
+assert "public ref class LibmemException : InvalidOperationException" in header
+assert 'LibmemException("LM_EnumProcesses"' in source
+assert 'LibmemException("LM_EnumThreadsEx"' in source
+assert 'LibmemException("LM_EnumModulesEx"' in source
+assert 'LibmemException("LM_ProtMemoryEx"' in source
+assert 'LibmemException("LM_FreeMemoryEx"' in source
+assert 'LibmemException("LM_UnloadModuleEx"' in source
+assert 'LibmemException("LM_LoadModuleEx"' in source
+print("PASS LibmemException core error mapping")
+
 assert "HookManager^ ProcessSession::Hooks::get()" in source
 assert "HookHandle^ HookManager::Install(UInt64 source,UInt64 destination)" in source
 assert "return Libmem::HookCode(Target(),source,destination);" in source
