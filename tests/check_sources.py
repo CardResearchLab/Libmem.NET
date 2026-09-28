@@ -36,7 +36,7 @@ for workflow in [build_workflow, hook_workflow, injector_workflow]:
     assert "architecture: ${{ matrix.platform }}" in workflow
 print("PASS x86/x64 build contract")
 
-for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
+for owner in ["Libmem", "LibmemException", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
     body = header.split("public ref class " + owner, 1)[1].split("\n    };", 1)[0]
     declarations = re.findall(r"(?<!::)\b(\w+)\s*\([^;{}]*\)\s*;", body)
     declarations = {name for name in declarations if name not in {"get"}}
@@ -89,12 +89,28 @@ inject_finalizer = source.split("InjectedModuleHandle::!InjectedModuleHandle()",
 assert "UnloadModule" not in inject_finalizer
 print("PASS Injector lifecycle contract")
 
+assert "LibmemException::LibmemException(String^ operation,String^ message)" in source
+assert "String^ LibmemException::Operation::get()" in source
+for native_failure in [
+    "LM_EnumProcesses",
+    "LM_EnumThreads",
+    "LM_EnumModules",
+    "LM_EnumSymbols",
+    "LM_EnumSegments",
+    "LM_ProtMemory",
+    "LM_VmtNew",
+    "LM_VmtHook",
+]:
+    assert f'LibmemException("{native_failure}"' in source
+print("PASS native failure exception mapping")
+
 assert "bool HookHandle::IsInstalled::get()" in source
 assert "bool HookHandle::IsDisposed::get()" in source
 assert "UInt64 HookHandle::Destination::get()" in source
 assert "bool bad_address(UInt64 value)" in source
 assert "address==UInt64::MaxValue" not in source
-assert 'throw gcnew InvalidOperationException("Failed to remove hook during Dispose; the hook remains installed.")' in source
+assert '"Failed to remove hook during Dispose; the hook remains installed."' in source
+assert 'LibmemException(target_!=nullptr ? "LM_UnhookCodeEx" : "LM_UnhookCode"' in source
 hook_finalizer = source.split("HookHandle::!HookHandle()", 1)[1].split("\n}", 1)[0]
 assert "LM_UnhookCode" in hook_finalizer
 print("PASS HookHandle lifecycle contract")
