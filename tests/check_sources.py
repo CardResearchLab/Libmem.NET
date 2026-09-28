@@ -176,6 +176,15 @@ assert "verify-package.py" in release_workflow
 assert "--expected-repository-commit" in release_workflow
 assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
 assert "LibmemCli-windows-x86.zip.sha256" in release_workflow
+x86_runtime_setup = (root / "eng/setup-dotnet-x86.ps1").read_text(encoding="utf-8")
+assert "-Architecture x86" in x86_runtime_setup
+assert "DOTNET_ROOT_X86" in x86_runtime_setup
+assert "DOTNET_ROOT(x86)" in x86_runtime_setup
+assert "setup-dotnet-x86.ps1" in build_workflow
+assert "setup-dotnet-x86.ps1" in reusable_workflow
+assert "setup-dotnet-x86.ps1" in hook_workflow
+assert "setup-dotnet-x86.ps1" in injector_workflow
+
 assert "platform: [x64, x86]" in build_workflow
 assert "platform: [x64, x86]" in hook_workflow
 assert "platform: [x64, x86]" in injector_workflow
