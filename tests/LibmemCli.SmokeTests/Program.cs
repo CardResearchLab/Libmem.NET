@@ -27,6 +27,7 @@ Check(session.Pid == current.Pid, "Mutating a returned ProcessInfo snapshot chan
 var refreshed = session.Refresh();
 Check(refreshed is not null && refreshed.Pid == current.Pid, "ProcessSession.Refresh failed for the current process.");
 
+var detachedMemory = session.Memory;
 session.Detach();
 Check(session.IsDisposed, "ProcessSession should be disposed after Detach.");
 
@@ -41,19 +42,51 @@ catch (ObjectDisposedException)
 }
 Check(disposedThrows, "ProcessSession members should reject use after Detach.");
 
+var detachedManagerThrows = false;
+try
+{
+    _ = detachedMemory.Read(0, 1);
+}
+catch (ObjectDisposedException)
+{
+    detachedManagerThrows = true;
+}
+Check(detachedManagerThrows, "MemoryManager should reject operations after its ProcessSession is detached.");
+
 using var pidSession = Libmem.Attach((uint)Environment.ProcessId);
 Check(pidSession is not null && pidSession.Pid == current.Pid, "Attach(pid) failed for the current process.");
 
-var ownedAllocation = pidSession!.Allocate(4096, MemoryProtection.ReadWrite);
-Check(ownedAllocation is not null, "ProcessSession.Allocate returned null.");
+var memory = pidSession!.Memory;
+var ownedAllocation = memory.Allocate(4096, MemoryProtection.ReadWrite);
+Check(ownedAllocation is not null, "MemoryManager.Allocate returned null.");
 Check(ownedAllocation!.Address != 0 && ownedAllocation.Address != ulong.MaxValue, "RemoteAllocation has an invalid address.");
 Check(ownedAllocation.Size == 4096, "RemoteAllocation did not preserve its requested size.");
 
 byte[] ownedPayload = [0x4C, 0x49, 0x42, 0x4D, 0x45, 0x4D];
-var ownedWritten = Libmem.WriteMemory(pidSession.Info, ownedAllocation.Address, ownedPayload);
-Check(ownedWritten == ownedPayload.Length, "Could not write to RemoteAllocation.");
-var ownedRead = Libmem.ReadMemory(pidSession.Info, ownedAllocation.Address, ownedPayload.Length);
-Check(ownedRead.SequenceEqual(ownedPayload), "RemoteAllocation read-back mismatch.");
+var ownedWritten = memory.Write(ownedAllocation.Address, ownedPayload);
+Check(ownedWritten == ownedPayload.Length, "MemoryManager.Write failed.");
+var ownedRead = memory.Read(ownedAllocation.Address, ownedPayload.Length);
+Check(ownedRead.SequenceEqual(ownedPayload), "MemoryManager.Read returned different data.");
+
+Check(memory.DataScan(ownedPayload, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
+    "MemoryManager.DataScan failed.");
+var ownedMask = new string('x', ownedPayload.Length);
+Check(memory.PatternScan(ownedPayload, ownedMask, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
+    "MemoryManager.PatternScan failed.");
+var ownedSignature = string.Join(" ", ownedPayload.Select(b => b.ToString("X2")));
+Check(memory.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
+    "MemoryManager.SigScan failed.");
+
+var ownedOldProtection = memory.Protect(ownedAllocation.Address, ownedAllocation.Size, MemoryProtection.Read);
+try
+{
+    Check(memory.Read(ownedAllocation.Address, ownedPayload.Length).SequenceEqual(ownedPayload),
+        "MemoryManager.Read failed after Protect.");
+}
+finally
+{
+    memory.Protect(ownedAllocation.Address, ownedAllocation.Size, ownedOldProtection);
+}
 
 Check(ownedAllocation.Free(), "RemoteAllocation.Free failed.");
 Check(ownedAllocation.IsDisposed, "RemoteAllocation should be disposed after Free.");
