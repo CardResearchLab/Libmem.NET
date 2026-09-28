@@ -139,6 +139,21 @@ var unity = modules.Find("UnityPlayer.dll");
 
 It currently provides `Enumerate / Find / Load / Unload`. Like `MemoryManager`, it follows the ProcessSession lifetime and rejects operations after Detach.
 
+### Injector
+
+`ProcessSession.Injector` is the higher-level DLL injection API above `ModuleManager.Load`. Its purpose is to make ownership of one LoadLibrary reference explicit:
+
+```csharp
+using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll")
+    ?? throw new InvalidOperationException("Injection failed");
+
+Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
+```
+
+`InjectLibrary` normalizes and validates the DLL path and rejects cross-bitness injection between the current runtime and target process. The returned `InjectedModuleHandle` preserves a module snapshot and requested path. `IsActive` means **this handle still owns the load reference it created**; it does not claim that the module is the only loaded instance in the process.
+
+Explicit `Unload()` or `Dispose()` attempts one matching `FreeLibrary`. Because Windows DLLs are reference-counted and the pinned upstream `LM_UnloadModuleEx` only requests a release, a successful call does not guarantee the module disappears completely from the target process. The GC finalizer never calls `FreeLibrary` in the target process.
+
 ### HookManager
 
 `ProcessSession.Hooks` binds hook installation to the current target process:
@@ -214,12 +229,13 @@ Do not mix outputs from different configurations or commits.
 
 ## GitHub Actions automation
 
-The repository includes four automation workflows:
+The repository includes five automation workflows:
 
 - \`.github/workflows/build.yml\`: builds Release x64 on pushes to \`main\`, pull requests, or manual runs, then uploads the \`LibmemCli-windows-x64\` artifact.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
 - \`.github/workflows/release.yml\`: builds tags matching \`v*\`, creates a GitHub Release, and attaches \`LibmemCli-windows-x64.zip\`.
 - \`.github/workflows/hook-vmt-tests.yml\`: runs dedicated real Hook / trampoline / VMT lifecycle tests separately from the baseline smoke suite.
+- \`.github/workflows/injector-tests.yml\`: independently validates DLL injection, module discovery, explicit Unload, and Dispose lifetime behavior.
 
 You can create the same runtime package locally:
 
@@ -262,6 +278,8 @@ CI validates more than compilation:
 2. **Runtime Smoke Tests** load `LibmemCli.dll + libmem.dll` and exercise process/module enumeration, memory allocation/read/write/protection, Data/Pattern/Signature scanning, assembly, and disassembly.
 
 Hook and VMT operations are intentionally kept out of the baseline smoke gate and validated by the separate `Hook VMT Runtime Tests` workflow. It allocates isolated executable memory in the current process and verifies hook redirection, trampoline execution, Remove, and VMT Hook / Unhook / Reset / Dispose without depending on Hearthstone or any external process.
+
+Injector behavior is also validated separately by `Injector Runtime Tests`. The test copies `libmem.dll` under a unique fixture name and performs real injection, module discovery, Unload, and Dispose against the current test process without depending on Hearthstone.
 
 ### Reuse the build from another repository
 
