@@ -394,8 +394,35 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
     if(!System::IO::File::Exists(fullPath))
         throw gcnew System::IO::FileNotFoundException("Library to inject was not found.", fullPath);
 
-    auto loaded=Libmem::LoadModule(target,fullPath);
-    return loaded==nullptr ? nullptr : gcnew InjectedModuleHandle(target,loaded,fullPath);
+    auto nativeTarget=proc(target);
+    auto nativePath=utf8(fullPath);
+
+    // Ask libmem only to perform the LoadLibrary operation. Its module_out lookup is
+    // name/suffix based; resolve the resulting module ourselves by normalized full path
+    // so same-named DLLs from different directories cannot be confused.
+    if(LM_LoadModuleEx(&nativeTarget,nativePath.c_str(),nullptr)==LM_FALSE) return nullptr;
+
+    ModuleInfo^ loaded=nullptr;
+    for each(ModuleInfo^ candidate in Libmem::EnumModules(target)) {
+        if(candidate==nullptr || String::IsNullOrWhiteSpace(candidate->Path)) continue;
+
+        String^ candidatePath;
+        try {
+            candidatePath=System::IO::Path::GetFullPath(candidate->Path);
+        } catch(Exception^) {
+            continue;
+        }
+
+        if(String::Equals(candidatePath,fullPath,StringComparison::OrdinalIgnoreCase)) {
+            loaded=candidate;
+            break;
+        }
+    }
+
+    if(loaded==nullptr)
+        throw gcnew InvalidOperationException("LoadLibrary completed but the injected module could not be resolved by full path.");
+
+    return gcnew InjectedModuleHandle(target,loaded,fullPath);
 }
 
 List<ProcessInfo^>^ Libmem::EnumProcesses() {
