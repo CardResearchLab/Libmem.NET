@@ -401,7 +401,7 @@ python .\eng\check-public-api.py --write
 
 ## 重要行为与限制
 
-1. **当前示例项目仅支持 x64。** 地址参数和返回值使用 `UInt64`。在 x64 下，libmem 的失败哨兵值 `LM_ADDRESS_BAD` 对应 `UInt64.MaxValue`。并非所有 API 都以 `0` 表示失败。本项目不会自动提权，也不提供远程架构转换或内核内存支持。
+1. **当前构建支持 Windows x86 与 x64。** 托管公开 API 继续统一使用 `UInt64` 表示地址和大小，但进入 native 层时会按当前进程的指针宽度做范围检查；x86 下超过 `UInt32.MaxValue` 的地址、size 或 index 会抛出 `ArgumentOutOfRangeException`，不会静默截断。`LM_ADDRESS_BAD` 在 x64 对应 `UInt64.MaxValue`，在 x86 对应 `UInt32.MaxValue`。本项目不提供跨位宽远程转换，注入仍要求当前 runtime 与目标进程位宽一致。
 
 2. `ReadMemory` **只返回实际成功读取的字节**；`WriteMemory` 返回实际写入长度。调用方应检查短读取和未完整写入的情况。返回 0 字节可能表示目标地址不可访问。
 
