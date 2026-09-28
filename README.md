@@ -359,6 +359,12 @@ jobs:
 
 原生汇编结果缓冲区在复制到托管内存后会被正确释放。
 
+### 错误映射
+
+明确的原生 libmem 操作失败会使用 `LibmemException` 表达，并通过 `Operation` 标明对应的原生操作（例如 `LM_EnumProcesses`、`LM_ProtMemoryEx`、`LM_VmtHook`）。`LibmemException` 继承自 `InvalidOperationException`，因此现有捕获逻辑仍然兼容。
+
+“未找到”或 libmem 本身以空结果表达的情况继续保持原有返回语义；封装层不会为了统一异常而把所有 `null` / 地址哨兵强行改成异常。
+
 ### Hook
 
 - `LM_HookCode[Ex]` → `Libmem.HookCode`
@@ -366,13 +372,13 @@ jobs:
 
 `HookHandle` 现在明确区分 **Hook 是否仍安装** 与 **对象是否已 Dispose**：
 
-- `Source / Trampoline / PatchedBytes`：保留安装元数据；
+- `Source / Destination / Trampoline / PatchedBytes`：保留安装元数据；
 - `IsInstalled`：目标代码当前是否仍被该 Handle 视为已 Hook；
 - `IsDisposed`：托管 Handle 生命周期是否已经结束；
 - `Remove()`：尝试卸载 Hook，成功后将 `IsInstalled` 置为 false，但不会自动 Dispose；
-- `Dispose()`：best-effort 清理，不再因 Unhook 失败而抛异常。
+- `Dispose()`：确定性尝试卸载；如果原生 Unhook 失败，会抛出 `LibmemException`，而不是把仍活动的 Hook 静默标记为已释放。
 
-这样如果卸载失败，`IsInstalled` 不会被错误地清零。Finalizer 仍然不会在 GC 线程中修改目标进程代码。
+这样如果卸载失败，`IsInstalled` 不会被错误地清零。若调用方遗漏显式释放，Finalizer 会执行一次不抛异常的 best-effort 恢复；它只是兜底，不替代确定性的 `Dispose()`。
 
 原生 VMT API 则封装为可释放的 `VmtManager`。当前固定的 libmem 版本中，`LM_VmtReset` 在释放内部条目后仍会再次读取该条目的索引；因此 `VmtManager.Reset / Dispose` 会先逐项调用 `LM_VmtUnhook` 清空记录，再在空列表上调用上游 Reset/Free，避开该 use-after-free 路径。GC Finalizer 不会改写 VTable；如果调用方跳过显式 `Dispose` 且仍有活动 Hook，宁可留下少量原生 bookkeeping 泄漏，也不会在 GC 线程里修改函数表。
 
@@ -382,13 +388,13 @@ jobs:
 
 2. `ReadMemory` **只返回实际成功读取的字节**；`WriteMemory` 返回实际写入长度。调用方应检查短读取和未完整写入的情况。返回 0 字节可能表示目标地址不可访问。
 
-3. `ProcessInfo` 和 `ModuleInfo` 是状态快照，而不是操作系统句柄。目标进程可能已经退出，模块与地址也可能失效。`IsProcessAlive` 会根据原始身份（`pid` + 启动时间）进行检查。
+3. `ProcessInfo` 和 `ModuleInfo` 是托管数据描述，而不是操作系统句柄。目标进程可能已经退出，模块与地址也可能失效。`IsProcessAlive` 会根据原始身份（`pid` + 启动时间）进行检查。
 
 4. `GetCommandLine` 返回 UTF-8 字符串，并负责释放原生分配。`string` 辅助方法拒绝包含嵌入式 NUL 的字符串。枚举回调为同步执行。
 
 5. `Disassemble(codeAddress, arch, ...)` 要求 `codeAddress` 指向**当前调用进程**中可读的机器码，而不是远程进程地址。需要反汇编远程代码时，应先调用 `ReadMemory`，再将返回的字节数组传给安全的固定缓冲区重载 `Disassemble(byte[], ...)`。
 
-6. Hook 要求目标和替换函数均为有效的可执行原生代码，并且调用约定、函数签名、架构和生命周期必须正确。**C# Delegate 的地址并不会自动成为安全的 Detour。** 安装远程 Hook 时，`destination` 必须指向**远程进程中的代码**；本封装不会自动完成代码注入。请在目标代码和进程仍有效时显式释放 `HookHandle`。其 Finalizer 不会在 GC 线程中恢复被修改的代码。
+6. Hook 要求目标和替换函数均为有效的可执行原生代码，并且调用约定、函数签名、架构和生命周期必须正确。**C# Delegate 的地址并不会自动成为安全的 Detour。** 安装远程 Hook 时，`destination` 必须指向**远程进程中的代码**；本封装不会自动完成代码注入。请在目标代码和进程仍有效时显式释放 `HookHandle`。Finalizer 只做最后一次 best-effort 恢复，不保证能够替代显式清理。
 
 7. VMT 管理器**仅支持本地进程**。请在原始 VTable 仍有效时释放它，不要向其传入任意或不可信地址。内部 VMT 条目不会自动与其他并发修改操作进行线程同步。
 
