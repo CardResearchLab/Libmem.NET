@@ -4,7 +4,7 @@ param(
     [string]$Destination,
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
-    [ValidateSet('x64')]
+    [ValidateSet('x64', 'x86')]
     [string]$Platform = 'x64'
 )
 
