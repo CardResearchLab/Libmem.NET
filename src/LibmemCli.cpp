@@ -138,40 +138,6 @@ void ProcessInfo::WriteInt32(UInt64 address,Int32 value) {
 }
 UInt64 ProcessInfo::SigScan(String^ signature,UInt64 address,UInt64 size) { return Libmem::SigScan(this,signature,address,size); }
 
-ProcessSnapshot::ProcessSnapshot(ProcessInfo^ source)
-    : pid_(0),parentPid_(0),architecture_(LibmemCli::Architecture::Generic),bits_(0),startTime_(0),name_(nullptr),path_(nullptr) {
-    if(source==nullptr) throw gcnew ArgumentNullException("source");
-    pid_=source->Pid;
-    parentPid_=source->ParentPid;
-    architecture_=source->Architecture;
-    bits_=source->Bits;
-    startTime_=source->StartTime;
-    name_=source->Name;
-    path_=source->Path;
-}
-UInt32 ProcessSnapshot::Pid::get() { return pid_; }
-UInt32 ProcessSnapshot::ParentPid::get() { return parentPid_; }
-LibmemCli::Architecture ProcessSnapshot::Architecture::get() { return architecture_; }
-UInt64 ProcessSnapshot::Bits::get() { return bits_; }
-UInt64 ProcessSnapshot::StartTime::get() { return startTime_; }
-String^ ProcessSnapshot::Name::get() { return name_; }
-String^ ProcessSnapshot::Path::get() { return path_; }
-
-ModuleSnapshot::ModuleSnapshot(ModuleInfo^ source)
-    : base_(0),end_(0),size_(0),name_(nullptr),path_(nullptr) {
-    if(source==nullptr) throw gcnew ArgumentNullException("source");
-    base_=source->Base;
-    end_=source->End;
-    size_=source->Size;
-    name_=source->Name;
-    path_=source->Path;
-}
-UInt64 ModuleSnapshot::Base::get() { return base_; }
-UInt64 ModuleSnapshot::End::get() { return end_; }
-UInt64 ModuleSnapshot::Size::get() { return size_; }
-String^ ModuleSnapshot::Name::get() { return name_; }
-String^ ModuleSnapshot::Path::get() { return path_; }
-
 RemoteAllocation::RemoteAllocation(ProcessInfo^ input,UInt64 address,UInt64 size)
     : target_(nullptr),address_(address),size_(size),disposed_(false) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
@@ -229,10 +195,6 @@ ProcessInfo^ ProcessSession::Target::get() {
 ProcessInfo^ ProcessSession::Info::get() {
     ThrowIfDisposed();
     return process(proc(identity_));
-}
-ProcessSnapshot^ ProcessSession::Snapshot::get() {
-    ThrowIfDisposed();
-    return gcnew ProcessSnapshot(identity_);
 }
 UInt32 ProcessSession::Pid::get() {
     ThrowIfDisposed();
@@ -364,19 +326,6 @@ ModuleInfo^ ModuleManager::Load(String^ path) {
 bool ModuleManager::Unload(ModuleInfo^ moduleInfo) {
     return Libmem::UnloadModule(Target(),moduleInfo);
 }
-IReadOnlyList<ModuleSnapshot^>^ ModuleManager::Snapshot() {
-    auto modules=Enumerate();
-    auto snapshots=gcnew List<ModuleSnapshot^>(modules->Count);
-    for each(ModuleInfo^ item in modules) {
-        if(item!=nullptr) snapshots->Add(gcnew ModuleSnapshot(item));
-    }
-    return snapshots->AsReadOnly();
-}
-ModuleSnapshot^ ModuleManager::FindSnapshot(String^ name) {
-    auto item=Find(name);
-    return item==nullptr ? nullptr : gcnew ModuleSnapshot(item);
-}
-
 InjectedModuleHandle::InjectedModuleHandle(ProcessInfo^ target,ModuleInfo^ moduleInfo,String^ requestedPath)
     : target_(nullptr),module_(nullptr),requestedPath_(requestedPath),active_(true),disposed_(false) {
     if(target==nullptr) throw gcnew ArgumentNullException("target");
@@ -386,9 +335,6 @@ InjectedModuleHandle::InjectedModuleHandle(ProcessInfo^ target,ModuleInfo^ modul
 }
 ModuleInfo^ InjectedModuleHandle::Module::get() {
     return module_==nullptr ? nullptr : module(mod(module_));
-}
-ModuleSnapshot^ InjectedModuleHandle::Snapshot::get() {
-    return module_==nullptr ? nullptr : gcnew ModuleSnapshot(module_);
 }
 String^ InjectedModuleHandle::RequestedPath::get() { return requestedPath_; }
 bool InjectedModuleHandle::IsActive::get() { return active_; }
