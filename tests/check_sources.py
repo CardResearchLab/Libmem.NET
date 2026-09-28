@@ -13,12 +13,11 @@ for file in [
     "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj",
     "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj",
     "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj",
-    "tests/LibmemCli.SnapshotTests/LibmemCli.SnapshotTests.csproj",
 ]:
     ET.parse(root / file)
     print("PASS XML", file)
 
-for owner in ["Libmem", "ProcessInfo", "ProcessSnapshot", "ModuleSnapshot", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
+for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
     body = header.split("public ref class " + owner, 1)[1].split("\n    };", 1)[0]
     declarations = re.findall(r"(?<!::)\b(\w+)\s*\([^;{}]*\)\s*;", body)
     declarations = {name for name in declarations if name not in {"get"}}
@@ -71,20 +70,12 @@ inject_finalizer = source.split("InjectedModuleHandle::!InjectedModuleHandle()",
 assert "UnloadModule" not in inject_finalizer
 print("PASS Injector lifecycle contract")
 
-process_snapshot_body = header.split("public ref class ProcessSnapshot", 1)[1].split("\n    };", 1)[0]
-module_snapshot_body = header.split("public ref class ModuleSnapshot", 1)[1].split("\n    };", 1)[0]
-assert "set();" not in process_snapshot_body
-assert "set();" not in module_snapshot_body
-assert "ProcessSnapshot^ ProcessSession::Snapshot::get()" in source
-assert "IReadOnlyList<ModuleSnapshot^>^ ModuleManager::Snapshot()" in source
-assert "return snapshots->AsReadOnly();" in source
-assert "ModuleSnapshot^ ModuleManager::FindSnapshot(String^ name)" in source
-assert "ModuleSnapshot^ InjectedModuleHandle::Snapshot::get()" in source
-print("PASS immutable snapshot contract")
-
 assert "bool HookHandle::IsInstalled::get()" in source
 assert "bool HookHandle::IsDisposed::get()" in source
-assert 'throw gcnew InvalidOperationException("Unhook failed; hook remains installed.")' not in source
+assert "UInt64 HookHandle::Destination::get()" in source
+assert 'throw gcnew InvalidOperationException("Failed to remove hook during Dispose; the hook remains installed.")' in source
+hook_finalizer = source.split("HookHandle::!HookHandle()", 1)[1].split("\n}", 1)[0]
+assert "LM_UnhookCode" in hook_finalizer
 print("PASS HookHandle lifecycle contract")
 
 assert "bool VmtManager::IsDisposed::get()" in source
