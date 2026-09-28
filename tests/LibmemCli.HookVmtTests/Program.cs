@@ -57,10 +57,10 @@ Check(memory.Write(destination.Address, destinationCode) == destinationCode.Leng
 Check(CallNoArgs(source.Address) == 1, "Source function did not return its original value before hooking.");
 Check(CallNoArgs(destination.Address) == 2, "Destination function did not return its expected value.");
 
-using var hook = session.Hooks.Install(source.Address, destination.Address)
-    ?? throw new InvalidOperationException("HookManager.Install returned null.");
+using var hook = session.Hooks.Install(source.Address, destination.Address);
 
 Check(hook.Source == source.Address, "HookHandle.Source does not match the hooked source.");
+Check(hook.Destination == destination.Address, "HookHandle.Destination does not match the hook target.");
 Check(hook.Trampoline != 0 && hook.Trampoline != ulong.MaxValue, "HookHandle.Trampoline is invalid.");
 Check(hook.PatchedBytes > 0, "HookHandle.PatchedBytes must be greater than zero.");
 Check(hook.IsInstalled, "HookHandle should report installed after HookManager.Install.");
@@ -72,6 +72,15 @@ Check(hook.Remove(), "HookHandle.Remove failed.");
 Check(!hook.IsInstalled, "HookHandle should report uninstalled after Remove.");
 Check(CallNoArgs(source.Address) == 1, "Source behavior was not restored after Remove.");
 Check(hook.Remove(), "HookHandle.Remove should be idempotent after a successful removal.");
+
+var disposeHook = session.Hooks.Install(source.Address, destination.Address);
+Check(disposeHook.IsInstalled, "Dispose coverage hook should start installed.");
+Check(disposeHook.Destination == destination.Address, "Dispose coverage hook lost its destination metadata.");
+Check(CallNoArgs(source.Address) == 2, "Dispose coverage hook did not redirect source.");
+((IDisposable)disposeHook).Dispose();
+Check(disposeHook.IsDisposed, "HookHandle should report disposed after successful Dispose.");
+Check(!disposeHook.IsInstalled, "HookHandle should report uninstalled after successful Dispose.");
+Check(CallNoArgs(source.Address) == 1, "HookHandle.Dispose did not restore source behavior.");
 
 // VmtManager lifecycle on an isolated page owned by this test process.
 using var vtablePage = memory.Allocate(4096, MemoryProtection.ReadWrite)
