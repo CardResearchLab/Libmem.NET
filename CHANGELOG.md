@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Added a committed x64 public API baseline and compatibility checker so accidental public signature changes fail source-contract CI.
+- Documented the explicit process for intentional pre-1.0 API changes: regenerate the baseline, review the diff, update the changelog, and version accordingly.
+
 - Upgraded the x64 runtime package manifest to schema v2 with per-file size and SHA-256 metadata.
 - Added an external SHA-256 checksum for the runtime ZIP and a shared package verifier used by build/reusable/release workflows.
 - Release publication now verifies package version, platform/configuration, file integrity, archive integrity, and repository commit provenance before creating a GitHub Release.
