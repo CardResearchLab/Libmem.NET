@@ -61,11 +61,21 @@ assert "HookHandle^ HookManager::Install(UInt64 source,UInt64 destination)" in s
 assert "return Libmem::HookCode(Target(),source,destination);" in source
 print("PASS HookManager session contract")
 
+remote_dispose = source.split("RemoteAllocation::~RemoteAllocation()", 1)[1].split("\n}", 1)[0]
+assert "if(!Free())" in remote_dispose
+assert "allocation remains active" in remote_dispose
+remote_finalizer = source.split("RemoteAllocation::!RemoteAllocation()", 1)[1].split("\n}", 1)[0]
+assert "FreeMemory" not in remote_finalizer
+print("PASS RemoteAllocation lifecycle contract")
+
 assert "InjectorManager^ ProcessSession::Injector::get()" in source
 assert "InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path)" in source
 assert "Cross-bitness library injection is not supported" in source
 assert "bool InjectedModuleHandle::IsActive::get()" in source
 assert "bool InjectedModuleHandle::IsDisposed::get()" in source
+inject_dispose = source.split("InjectedModuleHandle::~InjectedModuleHandle()", 1)[1].split("\n}", 1)[0]
+assert "active_ && !Unload()" in inject_dispose
+assert "owned load reference remains active" in inject_dispose
 inject_finalizer = source.split("InjectedModuleHandle::!InjectedModuleHandle()", 1)[1].split("\n}", 1)[0]
 assert "UnloadModule" not in inject_finalizer
 print("PASS Injector lifecycle contract")
