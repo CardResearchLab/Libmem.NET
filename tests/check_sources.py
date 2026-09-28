@@ -122,6 +122,7 @@ native_build_script = (root / "eng/build-native.ps1").read_text(encoding="utf-8"
 smoke_project = (root / "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj").read_text(encoding="utf-8")
 hook_project = (root / "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj").read_text(encoding="utf-8")
 injector_project = (root / "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj").read_text(encoding="utf-8")
+sample_project = (root / "samples/Example.csproj").read_text(encoding="utf-8")
 
 assert "Debug|x86 = Debug|x86" in solution
 assert "Release|x86 = Release|x86" in solution
@@ -130,7 +131,12 @@ assert "<LibmemPlatformLabel Condition=\"'$(Platform)' == 'Win32'\">x86</LibmemP
 assert "_WIN64;" not in vcxproj
 assert "[ValidateSet('x64', 'x86')]" in build_script
 assert "[ValidateSet('x64', 'x86')]" in native_build_script
-for project in [smoke_project, hook_project, injector_project]:
+for script in [
+    (root / "eng/package-runtime.ps1").read_text(encoding="utf-8"),
+    (root / "eng/write-manifest.ps1").read_text(encoding="utf-8"),
+]:
+    assert "[ValidateSet('x64', 'x86')]" in script
+for project in [sample_project, smoke_project, hook_project, injector_project]:
     assert "<Platforms>x64;x86</Platforms>" in project
     assert "<PlatformTarget>$(Platform)</PlatformTarget>" in project
 assert "lm_address_t native_address(UInt64 value" in source
@@ -148,6 +154,8 @@ compile(verify_script, str(verify_script_path), "exec")
 build_workflow = (root / ".github/workflows/build.yml").read_text(encoding="utf-8")
 reusable_workflow = (root / ".github/workflows/reusable-build.yml").read_text(encoding="utf-8")
 release_workflow = (root / ".github/workflows/release.yml").read_text(encoding="utf-8")
+hook_workflow = (root / ".github/workflows/hook-vmt-tests.yml").read_text(encoding="utf-8")
+injector_workflow = (root / ".github/workflows/injector-tests.yml").read_text(encoding="utf-8")
 
 assert "schemaVersion = 2" in manifest_script
 assert "Get-FileHash" in manifest_script
@@ -161,6 +169,8 @@ assert "--expected-repository-commit" in release_workflow
 assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
 assert "LibmemCli-windows-x86.zip.sha256" in release_workflow
 assert "platform: [x64, x86]" in build_workflow
+assert "platform: [x64, x86]" in hook_workflow
+assert "platform: [x64, x86]" in injector_workflow
 assert "platform:" in reusable_workflow and "Target platform (x64 or x86)" in reusable_workflow
 assert "needs: [build-x64, build-x86]" in release_workflow
 print("PASS package integrity and release provenance contract")
