@@ -162,10 +162,10 @@ Explicit `Unload()` returns the release result. `Dispose()` deterministically at
 using var hook = target.Hooks.Install(source, destination)
     ?? throw new InvalidOperationException("Hook failed");
 
-Console.WriteLine($"trampoline=0x{hook.Trampoline:X}");
+Console.WriteLine($"source=0x{hook.Source:X} destination=0x{hook.Destination:X} trampoline=0x{hook.Trampoline:X}");
 ```
 
-`HookManager` does not take ownership of installed hooks. Each returned `HookHandle` owns its own `Remove / Dispose` lifetime. Therefore `ProcessSession.Detach()` prevents new hook installation without silently rewriting target code. A saved `HookManager` rejects use after its session is detached with `ObjectDisposedException`.
+`HookManager` does not aggregate ownership of installed hooks. Each returned `HookHandle` independently owns its hook and trampoline. `Source / Destination / Trampoline / PatchedBytes` preserve installation metadata; `Remove()` exposes the restoration result, while `Dispose()` deterministically restores the original code and throws `LibmemException` on failure instead of silently marking a live hook as released. The finalizer never rewrites process code from the GC thread. `ProcessSession.Detach()` prevents new installations without bulk-removing handles already returned to callers.
 
 ### MemoryManager
 
@@ -277,7 +277,7 @@ CI validates more than compilation:
 1. **API Contract Check** parses the pinned submodule's `include/libmem/libmem.h`, extracts every public `LM_API`, and fails if upstream exposes a public API that the C++/CLI wrapper does not reference.
 2. **Runtime Smoke Tests** load `LibmemCli.dll + libmem.dll` and exercise process/module enumeration, memory allocation/read/write/protection, Data/Pattern/Signature scanning, assembly, and disassembly.
 
-Hook and VMT operations are intentionally kept out of the baseline smoke gate and validated by the separate `Hook VMT Runtime Tests` workflow. It allocates isolated executable memory in the current process and verifies hook redirection, trampoline execution, Remove, and VMT Hook / Unhook / Reset / Dispose without depending on Hearthstone or any external process.
+Hook and VMT operations are intentionally kept out of the baseline smoke gate and validated by the separate `Hook VMT Runtime Tests` workflow. Explicit `VmtManager.Dispose()` also uses deterministic restoration: if any tracked VMT entry cannot be restored, the manager remains undisposed and throws `LibmemException` instead of discarding the remaining hook bookkeeping. It allocates isolated executable memory in the current process and verifies hook redirection, trampoline execution, Remove, and VMT Hook / Unhook / Reset / Dispose without depending on Hearthstone or any external process.
 
 Injector behavior is also validated separately by `Injector Runtime Tests`. The test copies `libmem.dll` under a unique fixture name and performs real injection, module discovery, Unload, and Dispose against the current test process without depending on Hearthstone.
 
