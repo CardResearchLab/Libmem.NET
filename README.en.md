@@ -152,7 +152,7 @@ Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 
 `InjectLibrary` normalizes and validates the DLL path and rejects cross-bitness injection between the current runtime and target process. The returned `InjectedModuleHandle` preserves the managed module description and requested path. `IsActive` means **this handle still owns the load reference it created**; it does not claim that the module is the only loaded instance in the process.
 
-Explicit `Unload()` or `Dispose()` attempts one matching `FreeLibrary`. Because Windows DLLs are reference-counted and the pinned upstream `LM_UnloadModuleEx` only requests a release, a successful call does not guarantee the module disappears completely from the target process. The GC finalizer never calls `FreeLibrary` in the target process.
+Explicit `Unload()` returns the release result. `Dispose()` deterministically attempts to release the one `LoadLibrary` reference owned by the handle; if native cleanup fails, the failure is surfaced instead of silently marking live ownership as released. Because Windows DLLs are reference-counted and the pinned upstream `LM_UnloadModuleEx` only requests a release, a successful call does not guarantee the module disappears completely from the target process. The GC finalizer never calls `FreeLibrary` in the target process.
 
 ### HookManager
 
@@ -195,7 +195,7 @@ using var memory = target.Allocate(4096, MemoryProtection.ReadWrite)
 Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
 ```
 
-Calling `Free()` explicitly or leaving the `using` scope attempts to release the allocation. If the target process has already exited, its address space is considered reclaimed by the OS. The finalizer never mutates another process from the GC thread.
+Calling `Free()` explicitly lets callers inspect the release result. Leaving the `using` scope makes `Dispose()` deterministically release the allocation; if native cleanup fails, the failure is surfaced instead of silently discarding ownership. If the target process has already exited, its address space is considered reclaimed by the OS. The finalizer never mutates another process from the GC thread.
 
 ## Consume as a Git submodule
 
