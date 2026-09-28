@@ -64,6 +64,14 @@ assert "bool HookHandle::IsDisposed::get()" in source
 assert 'throw gcnew InvalidOperationException("Unhook failed; hook remains installed.")' not in source
 print("PASS HookHandle lifecycle contract")
 
+assert "bool VmtManager::IsDisposed::get()" in source
+assert "bool VmtManager::ResetNative()" in source
+assert "while(native_->hkentries!=LM_NULLPTR)" in source
+vmt_finalizer = source.split("VmtManager::!VmtManager()", 1)[1].split("\n}", 1)[0]
+assert "LM_VmtFree" not in vmt_finalizer
+assert "LM_VmtReset" not in vmt_finalizer
+print("PASS VmtManager lifecycle contract")
+
 version = (root / "VERSION").read_text(encoding="utf-8").strip()
 assert re.fullmatch(r"\d+\.\d+\.\d+", version), (
     f"VERSION must use MAJOR.MINOR.PATCH format: {version!r}"

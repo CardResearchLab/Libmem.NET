@@ -202,8 +202,11 @@ namespace LibmemCli {
     public ref class VmtManager sealed : IDisposable {
     private:
         lm_vmt_t* native_;
+        bool disposed_;
+        bool ResetNative();
     public:
         VmtManager(UInt64 vtableAddress);
+        property bool IsDisposed { bool get(); }
         void Hook(UInt64 index, UInt64 replacementAddress);
         bool Unhook(UInt64 index);
         UInt64 GetOriginal(UInt64 index);

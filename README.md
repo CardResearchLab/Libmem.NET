@@ -357,7 +357,7 @@ jobs:
 
 这样如果卸载失败，`IsInstalled` 不会被错误地清零。Finalizer 仍然不会在 GC 线程中修改目标进程代码。
 
-原生 VMT API 则封装为可释放的 `VmtManager`。
+原生 VMT API 则封装为可释放的 `VmtManager`。当前固定的 libmem 版本中，`LM_VmtReset` 在释放内部条目后仍会再次读取该条目的索引；因此 `VmtManager.Reset / Dispose` 会先逐项调用 `LM_VmtUnhook` 清空记录，再在空列表上调用上游 Reset/Free，避开该 use-after-free 路径。GC Finalizer 不会改写 VTable；如果调用方跳过显式 `Dispose` 且仍有活动 Hook，宁可留下少量原生 bookkeeping 泄漏，也不会在 GC 线程里修改函数表。
 
 ## 重要行为与限制
 
