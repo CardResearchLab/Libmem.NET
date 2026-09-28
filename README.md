@@ -257,6 +257,7 @@ artifacts/package/LibmemCli-windows-x64/
 └─ THIRD_PARTY_NOTICES.md
 
 artifacts/package/LibmemCli-windows-x64.zip
+artifacts/package/LibmemCli-windows-x64.zip.sha256
 ```
 
 ## 版本与自动验证
@@ -270,7 +271,10 @@ Runtime 包中的 `manifest.json` 会记录：
 - 固定的上游 libmem commit；
 - 目标框架（`net8.0`）；
 - 平台（`win-x64`）；
-- 构建配置（Debug / Release）。
+- 构建配置（Debug / Release）；
+- 包内每个实际文件的文件名、字节数和 SHA-256。
+
+打包后还会运行统一的 `eng/verify-package.py`：逐项核对 manifest 中的文件清单、大小、SHA-256，确认 ZIP 内容与目录内容一致，并验证外部 `.zip.sha256`。Release 发布时还会要求 manifest 的 `repositoryCommit` 必须等于本次发布的 Git commit，避免“版本号对了但包来自别的提交”。
 
 CI 不只检查“能否编译”，还会执行两层自动验证：
 
