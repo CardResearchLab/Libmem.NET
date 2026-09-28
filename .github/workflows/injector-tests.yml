@@ -19,8 +19,12 @@ permissions:
 
 jobs:
   injector:
-    name: Injector x64
+    name: Injector ${{ matrix.platform }}
     runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x64, x86]
 
     steps:
       - name: Checkout
@@ -32,6 +36,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+          architecture: ${{ matrix.platform }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -44,8 +49,8 @@ jobs:
 
       - name: Build LibmemCli
         shell: pwsh
-        run: .\build.ps1 -Configuration Release -Platform x64
+        run: .\build.ps1 -Configuration Release -Platform ${{ matrix.platform }}
 
       - name: Run Injector runtime tests
         shell: pwsh
-        run: dotnet run --project .\tests\LibmemCli.InjectorTests\LibmemCli.InjectorTests.csproj -c Release -p:Platform=x64
+        run: dotnet run --project .\tests\LibmemCli.InjectorTests\LibmemCli.InjectorTests.csproj -c Release -p:Platform=${{ matrix.platform }}
