@@ -233,9 +233,9 @@ Do not mix outputs from different configurations or commits.
 
 The repository includes five automation workflows:
 
-- \`.github/workflows/build.yml\`: builds Release x64 on pushes to \`main\`, pull requests, or manual runs, then uploads the \`LibmemCli-windows-x64\` artifact.
+- \`.github/workflows/build.yml\`: builds Release x64 and x86 as a matrix on pushes to \`main\`, pull requests, or manual runs, then uploads architecture-specific artifacts.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
-- \`.github/workflows/release.yml\`: builds tags matching \`v*\`, creates a GitHub Release, and attaches \`LibmemCli-windows-x64.zip\`.
+- \`.github/workflows/release.yml\`: builds both x64 and x86 for \`v*\` tags or \`release/v*\` branches and attaches both runtime ZIPs to the GitHub Release.
 - \`.github/workflows/hook-vmt-tests.yml\`: runs dedicated real Hook / trampoline / VMT lifecycle tests separately from the baseline smoke suite.
 - \`.github/workflows/injector-tests.yml\`: independently validates DLL injection, module discovery, explicit Unload, and Dispose lifetime behavior.
 
