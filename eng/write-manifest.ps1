@@ -42,8 +42,21 @@ function Get-GitValue {
 $repositoryCommit = Get-GitValue -WorkingDirectory $root -Arguments @('rev-parse', 'HEAD')
 $libmemCommit = Get-GitValue -WorkingDirectory (Join-Path $root 'third_party\libmem') -Arguments @('rev-parse', 'HEAD')
 
+$packageFiles = @(
+    Get-ChildItem -Path $Destination -File |
+        Where-Object { $_.Name -ne 'manifest.json' } |
+        Sort-Object Name |
+        ForEach-Object {
+            [ordered]@{
+                name = $_.Name
+                size = [UInt64]$_.Length
+                sha256 = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+        }
+)
+
 $manifest = [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     packageVersion = $version
     repository = 'HearthstoneModding/Libmem'
     repositoryCommit = $repositoryCommit
@@ -51,11 +64,7 @@ $manifest = [ordered]@{
     targetFramework = 'net8.0'
     platform = "win-$Platform"
     configuration = $Configuration
-    files = @(
-        'LibmemCli.dll'
-        'Ijwhost.dll'
-        'libmem.dll'
-    )
+    files = $packageFiles
 }
 
 New-Item -ItemType Directory -Force -Path $Destination | Out-Null
