@@ -11,6 +11,7 @@ for file in [
     "src/LibmemCli.vcxproj",
     "samples/Example.csproj",
     "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj",
+    "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj",
 ]:
     ET.parse(root / file)
     print("PASS XML", file)
