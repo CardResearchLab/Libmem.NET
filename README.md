@@ -10,7 +10,9 @@
 
 LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装，面向 Windows x64 / .NET 8 项目。
 
-本项目封装了当前固定版本 libmem 头文件中公开的全部函数，并使用托管模型、托管字节数组以及符合 .NET 使用习惯的 API 暴露给 C# / .NET。libmem 中普通函数与 `Ex` 函数通常在托管层对应为一组重载。
+本项目封装了当前固定版本 libmem 头文件中公开的全部函数，并使用托管类型、托管字节数组以及符合 .NET 使用习惯的 API 暴露给 C# / .NET。libmem 中普通函数与 `Ex` 函数通常在托管层对应为一组重载。
+
+LibmemCli 的职责止于 **libmem native → .NET 的映射、必要的类型转换与原生资源生命周期管理**。它不维护业务状态快照、游戏状态、进程/模块缓存或自动重扫逻辑；这些策略由调用方自行实现。
 
 原生 libmem 以固定版本的 Git Submodule 引入，并会在构建 C++/CLI 封装前自动编译。
 
@@ -90,11 +92,10 @@ var process = Libmem.CurrentProcess()
 using var session = Libmem.Attach(process)
     ?? throw new InvalidOperationException("Attach failed");
 
-var snapshot = session.Snapshot;
 Console.WriteLine(
-    $"Process: {snapshot.Name}  PID={snapshot.Pid}  Arch={snapshot.Architecture}  Bits={snapshot.Bits}");
+    $"Process: {process.Name}  PID={process.Pid}  Arch={process.Architecture}  Bits={process.Bits}");
 
-foreach (var module in session.Modules.Snapshot())
+foreach (var module in session.Modules.Enumerate())
 {
     Console.WriteLine(
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
@@ -105,7 +106,7 @@ foreach (var module in session.Modules.Snapshot())
 
 ## ProcessSession
 
-`ProcessSession` 是面向后续注入 SDK 的长期进程上下文。它通过 **PID + 进程启动时间** 锁定一个具体进程身份，并提供明确的 Attach / Detach 生命周期：
+`ProcessSession` 是 LibmemCli 提供的可选便利封装：它通过 **PID + 进程启动时间** 锁定一个具体进程身份，并为同一目标上的内存、模块、Hook 与注入调用提供明确的 Attach / Detach 生命周期。它不承担上层业务状态管理：
 
 ```csharp
 using var target = Libmem.Attach("Hearthstone.exe");
@@ -121,21 +122,9 @@ if (!target.IsAlive())
 var latest = target.Refresh();
 ```
 
-当前阶段 `ProcessSession` 主要负责进程身份与生命周期，不持有 Windows 原生进程句柄。后续 v0.2.0 的 `MemoryManager`、`ModuleManager`、`HookManager` 和 `Injector` 会逐步挂到这一上下文之上。
+当前 `ProcessSession` 不持有 Windows 原生进程句柄；`MemoryManager`、`ModuleManager`、`HookManager` 和 `InjectorManager` 只是围绕 libmem 调用提供目标绑定和资源生命周期约束。
 
-现有 `Libmem.*` 静态 API 保持兼容，不需要一次性迁移已有代码。
-
-### 只读 Snapshot
-
-`ProcessSession.Snapshot` 和 `ModuleManager.Snapshot()` 提供与操作句柄分离的不可变状态视图。`ProcessSnapshot` / `ModuleSnapshot` 只包含描述性数据，没有公开 setter，也不承担目标进程资源所有权，因此可以安全保存并在 `ProcessSession.Detach()` 之后继续读取已有快照。
-
-```csharp
-ProcessSnapshot process = target.Snapshot;
-IReadOnlyList<ModuleSnapshot> modules = target.Modules.Snapshot();
-ModuleSnapshot? unity = target.Modules.FindSnapshot("UnityPlayer.dll");
-```
-
-Snapshot 用于日志、事件、状态缓存和跨层传递；需要执行读写、加载、Hook 或注入时，仍通过对应的 Session-bound Manager 完成。
+现有 `Libmem.*` 静态 API 保持可直接使用。需要 Snapshot、缓存、事件状态或跨层状态模型时，应在调用方项目中基于这些返回值自行构建。
 
 ### ModuleManager
 
@@ -163,7 +152,7 @@ using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll
 Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 ```
 
-`InjectLibrary` 会规范化并检查 DLL 路径，并拒绝当前 runtime 与目标进程位宽不同的跨位宽注入。返回的 `InjectedModuleHandle` 保存模块快照与请求路径；`IsActive` 表示**这个 Handle 所拥有的一次加载引用尚未释放**，并不等价于“该 DLL 一定仍是目标进程中的唯一实例”。
+`InjectLibrary` 会规范化并检查 DLL 路径，并拒绝当前 runtime 与目标进程位宽不同的跨位宽注入。返回的 `InjectedModuleHandle` 保存已加载模块的托管描述与请求路径；`IsActive` 表示**这个 Handle 所拥有的一次加载引用尚未释放**，并不等价于“该 DLL 一定仍是目标进程中的唯一实例”。
 
 显式 `Unload()` 或 `Dispose()` 会尝试执行一次匹配的 `FreeLibrary`。由于 Windows DLL 引用计数以及固定 libmem 上游 `LM_UnloadModuleEx` 的语义，即使调用成功，也不承诺模块一定完全从目标进程消失。GC Finalizer 不会对目标进程执行 `FreeLibrary`。
 
@@ -175,10 +164,10 @@ Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 using var hook = target.Hooks.Install(source, destination)
     ?? throw new InvalidOperationException("Hook failed");
 
-Console.WriteLine($"trampoline=0x{hook.Trampoline:X}");
+Console.WriteLine($"source=0x{hook.Source:X} destination=0x{hook.Destination:X} trampoline=0x{hook.Trampoline:X}");
 ```
 
-`HookManager` 本身不接管已创建 Hook 的所有权；返回的 `HookHandle` 负责自己的 `Remove / Dispose` 生命周期。这样 `ProcessSession.Detach()` 只阻止继续安装新 Hook，不会在调用方没有明确要求时批量修改目标代码。保存下来的 `HookManager` 在 Session Detach 后继续使用会抛出 `ObjectDisposedException`。
+`HookManager` 本身不接管已创建 Hook 的所有权；返回的 `HookHandle` 负责自己的 `Remove / Dispose` 生命周期。`Dispose()` 会确定性尝试恢复原始代码，恢复失败会抛出异常而不是静默把 Handle 标记为已释放；若调用方遗漏显式释放，Finalizer 只作为最后一道 best-effort 清理。`ProcessSession.Detach()` 只阻止继续安装新 Hook，不会批量修改已有 Hook。
 
 ### MemoryManager
 
