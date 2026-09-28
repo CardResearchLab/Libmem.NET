@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Removed `ProcessSnapshot` / `ModuleSnapshot` and snapshot-specific APIs/workflow; application snapshots, caches, and game-state models belong to wrapper consumers.
+- Reaffirmed the x64-first boundary: the pinned libmem public C API is fully referenced by LibmemCli, while x86/x64 dual-architecture work remains deferred.
+- Clarified `ProcessSession` as an optional target-bound convenience wrapper rather than an application state container.
+
 ## 0.2.0
 
 LibmemCli 0.2.0 turns the wrapper into a session-oriented injection and memory toolkit for .NET 8 / Windows x64.
