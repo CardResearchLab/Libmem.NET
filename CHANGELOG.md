@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Expanded x64 runtime smoke coverage across process command lines, threads, modules/exported symbols, memory segments, SetMemory, DeepPointer, single-instruction assembly/disassembly, and CodeLength.
+- Kept mutation-oriented tests isolated to memory allocated inside the test process.
+
 - Hardened Hook/VMT ownership: `HookHandle` now retains `Destination`, explicit hook disposal surfaces unhook failure, and `VmtManager.Dispose()` preserves native bookkeeping when restoration fails.
 - Mapped Hook/VMT setup and restoration failures to `LibmemException` while keeping GC finalizers non-mutating.
 
