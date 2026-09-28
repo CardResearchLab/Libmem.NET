@@ -649,14 +649,18 @@ ProcessInfo^ HookManager::Target() {
     return session_->Target;
 }
 HookHandle^ HookManager::Install(UInt64 source,UInt64 destination) {
-    return Libmem::HookCode(Target(),source,destination);
+    auto handle=Libmem::HookCode(Target(),source,destination);
+    if(handle==nullptr)
+        throw gcnew LibmemException("LM_HookCodeEx", "Failed to install hook in the target process.");
+    return handle;
 }
 
-HookHandle::HookHandle(ProcessInfo^ target,UInt64 from,UInt64 trampoline,UInt64 size)
-    : target_(nullptr),from_(from),trampoline_(trampoline),size_(size),installed_(true),disposed_(false) {
+HookHandle::HookHandle(ProcessInfo^ target,UInt64 from,UInt64 destination,UInt64 trampoline,UInt64 size)
+    : target_(nullptr),from_(from),destination_(destination),trampoline_(trampoline),size_(size),installed_(true),disposed_(false) {
     if(target!=nullptr) target_=process(proc(target));
 }
 UInt64 HookHandle::Source::get() { return from_; }
+UInt64 HookHandle::Destination::get() { return destination_; }
 UInt64 HookHandle::Trampoline::get() { return trampoline_; }
 UInt64 HookHandle::PatchedBytes::get() { return size_; }
 bool HookHandle::IsInstalled::get() { return installed_; }
@@ -683,7 +687,10 @@ bool HookHandle::Remove() {
 }
 HookHandle::~HookHandle() {
     if(disposed_) return;
-    if(installed_) Remove();
+    if(installed_ && !Remove())
+        throw gcnew LibmemException(
+            target_!=nullptr ? "LM_UnhookCodeEx" : "LM_UnhookCode",
+            "Failed to remove hook during Dispose; the hook remains installed.");
     disposed_=true;
     target_=nullptr;
 }
@@ -697,16 +704,16 @@ HookHandle::!HookHandle() {
 HookHandle^ Libmem::HookCode(UInt64 from,UInt64 to) {
     lm_address_t trampoline=LM_ADDRESS_BAD;
     auto n=LM_HookCode(static_cast<lm_address_t>(from),static_cast<lm_address_t>(to),&trampoline);
-    return n ? gcnew HookHandle(nullptr,from,trampoline,n) : nullptr;
+    return n ? gcnew HookHandle(nullptr,from,to,trampoline,n) : nullptr;
 }
 HookHandle^ Libmem::HookCode(ProcessInfo^ input,UInt64 from,UInt64 to) {
     auto p=proc(input); lm_address_t trampoline=LM_ADDRESS_BAD;
     auto n=LM_HookCodeEx(&p,static_cast<lm_address_t>(from),static_cast<lm_address_t>(to),&trampoline);
-    return n ? gcnew HookHandle(input,from,trampoline,n) : nullptr;
+    return n ? gcnew HookHandle(input,from,to,trampoline,n) : nullptr;
 }
 VmtManager::VmtManager(UInt64 address) : native_(new lm_vmt_t{}), disposed_(false) {
     if(address==0 || !LM_VmtNew(reinterpret_cast<lm_address_t*>(static_cast<uintptr_t>(address)),native_)) {
-        delete native_; native_=nullptr; disposed_=true; throw gcnew InvalidOperationException("LM_VmtNew failed.");
+        delete native_; native_=nullptr; disposed_=true; throw gcnew LibmemException("LM_VmtNew", "LM_VmtNew failed.");
     }
 }
 bool VmtManager::IsDisposed::get() { return disposed_; }
@@ -723,7 +730,8 @@ bool VmtManager::ResetNative() {
 }
 void VmtManager::Hook(UInt64 index,UInt64 to) {
     if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
-    if(!LM_VmtHook(native_,static_cast<lm_size_t>(index),static_cast<lm_address_t>(to))) throw gcnew InvalidOperationException("LM_VmtHook failed.");
+    if(!LM_VmtHook(native_,static_cast<lm_size_t>(index),static_cast<lm_address_t>(to)))
+        throw gcnew LibmemException("LM_VmtHook", "LM_VmtHook failed.");
 }
 bool VmtManager::Unhook(UInt64 index) {
     if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
@@ -735,16 +743,25 @@ UInt64 VmtManager::GetOriginal(UInt64 index) {
 }
 void VmtManager::Reset() {
     if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
-    if(!ResetNative()) throw gcnew InvalidOperationException("VMT reset failed; one or more hooks may remain installed.");
+    if(!ResetNative())
+        throw gcnew LibmemException(
+            "LM_VmtUnhook",
+            "VMT reset failed because one or more tracked hooks could not be removed.");
     // Safe after ResetNative: the upstream list is empty, avoiding its reset use-after-free path.
     LM_VmtReset(native_);
 }
 VmtManager::~VmtManager() {
     if(disposed_) return;
     if(native_) {
-        // Explicit Dispose performs best-effort restoration. Only call LM_VmtFree after
-        // all tracked entries were removed, so the pinned upstream reset bug is unreachable.
-        if(ResetNative()) LM_VmtFree(native_);
+        // Explicit Dispose is deterministic. Do not discard the native bookkeeping if
+        // one or more VMT entries could not be restored; callers can catch and retry.
+        if(!ResetNative())
+            throw gcnew LibmemException(
+                "LM_VmtUnhook",
+                "Failed to restore one or more VMT hooks during Dispose; the manager remains active.");
+        // Safe after ResetNative: the tracked-entry list is empty, avoiding the pinned
+        // upstream LM_VmtReset use-after-free path inside LM_VmtFree.
+        LM_VmtFree(native_);
         delete native_;
         native_=nullptr;
     }
