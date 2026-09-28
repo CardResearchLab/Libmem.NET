@@ -4,6 +4,10 @@
 
 ### Changed
 
+- Upgraded the x64 runtime package manifest to schema v2 with per-file size and SHA-256 metadata.
+- Added an external SHA-256 checksum for the runtime ZIP and a shared package verifier used by build/reusable/release workflows.
+- Release publication now verifies package version, platform/configuration, file integrity, archive integrity, and repository commit provenance before creating a GitHub Release.
+
 - Expanded x64 runtime smoke coverage across process command lines, threads, modules/exported symbols, memory segments, SetMemory, DeepPointer, single-instruction assembly/disassembly, and CodeLength.
 - Kept mutation-oriented tests isolated to memory allocated inside the test process.
 
