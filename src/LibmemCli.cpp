@@ -180,10 +180,11 @@ RemoteAllocation::!RemoteAllocation() {
 void ProcessSession::ThrowIfDisposed() {
     if(disposed_) throw gcnew ObjectDisposedException("ProcessSession");
 }
-ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), disposed_(false) {
+ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), modules_(nullptr), disposed_(false) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
     identity_=process(proc(input));
     memory_=gcnew MemoryManager(this);
+    modules_=gcnew ModuleManager(this);
 }
 ProcessInfo^ ProcessSession::Target::get() {
     ThrowIfDisposed();
@@ -213,6 +214,10 @@ MemoryManager^ ProcessSession::Memory::get() {
     ThrowIfDisposed();
     return memory_;
 }
+ModuleManager^ ProcessSession::Modules::get() {
+    ThrowIfDisposed();
+    return modules_;
+}
 bool ProcessSession::IsDisposed::get() { return disposed_; }
 bool ProcessSession::IsAlive() {
     ThrowIfDisposed();
@@ -234,6 +239,7 @@ void ProcessSession::Detach() {
     disposed_=true;
     identity_=nullptr;
     memory_=nullptr;
+    modules_=nullptr;
 }
 ProcessSession::~ProcessSession() { Detach(); }
 
@@ -287,6 +293,26 @@ UInt64 MemoryManager::PatternScan(array<Byte>^ pattern,String^ mask,UInt64 addre
 }
 UInt64 MemoryManager::SigScan(String^ signature,UInt64 address,UInt64 scanSize) {
     return Libmem::SigScan(Target(),signature,address,scanSize);
+}
+
+ModuleManager::ModuleManager(ProcessSession^ session) : session_(session) {
+    if(session==nullptr) throw gcnew ArgumentNullException("session");
+}
+ProcessInfo^ ModuleManager::Target() {
+    if(session_==nullptr) throw gcnew ObjectDisposedException("ModuleManager");
+    return session_->Target;
+}
+List<ModuleInfo^>^ ModuleManager::Enumerate() {
+    return Libmem::EnumModules(Target());
+}
+ModuleInfo^ ModuleManager::Find(String^ name) {
+    return Libmem::FindModule(Target(),name);
+}
+ModuleInfo^ ModuleManager::Load(String^ path) {
+    return Libmem::LoadModule(Target(),path);
+}
+bool ModuleManager::Unload(ModuleInfo^ moduleInfo) {
+    return Libmem::UnloadModule(Target(),moduleInfo);
 }
 
 List<ProcessInfo^>^ Libmem::EnumProcesses() {
