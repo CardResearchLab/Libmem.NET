@@ -139,6 +139,19 @@ var unity = modules.Find("UnityPlayer.dll");
 
 It currently provides `Enumerate / Find / Load / Unload`. Like `MemoryManager`, it follows the ProcessSession lifetime and rejects operations after Detach.
 
+### HookManager
+
+`ProcessSession.Hooks` binds hook installation to the current target process:
+
+```csharp
+using var hook = target.Hooks.Install(source, destination)
+    ?? throw new InvalidOperationException("Hook failed");
+
+Console.WriteLine($"trampoline=0x{hook.Trampoline:X}");
+```
+
+`HookManager` does not take ownership of installed hooks. Each returned `HookHandle` owns its own `Remove / Dispose` lifetime. Therefore `ProcessSession.Detach()` prevents new hook installation without silently rewriting target code. A saved `HookManager` rejects use after its session is detached with `ObjectDisposedException`.
+
 ### MemoryManager
 
 `ProcessSession.Memory` groups target-process memory operations into one session-bound API:
