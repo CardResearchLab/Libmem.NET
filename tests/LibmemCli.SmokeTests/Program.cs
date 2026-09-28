@@ -13,6 +13,37 @@ Check(current is not null, "CurrentProcess returned null.");
 Check(current!.Pid == (uint)Environment.ProcessId, "CurrentProcess PID does not match the test process.");
 Check(current.IsAlive(), "Current process should be alive.");
 
+var session = Libmem.Attach(current);
+Check(session is not null, "Attach(ProcessInfo) returned null for the current process.");
+Check(session!.Pid == current.Pid, "ProcessSession PID does not match the attached process.");
+Check(session.Architecture == current.Architecture, "ProcessSession architecture does not match.");
+Check(session.Bits == current.Bits, "ProcessSession bitness does not match.");
+Check(session.IsAlive(), "Attached ProcessSession should report the current process as alive.");
+
+var sessionSnapshot = session.Info;
+sessionSnapshot.Pid = 0;
+Check(session.Pid == current.Pid, "Mutating a returned ProcessInfo snapshot changed ProcessSession identity.");
+
+var refreshed = session.Refresh();
+Check(refreshed is not null && refreshed.Pid == current.Pid, "ProcessSession.Refresh failed for the current process.");
+
+session.Detach();
+Check(session.IsDisposed, "ProcessSession should be disposed after Detach.");
+
+var disposedThrows = false;
+try
+{
+    _ = session.Pid;
+}
+catch (ObjectDisposedException)
+{
+    disposedThrows = true;
+}
+Check(disposedThrows, "ProcessSession members should reject use after Detach.");
+
+using var pidSession = Libmem.Attach((uint)Environment.ProcessId);
+Check(pidSession is not null && pidSession.Pid == current.Pid, "Attach(pid) failed for the current process.");
+
 var processes = Libmem.EnumProcesses();
 Check(processes.Any(p => p.Pid == current.Pid), "EnumProcesses did not include the current process.");
 
