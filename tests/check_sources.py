@@ -113,6 +113,27 @@ assert "LM_VmtFree" not in vmt_finalizer
 assert "LM_VmtReset" not in vmt_finalizer
 print("PASS VmtManager lifecycle contract")
 
+manifest_script = (root / "eng/write-manifest.ps1").read_text(encoding="utf-8")
+package_script = (root / "eng/package-runtime.ps1").read_text(encoding="utf-8")
+verify_script_path = root / "eng/verify-package.py"
+verify_script = verify_script_path.read_text(encoding="utf-8")
+compile(verify_script, str(verify_script_path), "exec")
+build_workflow = (root / ".github/workflows/build.yml").read_text(encoding="utf-8")
+reusable_workflow = (root / ".github/workflows/reusable-build.yml").read_text(encoding="utf-8")
+release_workflow = (root / ".github/workflows/release.yml").read_text(encoding="utf-8")
+
+assert "schemaVersion = 2" in manifest_script
+assert "Get-FileHash" in manifest_script
+assert "sha256 = " in manifest_script
+assert '$archiveChecksum = "$archive.sha256"' in package_script
+assert "Get-FileHash -Path $archive -Algorithm SHA256" in package_script
+assert "verify-package.py" in build_workflow
+assert "verify-package.py" in reusable_workflow
+assert "verify-package.py" in release_workflow
+assert "--expected-repository-commit" in release_workflow
+assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
+print("PASS package integrity and release provenance contract")
+
 version = (root / "VERSION").read_text(encoding="utf-8").strip()
 assert re.fullmatch(r"\d+\.\d+\.\d+", version), (
     f"VERSION must use MAJOR.MINOR.PATCH format: {version!r}"
