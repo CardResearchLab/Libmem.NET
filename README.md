@@ -1,14 +1,14 @@
-# LibmemCli — libmem 5.x C++/CLI 封装（Windows x64 / .NET 8）
+# LibmemCli — libmem 5.x C++/CLI 封装（Windows x86/x64 / .NET 8）
 
 [简体中文](README.md) | [English](README.en.md)
 
 [![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
-![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
+![Windows x86/x64](https://img.shields.io/badge/Windows-x86%20%7C%20x64-0078D4)
 
 
-LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装，面向 Windows x64 / .NET 8 项目。
+LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装，面向 Windows x86/x64 / .NET 8 项目。
 
 本项目封装了当前固定版本 libmem 头文件中公开的全部函数，并使用托管类型、托管字节数组以及符合 .NET 使用习惯的 API 暴露给 C# / .NET。libmem 中普通函数与 `Ex` 函数通常在托管层对应为一组重载。
 
@@ -24,7 +24,7 @@ LibmemCli 的职责止于 **libmem native → .NET 的映射、必要的类型�
 
 ```mermaid
 flowchart LR
-    App["C# / .NET 8 x64 项目"] --> Cli["LibmemCli.dll<br/>C++/CLI 托管封装"]
+    App["C# / .NET 8 x86/x64 项目"] --> Cli["LibmemCli.dll<br/>C++/CLI 托管封装"]
     Cli --> Native["libmem.dll<br/>rdbo/libmem"]
     Native --> Win["Windows 原生进程 / 内存 API"]
 
@@ -39,7 +39,7 @@ flowchart LR
 
 ## 环境要求
 
-- Windows x64
+- Windows x86 或 x64
 - Visual Studio，并安装：
   - **使用 C++ 的桌面开发**
   - **适用于 v143 生成工具的 C++/CLI 支持**
@@ -67,15 +67,15 @@ cd Libmem
 
 `bootstrap.ps1` 仍保留为兼容入口。
 
-也可以直接打开 `LibmemCli.sln`，使用 `Debug|x64` 或 `Release|x64` 构建。Visual Studio/MSBuild 会自动执行相同的原生依赖构建流程。
+也可以直接打开 `LibmemCli.sln`，使用 `Debug|x64`、`Release|x64`、`Debug|x86` 或 `Release|x86` 构建。Visual Studio/MSBuild 会自动执行相同的原生依赖构建流程。
 
 生成文件不会写入源码目录，默认输出到：
 
 ```text
-artifacts/native/x64/Release/bin/libmem.dll
-artifacts/native/x64/Release/lib/libmem.lib
-artifacts/managed/x64/Release/LibmemCli.dll
-artifacts/managed/x64/Release/Ijwhost.dll
+artifacts/native/{x64|x86}/Release/bin/libmem.dll
+artifacts/native/{x64|x86}/Release/lib/libmem.lib
+artifacts/managed/{x64|x86}/Release/LibmemCli.dll
+artifacts/managed/{x64|x86}/Release/Ijwhost.dll
 ```
 
 
@@ -214,7 +214,7 @@ git submodule update --init --recursive
 external/Libmem/src/LibmemCli.vcxproj
 ```
 
-加入使用方解决方案，并在 .NET 8 x64 项目中通过 `ProjectReference` 引用它。
+加入使用方解决方案，并在对应架构的 .NET 8 项目中通过 `ProjectReference` 引用它。
 
 建议使用完整的 Visual Studio MSBuild 构建整个解决方案，以确保 C++/CLI 工具链可用。
 
@@ -231,7 +231,7 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ## GitHub Actions 自动构建
 
-仓库内置六套自动化工作流：
+仓库内置五套自动化工作流：
 
 - \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64，并上传 \`LibmemCli-windows-x64\` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
@@ -250,15 +250,10 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ```text
 artifacts/package/LibmemCli-windows-x64/
-├─ LibmemCli.dll
-├─ Ijwhost.dll
-├─ libmem.dll
-├─ VERSION
-├─ manifest.json
-├─ LICENSE
-└─ THIRD_PARTY_NOTICES.md
-
 artifacts/package/LibmemCli-windows-x64.zip
+
+artifacts/package/LibmemCli-windows-x86/
+artifacts/package/LibmemCli-windows-x86.zip
 ```
 
 ## 版本与自动验证
@@ -271,7 +266,7 @@ Runtime 包中的 `manifest.json` 会记录：
 - 当前仓库 Git commit；
 - 固定的上游 libmem commit；
 - 目标框架（`net8.0`）；
-- 平台（`win-x64`）；
+- 平台（`win-x64` 或 `win-x86`）；
 - 构建配置（Debug / Release）。
 
 CI 不只检查“能否编译”，还会执行两层自动验证：
@@ -294,6 +289,7 @@ jobs:
     with:
       ref: main
       configuration: Release
+      platform: x64
       artifact-name: LibmemCli-windows-x64
 
   use-libmem:
@@ -382,7 +378,7 @@ jobs:
 
 ## 重要行为与限制
 
-1. **当前示例项目仅支持 x64。** 地址参数和返回值使用 `UInt64`。在 x64 下，libmem 的失败哨兵值 `LM_ADDRESS_BAD` 对应 `UInt64.MaxValue`。并非所有 API 都以 `0` 表示失败。本项目不会自动提权，也不提供远程架构转换或内核内存支持。
+1. **当前支持 Windows x86 与 x64，调用方进程架构必须与加载的 LibmemCli/libmem 运行时一致。** 托管 API 为保持统一仍使用 `UInt64` 表示地址，但底层地址宽度由目标构建架构决定。并非所有 libmem API 都以 `0` 表示失败。本项目不会自动提权，也不提供跨架构远程转换或内核内存支持。
 
 2. `ReadMemory` **只返回实际成功读取的字节**；`WriteMemory` 返回实际写入长度。调用方应检查短读取和未完整写入的情况。返回 0 字节可能表示目标地址不可访问。
 
