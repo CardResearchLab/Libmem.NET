@@ -124,6 +124,19 @@ var latest = target.Refresh();
 
 现有 `Libmem.*` 静态 API 保持兼容，不需要一次性迁移已有代码。
 
+### RemoteAllocation
+
+`ProcessSession.Allocate(...)` 现在返回可释放的 `RemoteAllocation`，用于明确表示“这块目标进程内存由当前对象拥有”：
+
+```csharp
+using var memory = target.Allocate(4096, MemoryProtection.ReadWrite)
+    ?? throw new InvalidOperationException("Allocation failed");
+
+Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
+```
+
+显式调用 `Free()` 或离开 `using` 作用域都会尝试释放内存；如果目标进程已经退出，则视为地址空间已被操作系统回收。Finalizer 不会在 GC 线程里修改其他进程内存。
+
 ## 作为 Git Submodule 引用
 
 可以在其他项目中将本仓库作为 Submodule 引入：
