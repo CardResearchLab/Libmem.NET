@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Added `LibmemException` with an `Operation` property for definite native libmem failures while preserving normal not-found/sentinel return semantics.
+- Mapped core enumeration, protection, allocation-release, injection-release, and fixed-size read/write failures to the unified exception type.
+
 - Hardened owned-resource disposal: `RemoteAllocation` and `InjectedModuleHandle` no longer silently discard ownership when native cleanup fails.
 - Kept GC finalizers non-mutating for remote-process resources; deterministic cleanup remains the caller's responsibility.
 
