@@ -100,6 +100,8 @@ namespace LibmemCli {
     ref class ModuleManager;
     ref class HookManager;
     ref class HookHandle;
+    ref class InjectorManager;
+    ref class InjectedModuleHandle;
 
     // ProcessSession represents an attachment to one concrete process identity (PID + start time).
     // It does not own an OS process handle; it provides a stable lifetime boundary for higher-level APIs.
@@ -109,6 +111,7 @@ namespace LibmemCli {
         MemoryManager^ memory_;
         ModuleManager^ modules_;
         HookManager^ hooks_;
+        InjectorManager^ injector_;
         bool disposed_;
         void ThrowIfDisposed();
     internal:
@@ -123,6 +126,7 @@ namespace LibmemCli {
         property MemoryManager^ Memory { MemoryManager^ get(); }
         property ModuleManager^ Modules { ModuleManager^ get(); }
         property HookManager^ Hooks { HookManager^ get(); }
+        property InjectorManager^ Injector { InjectorManager^ get(); }
         property bool IsDisposed { bool get(); }
         bool IsAlive();
         ProcessInfo^ Refresh();
@@ -165,6 +169,38 @@ namespace LibmemCli {
         ModuleInfo^ Find(String^ name);
         ModuleInfo^ Load(String^ path);
         bool Unload(ModuleInfo^ module);
+    };
+
+    // One owned LoadLibrary reference in the target process.
+    // Explicit disposal attempts one matching FreeLibrary; finalization never changes the target process.
+    public ref class InjectedModuleHandle sealed : IDisposable {
+    private:
+        ProcessInfo^ target_;
+        ModuleInfo^ module_;
+        String^ requestedPath_;
+        bool active_;
+        bool disposed_;
+    internal:
+        InjectedModuleHandle(ProcessInfo^ target, ModuleInfo^ module, String^ requestedPath);
+    public:
+        property ModuleInfo^ Module { ModuleInfo^ get(); }
+        property String^ RequestedPath { String^ get(); }
+        property bool IsActive { bool get(); }
+        property bool IsDisposed { bool get(); }
+        bool Unload();
+        ~InjectedModuleHandle();
+        !InjectedModuleHandle();
+    };
+
+    // Higher-level injection API. ModuleManager.Load remains the low-level direct wrapper.
+    public ref class InjectorManager sealed {
+    private:
+        ProcessSession^ session_;
+        ProcessInfo^ Target();
+    internal:
+        InjectorManager(ProcessSession^ session);
+    public:
+        InjectedModuleHandle^ InjectLibrary(String^ path);
     };
 
     // Session-bound hook installation. Returned HookHandle objects own their own hook lifetime.

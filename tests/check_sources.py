@@ -12,11 +12,12 @@ for file in [
     "samples/Example.csproj",
     "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj",
     "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj",
+    "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj",
 ]:
     ET.parse(root / file)
     print("PASS XML", file)
 
-for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "HookManager", "HookHandle", "VmtManager"]:
+for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
     body = header.split("public ref class " + owner, 1)[1].split("\n    };", 1)[0]
     declarations = re.findall(r"(?<!::)\b(\w+)\s*\([^;{}]*\)\s*;", body)
     declarations = {name for name in declarations if name not in {"get"}}
@@ -59,6 +60,15 @@ assert "HookManager^ ProcessSession::Hooks::get()" in source
 assert "HookHandle^ HookManager::Install(UInt64 source,UInt64 destination)" in source
 assert "return Libmem::HookCode(Target(),source,destination);" in source
 print("PASS HookManager session contract")
+
+assert "InjectorManager^ ProcessSession::Injector::get()" in source
+assert "InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path)" in source
+assert "Cross-bitness library injection is not supported" in source
+assert "bool InjectedModuleHandle::IsActive::get()" in source
+assert "bool InjectedModuleHandle::IsDisposed::get()" in source
+inject_finalizer = source.split("InjectedModuleHandle::!InjectedModuleHandle()", 1)[1].split("\n}", 1)[0]
+assert "UnloadModule" not in inject_finalizer
+print("PASS Injector lifecycle contract")
 
 assert "bool HookHandle::IsInstalled::get()" in source
 assert "bool HookHandle::IsDisposed::get()" in source

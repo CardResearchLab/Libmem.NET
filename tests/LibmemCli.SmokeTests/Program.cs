@@ -30,6 +30,7 @@ Check(refreshed is not null && refreshed.Pid == current.Pid, "ProcessSession.Ref
 var detachedMemory = session.Memory;
 var detachedModules = session.Modules;
 var detachedHooks = session.Hooks;
+var detachedInjector = session.Injector;
 session.Detach();
 Check(session.IsDisposed, "ProcessSession should be disposed after Detach.");
 
@@ -77,10 +78,22 @@ catch (ObjectDisposedException)
 }
 Check(detachedHookManagerThrows, "HookManager should reject operations after its ProcessSession is detached.");
 
+var detachedInjectorThrows = false;
+try
+{
+    _ = detachedInjector.InjectLibrary("not-a-real-library.dll");
+}
+catch (ObjectDisposedException)
+{
+    detachedInjectorThrows = true;
+}
+Check(detachedInjectorThrows, "InjectorManager should reject operations after its ProcessSession is detached.");
+
 using var pidSession = Libmem.Attach((uint)Environment.ProcessId);
 Check(pidSession is not null && pidSession.Pid == current.Pid, "Attach(pid) failed for the current process.");
 
 Check(pidSession!.Hooks is not null, "ProcessSession.Hooks returned null.");
+Check(pidSession.Injector is not null, "ProcessSession.Injector returned null.");
 
 var moduleManager = pidSession.Modules;
 var sessionModules = moduleManager.Enumerate();
