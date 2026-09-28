@@ -4,6 +4,11 @@
 
 ### Changed
 
+- Added Windows x86 alongside x64 across native builds, C++/CLI solution configurations, sample/test projects, CI matrices, reusable builds, packaging, and release assets.
+- Added pointer-width-safe address and size conversion so x86 rejects values that do not fit instead of silently truncating them.
+- Made smoke and Hook/VMT runtime tests architecture-aware, including pointer-size VMT slots and x86-specific overflow guards.
+- Kept the committed public API baseline unchanged across the dual-architecture implementation.
+
 - Added a committed x64 public API baseline and compatibility checker so accidental public signature changes fail source-contract CI.
 - Documented the explicit process for intentional pre-1.0 API changes: regenerate the baseline, review the diff, update the changelog, and version accordingly.
 
