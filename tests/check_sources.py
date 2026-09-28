@@ -115,6 +115,31 @@ assert "LM_VmtFree" not in vmt_finalizer
 assert "LM_VmtReset" not in vmt_finalizer
 print("PASS VmtManager lifecycle contract")
 
+solution = (root / "LibmemCli.sln").read_text(encoding="utf-8")
+vcxproj = (root / "src/LibmemCli.vcxproj").read_text(encoding="utf-8")
+build_script = (root / "build.ps1").read_text(encoding="utf-8")
+native_build_script = (root / "eng/build-native.ps1").read_text(encoding="utf-8")
+smoke_project = (root / "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj").read_text(encoding="utf-8")
+hook_project = (root / "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj").read_text(encoding="utf-8")
+injector_project = (root / "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj").read_text(encoding="utf-8")
+
+assert "Debug|x86 = Debug|x86" in solution
+assert "Release|x86 = Release|x86" in solution
+assert "Debug|Win32" in vcxproj and "Release|Win32" in vcxproj
+assert "<LibmemPlatformLabel Condition=\"'$(Platform)' == 'Win32'\">x86</LibmemPlatformLabel>" in vcxproj
+assert "_WIN64;" not in vcxproj
+assert "[ValidateSet('x64', 'x86')]" in build_script
+assert "[ValidateSet('x64', 'x86')]" in native_build_script
+for project in [smoke_project, hook_project, injector_project]:
+    assert "<Platforms>x64;x86</Platforms>" in project
+    assert "<PlatformTarget>$(Platform)</PlatformTarget>" in project
+assert "lm_address_t native_address(UInt64 value" in source
+assert "lm_size_t native_size(UInt64 value" in source
+assert "bool bad_address(UInt64 value)" in source
+assert "Address does not fit the current process architecture." in source
+assert "Size or index does not fit the current process architecture." in source
+print("PASS x86/x64 architecture contract")
+
 manifest_script = (root / "eng/write-manifest.ps1").read_text(encoding="utf-8")
 package_script = (root / "eng/package-runtime.ps1").read_text(encoding="utf-8")
 verify_script_path = root / "eng/verify-package.py"
@@ -134,6 +159,10 @@ assert "verify-package.py" in reusable_workflow
 assert "verify-package.py" in release_workflow
 assert "--expected-repository-commit" in release_workflow
 assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
+assert "LibmemCli-windows-x86.zip.sha256" in release_workflow
+assert "platform: [x64, x86]" in build_workflow
+assert "platform:" in reusable_workflow and "Target platform (x64 or x86)" in reusable_workflow
+assert "needs: [build-x64, build-x86]" in release_workflow
 print("PASS package integrity and release provenance contract")
 
 subprocess.run(
