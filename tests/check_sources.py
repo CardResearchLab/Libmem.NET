@@ -54,6 +54,11 @@ assert not missing_native_apis, (
 )
 print("PASS upstream public API coverage:", len(upstream_apis))
 
+assert "bool HookHandle::IsInstalled::get()" in source
+assert "bool HookHandle::IsDisposed::get()" in source
+assert 'throw gcnew InvalidOperationException("Unhook failed; hook remains installed.")' not in source
+print("PASS HookHandle lifecycle contract")
+
 version = (root / "VERSION").read_text(encoding="utf-8").strip()
 assert re.fullmatch(r"\d+\.\d+\.\d+", version), (
     f"VERSION must use MAJOR.MINOR.PATCH format: {version!r}"

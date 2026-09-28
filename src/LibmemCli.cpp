@@ -509,20 +509,48 @@ List<InstructionInfo^>^ Libmem::Disassemble(array<Byte>^ code,LibmemCli::Archite
 UInt64 Libmem::CodeLength(UInt64 a,UInt64 size) { return LM_CodeLength(static_cast<lm_address_t>(a),static_cast<lm_size_t>(size)); }
 UInt64 Libmem::CodeLength(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_CodeLengthEx(&p,static_cast<lm_address_t>(a),static_cast<lm_size_t>(size)); }
 
-HookHandle::HookHandle(ProcessInfo^ process,UInt64 from,UInt64 trampoline,UInt64 size)
-    : target_(process),from_(from),trampoline_(trampoline),size_(size),disposed_(false) {}
-UInt64 HookHandle::Trampoline::get() { if(disposed_) throw gcnew ObjectDisposedException("HookHandle"); return trampoline_; }
-UInt64 HookHandle::PatchedBytes::get() { if(disposed_) throw gcnew ObjectDisposedException("HookHandle"); return size_; }
-bool HookHandle::Remove() {
-    if(disposed_) return true;
-    bool ok;
-    if(target_!=nullptr) { if(!target_->IsAlive()) return false; auto p=proc(target_);
-        ok=LM_UnhookCodeEx(&p,static_cast<lm_address_t>(from_),static_cast<lm_address_t>(trampoline_),static_cast<lm_size_t>(size_))!=LM_FALSE;
-    } else ok=LM_UnhookCode(static_cast<lm_address_t>(from_),static_cast<lm_address_t>(trampoline_),static_cast<lm_size_t>(size_))!=LM_FALSE;
-    if(ok) disposed_=true; return ok;
+HookHandle::HookHandle(ProcessInfo^ target,UInt64 from,UInt64 trampoline,UInt64 size)
+    : target_(nullptr),from_(from),trampoline_(trampoline),size_(size),installed_(true),disposed_(false) {
+    if(target!=nullptr) target_=process(proc(target));
 }
-HookHandle::~HookHandle() { if(!Remove()) throw gcnew InvalidOperationException("Unhook failed; hook remains installed."); }
-HookHandle::!HookHandle() { /* Never patch process code from the GC finalizer thread. Use Dispose. */ }
+UInt64 HookHandle::Source::get() { return from_; }
+UInt64 HookHandle::Trampoline::get() { return trampoline_; }
+UInt64 HookHandle::PatchedBytes::get() { return size_; }
+bool HookHandle::IsInstalled::get() { return installed_; }
+bool HookHandle::IsDisposed::get() { return disposed_; }
+bool HookHandle::Remove() {
+    if(!installed_) return true;
+    if(disposed_) return false;
+
+    bool ok;
+    if(target_!=nullptr) {
+        if(!Libmem::IsProcessAlive(target_)) {
+            // The target address space no longer exists, so the hook cannot remain installed.
+            installed_=false;
+            return true;
+        }
+        auto p=proc(target_);
+        ok=LM_UnhookCodeEx(&p,static_cast<lm_address_t>(from_),static_cast<lm_address_t>(trampoline_),static_cast<lm_size_t>(size_))!=LM_FALSE;
+    } else {
+        ok=LM_UnhookCode(static_cast<lm_address_t>(from_),static_cast<lm_address_t>(trampoline_),static_cast<lm_size_t>(size_))!=LM_FALSE;
+    }
+
+    if(ok) installed_=false;
+    return ok;
+}
+HookHandle::~HookHandle() {
+    if(disposed_) return;
+    if(installed_) Remove();
+    disposed_=true;
+    target_=nullptr;
+}
+HookHandle::!HookHandle() {
+    // Never patch process code from the GC finalizer thread.
+    // If explicit disposal was skipped, IsInstalled may have remained true until finalization.
+    target_=nullptr;
+    disposed_=true;
+}
+
 HookHandle^ Libmem::HookCode(UInt64 from,UInt64 to) {
     lm_address_t trampoline=LM_ADDRESS_BAD;
     auto n=LM_HookCode(static_cast<lm_address_t>(from),static_cast<lm_address_t>(to),&trampoline);
