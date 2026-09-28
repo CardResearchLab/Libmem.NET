@@ -18,9 +18,6 @@ $installer = Join-Path $env:RUNNER_TEMP 'dotnet-install-x86.ps1'
 Invoke-WebRequest 'https://dot.net/v1/dotnet-install.ps1' -OutFile $installer
 
 & $installer -Channel $Channel -Runtime dotnet -Architecture x86 -InstallDir $installDirectory -NoPath
-if ($LASTEXITCODE -ne 0) {
-    throw 'Failed to install the x86 .NET runtime.'
-}
 
 $fxrRoot = Join-Path $installDirectory 'host\fxr'
 $hostFxr = Get-ChildItem $fxrRoot -Recurse -Filter 'hostfxr.dll' -File -ErrorAction SilentlyContinue | Select-Object -First 1
