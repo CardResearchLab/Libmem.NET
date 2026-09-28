@@ -1,6 +1,6 @@
 # Public API baseline
 
-`LibmemCli.PublicApi.txt` is the committed public API contract for the current x64-first LibmemCli surface.
+`LibmemCli.PublicApi.txt` is the committed public API contract shared by the current Windows x86/x64 LibmemCli builds.
 
 The baseline is generated from `src/LibmemCli.h` by `eng/check-public-api.py` and is checked by `tests/check_sources.py`.
 
