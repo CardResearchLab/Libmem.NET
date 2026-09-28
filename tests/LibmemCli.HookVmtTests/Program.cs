@@ -61,6 +61,7 @@ using var hook = session.Hooks.Install(source.Address, destination.Address)
     ?? throw new InvalidOperationException("HookManager.Install returned null.");
 
 Check(hook.Source == source.Address, "HookHandle.Source does not match the hooked source.");
+Check(hook.Destination == destination.Address, "HookHandle.Destination does not match the detour destination.");
 Check(hook.Trampoline != 0 && hook.Trampoline != ulong.MaxValue, "HookHandle.Trampoline is invalid.");
 Check(hook.PatchedBytes > 0, "HookHandle.PatchedBytes must be greater than zero.");
 Check(hook.IsInstalled, "HookHandle should report installed after HookManager.Install.");
@@ -72,6 +73,16 @@ Check(hook.Remove(), "HookHandle.Remove failed.");
 Check(!hook.IsInstalled, "HookHandle should report uninstalled after Remove.");
 Check(CallNoArgs(source.Address) == 1, "Source behavior was not restored after Remove.");
 Check(hook.Remove(), "HookHandle.Remove should be idempotent after a successful removal.");
+
+// Dispose must deterministically restore an active hook, and repeated Dispose must be harmless.
+var disposeHook = session.Hooks.Install(source.Address, destination.Address)
+    ?? throw new InvalidOperationException("HookManager.Install returned null for Dispose test.");
+Check(CallNoArgs(source.Address) == 2, "Dispose-test hook did not redirect to the destination.");
+((IDisposable)disposeHook).Dispose();
+Check(disposeHook.IsDisposed, "HookHandle should report disposed after Dispose.");
+Check(!disposeHook.IsInstalled, "HookHandle should not remain installed after Dispose.");
+Check(CallNoArgs(source.Address) == 1, "HookHandle.Dispose did not restore the original source behavior.");
+((IDisposable)disposeHook).Dispose();
 
 // VmtManager lifecycle on an isolated page owned by this test process.
 using var vtablePage = memory.Allocate(4096, MemoryProtection.ReadWrite)
