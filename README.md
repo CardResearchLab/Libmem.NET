@@ -275,7 +275,7 @@ Runtime 包中的 `manifest.json` 会记录：
 CI 不只检查“能否编译”，还会执行两层自动验证：
 
 1. **API Contract Check**：直接解析固定 Submodule 中的 `include/libmem/libmem.h`，提取所有公开 `LM_API`，如果上游新增公开 API 但 C++/CLI wrapper 尚未引用，构建会失败。
-2. **Runtime Smoke Tests**：实际加载 `LibmemCli.dll + libmem.dll`，验证进程/模块枚举、内存申请与读写、内存保护、Data/Pattern/Signature Scan、汇编与反汇编。
+2. **Runtime Smoke Tests**：实际加载 `LibmemCli.dll + libmem.dll`，覆盖进程/命令行、线程、模块/导出符号、内存段、内存申请/读写/填充/保护、DeepPointer、Data/Pattern/Signature Scan、汇编/反汇编与 CodeLength。所有可控的内存测试都只操作测试进程自己的隔离分配。
 
 Hook / VMT 不作为基础 Smoke Test 的硬性门禁，而是在独立的 `Hook VMT Runtime Tests` 工作流中验证。 `VmtManager` 的显式 `Dispose()` 同样采用确定性恢复：若任一已跟踪 VMT 项无法恢复，对象保持未释放状态并抛出 `LibmemException`，不会丢掉剩余 hook bookkeeping。该测试会在当前进程分配隔离的可执行内存，验证 Hook 重定向、trampoline、Remove，以及 VMT Hook / Unhook / Reset / Dispose，不依赖炉石或其他外部进程。
 
