@@ -180,12 +180,13 @@ RemoteAllocation::!RemoteAllocation() {
 void ProcessSession::ThrowIfDisposed() {
     if(disposed_) throw gcnew ObjectDisposedException("ProcessSession");
 }
-ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), modules_(nullptr), hooks_(nullptr), disposed_(false) {
+ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), modules_(nullptr), hooks_(nullptr), injector_(nullptr), disposed_(false) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
     identity_=process(proc(input));
     memory_=gcnew MemoryManager(this);
     modules_=gcnew ModuleManager(this);
     hooks_=gcnew HookManager(this);
+    injector_=gcnew InjectorManager(this);
 }
 ProcessInfo^ ProcessSession::Target::get() {
     ThrowIfDisposed();
@@ -223,6 +224,10 @@ HookManager^ ProcessSession::Hooks::get() {
     ThrowIfDisposed();
     return hooks_;
 }
+InjectorManager^ ProcessSession::Injector::get() {
+    ThrowIfDisposed();
+    return injector_;
+}
 bool ProcessSession::IsDisposed::get() { return disposed_; }
 bool ProcessSession::IsAlive() {
     ThrowIfDisposed();
@@ -246,6 +251,7 @@ void ProcessSession::Detach() {
     memory_=nullptr;
     modules_=nullptr;
     hooks_=nullptr;
+    injector_=nullptr;
 }
 ProcessSession::~ProcessSession() { Detach(); }
 
@@ -319,6 +325,77 @@ ModuleInfo^ ModuleManager::Load(String^ path) {
 }
 bool ModuleManager::Unload(ModuleInfo^ moduleInfo) {
     return Libmem::UnloadModule(Target(),moduleInfo);
+}
+
+InjectedModuleHandle::InjectedModuleHandle(ProcessInfo^ target,ModuleInfo^ moduleInfo,String^ requestedPath)
+    : target_(nullptr),module_(nullptr),requestedPath_(requestedPath),active_(true),disposed_(false) {
+    if(target==nullptr) throw gcnew ArgumentNullException("target");
+    if(moduleInfo==nullptr) throw gcnew ArgumentNullException("module");
+    target_=process(proc(target));
+    module_=module(mod(moduleInfo));
+}
+ModuleInfo^ InjectedModuleHandle::Module::get() {
+    return module_==nullptr ? nullptr : module(mod(module_));
+}
+String^ InjectedModuleHandle::RequestedPath::get() { return requestedPath_; }
+bool InjectedModuleHandle::IsActive::get() { return active_; }
+bool InjectedModuleHandle::IsDisposed::get() { return disposed_; }
+bool InjectedModuleHandle::Unload() {
+    if(!active_) return true;
+    if(disposed_) return false;
+    if(target_==nullptr) {
+        active_=false;
+        return true;
+    }
+    if(!Libmem::IsProcessAlive(target_)) {
+        // The process address space is gone, so this loader reference cannot remain active.
+        active_=false;
+        target_=nullptr;
+        return true;
+    }
+    bool ok=Libmem::UnloadModule(target_,module_);
+    if(ok) active_=false;
+    return ok;
+}
+InjectedModuleHandle::~InjectedModuleHandle() {
+    if(disposed_) return;
+    if(active_) Unload();
+    disposed_=true;
+    target_=nullptr;
+}
+InjectedModuleHandle::!InjectedModuleHandle() {
+    // Never call FreeLibrary in another process from the GC finalizer thread.
+    target_=nullptr;
+    disposed_=true;
+}
+
+InjectorManager::InjectorManager(ProcessSession^ session) : session_(session) {
+    if(session==nullptr) throw gcnew ArgumentNullException("session");
+}
+ProcessInfo^ InjectorManager::Target() {
+    if(session_==nullptr) throw gcnew ObjectDisposedException("InjectorManager");
+    return session_->Target;
+}
+InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
+    if(String::IsNullOrWhiteSpace(path)) throw gcnew ArgumentException("Library path must not be empty.", "path");
+
+    auto target=Target();
+    if(!Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
+    if(target->Bits!=Libmem::GetBits())
+        throw gcnew NotSupportedException("Cross-bitness library injection is not supported by the current runtime.");
+
+    String^ fullPath;
+    try {
+        fullPath=System::IO::Path::GetFullPath(path);
+    } catch(Exception^ ex) {
+        throw gcnew ArgumentException("Library path is invalid.", "path", ex);
+    }
+
+    if(!System::IO::File::Exists(fullPath))
+        throw gcnew System::IO::FileNotFoundException("Library to inject was not found.", fullPath);
+
+    auto loaded=Libmem::LoadModule(target,fullPath);
+    return loaded==nullptr ? nullptr : gcnew InjectedModuleHandle(target,loaded,fullPath);
 }
 
 List<ProcessInfo^>^ Libmem::EnumProcesses() {
