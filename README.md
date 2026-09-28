@@ -124,6 +124,21 @@ var latest = target.Refresh();
 
 现有 `Libmem.*` 静态 API 保持兼容，不需要一次性迁移已有代码。
 
+### ModuleManager
+
+`ProcessSession.Modules` 提供与目标进程绑定的模块操作：
+
+```csharp
+var modules = target.Modules;
+
+foreach (var module in modules.Enumerate())
+    Console.WriteLine($"{module.Name} 0x{module.Base:X}");
+
+var unity = modules.Find("UnityPlayer.dll");
+```
+
+当前提供 `Enumerate / Find / Load / Unload`。它和 `MemoryManager` 一样遵循 Session 生命周期，Detach 后不可继续操作。
+
 ### MemoryManager
 
 `ProcessSession.Memory` 将目标进程内存操作收拢为一个 session-bound API：
