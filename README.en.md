@@ -380,7 +380,7 @@ Not-found cases and APIs where libmem itself uses an empty result keep their exi
 
 This prevents a failed removal from being reported as a successful unhook. If explicit disposal is skipped, the finalizer performs one non-throwing best-effort restore as a last resort; it does not replace deterministic `Dispose()`.
 
-The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libmem revision, `LM_VmtReset` reads an entry index again after freeing that entry. `VmtManager.Reset / Dispose` therefore remove tracked entries one-by-one with `LM_VmtUnhook` first, then call the upstream Reset/Free only after the list is empty, avoiding that use-after-free path. The GC finalizer never rewrites VTable entries; if explicit `Dispose` is skipped while hooks remain active, a small amount of native bookkeeping may leak rather than mutating the table from the GC thread.
+The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libmem revision, `LM_VmtReset` reads an entry index again after freeing that entry. `VmtManager.Reset / Dispose` therefore remove tracked entries one-by-one with `LM_VmtUnhook` first, then call the upstream Reset/Free only after the list is empty, avoiding that use-after-free path. Explicit `Dispose()` throws `LibmemException` if a tracked entry cannot be restored and keeps the manager active for diagnosis instead of pretending cleanup succeeded. The GC finalizer never rewrites VTable entries; if explicit `Dispose` is skipped while hooks remain active, a small amount of native bookkeeping may leak rather than mutating the table from the GC thread.
 
 ## Important behavior and limitations
 
