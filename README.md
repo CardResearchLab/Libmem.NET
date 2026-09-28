@@ -233,9 +233,9 @@ external/Libmem/src/LibmemCli.vcxproj
 
 仓库内置五套自动化工作流：
 
-- \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64，并上传 \`LibmemCli-windows-x64\` Artifact。
+- \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时，以矩阵方式构建 Release x64/x86，并分别上传对应架构的 Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
-- \`.github/workflows/release.yml\`：推送 \`v*\` 标签时自动构建并创建 GitHub Release，同时附带 \`LibmemCli-windows-x64.zip\`。
+- \`.github/workflows/release.yml\`：推送 \`v*\` 标签或 \`release/v*\` 分支时同时构建 x64/x86，并在 GitHub Release 中附带两个架构的 ZIP。
 - \`.github/workflows/hook-vmt-tests.yml\`：独立运行真实 Hook / trampoline / VMT 生命周期测试，与基础 Smoke Test 分离。
 - \`.github/workflows/injector-tests.yml\`：独立验证 DLL 注入、模块发现、显式 Unload 与 Dispose 生命周期。
 
