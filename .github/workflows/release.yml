@@ -24,13 +24,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: LibmemCli-windows-x64
           path: dist
 
-      - name: Validate release version
+      - name: Validate release package
         shell: bash
         run: |
           if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
@@ -39,13 +47,8 @@ jobs:
             TAG_NAME="$GITHUB_REF_NAME"
           fi
 
-          PACKAGE_VERSION="$(tr -d '\r\n' < dist/LibmemCli-windows-x64/VERSION)"
           EXPECTED_VERSION="${TAG_NAME#v}"
-
-          if [[ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]]; then
-            echo "Release ref $TAG_NAME does not match package VERSION $PACKAGE_VERSION" >&2
-            exit 1
-          fi
+          python eng/verify-package.py --package-dir dist/LibmemCli-windows-x64 --archive dist/LibmemCli-windows-x64.zip --checksum dist/LibmemCli-windows-x64.zip.sha256 --expected-version "$EXPECTED_VERSION" --expected-repository-commit "$GITHUB_SHA" --expected-platform win-x64 --expected-configuration Release
 
       - name: Publish GitHub Release
         env:
@@ -60,6 +63,7 @@ jobs:
 
           gh release create "$TAG_NAME" \
             "dist/LibmemCli-windows-x64.zip" \
+            "dist/LibmemCli-windows-x64.zip.sha256" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "$TAG_NAME" \
