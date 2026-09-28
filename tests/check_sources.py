@@ -117,6 +117,7 @@ print("PASS HookHandle lifecycle contract")
 
 assert "bool VmtManager::IsDisposed::get()" in source
 assert "bool VmtManager::ResetNative()" in source
+assert '"Failed to restore one or more VMT hooks during Dispose; the manager remains active."' in source
 assert "while(native_->hkentries!=LM_NULLPTR)" in source
 vmt_finalizer = source.split("VmtManager::!VmtManager()", 1)[1].split("\n}", 1)[0]
 assert "LM_VmtFree" not in vmt_finalizer
