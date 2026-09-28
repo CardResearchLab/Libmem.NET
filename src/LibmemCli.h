@@ -77,6 +77,25 @@ namespace LibmemCli {
         property String^ OperandString;
     };
 
+    // RemoteAllocation owns one allocation in a target process.
+    // Explicit disposal frees the allocation; finalization never touches process memory.
+    public ref class RemoteAllocation sealed : IDisposable {
+    private:
+        ProcessInfo^ target_;
+        UInt64 address_;
+        UInt64 size_;
+        bool disposed_;
+    internal:
+        RemoteAllocation(ProcessInfo^ process, UInt64 address, UInt64 size);
+    public:
+        property UInt64 Address { UInt64 get(); }
+        property UInt64 Size { UInt64 get(); }
+        property bool IsDisposed { bool get(); }
+        bool Free();
+        ~RemoteAllocation();
+        !RemoteAllocation();
+    };
+
     // ProcessSession represents an attachment to one concrete process identity (PID + start time).
     // It does not own an OS process handle; it provides a stable lifetime boundary for higher-level APIs.
     public ref class ProcessSession sealed : IDisposable {
@@ -96,6 +115,7 @@ namespace LibmemCli {
         property bool IsDisposed { bool get(); }
         bool IsAlive();
         ProcessInfo^ Refresh();
+        RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);
         void Detach();
         ~ProcessSession();
     };
