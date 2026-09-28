@@ -11,24 +11,39 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-x64:
     uses: ./.github/workflows/reusable-build.yml
     with:
       ref: ${{ github.ref_name }}
       configuration: Release
+      platform: x64
       artifact-name: LibmemCli-windows-x64
+
+  build-x86:
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      ref: ${{ github.ref_name }}
+      configuration: Release
+      platform: x86
+      artifact-name: LibmemCli-windows-x86
 
   release:
     name: Publish release
-    needs: build
+    needs: [build-x64, build-x86]
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download build artifact
+      - name: Download x64 build artifact
         uses: actions/download-artifact@v4
         with:
           name: LibmemCli-windows-x64
-          path: dist
+          path: dist/x64
+
+      - name: Download x86 build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: LibmemCli-windows-x86
+          path: dist/x86
 
       - name: Validate release version
         shell: bash
@@ -39,11 +54,12 @@ jobs:
             TAG_NAME="$GITHUB_REF_NAME"
           fi
 
-          PACKAGE_VERSION="$(tr -d '\r\n' < dist/LibmemCli-windows-x64/VERSION)"
+          PACKAGE_VERSION_X64="$(tr -d '\r\n' < dist/x64/LibmemCli-windows-x64/VERSION)"
+          PACKAGE_VERSION_X86="$(tr -d '\r\n' < dist/x86/LibmemCli-windows-x86/VERSION)"
           EXPECTED_VERSION="${TAG_NAME#v}"
 
-          if [[ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]]; then
-            echo "Release ref $TAG_NAME does not match package VERSION $PACKAGE_VERSION" >&2
+          if [[ "$PACKAGE_VERSION_X64" != "$EXPECTED_VERSION" || "$PACKAGE_VERSION_X86" != "$EXPECTED_VERSION" ]]; then
+            echo "Release ref $TAG_NAME does not match package versions x64=$PACKAGE_VERSION_X64 x86=$PACKAGE_VERSION_X86" >&2
             exit 1
           fi
 
@@ -59,7 +75,8 @@ jobs:
           fi
 
           gh release create "$TAG_NAME" \
-            "dist/LibmemCli-windows-x64.zip" \
+            "dist/x64/LibmemCli-windows-x64.zip" \
+            "dist/x86/LibmemCli-windows-x86.zip" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "$TAG_NAME" \
