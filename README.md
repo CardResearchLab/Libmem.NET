@@ -334,6 +334,16 @@ jobs:
 - `LM_HookCode[Ex]` → `Libmem.HookCode`
 - `LM_UnhookCode[Ex]` → 可释放的 `HookHandle`
 
+`HookHandle` 现在明确区分 **Hook 是否仍安装** 与 **对象是否已 Dispose**：
+
+- `Source / Trampoline / PatchedBytes`：保留安装元数据；
+- `IsInstalled`：目标代码当前是否仍被该 Handle 视为已 Hook；
+- `IsDisposed`：托管 Handle 生命周期是否已经结束；
+- `Remove()`：尝试卸载 Hook，成功后将 `IsInstalled` 置为 false，但不会自动 Dispose；
+- `Dispose()`：best-effort 清理，不再因 Unhook 失败而抛异常。
+
+这样如果卸载失败，`IsInstalled` 不会被错误地清零。Finalizer 仍然不会在 GC 线程中修改目标进程代码。
+
 原生 VMT API 则封装为可释放的 `VmtManager`。
 
 ## 重要行为与限制
