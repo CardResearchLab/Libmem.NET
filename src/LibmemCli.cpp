@@ -12,6 +12,10 @@ using namespace System::Collections::Generic;
 using namespace LibmemCli;
 
 namespace {
+    lm_address_t native_address(UInt64 value, String^ parameterName);
+    lm_size_t native_size(UInt64 value, String^ parameterName);
+    bool bad_address(UInt64 value);
+
     std::string utf8(String^ value) {
         if (value == nullptr) throw gcnew ArgumentNullException("value");
         if (value->IndexOf('\0') >= 0) throw gcnew ArgumentException("Embedded NUL is not supported.");
