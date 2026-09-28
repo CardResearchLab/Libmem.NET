@@ -1,6 +1,7 @@
 #include "LibmemCli.h"
 #include <algorithm>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <vector>
 #include <vcclr.h>
@@ -40,9 +41,9 @@ namespace {
     lm_module_t mod(ModuleInfo^ input) {
         if (input == nullptr) throw gcnew ArgumentNullException("module");
         lm_module_t m{};
-        m.base = static_cast<lm_address_t>(input->Base);
-        m.end = static_cast<lm_address_t>(input->End);
-        m.size = static_cast<lm_size_t>(input->Size);
+        m.base = native_address(input->Base,"module.Base");
+        m.end = native_address(input->End,"module.End");
+        m.size = native_size(input->Size,"module.Size");
         std::string name = utf8(input->Name == nullptr ? String::Empty : input->Name);
         std::string path = utf8(input->Path == nullptr ? String::Empty : input->Path);
         std::memcpy(m.name, name.data(), std::min(name.size(), sizeof(m.name) - 1));
@@ -99,10 +100,10 @@ namespace {
         array<Byte>^ bytes=gcnew array<Byte>(count);
         if(!count) return bytes;
         pin_ptr<Byte> dest=&bytes[0];
-        lm_size_t got=p ? LM_ReadMemoryEx(p,static_cast<lm_address_t>(address),dest,count)
-                        : LM_ReadMemory(static_cast<lm_address_t>(address),dest,count);
-        if(got > static_cast<lm_size_t>(count)) throw gcnew InvalidOperationException("Native read exceeded buffer.");
-        if(got == static_cast<lm_size_t>(count)) return bytes;
+        lm_size_t got=p ? LM_ReadMemoryEx(p,native_address(address,"address"),dest,count)
+                        : LM_ReadMemory(native_address(address,"address"),dest,count);
+        if(got > native_size(count,"count")) throw gcnew InvalidOperationException("Native read exceeded buffer.");
+        if(got == native_size(count,"count")) return bytes;
         auto partial = gcnew array<Byte>(static_cast<int>(got));
         Array::Copy(bytes, partial, partial->Length);
         return partial;
@@ -111,15 +112,34 @@ namespace {
         if(bytes==nullptr) throw gcnew ArgumentNullException("data");
         if(!bytes->Length) return 0;
         pin_ptr<Byte> src=&bytes[0];
-        lm_size_t n=p ? LM_WriteMemoryEx(p,static_cast<lm_address_t>(address),src,bytes->Length)
-                      : LM_WriteMemory(static_cast<lm_address_t>(address),src,bytes->Length);
+        lm_size_t n=p ? LM_WriteMemoryEx(p,native_address(address,"address"),src,bytes->Length)
+                      : LM_WriteMemory(native_address(address,"address"),src,bytes->Length);
         if(n>static_cast<lm_size_t>(bytes->Length)) throw gcnew InvalidOperationException("Native write exceeded buffer.");
         return static_cast<int>(n);
+    }
+    lm_address_t native_address(UInt64 value, String^ parameterName) {
+        const UInt64 maximum=static_cast<UInt64>(std::numeric_limits<lm_address_t>::max());
+        if(value>maximum)
+            throw gcnew ArgumentOutOfRangeException(
+                parameterName,
+                "Address does not fit the current process architecture.");
+        return static_cast<lm_address_t>(value);
+    }
+    lm_size_t native_size(UInt64 value, String^ parameterName) {
+        const UInt64 maximum=static_cast<UInt64>(std::numeric_limits<lm_size_t>::max());
+        if(value>maximum)
+            throw gcnew ArgumentOutOfRangeException(
+                parameterName,
+                "Size or index does not fit the current process architecture.");
+        return static_cast<lm_size_t>(value);
+    }
+    bool bad_address(UInt64 value) {
+        return value==static_cast<UInt64>(LM_ADDRESS_BAD);
     }
     std::vector<lm_address_t> offsets(array<UInt64>^ input) {
         if (input==nullptr) throw gcnew ArgumentNullException("offsets");
         std::vector<lm_address_t> result; result.reserve(input->Length);
-        for each (UInt64 item in input) result.push_back(static_cast<lm_address_t>(item));
+        for each (UInt64 item in input) result.push_back(native_address(item,"offsets"));
         return result;
     }
 }
@@ -153,7 +173,7 @@ UInt64 ProcessInfo::SigScan(String^ signature,UInt64 address,UInt64 size) { retu
 RemoteAllocation::RemoteAllocation(ProcessInfo^ input,UInt64 address,UInt64 size)
     : target_(nullptr),address_(address),size_(size),disposed_(false) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
-    if(address==0 || address==UInt64::MaxValue) throw gcnew ArgumentOutOfRangeException("address");
+    if(address==0 || bad_address(address)) throw gcnew ArgumentOutOfRangeException("address");
     if(size==0) throw gcnew ArgumentOutOfRangeException("size");
     target_=process(proc(input));
 }
@@ -303,7 +323,7 @@ RemoteAllocation^ MemoryManager::Allocate(UInt64 size,MemoryProtection protectio
     auto target=Target();
     if(!Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
     auto address=Libmem::AllocateMemory(target,size,protection);
-    if(address==0 || address==UInt64::MaxValue) return nullptr;
+    if(address==0 || bad_address(address)) return nullptr;
     return gcnew RemoteAllocation(target,address,size);
 }
 bool MemoryManager::Free(UInt64 address,UInt64 size) {
@@ -551,72 +571,72 @@ List<SegmentInfo^>^ Libmem::EnumSegments(ProcessInfo^ input) {
     if(!LM_EnumSegmentsEx(&p,cb_segment,&native)) throw gcnew LibmemException("LM_EnumSegmentsEx", "LM_EnumSegmentsEx failed.");
     auto r=gcnew List<SegmentInfo^>(); for(const auto& s : native) r->Add(segment(s)); return r;
 }
-SegmentInfo^ Libmem::FindSegment(UInt64 a) { lm_segment_t s{}; return LM_FindSegment(static_cast<lm_address_t>(a),&s) ? segment(s) : nullptr; }
-SegmentInfo^ Libmem::FindSegment(ProcessInfo^ input,UInt64 a) { auto p=proc(input); lm_segment_t s{}; return LM_FindSegmentEx(&p,static_cast<lm_address_t>(a),&s) ? segment(s) : nullptr; }
+SegmentInfo^ Libmem::FindSegment(UInt64 a) { lm_segment_t s{}; return LM_FindSegment(native_address(a,"address"),&s) ? segment(s) : nullptr; }
+SegmentInfo^ Libmem::FindSegment(ProcessInfo^ input,UInt64 a) { auto p=proc(input); lm_segment_t s{}; return LM_FindSegmentEx(&p,native_address(a,"address"),&s) ? segment(s) : nullptr; }
 
 array<Byte>^ Libmem::ReadMemory(UInt64 a,int size) { return read_common(nullptr,a,size); }
 array<Byte>^ Libmem::ReadMemory(ProcessInfo^ input,UInt64 a,int size) { auto p=proc(input); return read_common(&p,a,size); }
 int Libmem::WriteMemory(UInt64 a,array<Byte>^ data) { return write_common(nullptr,a,data); }
 int Libmem::WriteMemory(ProcessInfo^ input,UInt64 a,array<Byte>^ data) { auto p=proc(input); return write_common(&p,a,data); }
-UInt64 Libmem::SetMemory(UInt64 a,Byte value,UInt64 size) { return LM_SetMemory(static_cast<lm_address_t>(a),value,static_cast<lm_size_t>(size)); }
-UInt64 Libmem::SetMemory(ProcessInfo^ input,UInt64 a,Byte value,UInt64 size) { auto p=proc(input); return LM_SetMemoryEx(&p,static_cast<lm_address_t>(a),value,static_cast<lm_size_t>(size)); }
+UInt64 Libmem::SetMemory(UInt64 a,Byte value,UInt64 size) { return LM_SetMemory(native_address(a,"address"),value,native_size(size,"size")); }
+UInt64 Libmem::SetMemory(ProcessInfo^ input,UInt64 a,Byte value,UInt64 size) { auto p=proc(input); return LM_SetMemoryEx(&p,native_address(a,"address"),value,native_size(size,"size")); }
 MemoryProtection Libmem::ProtectMemory(UInt64 a,UInt64 size,MemoryProtection prot) {
     lm_prot_t old{};
-    if(!LM_ProtMemory(static_cast<lm_address_t>(a),static_cast<lm_size_t>(size),static_cast<lm_prot_t>(prot),&old)) throw gcnew LibmemException("LM_ProtMemory", "LM_ProtMemory failed.");
+    if(!LM_ProtMemory(native_address(a,"address"),native_size(size,"size"),static_cast<lm_prot_t>(prot),&old)) throw gcnew LibmemException("LM_ProtMemory", "LM_ProtMemory failed.");
     return static_cast<MemoryProtection>(old);
 }
 MemoryProtection Libmem::ProtectMemory(ProcessInfo^ input,UInt64 a,UInt64 size,MemoryProtection prot) {
     auto p=proc(input); lm_prot_t old{};
-    if(!LM_ProtMemoryEx(&p,static_cast<lm_address_t>(a),static_cast<lm_size_t>(size),static_cast<lm_prot_t>(prot),&old)) throw gcnew LibmemException("LM_ProtMemoryEx", "LM_ProtMemoryEx failed.");
+    if(!LM_ProtMemoryEx(&p,native_address(a,"address"),native_size(size,"size"),static_cast<lm_prot_t>(prot),&old)) throw gcnew LibmemException("LM_ProtMemoryEx", "LM_ProtMemoryEx failed.");
     return static_cast<MemoryProtection>(old);
 }
-UInt64 Libmem::AllocateMemory(UInt64 size,MemoryProtection prot) { return LM_AllocMemory(static_cast<lm_size_t>(size),static_cast<lm_prot_t>(prot)); }
-UInt64 Libmem::AllocateMemory(ProcessInfo^ input,UInt64 size,MemoryProtection prot) { auto p=proc(input); return LM_AllocMemoryEx(&p,static_cast<lm_size_t>(size),static_cast<lm_prot_t>(prot)); }
-bool Libmem::FreeMemory(UInt64 a,UInt64 size) { return LM_FreeMemory(static_cast<lm_address_t>(a),static_cast<lm_size_t>(size))!=LM_FALSE; }
-bool Libmem::FreeMemory(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_FreeMemoryEx(&p,static_cast<lm_address_t>(a),static_cast<lm_size_t>(size))!=LM_FALSE; }
+UInt64 Libmem::AllocateMemory(UInt64 size,MemoryProtection prot) { return LM_AllocMemory(native_size(size,"size"),static_cast<lm_prot_t>(prot)); }
+UInt64 Libmem::AllocateMemory(ProcessInfo^ input,UInt64 size,MemoryProtection prot) { auto p=proc(input); return LM_AllocMemoryEx(&p,native_size(size,"size"),static_cast<lm_prot_t>(prot)); }
+bool Libmem::FreeMemory(UInt64 a,UInt64 size) { return LM_FreeMemory(native_address(a,"address"),native_size(size,"size"))!=LM_FALSE; }
+bool Libmem::FreeMemory(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_FreeMemoryEx(&p,native_address(a,"address"),native_size(size,"size"))!=LM_FALSE; }
 UInt64 Libmem::DeepPointer(UInt64 a,array<UInt64>^ data) {
-    auto off=offsets(data); return LM_DeepPointer(static_cast<lm_address_t>(a),off.empty()?nullptr:off.data(),off.size());
+    auto off=offsets(data); return LM_DeepPointer(native_address(a,"address"),off.empty()?nullptr:off.data(),off.size());
 }
 UInt64 Libmem::DeepPointer(ProcessInfo^ input,UInt64 a,array<UInt64>^ data) {
-    auto p=proc(input); auto off=offsets(data); return LM_DeepPointerEx(&p,static_cast<lm_address_t>(a),off.empty()?nullptr:off.data(),off.size());
+    auto p=proc(input); auto off=offsets(data); return LM_DeepPointerEx(&p,native_address(a,"address"),off.empty()?nullptr:off.data(),off.size());
 }
 UInt64 Libmem::DataScan(array<Byte>^ data,UInt64 a,UInt64 size) {
     if(data==nullptr) throw gcnew ArgumentNullException("data"); if(!data->Length) throw gcnew ArgumentException("Pattern is empty.");
-    pin_ptr<Byte> raw=&data[0]; return LM_DataScan(raw,data->Length,static_cast<lm_address_t>(a),static_cast<lm_size_t>(size));
+    pin_ptr<Byte> raw=&data[0]; return LM_DataScan(raw,data->Length,native_address(a,"address"),native_size(size,"size"));
 }
 UInt64 Libmem::DataScan(ProcessInfo^ input,array<Byte>^ data,UInt64 a,UInt64 size) {
     auto p=proc(input); if(data==nullptr) throw gcnew ArgumentNullException("data"); if(!data->Length) throw gcnew ArgumentException("Pattern is empty.");
-    pin_ptr<Byte> raw=&data[0]; return LM_DataScanEx(&p,raw,data->Length,static_cast<lm_address_t>(a),static_cast<lm_size_t>(size));
+    pin_ptr<Byte> raw=&data[0]; return LM_DataScanEx(&p,raw,data->Length,native_address(a,"address"),native_size(size,"size"));
 }
 UInt64 Libmem::PatternScan(array<Byte>^ data,String^ mask,UInt64 a,UInt64 size) {
     if(data==nullptr) throw gcnew ArgumentNullException("pattern"); auto m=utf8(mask);
     if(!data->Length || m.size()!=static_cast<size_t>(data->Length)) throw gcnew ArgumentException("Pattern size must match mask length.");
-    pin_ptr<Byte> raw=&data[0]; return LM_PatternScan(raw,m.c_str(),static_cast<lm_address_t>(a),static_cast<lm_size_t>(size));
+    pin_ptr<Byte> raw=&data[0]; return LM_PatternScan(raw,m.c_str(),native_address(a,"address"),native_size(size,"size"));
 }
 UInt64 Libmem::PatternScan(ProcessInfo^ input,array<Byte>^ data,String^ mask,UInt64 a,UInt64 size) {
     auto p=proc(input); if(data==nullptr) throw gcnew ArgumentNullException("pattern"); auto m=utf8(mask);
     if(!data->Length || m.size()!=static_cast<size_t>(data->Length)) throw gcnew ArgumentException("Pattern size must match mask length.");
-    pin_ptr<Byte> raw=&data[0]; return LM_PatternScanEx(&p,raw,m.c_str(),static_cast<lm_address_t>(a),static_cast<lm_size_t>(size));
+    pin_ptr<Byte> raw=&data[0]; return LM_PatternScanEx(&p,raw,m.c_str(),native_address(a,"address"),native_size(size,"size"));
 }
-UInt64 Libmem::SigScan(String^ signature,UInt64 a,UInt64 size) { auto s=utf8(signature); return LM_SigScan(s.c_str(),static_cast<lm_address_t>(a),static_cast<lm_size_t>(size)); }
-UInt64 Libmem::SigScan(ProcessInfo^ input,String^ signature,UInt64 a,UInt64 size) { auto p=proc(input); auto s=utf8(signature); return LM_SigScanEx(&p,s.c_str(),static_cast<lm_address_t>(a),static_cast<lm_size_t>(size)); }
+UInt64 Libmem::SigScan(String^ signature,UInt64 a,UInt64 size) { auto s=utf8(signature); return LM_SigScan(s.c_str(),native_address(a,"address"),native_size(size,"size")); }
+UInt64 Libmem::SigScan(ProcessInfo^ input,String^ signature,UInt64 a,UInt64 size) { auto p=proc(input); auto s=utf8(signature); return LM_SigScanEx(&p,s.c_str(),native_address(a,"address"),native_size(size,"size")); }
 
 LibmemCli::Architecture Libmem::GetArchitecture() { return static_cast<LibmemCli::Architecture>(LM_GetArchitecture()); }
 InstructionInfo^ Libmem::Assemble(String^ code) { auto s=utf8(code); lm_inst_t i{}; return LM_Assemble(s.c_str(),&i) ? instruction(i) : nullptr; }
 array<Byte>^ Libmem::Assemble(String^ code,LibmemCli::Architecture arch,UInt64 runtimeAddress) {
     auto s=utf8(code); lm_byte_t* payload=nullptr;
-    lm_size_t n=LM_AssembleEx(s.c_str(),static_cast<lm_arch_t>(arch),static_cast<lm_address_t>(runtimeAddress),&payload);
+    lm_size_t n=LM_AssembleEx(s.c_str(),static_cast<lm_arch_t>(arch),native_address(runtimeAddress,"runtimeAddress"),&payload);
     if(n==0 || !payload) return nullptr;
     try {
         if(n>Int32::MaxValue) throw gcnew InvalidOperationException("Payload exceeds managed array capacity.");
         auto bytes=gcnew array<Byte>(static_cast<int>(n)); Marshal::Copy(IntPtr(payload),bytes,0,bytes->Length); return bytes;
     } finally { LM_FreePayload(payload); }
 }
-InstructionInfo^ Libmem::Disassemble(UInt64 address) { lm_inst_t i{}; return LM_Disassemble(static_cast<lm_address_t>(address),&i) ? instruction(i) : nullptr; }
+InstructionInfo^ Libmem::Disassemble(UInt64 address) { lm_inst_t i{}; return LM_Disassemble(native_address(address,"address"),&i) ? instruction(i) : nullptr; }
 List<InstructionInfo^>^ Libmem::Disassemble(UInt64 address,LibmemCli::Architecture arch,UInt64 maxBytes,UInt64 count,UInt64 runtimeAddress) {
     if(!maxBytes && !count) throw gcnew ArgumentException("Specify maxBytes or instructionCount.");
     lm_inst_t* instructions=nullptr;
-    lm_size_t n=LM_DisassembleEx(static_cast<lm_address_t>(address),static_cast<lm_arch_t>(arch),static_cast<lm_size_t>(maxBytes),static_cast<lm_size_t>(count),static_cast<lm_address_t>(runtimeAddress),&instructions);
+    lm_size_t n=LM_DisassembleEx(native_address(address,"address"),static_cast<lm_arch_t>(arch),native_size(maxBytes,"maxBytes"),native_size(count,"count"),native_address(runtimeAddress,"runtimeAddress"),&instructions);
     if(!n || !instructions) return gcnew List<InstructionInfo^>();
     try {
         auto result=gcnew List<InstructionInfo^>();
@@ -629,8 +649,8 @@ List<InstructionInfo^>^ Libmem::Disassemble(array<Byte>^ code,LibmemCli::Archite
     pin_ptr<Byte> pinned=&code[0]; lm_inst_t* instructions=nullptr;
     lm_byte_t* raw=pinned;
     auto address=reinterpret_cast<lm_address_t>(raw);
-    lm_size_t n=LM_DisassembleEx(address,static_cast<lm_arch_t>(arch),static_cast<lm_size_t>(code->LongLength),
-                                 static_cast<lm_size_t>(count),static_cast<lm_address_t>(runtimeAddress),&instructions);
+    lm_size_t n=LM_DisassembleEx(address,static_cast<lm_arch_t>(arch),native_size(static_cast<UInt64>(code->LongLength),"code"),
+                                 native_size(count,"count"),native_address(runtimeAddress,"runtimeAddress"),&instructions);
     if(!n || !instructions) return gcnew List<InstructionInfo^>();
     try {
         auto result=gcnew List<InstructionInfo^>();
@@ -638,8 +658,8 @@ List<InstructionInfo^>^ Libmem::Disassemble(array<Byte>^ code,LibmemCli::Archite
         return result;
     } finally { LM_FreeInstructions(instructions); }
 }
-UInt64 Libmem::CodeLength(UInt64 a,UInt64 size) { return LM_CodeLength(static_cast<lm_address_t>(a),static_cast<lm_size_t>(size)); }
-UInt64 Libmem::CodeLength(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_CodeLengthEx(&p,static_cast<lm_address_t>(a),static_cast<lm_size_t>(size)); }
+UInt64 Libmem::CodeLength(UInt64 a,UInt64 size) { return LM_CodeLength(native_address(a,"address"),native_size(size,"size")); }
+UInt64 Libmem::CodeLength(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_CodeLengthEx(&p,native_address(a,"address"),native_size(size,"size")); }
 
 HookManager::HookManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");
@@ -677,9 +697,9 @@ bool HookHandle::Remove() {
             return true;
         }
         auto p=proc(target_);
-        ok=LM_UnhookCodeEx(&p,static_cast<lm_address_t>(from_),static_cast<lm_address_t>(trampoline_),static_cast<lm_size_t>(size_))!=LM_FALSE;
+        ok=LM_UnhookCodeEx(&p,native_address(from_,"source"),native_address(trampoline_,"trampoline"),native_size(size_,"size"))!=LM_FALSE;
     } else {
-        ok=LM_UnhookCode(static_cast<lm_address_t>(from_),static_cast<lm_address_t>(trampoline_),static_cast<lm_size_t>(size_))!=LM_FALSE;
+        ok=LM_UnhookCode(native_address(from_,"source"),native_address(trampoline_,"trampoline"),native_size(size_,"size"))!=LM_FALSE;
     }
 
     if(ok) installed_=false;
@@ -703,16 +723,16 @@ HookHandle::!HookHandle() {
 
 HookHandle^ Libmem::HookCode(UInt64 from,UInt64 to) {
     lm_address_t trampoline=LM_ADDRESS_BAD;
-    auto n=LM_HookCode(static_cast<lm_address_t>(from),static_cast<lm_address_t>(to),&trampoline);
+    auto n=LM_HookCode(native_address(from,"source"),native_address(to,"destination"),&trampoline);
     return n ? gcnew HookHandle(nullptr,from,to,trampoline,n) : nullptr;
 }
 HookHandle^ Libmem::HookCode(ProcessInfo^ input,UInt64 from,UInt64 to) {
     auto p=proc(input); lm_address_t trampoline=LM_ADDRESS_BAD;
-    auto n=LM_HookCodeEx(&p,static_cast<lm_address_t>(from),static_cast<lm_address_t>(to),&trampoline);
+    auto n=LM_HookCodeEx(&p,native_address(from,"source"),native_address(to,"destination"),&trampoline);
     return n ? gcnew HookHandle(input,from,to,trampoline,n) : nullptr;
 }
 VmtManager::VmtManager(UInt64 address) : native_(new lm_vmt_t{}), disposed_(false) {
-    if(address==0 || !LM_VmtNew(reinterpret_cast<lm_address_t*>(static_cast<uintptr_t>(address)),native_)) {
+    if(address==0 || !LM_VmtNew(reinterpret_cast<lm_address_t*>(static_cast<uintptr_t>(native_address(address,"vtableAddress"))),native_)) {
         delete native_; native_=nullptr; disposed_=true; throw gcnew LibmemException("LM_VmtNew", "LM_VmtNew failed.");
     }
 }
@@ -730,16 +750,16 @@ bool VmtManager::ResetNative() {
 }
 void VmtManager::Hook(UInt64 index,UInt64 to) {
     if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
-    if(!LM_VmtHook(native_,static_cast<lm_size_t>(index),static_cast<lm_address_t>(to)))
+    if(!LM_VmtHook(native_,native_size(index,"index"),native_address(to,"destination")))
         throw gcnew LibmemException("LM_VmtHook", "LM_VmtHook failed.");
 }
 bool VmtManager::Unhook(UInt64 index) {
     if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
-    return LM_VmtUnhook(native_,static_cast<lm_size_t>(index))!=LM_FALSE;
+    return LM_VmtUnhook(native_,native_size(index,"index"))!=LM_FALSE;
 }
 UInt64 VmtManager::GetOriginal(UInt64 index) {
     if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
-    return LM_VmtGetOriginal(native_,static_cast<lm_size_t>(index));
+    return LM_VmtGetOriginal(native_,native_size(index,"index"));
 }
 void VmtManager::Reset() {
     if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
