@@ -61,18 +61,24 @@ assert not missing_native_apis, (
 print("PASS upstream public API coverage:", len(upstream_apis))
 
 assert "public ref class LibmemException : InvalidOperationException" in header
-assert 'LibmemException("LM_EnumProcesses"' in source
-assert 'LibmemException("LM_EnumThreadsEx"' in source
-assert 'LibmemException("LM_EnumModulesEx"' in source
-assert 'LibmemException("LM_ProtMemoryEx"' in source
-assert 'LibmemException("LM_FreeMemoryEx"' in source
-assert 'LibmemException("LM_UnloadModuleEx"' in source
-assert 'LibmemException("LM_LoadModuleEx"' in source
+for operation in [
+    "LM_EnumProcesses",
+    "LM_EnumThreadsEx",
+    "LM_EnumModulesEx",
+    "LM_ProtMemoryEx",
+    "LM_FreeMemoryEx",
+    "LM_UnloadModuleEx",
+    "LM_LoadModuleEx",
+]:
+    assert re.search(
+        r'LibmemException\(\s*"' + re.escape(operation) + r'"',
+        source,
+    ), f"{operation} is not mapped to LibmemException"
 print("PASS LibmemException core error mapping")
 
 assert "HookManager^ ProcessSession::Hooks::get()" in source
 assert "HookHandle^ HookManager::Install(UInt64 source,UInt64 destination)" in source
-assert 'LibmemException("LM_HookCodeEx"' in source
+assert re.search(r'LibmemException\(\s*"LM_HookCodeEx"', source)
 print("PASS HookManager session contract")
 
 remote_dispose = source.split("RemoteAllocation::~RemoteAllocation()", 1)[1].split("\n}", 1)[0]
@@ -110,8 +116,8 @@ assert "while(native_->hkentries!=LM_NULLPTR)" in source
 vmt_dispose = source.split("VmtManager::~VmtManager()", 1)[1].split("\n}", 1)[0]
 assert "if(!ResetNative())" in vmt_dispose
 assert "manager remains active" in vmt_dispose
-assert 'LibmemException("LM_VmtNew"' in source
-assert 'LibmemException("LM_VmtHook"' in source
+assert re.search(r'LibmemException\(\s*"LM_VmtNew"', source)
+assert re.search(r'LibmemException\(\s*"LM_VmtHook"', source)
 vmt_finalizer = source.split("VmtManager::!VmtManager()", 1)[1].split("\n}", 1)[0]
 assert "LM_VmtFree" not in vmt_finalizer
 assert "LM_VmtReset" not in vmt_finalizer
