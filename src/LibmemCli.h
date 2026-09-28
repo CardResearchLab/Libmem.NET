@@ -27,6 +27,17 @@ namespace LibmemCli {
         ExecuteReadWrite = LM_PROT_XRW
     };
 
+    // Represents a definite failure reported while executing a native libmem operation.
+    // Not-found and sentinel-return APIs keep their native-style result semantics.
+    public ref class LibmemException : InvalidOperationException {
+    private:
+        String^ operation_;
+    public:
+        LibmemException(String^ operation, String^ message);
+        LibmemException(String^ operation, String^ message, Exception^ innerException);
+        property String^ Operation { String^ get(); }
+    };
+
     public ref class ProcessInfo sealed {
     public:
         property UInt32 Pid;
