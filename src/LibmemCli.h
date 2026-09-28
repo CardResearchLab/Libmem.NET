@@ -98,6 +98,7 @@ namespace LibmemCli {
 
     ref class MemoryManager;
     ref class ModuleManager;
+    ref class HookManager;
 
     // ProcessSession represents an attachment to one concrete process identity (PID + start time).
     // It does not own an OS process handle; it provides a stable lifetime boundary for higher-level APIs.
@@ -106,6 +107,7 @@ namespace LibmemCli {
         ProcessInfo^ identity_;
         MemoryManager^ memory_;
         ModuleManager^ modules_;
+        HookManager^ hooks_;
         bool disposed_;
         void ThrowIfDisposed();
     internal:
@@ -119,6 +121,7 @@ namespace LibmemCli {
         property UInt64 Bits { UInt64 get(); }
         property MemoryManager^ Memory { MemoryManager^ get(); }
         property ModuleManager^ Modules { ModuleManager^ get(); }
+        property HookManager^ Hooks { HookManager^ get(); }
         property bool IsDisposed { bool get(); }
         bool IsAlive();
         ProcessInfo^ Refresh();
@@ -161,6 +164,17 @@ namespace LibmemCli {
         ModuleInfo^ Find(String^ name);
         ModuleInfo^ Load(String^ path);
         bool Unload(ModuleInfo^ module);
+    };
+
+    // Session-bound hook installation. Returned HookHandle objects own their own hook lifetime.
+    public ref class HookManager sealed {
+    private:
+        ProcessSession^ session_;
+        ProcessInfo^ Target();
+    internal:
+        HookManager(ProcessSession^ session);
+    public:
+        HookHandle^ Install(UInt64 source, UInt64 destination);
     };
 
     // HookHandle owns a native trampoline. Explicit disposal restores the original code.
