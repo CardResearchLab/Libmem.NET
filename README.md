@@ -152,7 +152,7 @@ Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 
 `InjectLibrary` 会规范化并检查 DLL 路径，并拒绝当前 runtime 与目标进程位宽不同的跨位宽注入。返回的 `InjectedModuleHandle` 保存模块描述与请求路径；`IsActive` 表示**这个 Handle 所拥有的一次加载引用尚未释放**，并不等价于“该 DLL 一定仍是目标进程中的唯一实例”。
 
-显式 `Unload()` 或 `Dispose()` 会尝试执行一次匹配的 `FreeLibrary`。由于 Windows DLL 引用计数以及固定 libmem 上游 `LM_UnloadModuleEx` 的语义，即使调用成功，也不承诺模块一定完全从目标进程消失。GC Finalizer 不会对目标进程执行 `FreeLibrary`。
+显式 `Unload()` 会返回释放结果；`Dispose()` 会确定性尝试释放该 Handle 所拥有的一次 `LoadLibrary` 引用，失败时会向调用方报告，而不会把仍然有效的所有权静默标记为已释放。由于 Windows DLL 引用计数以及固定 libmem 上游 `LM_UnloadModuleEx` 的语义，即使调用成功，也不承诺模块一定完全从目标进程消失。GC Finalizer 不会对目标进程执行 `FreeLibrary`。
 
 ### HookManager
 
@@ -195,7 +195,7 @@ using var memory = target.Allocate(4096, MemoryProtection.ReadWrite)
 Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
 ```
 
-显式调用 `Free()` 或离开 `using` 作用域都会尝试释放内存；如果目标进程已经退出，则视为地址空间已被操作系统回收。Finalizer 不会在 GC 线程里修改其他进程内存。
+显式调用 `Free()` 可以检查释放是否成功；离开 `using` 作用域时，`Dispose()` 会确定性释放这块内存，若原生释放失败则直接向调用方报告失败，而不会静默丢失所有权。如果目标进程已经退出，则视为地址空间已被操作系统回收。Finalizer 不会在 GC 线程里修改其他进程内存。
 
 ## 作为 Git Submodule 引用
 
