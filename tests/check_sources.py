@@ -1,6 +1,8 @@
 """Source/contract checks. These run on every platform and do not compile mixed-mode C++/CLI."""
 from pathlib import Path
 import re
+import subprocess
+import sys
 import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[1]
@@ -133,6 +135,20 @@ assert "verify-package.py" in release_workflow
 assert "--expected-repository-commit" in release_workflow
 assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
 print("PASS package integrity and release provenance contract")
+
+subprocess.run(
+    [
+        sys.executable,
+        str(root / "eng/check-public-api.py"),
+        "--header",
+        str(root / "src/LibmemCli.h"),
+        "--baseline",
+        str(root / "api/LibmemCli.PublicApi.txt"),
+    ],
+    cwd=root,
+    check=True,
+)
+print("PASS committed public API baseline")
 
 version = (root / "VERSION").read_text(encoding="utf-8").strip()
 assert re.fullmatch(r"\d+\.\d+\.\d+", version), (
