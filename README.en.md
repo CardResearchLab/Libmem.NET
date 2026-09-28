@@ -124,6 +124,21 @@ At this stage, `ProcessSession` owns process identity and lifetime semantics but
 
 The existing static `Libmem.*` API remains compatible so existing callers do not need an all-at-once migration.
 
+### ModuleManager
+
+`ProcessSession.Modules` exposes module operations bound to the target process:
+
+```csharp
+var modules = target.Modules;
+
+foreach (var module in modules.Enumerate())
+    Console.WriteLine($"{module.Name} 0x{module.Base:X}");
+
+var unity = modules.Find("UnityPlayer.dll");
+```
+
+It currently provides `Enumerate / Find / Load / Unload`. Like `MemoryManager`, it follows the ProcessSession lifetime and rejects operations after Detach.
+
 ### MemoryManager
 
 `ProcessSession.Memory` groups target-process memory operations into one session-bound API:
