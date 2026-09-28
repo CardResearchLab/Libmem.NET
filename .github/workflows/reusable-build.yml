@@ -61,6 +61,12 @@ jobs:
         shell: pwsh
         run: '.\eng\package-runtime.ps1 -Configuration "${{ inputs.configuration }}" -Platform x64'
 
+      - name: Verify runtime package
+        shell: pwsh
+        run: |
+          $commit = (git rev-parse HEAD).Trim()
+          python .\eng\verify-package.py --package-dir .\artifacts\package\LibmemCli-windows-x64 --archive .\artifacts\package\LibmemCli-windows-x64.zip --checksum .\artifacts\package\LibmemCli-windows-x64.zip.sha256 --expected-repository-commit $commit --expected-platform win-x64 --expected-configuration "${{ inputs.configuration }}"
+
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
         with:
@@ -68,5 +74,6 @@ jobs:
           path: |
             artifacts/package/LibmemCli-windows-x64/
             artifacts/package/LibmemCli-windows-x64.zip
+            artifacts/package/LibmemCli-windows-x64.zip.sha256
           if-no-files-found: error
           retention-days: 14
