@@ -6,7 +6,18 @@ static void Check(bool condition, string message)
         throw new InvalidOperationException(message);
 }
 
+static byte[] PointerBytes(ulong value)
+{
+    return IntPtr.Size == sizeof(ulong)
+        ? BitConverter.GetBytes(value)
+        : BitConverter.GetBytes(checked((uint)value));
+}
+
 Console.WriteLine("LibmemCli runtime smoke tests");
+
+var expectedBits = (ulong)(IntPtr.Size * 8);
+var expectedArchitecture = IntPtr.Size == sizeof(ulong) ? Architecture.X64 : Architecture.X86;
+var invalidAddress = IntPtr.Size == sizeof(ulong) ? ulong.MaxValue : uint.MaxValue;
 
 Check(typeof(InvalidOperationException).IsAssignableFrom(typeof(LibmemException)),
     "LibmemException must remain compatible with InvalidOperationException catches.");
@@ -24,9 +35,9 @@ var byName = Libmem.FindProcess(current.Name);
 Check(byName is not null, "FindProcess could not resolve the current process name.");
 var commandLine = Libmem.GetCommandLine(current);
 Check(commandLine.Length > 0, "GetCommandLine returned no arguments for the current process.");
-Check(Libmem.GetBits() == 64, "The x64 smoke suite must execute in a 64-bit process.");
+Check(Libmem.GetBits() == expectedBits, "Libmem.GetBits does not match the runtime pointer size.");
 Check(Libmem.GetSystemBits() >= Libmem.GetBits(), "System bitness is smaller than process bitness.");
-Check(Libmem.GetArchitecture() == Architecture.X64, "The x64 smoke suite did not report x64 architecture.");
+Check(Libmem.GetArchitecture() == expectedArchitecture, "Libmem.GetArchitecture does not match the runtime architecture.");
 
 var currentThread = Libmem.CurrentThread();
 Check(currentThread is not null, "CurrentThread returned null.");
@@ -137,17 +148,17 @@ var staticFoundModule = Libmem.FindModule(current, namedModule.Name);
 Check(staticFoundModule is not null, "FindModule(process, name) could not find a known module.");
 
 var kernel32 = Libmem.FindModule("kernel32.dll");
-Check(kernel32 is not null, "kernel32.dll was not found in the x64 Windows test process.");
+Check(kernel32 is not null, "kernel32.dll was not found in the Windows test process.");
 var kernel32Symbols = Libmem.EnumSymbols(kernel32!, demangle: false);
 Check(kernel32Symbols.Count > 0, "EnumSymbols(kernel32.dll) returned no exports.");
 var getCurrentProcessId = Libmem.FindSymbolAddress(kernel32!, "GetCurrentProcessId", demangle: false);
-Check(getCurrentProcessId != 0 && getCurrentProcessId != ulong.MaxValue,
+Check(getCurrentProcessId != 0 && getCurrentProcessId != invalidAddress,
     "FindSymbolAddress could not resolve GetCurrentProcessId.");
 
 var memory = pidSession!.Memory;
 var ownedAllocation = memory.Allocate(4096, MemoryProtection.ReadWrite);
 Check(ownedAllocation is not null, "MemoryManager.Allocate returned null.");
-Check(ownedAllocation!.Address != 0 && ownedAllocation.Address != ulong.MaxValue, "RemoteAllocation has an invalid address.");
+Check(ownedAllocation!.Address != 0 && ownedAllocation.Address != invalidAddress, "RemoteAllocation has an invalid address.");
 Check(ownedAllocation.Size == 4096, "RemoteAllocation did not preserve its requested size.");
 
 var localSegment = Libmem.FindSegment(ownedAllocation.Address);
@@ -191,9 +202,9 @@ using (var pointerLayer1 = memory.Allocate(4096, MemoryProtection.ReadWrite)
 using (var pointerLayer2 = memory.Allocate(4096, MemoryProtection.ReadWrite)
        ?? throw new InvalidOperationException("Could not allocate pointer layer 2."))
 {
-    Check(memory.Write(pointerLayer0.Address, BitConverter.GetBytes(pointerLayer1.Address)) == sizeof(ulong),
+    Check(memory.Write(pointerLayer0.Address, PointerBytes(pointerLayer1.Address)) == IntPtr.Size,
         "Could not write pointer layer 0.");
-    Check(memory.Write(pointerLayer1.Address + 0xA0, BitConverter.GetBytes(pointerLayer2.Address)) == sizeof(ulong),
+    Check(memory.Write(pointerLayer1.Address + 0xA0, PointerBytes(pointerLayer2.Address)) == IntPtr.Size,
         "Could not write pointer layer 1.");
 
     ulong[] offsets = [0xA0, 0x10];
@@ -236,7 +247,7 @@ Check(modules.Any(m => m.Base != 0 && m.Size != 0), "EnumModules returned no usa
 
 const ulong allocationSize = 4096;
 var address = Libmem.AllocateMemory(allocationSize, MemoryProtection.ReadWrite);
-Check(address != 0 && address != ulong.MaxValue, "AllocateMemory failed.");
+Check(address != 0 && address != invalidAddress, "AllocateMemory failed.");
 
 try
 {
@@ -279,7 +290,7 @@ try
     Check(singleInstruction is not null && singleInstruction.Size > 0,
         "Single-instruction Assemble returned no instruction.");
 
-    var machineCode = Libmem.Assemble("nop; ret", Architecture.X64, 0x1000);
+    var machineCode = Libmem.Assemble("nop; ret", expectedArchitecture, 0x1000);
     Check(machineCode is { Length: > 0 }, "Assemble returned no machine code.");
 
     var instructions = Libmem.Disassemble(machineCode!, Architecture.X64, 2, 0x1000);
@@ -299,6 +310,31 @@ try
 finally
 {
     Check(Libmem.FreeMemory(address, allocationSize), "FreeMemory failed.");
+}
+
+if (IntPtr.Size == sizeof(uint))
+{
+    var addressOverflowThrows = false;
+    try
+    {
+        _ = Libmem.ReadMemory((ulong)uint.MaxValue + 1UL, 1);
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+        addressOverflowThrows = true;
+    }
+    Check(addressOverflowThrows, "x86 address conversion should reject values above UInt32.MaxValue.");
+
+    var sizeOverflowThrows = false;
+    try
+    {
+        _ = Libmem.AllocateMemory((ulong)uint.MaxValue + 1UL, MemoryProtection.ReadWrite);
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+        sizeOverflowThrows = true;
+    }
+    Check(sizeOverflowThrows, "x86 size conversion should reject values above UInt32.MaxValue.");
 }
 
 Console.WriteLine("SMOKE TESTS PASS");
