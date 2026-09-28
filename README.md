@@ -124,6 +124,23 @@ var latest = target.Refresh();
 
 现有 `Libmem.*` 静态 API 保持兼容，不需要一次性迁移已有代码。
 
+### MemoryManager
+
+`ProcessSession.Memory` 将目标进程内存操作收拢为一个 session-bound API：
+
+```csharp
+var memory = target.Memory;
+
+using var buffer = memory.Allocate(4096, MemoryProtection.ReadWrite)
+    ?? throw new InvalidOperationException("Allocation failed");
+
+memory.Write(buffer.Address, payload);
+var copy = memory.Read(buffer.Address, payload.Length);
+var hit = memory.SigScan("48 8B ?? ??", start, size);
+```
+
+当前提供 Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free / DeepPointer / DataScan / PatternScan / SigScan。Manager 与 `ProcessSession` 生命周期绑定；Session Detach 后继续调用会抛出 `ObjectDisposedException`。
+
 ### RemoteAllocation
 
 `ProcessSession.Allocate(...)` 现在返回可释放的 `RemoteAllocation`，用于明确表示“这块目标进程内存由当前对象拥有”：
