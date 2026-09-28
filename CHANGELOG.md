@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Hardened owned-resource disposal: `RemoteAllocation` and `InjectedModuleHandle` no longer silently discard ownership when native cleanup fails.
+- Kept GC finalizers non-mutating for remote-process resources; deterministic cleanup remains the caller's responsibility.
+
 - Removed `ProcessSnapshot` / `ModuleSnapshot` and snapshot-specific APIs/workflow; application snapshots, caches, and game-state models belong to wrapper consumers.
 - Reaffirmed the x64-first boundary: the pinned libmem public C API is fully referenced by LibmemCli, while x86/x64 dual-architecture work remains deferred.
 - Clarified `ProcessSession` as an optional target-bound convenience wrapper rather than an application state container.
