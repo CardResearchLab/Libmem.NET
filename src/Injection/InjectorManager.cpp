@@ -58,6 +58,7 @@ ProcessInfo^ InjectorManager::Target() {
     return session_->Target;
 }
 InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
+    if(path==nullptr) throw gcnew ArgumentNullException("path");
     if(String::IsNullOrWhiteSpace(path)) throw gcnew ArgumentException("Library path must not be empty.", "path");
 
     auto target=Target();
