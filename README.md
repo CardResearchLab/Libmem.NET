@@ -167,7 +167,7 @@ var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
 var resolved = target.Scanner.DeepPointer(baseAddress, offsets);
 ```
 
-`ScanManager` 当前提供 `DeepPointer / DataScan / PatternScan / SigScan`。为保证 v0.x 兼容，`MemoryManager` 上原有的同名方法暂时继续保留。
+`ScanManager` 提供 `DeepPointer / DataScan / PatternScan / SigScan`，并作为 session-bound 扫描的唯一入口。v0.x 早期暂存在 `MemoryManager` 上的同名转发方法已在 v1.0 API Freeze 前移除；静态 `Libmem.*` 兼容接口继续保留。
 
 ### SymbolManager
 
