@@ -77,11 +77,13 @@
     <ClCompile Include="LibmemCli.cpp" />
     <ClCompile Include="Core\ProcessSession.cpp" />
     <ClCompile Include="Memory\MemoryManager.cpp" />
+    <ClCompile Include="Memory\RemoteAllocation.cpp" />
     <ClCompile Include="Modules\ModuleManager.cpp" />
     <ClCompile Include="Threads\ThreadManager.cpp" />
     <ClCompile Include="Scanning\ScanManager.cpp" />
     <ClCompile Include="Symbols\SymbolManager.cpp" />
     <ClCompile Include="Assembly\AssemblyManager.cpp" />
+    <ClCompile Include="Injection\InjectorManager.cpp" />
     <ClCompile Include="Interop\NativeConverter.cpp" />
   </ItemGroup>
   <Target Name="BuildLibmemNative" BeforeTargets="PrepareForBuild" Condition="'$(SkipLibmemNativeBuild)' != 'true'">
