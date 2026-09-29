@@ -1,14 +1,16 @@
-# LibmemCli — libmem 5.x C++/CLI wrapper (Windows x86/x64 / .NET 8)
+# LibmemCli — libmem 5.x C++/CLI wrapper (Windows x64 / .NET 8)
 
 [简体中文](README.md) | [English](README.en.md)
 
 [![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
-![Windows x86/x64](https://img.shields.io/badge/Windows-x86%20%7C%20x64-0078D4)
+![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 
-LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem), intended for Windows x86/x64 / .NET 8 projects.
+LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). **Current development, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
+
+See [ROADMAP.en.md](ROADMAP.en.md) for the current development plan.
 
 Except for explicitly documented compatibility waivers, the wrapper covers the public functions in the pinned libmem header through managed models, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
 
@@ -22,7 +24,7 @@ The native libmem library is included as a pinned Git submodule and is built aut
 
 ```mermaid
 flowchart LR
-    App["C# / .NET 8 x86/x64 project"] --> Cli["LibmemCli.dll<br/>C++/CLI managed wrapper"]
+    App["C# / .NET 8 x64 project"] --> Cli["LibmemCli.dll<br/>C++/CLI managed wrapper"]
     Cli --> Native["libmem.dll<br/>rdbo/libmem"]
     Native --> Win["Windows native process / memory APIs"]
 
@@ -37,7 +39,8 @@ The runtime call chain is **C#/.NET → LibmemCli.dll → libmem.dll → Windows
 
 ## Requirements
 
-- Windows x86 or x64
+- Windows x64 (current supported development and release target)
+- x86 build configuration is retained only for future restoration or manual compatibility checks and is not part of the current support commitment
 - Visual Studio with:
   - **Desktop development with C++**
   - **C++/CLI support for the v143 build tools**
@@ -65,15 +68,15 @@ cd Libmem
 
 `bootstrap.ps1` remains available as a compatibility alias.
 
-You can also open `LibmemCli.sln` directly and build `Debug|x64`, `Release|x64`, `Debug|x86`, or `Release|x86`. Visual Studio/MSBuild will perform the same native prerequisite build automatically.
+You can also open `LibmemCli.sln` directly and build `Debug|x64` or `Release|x64`. Visual Studio/MSBuild will perform the same native prerequisite build automatically. The repository still contains x86 configurations, but they are not part of the primary development path, default CI, or official releases.
 
 Generated files are kept outside the source directories:
 
 ```text
-artifacts/native/{x64|x86}/Release/bin/libmem.dll
-artifacts/native/{x64|x86}/Release/lib/libmem.lib
-artifacts/managed/{x64|x86}/Release/LibmemCli.dll
-artifacts/managed/{x64|x86}/Release/Ijwhost.dll
+artifacts/native/x64/Release/bin/libmem.dll
+artifacts/native/x64/Release/lib/libmem.lib
+artifacts/managed/x64/Release/LibmemCli.dll
+artifacts/managed/x64/Release/Ijwhost.dll
 ```
 
 
@@ -279,11 +282,11 @@ Do not mix outputs from different configurations or commits.
 
 The repository includes five automation workflows:
 
-- \`.github/workflows/build.yml\`: builds Release x64 and x86 on pushes to \`main\`, pull requests, or manual runs, then uploads separate \`LibmemCli-windows-x64\` and \`LibmemCli-windows-x86\` artifacts.
+- \`.github/workflows/build.yml\`: builds and validates Release x64 on pushes to `main`, pull requests, or manual runs, then uploads the `LibmemCli-windows-x64` artifact.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
-- \`.github/workflows/release.yml\`: builds both architectures for \`v*\` tags or \`release/v*\` release branches, verifies package provenance and SHA-256 integrity, creates a GitHub Release, and attaches both architecture ZIPs and checksum files.
-- \`.github/workflows/hook-vmt-tests.yml\`: runs dedicated real Hook / trampoline / VMT lifecycle tests separately from the baseline smoke suite.
-- \`.github/workflows/injector-tests.yml\`: independently validates DLL injection, module discovery, explicit Unload, and Dispose lifetime behavior.
+- \`.github/workflows/release.yml\`: builds, verifies, and publishes only the x64 package for `v*` tags or `release/v*` release branches. x86 release assets are not currently produced.
+- \`.github/workflows/hook-vmt-tests.yml\`: runs real Hook / trampoline / VMT lifecycle tests on x64 independently from the base smoke suite.
+- \`.github/workflows/injector-tests.yml\`: independently validates DLL injection, module discovery, explicit Unload, and Dispose lifetime behavior on x64.
 
 You can create the same runtime package locally:
 
@@ -298,10 +301,6 @@ Output:
 artifacts/package/LibmemCli-windows-x64/
 artifacts/package/LibmemCli-windows-x64.zip
 artifacts/package/LibmemCli-windows-x64.zip.sha256
-
-artifacts/package/LibmemCli-windows-x86/
-artifacts/package/LibmemCli-windows-x86.zip
-artifacts/package/LibmemCli-windows-x86.zip.sha256
 ```
 
 ## Versioning and automated validation
@@ -314,7 +313,7 @@ Each runtime package contains a `manifest.json` recording:
 - the repository Git commit;
 - the pinned upstream libmem commit;
 - target framework (`net8.0`);
-- platform (`win-x64` or `win-x86`);
+- platform (official releases currently use `win-x64`);
 - build configuration (Debug / Release);
 - the file name, byte length, and SHA-256 of every packaged file.
 
@@ -359,7 +358,7 @@ The caller does not need to duplicate Libmem's build scripts; the artifact is up
 
 ## API stability
 
-The repository now commits a shared x86/x64 public API baseline at `api/LibmemCli.PublicApi.txt`. Every `tests/check_sources.py` run extracts the actual public types, properties, methods, and enum members from `src/LibmemCli.h` and compares them with that baseline.
+The repository commits a shared public API baseline at `api/LibmemCli.PublicApi.txt`. Every `tests/check_sources.py` run extracts the actual public types, properties, methods, and enum members from `src/LibmemCli.h` and compares them with that baseline.
 
 Accidental removals, signature changes, public-member renames, or enum changes therefore fail CI. An intentional public API change must explicitly run:
 
@@ -451,7 +450,7 @@ The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libm
 
 ## Important behavior and limitations
 
-1. **Current builds support Windows x86 and x64.** The managed public API continues to use `UInt64` for addresses/sizes, but conversion to native values is range-checked for the current pointer width. On x86, addresses or sizes above `UInt32.MaxValue` throw `ArgumentOutOfRangeException` instead of being silently truncated. `LM_ADDRESS_BAD` is `UInt64.MaxValue` on x64 and `UInt32.MaxValue` on x86. The wrapper does not provide cross-bitness remote translation; injection still requires the current runtime and target process to have matching bitness.
+1. **The current official development, default CI, and Release target is Windows x64.** x86-related code and build configurations remain in the repository but are deferred: they are not a near-term acceptance target, new x64 work is not required to maintain feature parity with x86, and no x86 Release package is published. If x86 development resumes, it will receive a dedicated compatibility audit and restored test matrix. Remote injection still requires the current runtime and target process to have matching bitness.
 
 2. `ReadMemory` returns **only the bytes actually read**. `WriteMemory` returns the actual number of bytes written. Callers should check for short reads and partial writes. A zero-byte result may indicate an inaccessible address.
 
