@@ -7,7 +7,10 @@ import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[1]
 header = (root / "src/LibmemCli.h").read_text(encoding="utf-8")
-source = (root / "src/LibmemCli.cpp").read_text(encoding="utf-8")
+source_files = sorted((root / "src").rglob("*.cpp"))
+source = "\n".join(path.read_text(encoding="utf-8") for path in source_files)
+assert source_files, "No C++ source files were found under src/"
+print("PASS source aggregation:", ", ".join(str(path.relative_to(root)) for path in source_files))
 
 for file in [
     "src/LibmemCli.vcxproj",
