@@ -1,0 +1,179 @@
+#include "NativeConverter.h"
+
+#include <algorithm>
+#include <cstring>
+#include <limits>
+#include <vcclr.h>
+
+using namespace System;
+using namespace System::Text;
+using namespace System::Runtime::InteropServices;
+
+namespace LibmemCli::Interop {
+    std::string utf8(String^ value) {
+        if(value == nullptr) throw gcnew ArgumentNullException("value");
+        if(value->IndexOf('\0') >= 0) throw gcnew ArgumentException("Embedded NUL is not supported.");
+
+        array<Byte>^ bytes = Encoding::UTF8->GetBytes(value);
+        if(bytes->Length == 0) return std::string();
+
+        pin_ptr<Byte> pinned = &bytes[0];
+        return std::string(reinterpret_cast<const char*>(pinned), bytes->Length);
+    }
+
+    String^ str(const char* text) {
+        if(!text) return nullptr;
+
+        int length = static_cast<int>(std::strlen(text));
+        auto bytes = gcnew array<Byte>(length);
+        if(length) Marshal::Copy(IntPtr((void*)text), bytes, 0, length);
+        return Encoding::UTF8->GetString(bytes);
+    }
+
+    lm_address_t native_address(UInt64 value, String^ parameterName) {
+        const UInt64 maximum = static_cast<UInt64>(std::numeric_limits<lm_address_t>::max());
+        if(value > maximum) {
+            throw gcnew ArgumentOutOfRangeException(
+                parameterName,
+                "Address does not fit the current process architecture.");
+        }
+        return static_cast<lm_address_t>(value);
+    }
+
+    lm_size_t native_size(UInt64 value, String^ parameterName) {
+        const UInt64 maximum = static_cast<UInt64>(std::numeric_limits<lm_size_t>::max());
+        if(value > maximum) {
+            throw gcnew ArgumentOutOfRangeException(
+                parameterName,
+                "Size or index does not fit the current process architecture.");
+        }
+        return static_cast<lm_size_t>(value);
+    }
+
+    bool bad_address(UInt64 value) {
+        return value == static_cast<UInt64>(LM_ADDRESS_BAD);
+    }
+
+    lm_process_t proc(ProcessInfo^ input) {
+        if(input == nullptr) throw gcnew ArgumentNullException("process");
+
+        lm_process_t result{};
+        result.pid = input->Pid;
+        result.ppid = input->ParentPid;
+        result.arch = static_cast<lm_arch_t>(input->Architecture);
+        result.bits = static_cast<lm_size_t>(input->Bits);
+        result.start_time = input->StartTime;
+
+        std::string name = utf8(input->Name == nullptr ? String::Empty : input->Name);
+        std::string path = utf8(input->Path == nullptr ? String::Empty : input->Path);
+        std::memcpy(result.name, name.data(), std::min(name.size(), sizeof(result.name) - 1));
+        std::memcpy(result.path, path.data(), std::min(path.size(), sizeof(result.path) - 1));
+        return result;
+    }
+
+    lm_module_t mod(ModuleInfo^ input) {
+        if(input == nullptr) throw gcnew ArgumentNullException("module");
+
+        lm_module_t result{};
+        result.base = native_address(input->Base, "module.Base");
+        result.end = native_address(input->End, "module.End");
+        result.size = native_size(input->Size, "module.Size");
+
+        std::string name = utf8(input->Name == nullptr ? String::Empty : input->Name);
+        std::string path = utf8(input->Path == nullptr ? String::Empty : input->Path);
+        std::memcpy(result.name, name.data(), std::min(name.size(), sizeof(result.name) - 1));
+        std::memcpy(result.path, path.data(), std::min(path.size(), sizeof(result.path) - 1));
+        return result;
+    }
+
+    ProcessInfo^ process(const lm_process_t& value) {
+        auto result = gcnew ProcessInfo();
+        result->Pid = value.pid;
+        result->ParentPid = value.ppid;
+        result->Architecture = static_cast<LibmemCli::Architecture>(value.arch);
+        result->Bits = value.bits;
+        result->StartTime = value.start_time;
+        result->Name = str(value.name);
+        result->Path = str(value.path);
+        return result;
+    }
+
+    ThreadInfo^ thread(const lm_thread_t& value) {
+        auto result = gcnew ThreadInfo();
+        result->Id = value.tid;
+        result->OwnerPid = value.owner_pid;
+        return result;
+    }
+
+    ModuleInfo^ module(const lm_module_t& value) {
+        auto result = gcnew ModuleInfo();
+        result->Base = value.base;
+        result->End = value.end;
+        result->Size = value.size;
+        result->Path = str(value.path);
+        result->Name = str(value.name);
+        return result;
+    }
+
+    SegmentInfo^ segment(const lm_segment_t& value) {
+        auto result = gcnew SegmentInfo();
+        result->Base = value.base;
+        result->End = value.end;
+        result->Size = value.size;
+        result->Protection = static_cast<MemoryProtection>(value.prot);
+        return result;
+    }
+
+    InstructionInfo^ instruction(const lm_inst_t& value) {
+        auto result = gcnew InstructionInfo();
+        result->Address = value.address;
+        result->Size = value.size;
+
+        int byteCount = static_cast<int>(std::min(static_cast<size_t>(value.size), sizeof(value.bytes)));
+        result->Bytes = gcnew array<Byte>(byteCount);
+        if(byteCount) Marshal::Copy(IntPtr((void*)value.bytes), result->Bytes, 0, byteCount);
+
+        result->Mnemonic = str(value.mnemonic);
+        result->OperandString = str(value.op_str);
+        return result;
+    }
+
+    std::vector<lm_address_t> offsets(array<UInt64>^ input) {
+        if(input == nullptr) throw gcnew ArgumentNullException("offsets");
+
+        std::vector<lm_address_t> result;
+        result.reserve(input->Length);
+        for each(UInt64 item in input) {
+            result.push_back(native_address(item, "offsets"));
+        }
+        return result;
+    }
+
+#pragma managed(push, off)
+    lm_bool_t LM_CALL cb_process(lm_process_t* value, void* context) {
+        static_cast<std::vector<lm_process_t>*>(context)->push_back(*value);
+        return LM_TRUE;
+    }
+
+    lm_bool_t LM_CALL cb_thread(lm_thread_t* value, void* context) {
+        static_cast<std::vector<lm_thread_t>*>(context)->push_back(*value);
+        return LM_TRUE;
+    }
+
+    lm_bool_t LM_CALL cb_module(lm_module_t* value, void* context) {
+        static_cast<std::vector<lm_module_t>*>(context)->push_back(*value);
+        return LM_TRUE;
+    }
+
+    lm_bool_t LM_CALL cb_segment(lm_segment_t* value, void* context) {
+        static_cast<std::vector<lm_segment_t>*>(context)->push_back(*value);
+        return LM_TRUE;
+    }
+
+    lm_bool_t LM_CALL cb_symbol(lm_symbol_t* value, void* context) {
+        static_cast<std::vector<NativeSymbol>*>(context)->push_back(
+            { value->address, value->name ? value->name : "" });
+        return LM_TRUE;
+    }
+#pragma managed(pop)
+}
