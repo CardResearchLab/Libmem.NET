@@ -81,6 +81,20 @@ Checks the exact attached process identity, not only whether the PID currently e
 
 `Detach()` and `Dispose()` are idempotent. After the first detach/dispose, session members and previously obtained session-bound Managers reject operational use with `ObjectDisposedException`. Independently owned resource handles keep their own lifetime and are not bulk-cleaned by session detachment.
 
+### Target process exit
+
+Target exit does **not** implicitly detach or dispose a `ProcessSession`. The session remains an identity object for the process it originally bound to:
+
+- `IsDisposed` remains `false` until `Detach()` / `Dispose()` is called;
+- `Pid`, `Name`, `Architecture`, `Bits`, and `Info` remain readable from the bound identity;
+- `IsAlive()` returns `false`;
+- `Refresh()` returns `null`;
+- Manager properties remain accessible.
+
+LibmemCli intentionally does not add an exact-identity liveness preflight to every Manager operation. For external processes, exact PID + start-time validation requires process enumeration; doing that before every read/write/scan would add material overhead and still could not eliminate the race between a preflight and the native operation.
+
+Manager operations therefore keep their documented per-operation result/error semantics after target exit unless the method has an explicit managed liveness precondition. In the current frozen contract, `MemoryManager.Allocate` and `InjectorManager.InjectLibrary` explicitly reject a dead target with `InvalidOperationException`. Independently owned handles keep their separate target-exit cleanup semantics.
+
 ## Manager APIs
 
 ### MemoryManager
