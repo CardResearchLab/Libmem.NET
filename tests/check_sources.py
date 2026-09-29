@@ -321,6 +321,8 @@ for package_marker in [
     r"runtimes\win-x64\native\libmem.dll",
     r"runtimes\win-x64\native\Ijwhost.dll",
     r"buildTransitive\HearthstoneModding.LibmemCli.targets",
+    "<RepositoryType>git</RepositoryType>",
+    "<RepositoryCommit",
 ]:
     assert package_marker in nuget_package_project, (
         f"NuGet prototype lost package asset: {package_marker}"
@@ -483,6 +485,9 @@ assert "NuGet Consumer x64" in nuget_consumer_workflow
 assert "HearthstoneModding.LibmemCli.csproj" in nuget_consumer_workflow
 assert "LibmemCli.NuGetConsumer" in nuget_consumer_workflow
 assert "verify_nuget_package.py" in nuget_consumer_workflow
+assert "--expected-version" in nuget_consumer_workflow
+assert "--expected-commit" in nuget_consumer_workflow
+assert "-p:RepositoryCommit=$env:GITHUB_SHA" in nuget_consumer_workflow
 assert "Publish NuGet consumer" in nuget_consumer_workflow
 assert "Reject non-x64 NuGet consumer" in nuget_consumer_workflow
 assert "LibmemCli.dll" in nuget_consumer_workflow
