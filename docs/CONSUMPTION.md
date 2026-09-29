@@ -109,6 +109,21 @@ The consumer test references **only the local NuGet package**. It does not use a
 
 This proves more than package creation: it verifies that the restored package is loadable and executable on Windows x64, that publish output receives the required native runtime files, and that unsupported non-x64 consumption fails early.
 
+## Platform/runtime rationale
+
+Microsoft's modern .NET C++/CLI guidance documents two constraints that directly shape this package prototype:
+
+- C++/CLI targeting modern .NET is Windows-only.
+- `ijwhost.dll` must be copied from the .NET app host into the output directory for C++/CLI components.
+
+References:
+
+- [Migrate C++/CLI projects to .NET](https://learn.microsoft.com/en-us/dotnet/core/porting/cpp-cli)
+- [NuGet multi-targeting and architecture-specific assets](https://learn.microsoft.com/en-us/nuget/create-packages/supporting-multiple-target-frameworks)
+- [.NET Runtime Identifier catalog](https://learn.microsoft.com/en-us/dotnet/core/rid-catalog)
+
+The prototype therefore uses the portable `win-x64` RID for native assets and fails early outside Windows x64.
+
 ## Why NuGet is still experimental
 
 LibmemCli is not a normal AnyCPU managed library:
