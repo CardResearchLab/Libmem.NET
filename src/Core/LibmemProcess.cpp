@@ -36,7 +36,14 @@ ProcessInfo^ Libmem::GetProcess(UInt32 pid) {
     p.start_time=match->start_time;
     return process(p);
 }
-ProcessInfo^ Libmem::FindProcess(String^ name) { lm_process_t p{}; auto n=utf8(name); return LM_FindProcess(n.c_str(),&p) ? process(p) : nullptr; }
+ProcessInfo^ Libmem::FindProcess(String^ name) {
+    if(name==nullptr) throw gcnew ArgumentNullException("name");
+    if(String::IsNullOrWhiteSpace(name))
+        throw gcnew ArgumentException("Process name must not be empty.", "name");
+    lm_process_t p{};
+    auto n=utf8(name);
+    return LM_FindProcess(n.c_str(),&p) ? process(p) : nullptr;
+}
 ProcessSession^ Libmem::Attach(UInt32 pid) {
     auto current=GetProcess(pid);
     return current==nullptr ? nullptr : gcnew ProcessSession(current);

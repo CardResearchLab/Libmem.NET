@@ -6,6 +6,21 @@ static void Check(bool condition, string message)
         throw new InvalidOperationException(message);
 }
 
+static TException ExpectThrows<TException>(Action action, string message)
+    where TException : Exception
+{
+    try
+    {
+        action();
+    }
+    catch (TException ex)
+    {
+        return ex;
+    }
+
+    throw new InvalidOperationException(message);
+}
+
 static byte[] PointerBytes(ulong value)
 {
     return IntPtr.Size == sizeof(ulong)
@@ -41,6 +56,16 @@ var byPid = Libmem.GetProcess(current.Pid);
 Check(byPid is not null && byPid.Pid == current.Pid, "GetProcess could not resolve the current PID.");
 var byName = Libmem.FindProcess(current.Name);
 Check(byName is not null, "FindProcess could not resolve the current process name.");
+
+var nullProcessName = ExpectThrows<ArgumentNullException>(
+    () => Libmem.FindProcess(null!),
+    "FindProcess(null) should throw ArgumentNullException.");
+Check(nullProcessName.ParamName == "name", "FindProcess(null) reported the wrong parameter name.");
+
+var blankProcessName = ExpectThrows<ArgumentException>(
+    () => Libmem.FindProcess("   "),
+    "FindProcess(blank) should throw ArgumentException.");
+Check(blankProcessName.ParamName == "name", "FindProcess(blank) reported the wrong parameter name.");
 var commandLine = Libmem.GetCommandLine(current);
 Check(commandLine.Length > 0, "GetCommandLine returned no arguments for the current process.");
 Check(Libmem.GetBits() == expectedBits, "Libmem.GetBits does not match the runtime pointer size.");
@@ -77,6 +102,31 @@ Check(session.Threads.Enumerate().Any(x => x.Id == currentThread.Id),
     "ThreadManager.Enumerate did not include the current thread.");
 Check(session.Threads.Main is not null && session.Threads.Main.OwnerPid == current.Pid,
     "ThreadManager.Main did not resolve a thread owned by the session process.");
+
+var nullModuleName = ExpectThrows<ArgumentNullException>(
+    () => session.Modules.Find(null!),
+    "ModuleManager.Find(null) should throw ArgumentNullException.");
+Check(nullModuleName.ParamName == "name", "ModuleManager.Find(null) reported the wrong parameter name.");
+
+var blankModuleName = ExpectThrows<ArgumentException>(
+    () => session.Modules.Find("   "),
+    "ModuleManager.Find(blank) should throw ArgumentException.");
+Check(blankModuleName.ParamName == "name", "ModuleManager.Find(blank) reported the wrong parameter name.");
+
+var nullModulePath = ExpectThrows<ArgumentNullException>(
+    () => session.Modules.Load(null!),
+    "ModuleManager.Load(null) should throw ArgumentNullException.");
+Check(nullModulePath.ParamName == "path", "ModuleManager.Load(null) reported the wrong parameter name.");
+
+var blankModulePath = ExpectThrows<ArgumentException>(
+    () => session.Modules.Load("   "),
+    "ModuleManager.Load(blank) should throw ArgumentException.");
+Check(blankModulePath.ParamName == "path", "ModuleManager.Load(blank) reported the wrong parameter name.");
+
+var nullInjectionPath = ExpectThrows<ArgumentNullException>(
+    () => session.Injector.InjectLibrary(null!),
+    "InjectorManager.InjectLibrary(null) should throw ArgumentNullException.");
+Check(nullInjectionPath.ParamName == "path", "InjectorManager.InjectLibrary(null) reported the wrong parameter name.");
 
 using (var openedSession = ProcessSession.Open(current)
        ?? throw new InvalidOperationException("ProcessSession.Open(ProcessInfo) failed for the current process."))
