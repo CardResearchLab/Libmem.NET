@@ -69,6 +69,10 @@ Check(session.Bits == current.Bits, "ProcessSession bitness does not match.");
 Check(session.IsAlive(), "Attached ProcessSession should report the current process as alive.");
 Check(session.Threads is not null, "ProcessSession.Threads returned null.");
 Check(session.Scanner is not null, "ProcessSession.Scanner returned null.");
+Check(session.Symbols is not null, "ProcessSession.Symbols returned null.");
+Check(session.Assembly is not null, "ProcessSession.Assembly returned null.");
+Check(session.Assembly.Architecture == current.Architecture,
+    "AssemblyManager architecture does not match the session process.");
 Check(session.Threads.Enumerate().Any(x => x.Id == currentThread.Id),
     "ThreadManager.Enumerate did not include the current thread.");
 Check(session.Threads.Main is not null && session.Threads.Main.OwnerPid == current.Pid,
@@ -93,6 +97,8 @@ var detachedMemory = session.Memory;
 var detachedModules = session.Modules;
 var detachedThreads = session.Threads;
 var detachedScanner = session.Scanner;
+var detachedSymbols = session.Symbols;
+var detachedAssembly = session.Assembly;
 var detachedHooks = session.Hooks;
 var detachedInjector = session.Injector;
 session.Detach();
@@ -153,6 +159,28 @@ catch (ObjectDisposedException)
 }
 Check(detachedScanManagerThrows, "ScanManager should reject operations after its ProcessSession is detached.");
 
+var detachedSymbolManagerThrows = false;
+try
+{
+    _ = detachedSymbols.Demangle("test");
+}
+catch (ObjectDisposedException)
+{
+    detachedSymbolManagerThrows = true;
+}
+Check(detachedSymbolManagerThrows, "SymbolManager should reject operations after its ProcessSession is detached.");
+
+var detachedAssemblyManagerThrows = false;
+try
+{
+    _ = detachedAssembly.Assemble("nop", 0);
+}
+catch (ObjectDisposedException)
+{
+    detachedAssemblyManagerThrows = true;
+}
+Check(detachedAssemblyManagerThrows, "AssemblyManager should reject operations after its ProcessSession is detached.");
+
 var detachedHookManagerThrows = false;
 try
 {
@@ -207,7 +235,7 @@ foreach (var candidate in sessionModules)
 
     try
     {
-        exportedSymbol = Libmem.EnumSymbols(candidate, demangle: false)
+        exportedSymbol = pidSession.Symbols.Enumerate(candidate, demangle: false)
             .FirstOrDefault(symbol => symbol is not null
                                       && !string.IsNullOrWhiteSpace(symbol.Name)
                                       && symbol.Address != 0
@@ -229,9 +257,13 @@ foreach (var candidate in sessionModules)
 Check(symbolModule is not null && exportedSymbol is not null,
     "No loaded module exposed a usable symbol for symbol API validation.");
 
-var resolvedSymbol = Libmem.FindSymbolAddress(symbolModule!, exportedSymbol!.Name, demangle: false);
+var resolvedSymbol = pidSession.Symbols.FindAddress(symbolModule!, exportedSymbol!.Name, demangle: false);
 Check(resolvedSymbol == exportedSymbol.Address,
-    "FindSymbolAddress disagreed with EnumSymbols for the selected loaded module.");
+    "SymbolManager.FindAddress disagreed with Enumerate for the selected loaded module.");
+
+// v0.x compatibility for the existing static symbol facade.
+Check(Libmem.FindSymbolAddress(symbolModule!, exportedSymbol.Name, demangle: false) == exportedSymbol.Address,
+    "Static FindSymbolAddress compatibility API disagreed with SymbolManager.");
 
 Stage("memory-segments");
 var memory = pidSession!.Memory;
@@ -378,26 +410,31 @@ try
     }
 
     Stage("assembly-disassembly");
+    var assembly = pidSession.Assembly;
     var singleInstruction = Libmem.Assemble("nop");
     Check(singleInstruction is not null && singleInstruction.Size > 0,
-        "Single-instruction Assemble returned no instruction.");
+        "Single-instruction Assemble compatibility API returned no instruction.");
 
-    var machineCode = Libmem.Assemble("nop; ret", expectedArchitecture, 0x1000);
-    Check(machineCode is { Length: > 0 }, "Assemble returned no machine code.");
+    var machineCode = assembly.Assemble("nop; ret", 0x1000);
+    Check(machineCode is { Length: > 0 }, "AssemblyManager.Assemble returned no machine code.");
 
-    var instructions = Libmem.Disassemble(machineCode!, expectedArchitecture, 2, 0x1000);
-    Check(instructions.Count > 0, "Disassemble returned no instructions.");
+    var instructions = assembly.Disassemble(machineCode!, 2, 0x1000);
+    Check(instructions.Count > 0, "AssemblyManager.Disassemble(byte[]) returned no instructions.");
     Check(instructions[0].Mnemonic.Length > 0, "Disassembled instruction has no mnemonic.");
 
     Check(Libmem.WriteMemory(address, machineCode!) == machineCode!.Length,
         "Could not place assembled code in the local allocation.");
-    var directInstruction = Libmem.Disassemble(address);
-    Check(directInstruction is not null && directInstruction.Mnemonic.Length > 0,
-        "Direct Disassemble returned no instruction.");
+
+    var remoteInstructions = assembly.Disassemble(address, (ulong)machineCode.Length, 2, address);
+    Check(remoteInstructions.Count > 0,
+        "AssemblyManager.Disassemble(address) returned no target-process instructions.");
+
+    var remoteCodeLength = assembly.CodeLength(address, 1);
+    Check(remoteCodeLength >= 1, "AssemblyManager.CodeLength failed for target memory.");
+
+    // v0.x compatibility for existing static assembly/disassembly APIs.
     var localCodeLength = Libmem.CodeLength(address, 1);
-    Check(localCodeLength >= 1, "CodeLength failed for local memory.");
-    var remoteCodeLength = Libmem.CodeLength(current, address, 1);
-    Check(remoteCodeLength == localCodeLength, "CodeLength(process) disagreed with the local result.");
+    Check(localCodeLength == remoteCodeLength, "Static CodeLength disagreed with AssemblyManager.");
 }
 finally
 {
