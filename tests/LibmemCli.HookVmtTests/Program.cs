@@ -94,8 +94,9 @@ Check(disposeHook.IsInstalled, "Dispose coverage hook should start installed.");
 Check(disposeHook.Destination == destination.Address, "Dispose coverage hook lost its destination metadata.");
 Check(CallNoArgs(source.Address) == 2, "Dispose coverage hook did not redirect source.");
 ((IDisposable)disposeHook).Dispose();
-Check(disposeHook.IsDisposed, "HookHandle should report disposed after successful Dispose.");
-Check(!disposeHook.IsInstalled, "HookHandle should report uninstalled after successful Dispose.");
+((IDisposable)disposeHook).Dispose();
+Check(disposeHook.IsDisposed, "HookHandle should report disposed after repeated Dispose calls.");
+Check(!disposeHook.IsInstalled, "HookHandle should report uninstalled after repeated Dispose calls.");
 Check(CallNoArgs(source.Address) == 1, "HookHandle.Dispose did not restore source behavior.");
 
 // VmtManager lifecycle on an isolated page owned by this test process.
@@ -130,7 +131,8 @@ Check(ReadPointer(memory, vtablePage.Address + (ulong)IntPtr.Size) == original1,
 
 vmt.Hook(0, replacement0);
 ((IDisposable)vmt).Dispose();
-Check(vmt.IsDisposed, "VmtManager should report disposed after Dispose.");
+((IDisposable)vmt).Dispose();
+Check(vmt.IsDisposed, "VmtManager should report disposed after repeated Dispose calls.");
 Check(ReadPointer(memory, vtablePage.Address) == original0, "VmtManager.Dispose did not restore an active hook.");
 
 var disposedVmtThrows = false;
