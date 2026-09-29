@@ -308,7 +308,16 @@ for api_reference_marker in [
     assert api_reference_marker in api_reference, (
         f"API reference lost required section: {api_reference_marker}"
     )
-assert "Hearthstone" not in api_reference
+for forbidden_api_coupling in [
+    "Hearthstone.exe",
+    "HearthstoneBot",
+    "GameState",
+    "UnityPlayer",
+    "ManagedMod",
+]:
+    assert forbidden_api_coupling not in api_reference, (
+        f"API reference contains application-specific coupling: {forbidden_api_coupling}"
+    )
 print("PASS consumer API reference contract")
 
 nuget_verifier_path = root / "tests/verify_nuget_package.py"
