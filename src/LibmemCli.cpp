@@ -219,14 +219,19 @@ RemoteAllocation::!RemoteAllocation() {
 void ProcessSession::ThrowIfDisposed() {
     if(disposed_) throw gcnew ObjectDisposedException("ProcessSession");
 }
-ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), modules_(nullptr), hooks_(nullptr), injector_(nullptr), disposed_(false) {
+ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), modules_(nullptr), threads_(nullptr), scanner_(nullptr), hooks_(nullptr), injector_(nullptr), disposed_(false) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
     identity_=process(proc(input));
     memory_=gcnew MemoryManager(this);
     modules_=gcnew ModuleManager(this);
+    threads_=gcnew ThreadManager(this);
+    scanner_=gcnew ScanManager(this);
     hooks_=gcnew HookManager(this);
     injector_=gcnew InjectorManager(this);
 }
+ProcessSession^ ProcessSession::Open(UInt32 pid) { return Libmem::Attach(pid); }
+ProcessSession^ ProcessSession::Open(String^ name) { return Libmem::Attach(name); }
+ProcessSession^ ProcessSession::Open(ProcessInfo^ input) { return Libmem::Attach(input); }
 ProcessInfo^ ProcessSession::Target::get() {
     ThrowIfDisposed();
     return identity_;
@@ -259,6 +264,14 @@ ModuleManager^ ProcessSession::Modules::get() {
     ThrowIfDisposed();
     return modules_;
 }
+ThreadManager^ ProcessSession::Threads::get() {
+    ThrowIfDisposed();
+    return threads_;
+}
+ScanManager^ ProcessSession::Scanner::get() {
+    ThrowIfDisposed();
+    return scanner_;
+}
 HookManager^ ProcessSession::Hooks::get() {
     ThrowIfDisposed();
     return hooks_;
@@ -289,6 +302,8 @@ void ProcessSession::Detach() {
     identity_=nullptr;
     memory_=nullptr;
     modules_=nullptr;
+    threads_=nullptr;
+    scanner_=nullptr;
     hooks_=nullptr;
     injector_=nullptr;
 }
@@ -346,6 +361,26 @@ UInt64 MemoryManager::SigScan(String^ signature,UInt64 address,UInt64 scanSize) 
     return Libmem::SigScan(Target(),signature,address,scanSize);
 }
 
+ScanManager::ScanManager(ProcessSession^ session) : session_(session) {
+    if(session==nullptr) throw gcnew ArgumentNullException("session");
+}
+ProcessInfo^ ScanManager::Target() {
+    if(session_==nullptr) throw gcnew ObjectDisposedException("ScanManager");
+    return session_->Target;
+}
+UInt64 ScanManager::DeepPointer(UInt64 baseAddress,array<UInt64>^ pointerOffsets) {
+    return Libmem::DeepPointer(Target(),baseAddress,pointerOffsets);
+}
+UInt64 ScanManager::DataScan(array<Byte>^ data,UInt64 address,UInt64 scanSize) {
+    return Libmem::DataScan(Target(),data,address,scanSize);
+}
+UInt64 ScanManager::PatternScan(array<Byte>^ pattern,String^ mask,UInt64 address,UInt64 scanSize) {
+    return Libmem::PatternScan(Target(),pattern,mask,address,scanSize);
+}
+UInt64 ScanManager::SigScan(String^ signature,UInt64 address,UInt64 scanSize) {
+    return Libmem::SigScan(Target(),signature,address,scanSize);
+}
+
 ModuleManager::ModuleManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");
 }
@@ -365,6 +400,21 @@ ModuleInfo^ ModuleManager::Load(String^ path) {
 bool ModuleManager::Unload(ModuleInfo^ moduleInfo) {
     return Libmem::UnloadModule(Target(),moduleInfo);
 }
+
+ThreadManager::ThreadManager(ProcessSession^ session) : session_(session) {
+    if(session==nullptr) throw gcnew ArgumentNullException("session");
+}
+ProcessInfo^ ThreadManager::Target() {
+    if(session_==nullptr) throw gcnew ObjectDisposedException("ThreadManager");
+    return session_->Target;
+}
+List<ThreadInfo^>^ ThreadManager::Enumerate() {
+    return Libmem::EnumThreads(Target());
+}
+ThreadInfo^ ThreadManager::Main::get() {
+    return Libmem::GetThread(Target());
+}
+
 InjectedModuleHandle::InjectedModuleHandle(ProcessInfo^ target,ModuleInfo^ moduleInfo,String^ requestedPath)
     : target_(nullptr),module_(nullptr),requestedPath_(requestedPath),active_(true),disposed_(false) {
     if(target==nullptr) throw gcnew ArgumentNullException("target");
