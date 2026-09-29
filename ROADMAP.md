@@ -99,7 +99,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - Smoke Tests；
 - Hook/VMT Tests；
 - Injector Tests；
-- 独立 TestTarget；
+- 独立 TestTarget（已建立 x64 外部进程测试靶）；
 - C# consumer sample；
 - XML 文档；
 - README / API 文档。
