@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+// Internal-only native/managed interop boundary.
+// This header is an implementation detail and must not become part of the public managed API.
 namespace LibmemCli::Interop {
     struct NativeSymbol {
         lm_address_t address;
