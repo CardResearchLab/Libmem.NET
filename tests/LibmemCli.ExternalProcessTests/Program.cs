@@ -73,6 +73,15 @@ try
     var process = Libmem.GetProcess(ready.Pid);
     Check(process is not null, "Libmem.GetProcess could not resolve the TestTarget process.");
 
+    var enumeratedProcess = Libmem.EnumProcesses().FirstOrDefault(candidate => candidate.Pid == ready.Pid);
+    Check(enumeratedProcess is not null, "Libmem.EnumProcesses did not include the TestTarget process.");
+    Check(process!.StartTime == enumeratedProcess!.StartTime,
+        "Libmem.GetProcess returned a target start time inconsistent with EnumProcesses.");
+
+    using var pidSession = ProcessSession.Open(ready.Pid)
+        ?? throw new InvalidOperationException("ProcessSession.Open(pid) failed for TestTarget.");
+    Check(pidSession.IsAlive(), "PID-opened ProcessSession should observe TestTarget as alive.");
+
     using var session = ProcessSession.Open(process!)
         ?? throw new InvalidOperationException("ProcessSession.Open failed for TestTarget.");
 
