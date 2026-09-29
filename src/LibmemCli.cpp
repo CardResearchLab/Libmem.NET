@@ -219,13 +219,15 @@ RemoteAllocation::!RemoteAllocation() {
 void ProcessSession::ThrowIfDisposed() {
     if(disposed_) throw gcnew ObjectDisposedException("ProcessSession");
 }
-ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), modules_(nullptr), threads_(nullptr), scanner_(nullptr), hooks_(nullptr), injector_(nullptr), disposed_(false) {
+ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_(nullptr), modules_(nullptr), threads_(nullptr), scanner_(nullptr), symbols_(nullptr), assembly_(nullptr), hooks_(nullptr), injector_(nullptr), disposed_(false) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
     identity_=process(proc(input));
     memory_=gcnew MemoryManager(this);
     modules_=gcnew ModuleManager(this);
     threads_=gcnew ThreadManager(this);
     scanner_=gcnew ScanManager(this);
+    symbols_=gcnew SymbolManager(this);
+    assembly_=gcnew AssemblyManager(this);
     hooks_=gcnew HookManager(this);
     injector_=gcnew InjectorManager(this);
 }
@@ -272,6 +274,14 @@ ScanManager^ ProcessSession::Scanner::get() {
     ThrowIfDisposed();
     return scanner_;
 }
+SymbolManager^ ProcessSession::Symbols::get() {
+    ThrowIfDisposed();
+    return symbols_;
+}
+AssemblyManager^ ProcessSession::Assembly::get() {
+    ThrowIfDisposed();
+    return assembly_;
+}
 HookManager^ ProcessSession::Hooks::get() {
     ThrowIfDisposed();
     return hooks_;
@@ -304,6 +314,8 @@ void ProcessSession::Detach() {
     modules_=nullptr;
     threads_=nullptr;
     scanner_=nullptr;
+    symbols_=nullptr;
+    assembly_=nullptr;
     hooks_=nullptr;
     injector_=nullptr;
 }
@@ -379,6 +391,56 @@ UInt64 ScanManager::PatternScan(array<Byte>^ pattern,String^ mask,UInt64 address
 }
 UInt64 ScanManager::SigScan(String^ signature,UInt64 address,UInt64 scanSize) {
     return Libmem::SigScan(Target(),signature,address,scanSize);
+}
+
+SymbolManager::SymbolManager(ProcessSession^ session) : session_(session) {
+    if(session==nullptr) throw gcnew ArgumentNullException("session");
+}
+ProcessInfo^ SymbolManager::Target() {
+    if(session_==nullptr) throw gcnew ObjectDisposedException("SymbolManager");
+    return session_->Target;
+}
+List<SymbolInfo^>^ SymbolManager::Enumerate(ModuleInfo^ moduleInfo,bool demangle) {
+    Target();
+    return Libmem::EnumSymbols(moduleInfo,demangle);
+}
+UInt64 SymbolManager::FindAddress(ModuleInfo^ moduleInfo,String^ name,bool demangle) {
+    Target();
+    return Libmem::FindSymbolAddress(moduleInfo,name,demangle);
+}
+String^ SymbolManager::Demangle(String^ name) {
+    Target();
+    return Libmem::DemangleSymbol(name);
+}
+
+AssemblyManager::AssemblyManager(ProcessSession^ session) : session_(session) {
+    if(session==nullptr) throw gcnew ArgumentNullException("session");
+}
+ProcessInfo^ AssemblyManager::Target() {
+    if(session_==nullptr) throw gcnew ObjectDisposedException("AssemblyManager");
+    return session_->Target;
+}
+LibmemCli::Architecture AssemblyManager::Architecture::get() {
+    return Target()->Architecture;
+}
+array<Byte>^ AssemblyManager::Assemble(String^ code,UInt64 runtimeAddress) {
+    auto target=Target();
+    return Libmem::Assemble(code,target->Architecture,runtimeAddress);
+}
+List<InstructionInfo^>^ AssemblyManager::Disassemble(array<Byte>^ code,UInt64 instructionCount,UInt64 runtimeAddress) {
+    auto target=Target();
+    return Libmem::Disassemble(code,target->Architecture,instructionCount,runtimeAddress);
+}
+List<InstructionInfo^>^ AssemblyManager::Disassemble(UInt64 address,UInt64 maxBytes,UInt64 instructionCount,UInt64 runtimeAddress) {
+    auto target=Target();
+    if(maxBytes==0) throw gcnew ArgumentOutOfRangeException("maxBytes");
+    if(maxBytes>static_cast<UInt64>(Int32::MaxValue)) throw gcnew ArgumentOutOfRangeException("maxBytes");
+    auto bytes=Libmem::ReadMemory(target,address,static_cast<int>(maxBytes));
+    if(bytes->Length==0) return gcnew List<InstructionInfo^>();
+    return Libmem::Disassemble(bytes,target->Architecture,instructionCount,runtimeAddress);
+}
+UInt64 AssemblyManager::CodeLength(UInt64 address,UInt64 minimumLength) {
+    return Libmem::CodeLength(Target(),address,minimumLength);
 }
 
 ModuleManager::ModuleManager(ProcessSession^ session) : session_(session) {
