@@ -1,0 +1,89 @@
+name: NuGet Consumer Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'packaging/**'
+      - 'tests/LibmemCli.NuGetConsumer/**'
+      - 'tests/verify_nuget_package.py'
+      - 'tests/check_sources.py'
+      - 'eng/**'
+      - 'build.ps1'
+      - '.gitmodules'
+      - '.github/workflows/nuget-consumer-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nuget-consumer:
+    name: NuGet Consumer x64
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Check wrapper contract
+        shell: pwsh
+        run: python .\tests\check_sources.py
+
+      - name: Build LibmemCli
+        shell: pwsh
+        run: .\build.ps1 -Configuration Release -Platform x64
+
+      - name: Pack local NuGet prototype
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\VERSION -Raw).Trim()
+          dotnet pack .\packaging\HearthstoneModding.LibmemCli.csproj `
+            -c Release `
+            -p:PackageVersion=$version `
+            -p:NuGetAudit=false `
+            -o .\artifacts\nuget
+
+      - name: Verify NuGet package layout
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\VERSION -Raw).Trim()
+          $package = ".\artifacts\nuget\HearthstoneModding.LibmemCli.$version.nupkg"
+          python .\tests\verify_nuget_package.py --package $package
+
+      - name: Restore NuGet consumer from local feed
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\VERSION -Raw).Trim()
+          dotnet restore .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
+            --source .\artifacts\nuget `
+            -p:LibmemCliTestPackageVersion=$version `
+            -p:NuGetAudit=false
+
+      - name: Run NuGet consumer
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\VERSION -Raw).Trim()
+          dotnet run `
+            --project .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
+            -c Release `
+            --no-restore `
+            -p:LibmemCliTestPackageVersion=$version
