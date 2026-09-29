@@ -198,8 +198,7 @@ var length = target.Assembly.CodeLength(address, 5);
 `ProcessSession.Injector` 是比 `ModuleManager.Load` 更高一层的 DLL 注入接口，用来表达“这一次 LoadLibrary 引用由谁负责释放”：
 
 ```csharp
-using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll")
-    ?? throw new InvalidOperationException("Injection failed");
+using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll");
 
 Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 ```
@@ -213,8 +212,7 @@ Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 `ProcessSession.Hooks` 把 Hook 安装操作绑定到当前目标进程：
 
 ```csharp
-using var hook = target.Hooks.Install(source, destination)
-    ?? throw new InvalidOperationException("Hook failed");
+using var hook = target.Hooks.Install(source, destination);
 
 Console.WriteLine($"source=0x{hook.Source:X} destination=0x{hook.Destination:X} trampoline=0x{hook.Trampoline:X}");
 ```
