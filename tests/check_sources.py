@@ -39,6 +39,17 @@ assert "InjectedModuleHandle::InjectedModuleHandle" not in libmem_facade_source
 assert "InjectorManager::InjectLibrary" not in libmem_facade_source
 print("PASS resource lifetime extraction contract")
 
+hook_source = (root / "src/Hooks/HookManager.cpp").read_text(encoding="utf-8")
+vmt_source = (root / "src/Hooks/VmtManager.cpp").read_text(encoding="utf-8")
+assert "HookManager::HookManager" in hook_source
+assert "HookHandle::HookHandle" in hook_source
+assert "HookHandle^ Libmem::HookCode" in hook_source
+assert "VmtManager::VmtManager" in vmt_source
+assert "HookManager::HookManager" not in libmem_facade_source
+assert "HookHandle::HookHandle" not in libmem_facade_source
+assert "VmtManager::VmtManager" not in libmem_facade_source
+print("PASS Hook VMT extraction contract")
+
 for file in [
     "src/LibmemCli.vcxproj",
     "samples/Example.csproj",
