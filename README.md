@@ -1,14 +1,14 @@
-# LibmemCli — libmem 5.x C++/CLI 封装（Windows x64 / .NET 8）
+# LibmemCli — libmem 5.x C++/CLI 封装（Windows x86/x64 / .NET 8）
 
 [简体中文](README.md) | [English](README.en.md)
 
 [![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
-![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
+![Windows x86/x64](https://img.shields.io/badge/Windows-x86%20%7C%20x64-0078D4)
 
 
-LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装，面向 Windows x64 / .NET 8 项目。
+LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装，面向 Windows x86/x64 / .NET 8 项目。
 
 本项目封装了当前固定版本 libmem 头文件中公开的全部函数，并使用托管模型、托管字节数组以及符合 .NET 使用习惯的 API 暴露给 C# / .NET。libmem 中普通函数与 `Ex` 函数通常在托管层对应为一组重载。
 
@@ -22,7 +22,7 @@ LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复�
 
 ```mermaid
 flowchart LR
-    App["C# / .NET 8 x64 项目"] --> Cli["LibmemCli.dll<br/>C++/CLI 托管封装"]
+    App["C# / .NET 8 x86/x64 项目"] --> Cli["LibmemCli.dll<br/>C++/CLI 托管封装"]
     Cli --> Native["libmem.dll<br/>rdbo/libmem"]
     Native --> Win["Windows 原生进程 / 内存 API"]
 
@@ -37,7 +37,7 @@ flowchart LR
 
 ## 环境要求
 
-- Windows x64
+- Windows x86 或 x64
 - Visual Studio，并安装：
   - **使用 C++ 的桌面开发**
   - **适用于 v143 生成工具的 C++/CLI 支持**
@@ -65,15 +65,15 @@ cd Libmem
 
 `bootstrap.ps1` 仍保留为兼容入口。
 
-也可以直接打开 `LibmemCli.sln`，使用 `Debug|x64` 或 `Release|x64` 构建。Visual Studio/MSBuild 会自动执行相同的原生依赖构建流程。
+也可以直接打开 `LibmemCli.sln`，使用 `Debug|x64`、`Release|x64`、`Debug|x86` 或 `Release|x86` 构建。Visual Studio/MSBuild 会自动执行相同的原生依赖构建流程。
 
 生成文件不会写入源码目录，默认输出到：
 
 ```text
-artifacts/native/x64/Release/bin/libmem.dll
-artifacts/native/x64/Release/lib/libmem.lib
-artifacts/managed/x64/Release/LibmemCli.dll
-artifacts/managed/x64/Release/Ijwhost.dll
+artifacts/native/{x64|x86}/Release/bin/libmem.dll
+artifacts/native/{x64|x86}/Release/lib/libmem.lib
+artifacts/managed/{x64|x86}/Release/LibmemCli.dll
+artifacts/managed/{x64|x86}/Release/Ijwhost.dll
 ```
 
 
@@ -90,11 +90,10 @@ var process = Libmem.CurrentProcess()
 using var session = Libmem.Attach(process)
     ?? throw new InvalidOperationException("Attach failed");
 
-var snapshot = session.Snapshot;
 Console.WriteLine(
-    $"Process: {snapshot.Name}  PID={snapshot.Pid}  Arch={snapshot.Architecture}  Bits={snapshot.Bits}");
+    $"Process: {process.Name}  PID={process.Pid}  Arch={process.Architecture}  Bits={process.Bits}");
 
-foreach (var module in session.Modules.Snapshot())
+foreach (var module in session.Modules.Enumerate())
 {
     Console.WriteLine(
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
@@ -105,7 +104,7 @@ foreach (var module in session.Modules.Snapshot())
 
 ## ProcessSession
 
-`ProcessSession` 是面向后续注入 SDK 的长期进程上下文。它通过 **PID + 进程启动时间** 锁定一个具体进程身份，并提供明确的 Attach / Detach 生命周期：
+`ProcessSession` 是可选的通用进程上下文封装。它通过 **PID + 进程启动时间** 锁定一个具体进程身份，并为同一目标的内存、模块、Hook 与注入操作提供明确的 Attach / Detach 生命周期；它不承担应用状态管理：
 
 ```csharp
 using var target = Libmem.Attach("Hearthstone.exe");
@@ -121,21 +120,9 @@ if (!target.IsAlive())
 var latest = target.Refresh();
 ```
 
-当前阶段 `ProcessSession` 主要负责进程身份与生命周期，不持有 Windows 原生进程句柄。后续 v0.2.0 的 `MemoryManager`、`ModuleManager`、`HookManager` 和 `Injector` 会逐步挂到这一上下文之上。
+当前 `ProcessSession` 不持有 Windows 原生进程句柄；`MemoryManager`、`ModuleManager`、`HookManager` 和 `InjectorManager` 只是在 libmem 调用之上增加目标绑定与必要的资源生命周期约束。
 
-现有 `Libmem.*` 静态 API 保持兼容，不需要一次性迁移已有代码。
-
-### 只读 Snapshot
-
-`ProcessSession.Snapshot` 和 `ModuleManager.Snapshot()` 提供与操作句柄分离的不可变状态视图。`ProcessSnapshot` / `ModuleSnapshot` 只包含描述性数据，没有公开 setter，也不承担目标进程资源所有权，因此可以安全保存并在 `ProcessSession.Detach()` 之后继续读取已有快照。
-
-```csharp
-ProcessSnapshot process = target.Snapshot;
-IReadOnlyList<ModuleSnapshot> modules = target.Modules.Snapshot();
-ModuleSnapshot? unity = target.Modules.FindSnapshot("UnityPlayer.dll");
-```
-
-Snapshot 用于日志、事件、状态缓存和跨层传递；需要执行读写、加载、Hook 或注入时，仍通过对应的 Session-bound Manager 完成。
+现有 `Libmem.*` 静态 API 保持直接可用。应用如果需要 Snapshot、缓存、事件状态或游戏状态模型，应在调用方自己构建，而不是放进 LibmemCli。
 
 ### ModuleManager
 
@@ -163,9 +150,9 @@ using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll
 Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 ```
 
-`InjectLibrary` 会规范化并检查 DLL 路径，并拒绝当前 runtime 与目标进程位宽不同的跨位宽注入。返回的 `InjectedModuleHandle` 保存模块快照与请求路径；`IsActive` 表示**这个 Handle 所拥有的一次加载引用尚未释放**，并不等价于“该 DLL 一定仍是目标进程中的唯一实例”。
+`InjectLibrary` 会规范化并检查 DLL 路径，并拒绝当前 runtime 与目标进程位宽不同的跨位宽注入。返回的 `InjectedModuleHandle` 保存模块描述与请求路径；`IsActive` 表示**这个 Handle 所拥有的一次加载引用尚未释放**，并不等价于“该 DLL 一定仍是目标进程中的唯一实例”。
 
-显式 `Unload()` 或 `Dispose()` 会尝试执行一次匹配的 `FreeLibrary`。由于 Windows DLL 引用计数以及固定 libmem 上游 `LM_UnloadModuleEx` 的语义，即使调用成功，也不承诺模块一定完全从目标进程消失。GC Finalizer 不会对目标进程执行 `FreeLibrary`。
+显式 `Unload()` 会返回释放结果；`Dispose()` 会确定性尝试释放该 Handle 所拥有的一次 `LoadLibrary` 引用，失败时会向调用方报告，而不会把仍然有效的所有权静默标记为已释放。由于 Windows DLL 引用计数以及固定 libmem 上游 `LM_UnloadModuleEx` 的语义，即使调用成功，也不承诺模块一定完全从目标进程消失。GC Finalizer 不会对目标进程执行 `FreeLibrary`。
 
 ### HookManager
 
@@ -175,7 +162,7 @@ Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 using var hook = target.Hooks.Install(source, destination)
     ?? throw new InvalidOperationException("Hook failed");
 
-Console.WriteLine($"trampoline=0x{hook.Trampoline:X}");
+Console.WriteLine($"source=0x{hook.Source:X} destination=0x{hook.Destination:X} trampoline=0x{hook.Trampoline:X}");
 ```
 
 `HookManager` 本身不接管已创建 Hook 的所有权；返回的 `HookHandle` 负责自己的 `Remove / Dispose` 生命周期。这样 `ProcessSession.Detach()` 只阻止继续安装新 Hook，不会在调用方没有明确要求时批量修改目标代码。保存下来的 `HookManager` 在 Session Detach 后继续使用会抛出 `ObjectDisposedException`。
@@ -208,7 +195,7 @@ using var memory = target.Allocate(4096, MemoryProtection.ReadWrite)
 Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
 ```
 
-显式调用 `Free()` 或离开 `using` 作用域都会尝试释放内存；如果目标进程已经退出，则视为地址空间已被操作系统回收。Finalizer 不会在 GC 线程里修改其他进程内存。
+显式调用 `Free()` 可以检查释放是否成功；离开 `using` 作用域时，`Dispose()` 会确定性释放这块内存，若原生释放失败则直接向调用方报告失败，而不会静默丢失所有权。如果目标进程已经退出，则视为地址空间已被操作系统回收。Finalizer 不会在 GC 线程里修改其他进程内存。
 
 ## 作为 Git Submodule 引用
 
@@ -225,7 +212,7 @@ git submodule update --init --recursive
 external/Libmem/src/LibmemCli.vcxproj
 ```
 
-加入使用方解决方案，并在 .NET 8 x64 项目中通过 `ProjectReference` 引用它。
+加入使用方解决方案，并在相同架构的 .NET 8 项目中通过 `ProjectReference` 引用它。
 
 建议使用完整的 Visual Studio MSBuild 构建整个解决方案，以确保 C++/CLI 工具链可用。
 
@@ -242,7 +229,7 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ## GitHub Actions 自动构建
 
-仓库内置六套自动化工作流：
+仓库内置五套自动化工作流：
 
 - \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64，并上传 \`LibmemCli-windows-x64\` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
@@ -261,15 +248,12 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ```text
 artifacts/package/LibmemCli-windows-x64/
-├─ LibmemCli.dll
-├─ Ijwhost.dll
-├─ libmem.dll
-├─ VERSION
-├─ manifest.json
-├─ LICENSE
-└─ THIRD_PARTY_NOTICES.md
-
 artifacts/package/LibmemCli-windows-x64.zip
+artifacts/package/LibmemCli-windows-x64.zip.sha256
+
+artifacts/package/LibmemCli-windows-x86/
+artifacts/package/LibmemCli-windows-x86.zip
+artifacts/package/LibmemCli-windows-x86.zip.sha256
 ```
 
 ## 版本与自动验证
@@ -282,15 +266,18 @@ Runtime 包中的 `manifest.json` 会记录：
 - 当前仓库 Git commit；
 - 固定的上游 libmem commit；
 - 目标框架（`net8.0`）；
-- 平台（`win-x64`）；
-- 构建配置（Debug / Release）。
+- 平台（`win-x64` 或 `win-x86`）；
+- 构建配置（Debug / Release）；
+- 包内每个实际文件的文件名、字节数和 SHA-256。
+
+打包后还会运行统一的 `eng/verify-package.py`：逐项核对 manifest 中的文件清单、大小、SHA-256，确认 ZIP 内容与目录内容一致，并验证外部 `.zip.sha256`。Release 发布时还会要求 manifest 的 `repositoryCommit` 必须等于本次发布的 Git commit，避免“版本号对了但包来自别的提交”。
 
 CI 不只检查“能否编译”，还会执行两层自动验证：
 
 1. **API Contract Check**：直接解析固定 Submodule 中的 `include/libmem/libmem.h`，提取所有公开 `LM_API`，如果上游新增公开 API 但 C++/CLI wrapper 尚未引用，构建会失败。
-2. **Runtime Smoke Tests**：实际加载 `LibmemCli.dll + libmem.dll`，验证进程/模块枚举、内存申请与读写、内存保护、Data/Pattern/Signature Scan、汇编与反汇编。
+2. **Runtime Smoke Tests**：实际加载 `LibmemCli.dll + libmem.dll`，覆盖进程/命令行、线程、模块/导出符号、内存段、内存申请/读写/填充/保护、DeepPointer、Data/Pattern/Signature Scan、汇编/反汇编与 CodeLength。所有可控的内存测试都只操作测试进程自己的隔离分配。
 
-Hook / VMT 不作为基础 Smoke Test 的硬性门禁，而是在独立的 `Hook VMT Runtime Tests` 工作流中验证。该测试会在当前进程分配隔离的可执行内存，验证 Hook 重定向、trampoline、Remove，以及 VMT Hook / Unhook / Reset / Dispose，不依赖炉石或其他外部进程。
+Hook / VMT 不作为基础 Smoke Test 的硬性门禁，而是在独立的 `Hook VMT Runtime Tests` 工作流中验证。 `VmtManager` 的显式 `Dispose()` 同样采用确定性恢复：若任一已跟踪 VMT 项无法恢复，对象保持未释放状态并抛出 `LibmemException`，不会丢掉剩余 hook bookkeeping。该测试会在当前进程分配隔离的可执行内存，验证 Hook 重定向、trampoline、Remove，以及 VMT Hook / Unhook / Reset / Dispose，不依赖炉石或其他外部进程。
 
 Injector 同样使用独立的 `Injector Runtime Tests`：测试会复制一份唯一文件名的 `libmem.dll` 作为隔离 fixture，在当前测试进程中实际执行注入、模块枚举、Unload 和 Dispose，避免依赖炉石进程。
 
@@ -305,6 +292,7 @@ jobs:
     with:
       ref: main
       configuration: Release
+      platform: x64
       artifact-name: LibmemCli-windows-x64
 
   use-libmem:
@@ -320,6 +308,26 @@ jobs:
 这样调用方无需复制 Libmem 的编译脚本，构建产物会直接出现在调用方的 Workflow Run 中。
 
 > 当前仓库为私有仓库时，跨仓库复用需要在 GitHub Actions 的仓库/组织访问设置中允许调用方仓库访问该 reusable workflow；如果以后将仓库公开，则公开仓库可直接引用。
+
+## API 稳定性
+
+仓库现在提交了一份 x86/x64 共用的公共 API 基线：`api/LibmemCli.PublicApi.txt`。每次 `tests/check_sources.py` 运行时，都会从 `src/LibmemCli.h` 提取实际公开类型、属性、方法和枚举，并与这份基线比较。
+
+这意味着误删方法、修改参数/返回类型、重命名公开成员或改变公开枚举成员都会直接让 CI 失败。确实需要调整公共 API 时，必须显式运行：
+
+```powershell
+python .\eng\check-public-api.py --write
+```
+
+然后同时审查 API diff、更新 `CHANGELOG.md`，并按变更性质处理版本号。当前仍处于 1.0 之前，因此这不是“永不再有 breaking change”的承诺，而是保证 breaking change 不会悄悄发生。
+
+## 错误模型
+
+对于能够明确判断为 **native libmem 操作失败** 的情况，LibmemCli 统一抛出 `LibmemException`。它继承自 `InvalidOperationException`，并通过 `Operation` 属性保留对应的原生操作名，例如 `LM_EnumProcesses`、`LM_ProtMemoryEx`、`LM_FreeMemoryEx`。
+
+`Find*`、Scan 未命中、以及上游本身用 `null` / `LM_ADDRESS_BAD` 表示正常“未找到”的接口仍保持原有返回语义，不会为了统一异常而把正常未命中改成错误。
+
+参数错误继续使用 .NET 标准的 `ArgumentException` / `ArgumentNullException` / `ArgumentOutOfRangeException`；对象生命周期错误继续使用 `ObjectDisposedException`。
 
 ## API 映射
 
@@ -393,7 +401,7 @@ jobs:
 
 ## 重要行为与限制
 
-1. **当前示例项目仅支持 x64。** 地址参数和返回值使用 `UInt64`。在 x64 下，libmem 的失败哨兵值 `LM_ADDRESS_BAD` 对应 `UInt64.MaxValue`。并非所有 API 都以 `0` 表示失败。本项目不会自动提权，也不提供远程架构转换或内核内存支持。
+1. **当前构建支持 Windows x86 与 x64。** 托管公开 API 继续统一使用 `UInt64` 表示地址和大小，但进入 native 层时会按当前进程的指针宽度做范围检查；x86 下超过 `UInt32.MaxValue` 的地址、size 或 index 会抛出 `ArgumentOutOfRangeException`，不会静默截断。`LM_ADDRESS_BAD` 在 x64 对应 `UInt64.MaxValue`，在 x86 对应 `UInt32.MaxValue`。本项目不提供跨位宽远程转换，注入仍要求当前 runtime 与目标进程位宽一致。
 
 2. `ReadMemory` **只返回实际成功读取的字节**；`WriteMemory` 返回实际写入长度。调用方应检查短读取和未完整写入的情况。返回 0 字节可能表示目标地址不可访问。
 

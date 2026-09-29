@@ -2,7 +2,7 @@
 param(
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
-    [ValidateSet('x64')]
+    [ValidateSet('x64', 'x86')]
     [string]$Platform = 'x64'
 )
 
@@ -14,6 +14,7 @@ $packageRoot = Join-Path $root 'artifacts\package'
 $packageName = "LibmemCli-windows-$Platform"
 $destination = Join-Path $packageRoot $packageName
 $archive = Join-Path $packageRoot "$packageName.zip"
+$archiveChecksum = "$archive.sha256"
 
 $requiredFiles = @(
     (Join-Path $managed 'LibmemCli.dll'),
@@ -50,7 +51,16 @@ $manifestScript = Join-Path $PSScriptRoot 'write-manifest.ps1'
 if (Test-Path $archive) {
     Remove-Item $archive -Force
 }
+if (Test-Path $archiveChecksum) {
+    Remove-Item $archiveChecksum -Force
+}
 Compress-Archive -Path (Join-Path $destination '*') -DestinationPath $archive -CompressionLevel Optimal
+
+$archiveHash = (Get-FileHash -Path $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+$checksumLine = "$archiveHash  $packageName.zip"
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($archiveChecksum, $checksumLine + [Environment]::NewLine, $utf8NoBom)
 
 Write-Host "Runtime package: $destination"
 Write-Host "Runtime archive: $archive"
+Write-Host "Runtime archive checksum: $archiveChecksum"

@@ -17,10 +17,18 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   injector:
-    name: Injector x64
+    name: Injector ${{ matrix.platform }}
     runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x64, x86]
 
     steps:
       - name: Checkout
@@ -33,6 +41,11 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Setup .NET 8 x86 runtime
+        if: matrix.platform == 'x86'
+        shell: pwsh
+        run: .\eng\setup-dotnet-x86.ps1
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -44,8 +57,8 @@ jobs:
 
       - name: Build LibmemCli
         shell: pwsh
-        run: .\build.ps1 -Configuration Release -Platform x64
+        run: .\build.ps1 -Configuration Release -Platform ${{ matrix.platform }}
 
       - name: Run Injector runtime tests
         shell: pwsh
-        run: dotnet run --project .\tests\LibmemCli.InjectorTests\LibmemCli.InjectorTests.csproj -c Release -p:Platform=x64
+        run: dotnet run --project .\tests\LibmemCli.InjectorTests\LibmemCli.InjectorTests.csproj -c Release -p:Platform=${{ matrix.platform }}

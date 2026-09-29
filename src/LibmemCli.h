@@ -27,6 +27,17 @@ namespace LibmemCli {
         ExecuteReadWrite = LM_PROT_XRW
     };
 
+    // Represents a definite failure reported while executing a native libmem operation.
+    // Not-found and sentinel-return APIs keep their native-style result semantics.
+    public ref class LibmemException : InvalidOperationException {
+    private:
+        String^ operation_;
+    public:
+        LibmemException(String^ operation, String^ message);
+        LibmemException(String^ operation, String^ message, Exception^ innerException);
+        property String^ Operation { String^ get(); }
+    };
+
     public ref class ProcessInfo sealed {
     public:
         property UInt32 Pid;
@@ -77,48 +88,8 @@ namespace LibmemCli {
         property String^ OperandString;
     };
 
-    // Immutable descriptive view. Snapshot types never perform process operations.
-    public ref class ProcessSnapshot sealed {
-    private:
-        UInt32 pid_;
-        UInt32 parentPid_;
-        LibmemCli::Architecture architecture_;
-        UInt64 bits_;
-        UInt64 startTime_;
-        String^ name_;
-        String^ path_;
-    internal:
-        ProcessSnapshot(ProcessInfo^ source);
-    public:
-        property UInt32 Pid { UInt32 get(); }
-        property UInt32 ParentPid { UInt32 get(); }
-        property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
-        property UInt64 Bits { UInt64 get(); }
-        property UInt64 StartTime { UInt64 get(); }
-        property String^ Name { String^ get(); }
-        property String^ Path { String^ get(); }
-    };
-
-    // Immutable module description. It carries no unload/load behavior.
-    public ref class ModuleSnapshot sealed {
-    private:
-        UInt64 base_;
-        UInt64 end_;
-        UInt64 size_;
-        String^ name_;
-        String^ path_;
-    internal:
-        ModuleSnapshot(ModuleInfo^ source);
-    public:
-        property UInt64 Base { UInt64 get(); }
-        property UInt64 End { UInt64 get(); }
-        property UInt64 Size { UInt64 get(); }
-        property String^ Name { String^ get(); }
-        property String^ Path { String^ get(); }
-    };
-
     // RemoteAllocation owns one allocation in a target process.
-    // Explicit disposal frees the allocation; finalization never touches process memory.
+    // Explicit disposal deterministically frees it or surfaces failure; finalization never touches process memory.
     public ref class RemoteAllocation sealed : IDisposable {
     private:
         ProcessInfo^ target_;
@@ -159,7 +130,6 @@ namespace LibmemCli {
         property ProcessInfo^ Target { ProcessInfo^ get(); }
     public:
         property ProcessInfo^ Info { ProcessInfo^ get(); }
-        property ProcessSnapshot^ Snapshot { ProcessSnapshot^ get(); }
         property UInt32 Pid { UInt32 get(); }
         property String^ Name { String^ get(); }
         property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
@@ -210,12 +180,10 @@ namespace LibmemCli {
         ModuleInfo^ Find(String^ name);
         ModuleInfo^ Load(String^ path);
         bool Unload(ModuleInfo^ module);
-        IReadOnlyList<ModuleSnapshot^>^ Snapshot();
-        ModuleSnapshot^ FindSnapshot(String^ name);
     };
 
     // One owned LoadLibrary reference in the target process.
-    // Explicit disposal attempts one matching FreeLibrary; finalization never changes the target process.
+    // Explicit disposal releases it or surfaces failure; finalization never changes the target process.
     public ref class InjectedModuleHandle sealed : IDisposable {
     private:
         ProcessInfo^ target_;
@@ -227,7 +195,6 @@ namespace LibmemCli {
         InjectedModuleHandle(ProcessInfo^ target, ModuleInfo^ module, String^ requestedPath);
     public:
         property ModuleInfo^ Module { ModuleInfo^ get(); }
-        property ModuleSnapshot^ Snapshot { ModuleSnapshot^ get(); }
         property String^ RequestedPath { String^ get(); }
         property bool IsActive { bool get(); }
         property bool IsDisposed { bool get(); }
@@ -262,13 +229,14 @@ namespace LibmemCli {
     public ref class HookHandle sealed : IDisposable {
     private:
         ProcessInfo^ target_;
-        UInt64 from_, trampoline_, size_;
+        UInt64 from_, destination_, trampoline_, size_;
         bool installed_;
         bool disposed_;
     internal:
-        HookHandle(ProcessInfo^ target, UInt64 from, UInt64 trampoline, UInt64 size);
+        HookHandle(ProcessInfo^ target, UInt64 from, UInt64 destination, UInt64 trampoline, UInt64 size);
     public:
         property UInt64 Source { UInt64 get(); }
+        property UInt64 Destination { UInt64 get(); }
         property UInt64 Trampoline { UInt64 get(); }
         property UInt64 PatchedBytes { UInt64 get(); }
         property bool IsInstalled { bool get(); }

@@ -67,6 +67,7 @@ try
     ((IDisposable)disposable).Dispose();
     Check(disposable.IsDisposed, "InjectedModuleHandle should report disposed after Dispose.");
     Check(!disposable.IsActive, "InjectedModuleHandle should be inactive after successful Dispose cleanup.");
+    Check(disposable.Unload(), "InjectedModuleHandle.Unload should remain idempotent after successful Dispose.");
     Check(session.Modules.Find(disposeName) is null, "Dispose fixture is still present after Dispose.");
 
     var missingThrows = false;

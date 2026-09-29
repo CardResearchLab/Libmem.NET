@@ -13,6 +13,11 @@ on:
         required: false
         default: Release
         type: string
+      platform:
+        description: Target platform (x64 or x86)
+        required: false
+        default: x64
+        type: string
       artifact-name:
         description: Uploaded artifact name
         required: false
@@ -40,6 +45,11 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Setup .NET 8 x86 runtime
+        if: inputs.platform == 'x86'
+        shell: pwsh
+        run: .\eng\setup-dotnet-x86.ps1
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -51,22 +61,29 @@ jobs:
 
       - name: Build
         shell: pwsh
-        run: '.\build.ps1 -Configuration "${{ inputs.configuration }}" -Platform x64'
+        run: '.\build.ps1 -Configuration "${{ inputs.configuration }}" -Platform "${{ inputs.platform }}"'
 
       - name: Run runtime smoke tests
         shell: pwsh
-        run: 'dotnet run --project .\tests\LibmemCli.SmokeTests\LibmemCli.SmokeTests.csproj -c "${{ inputs.configuration }}" -p:Platform=x64'
+        run: 'dotnet run --project .\tests\LibmemCli.SmokeTests\LibmemCli.SmokeTests.csproj -c "${{ inputs.configuration }}" -p:Platform="${{ inputs.platform }}"'
 
       - name: Package runtime
         shell: pwsh
-        run: '.\eng\package-runtime.ps1 -Configuration "${{ inputs.configuration }}" -Platform x64'
+        run: '.\eng\package-runtime.ps1 -Configuration "${{ inputs.configuration }}" -Platform "${{ inputs.platform }}"'
+
+      - name: Verify runtime package
+        shell: pwsh
+        run: |
+          $commit = (git rev-parse HEAD).Trim()
+          python .\eng\verify-package.py --package-dir .\artifacts\package\LibmemCli-windows-${{ inputs.platform }} --archive .\artifacts\package\LibmemCli-windows-${{ inputs.platform }}.zip --checksum .\artifacts\package\LibmemCli-windows-${{ inputs.platform }}.zip.sha256 --expected-repository-commit $commit --expected-platform win-${{ inputs.platform }} --expected-configuration "${{ inputs.configuration }}"
 
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
           path: |
-            artifacts/package/LibmemCli-windows-x64/
-            artifacts/package/LibmemCli-windows-x64.zip
+            artifacts/package/LibmemCli-windows-${{ inputs.platform }}/
+            artifacts/package/LibmemCli-windows-${{ inputs.platform }}.zip
+            artifacts/package/LibmemCli-windows-${{ inputs.platform }}.zip.sha256
           if-no-files-found: error
           retention-days: 14

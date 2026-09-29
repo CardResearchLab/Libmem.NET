@@ -1,14 +1,14 @@
-# LibmemCli — libmem 5.x C++/CLI wrapper (Windows x64 / .NET 8)
+# LibmemCli — libmem 5.x C++/CLI wrapper (Windows x86/x64 / .NET 8)
 
 [简体中文](README.md) | [English](README.en.md)
 
 [![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
-![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
+![Windows x86/x64](https://img.shields.io/badge/Windows-x86%20%7C%20x64-0078D4)
 
 
-LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem), intended for Windows x64 / .NET 8 projects.
+LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem), intended for Windows x86/x64 / .NET 8 projects.
 
 The wrapper exposes every public function in the pinned libmem header through managed models, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
 
@@ -22,7 +22,7 @@ The native libmem library is included as a pinned Git submodule and is built aut
 
 ```mermaid
 flowchart LR
-    App["C# / .NET 8 x64 project"] --> Cli["LibmemCli.dll<br/>C++/CLI managed wrapper"]
+    App["C# / .NET 8 x86/x64 project"] --> Cli["LibmemCli.dll<br/>C++/CLI managed wrapper"]
     Cli --> Native["libmem.dll<br/>rdbo/libmem"]
     Native --> Win["Windows native process / memory APIs"]
 
@@ -37,7 +37,7 @@ The runtime call chain is **C#/.NET → LibmemCli.dll → libmem.dll → Windows
 
 ## Requirements
 
-- Windows x64
+- Windows x86 or x64
 - Visual Studio with:
   - **Desktop development with C++**
   - **C++/CLI support for the v143 build tools**
@@ -65,15 +65,15 @@ cd Libmem
 
 `bootstrap.ps1` remains available as a compatibility alias.
 
-You can also open `LibmemCli.sln` directly and build either `Debug|x64` or `Release|x64`. Visual Studio/MSBuild will perform the same native prerequisite build automatically.
+You can also open `LibmemCli.sln` directly and build `Debug|x64`, `Release|x64`, `Debug|x86`, or `Release|x86`. Visual Studio/MSBuild will perform the same native prerequisite build automatically.
 
 Generated files are kept outside the source directories:
 
 ```text
-artifacts/native/x64/Release/bin/libmem.dll
-artifacts/native/x64/Release/lib/libmem.lib
-artifacts/managed/x64/Release/LibmemCli.dll
-artifacts/managed/x64/Release/Ijwhost.dll
+artifacts/native/{x64|x86}/Release/bin/libmem.dll
+artifacts/native/{x64|x86}/Release/lib/libmem.lib
+artifacts/managed/{x64|x86}/Release/LibmemCli.dll
+artifacts/managed/{x64|x86}/Release/Ijwhost.dll
 ```
 
 
@@ -90,11 +90,10 @@ var process = Libmem.CurrentProcess()
 using var session = Libmem.Attach(process)
     ?? throw new InvalidOperationException("Attach failed");
 
-var snapshot = session.Snapshot;
 Console.WriteLine(
-    $"Process: {snapshot.Name}  PID={snapshot.Pid}  Arch={snapshot.Architecture}  Bits={snapshot.Bits}");
+    $"Process: {process.Name}  PID={process.Pid}  Arch={process.Architecture}  Bits={process.Bits}");
 
-foreach (var module in session.Modules.Snapshot())
+foreach (var module in session.Modules.Enumerate())
 {
     Console.WriteLine(
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
@@ -105,7 +104,7 @@ At runtime, keep `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll` beside the app
 
 ## ProcessSession
 
-`ProcessSession` is the long-lived process context for the higher-level injection SDK. It binds to one concrete process identity using **PID + process start time** and gives Attach / Detach an explicit lifetime:
+`ProcessSession` is an optional general-purpose process context. It binds to one concrete process identity using **PID + process start time** and gives memory, module, hook, and injection calls for the same target an explicit Attach / Detach lifetime; it does not own application state:
 
 ```csharp
 using var target = Libmem.Attach("Hearthstone.exe");
@@ -121,21 +120,9 @@ if (!target.IsAlive())
 var latest = target.Refresh();
 ```
 
-At this stage, `ProcessSession` owns process identity and lifetime semantics but does not own a native Windows process handle. Future v0.2.0 components such as `MemoryManager`, `ModuleManager`, `HookManager`, and `Injector` will be built on top of this context.
+`ProcessSession` does not own a native Windows process handle. `MemoryManager`, `ModuleManager`, `HookManager`, and `InjectorManager` only add target binding and necessary resource-lifetime constraints around libmem calls.
 
-The existing static `Libmem.*` API remains compatible so existing callers do not need an all-at-once migration.
-
-### Immutable snapshots
-
-`ProcessSession.Snapshot` and `ModuleManager.Snapshot()` provide immutable state views separated from operational handles. `ProcessSnapshot` / `ModuleSnapshot` contain descriptive data only, expose no public setters, and own no target-process resources, so existing snapshots remain readable after `ProcessSession.Detach()`.
-
-```csharp
-ProcessSnapshot process = target.Snapshot;
-IReadOnlyList<ModuleSnapshot> modules = target.Modules.Snapshot();
-ModuleSnapshot? unity = target.Modules.FindSnapshot("UnityPlayer.dll");
-```
-
-Snapshots are intended for logging, events, state caches, and cross-layer data transfer. Memory writes, module loading, hooks, and injection remain session-bound operations through the corresponding managers.
+The static `Libmem.*` API remains directly usable. Applications that need snapshots, caches, event state, or game-state models should build those models in the caller rather than in LibmemCli.
 
 ### ModuleManager
 
@@ -163,9 +150,9 @@ using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll
 Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 ```
 
-`InjectLibrary` normalizes and validates the DLL path and rejects cross-bitness injection between the current runtime and target process. The returned `InjectedModuleHandle` preserves a module snapshot and requested path. `IsActive` means **this handle still owns the load reference it created**; it does not claim that the module is the only loaded instance in the process.
+`InjectLibrary` normalizes and validates the DLL path and rejects cross-bitness injection between the current runtime and target process. The returned `InjectedModuleHandle` preserves the managed module description and requested path. `IsActive` means **this handle still owns the load reference it created**; it does not claim that the module is the only loaded instance in the process.
 
-Explicit `Unload()` or `Dispose()` attempts one matching `FreeLibrary`. Because Windows DLLs are reference-counted and the pinned upstream `LM_UnloadModuleEx` only requests a release, a successful call does not guarantee the module disappears completely from the target process. The GC finalizer never calls `FreeLibrary` in the target process.
+Explicit `Unload()` returns the release result. `Dispose()` deterministically attempts to release the one `LoadLibrary` reference owned by the handle; if native cleanup fails, the failure is surfaced instead of silently marking live ownership as released. Because Windows DLLs are reference-counted and the pinned upstream `LM_UnloadModuleEx` only requests a release, a successful call does not guarantee the module disappears completely from the target process. The GC finalizer never calls `FreeLibrary` in the target process.
 
 ### HookManager
 
@@ -175,10 +162,10 @@ Explicit `Unload()` or `Dispose()` attempts one matching `FreeLibrary`. Because 
 using var hook = target.Hooks.Install(source, destination)
     ?? throw new InvalidOperationException("Hook failed");
 
-Console.WriteLine($"trampoline=0x{hook.Trampoline:X}");
+Console.WriteLine($"source=0x{hook.Source:X} destination=0x{hook.Destination:X} trampoline=0x{hook.Trampoline:X}");
 ```
 
-`HookManager` does not take ownership of installed hooks. Each returned `HookHandle` owns its own `Remove / Dispose` lifetime. Therefore `ProcessSession.Detach()` prevents new hook installation without silently rewriting target code. A saved `HookManager` rejects use after its session is detached with `ObjectDisposedException`.
+`HookManager` does not aggregate ownership of installed hooks. Each returned `HookHandle` independently owns its hook and trampoline. `Source / Destination / Trampoline / PatchedBytes` preserve installation metadata; `Remove()` exposes the restoration result, while `Dispose()` deterministically restores the original code and throws `LibmemException` on failure instead of silently marking a live hook as released. The finalizer never rewrites process code from the GC thread. `ProcessSession.Detach()` prevents new installations without bulk-removing handles already returned to callers.
 
 ### MemoryManager
 
@@ -208,7 +195,7 @@ using var memory = target.Allocate(4096, MemoryProtection.ReadWrite)
 Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
 ```
 
-Calling `Free()` explicitly or leaving the `using` scope attempts to release the allocation. If the target process has already exited, its address space is considered reclaimed by the OS. The finalizer never mutates another process from the GC thread.
+Calling `Free()` explicitly lets callers inspect the release result. Leaving the `using` scope makes `Dispose()` deterministically release the allocation; if native cleanup fails, the failure is surfaced instead of silently discarding ownership. If the target process has already exited, its address space is considered reclaimed by the OS. The finalizer never mutates another process from the GC thread.
 
 ## Consume as a Git submodule
 
@@ -225,7 +212,7 @@ Then add:
 external/Libmem/src/LibmemCli.vcxproj
 ```
 
-to the consuming solution and reference it from the .NET 8 x64 project with a `ProjectReference`.
+to the consuming solution and reference it from a matching-architecture .NET 8 project with a `ProjectReference`.
 
 Build the full solution with Visual Studio MSBuild so the C++/CLI toolchain is available.
 
@@ -242,7 +229,7 @@ Do not mix outputs from different configurations or commits.
 
 ## GitHub Actions automation
 
-The repository includes six automation workflows:
+The repository includes five automation workflows:
 
 - \`.github/workflows/build.yml\`: builds Release x64 on pushes to \`main\`, pull requests, or manual runs, then uploads the \`LibmemCli-windows-x64\` artifact.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
@@ -261,15 +248,12 @@ Output:
 
 ```text
 artifacts/package/LibmemCli-windows-x64/
-├─ LibmemCli.dll
-├─ Ijwhost.dll
-├─ libmem.dll
-├─ VERSION
-├─ manifest.json
-├─ LICENSE
-└─ THIRD_PARTY_NOTICES.md
-
 artifacts/package/LibmemCli-windows-x64.zip
+artifacts/package/LibmemCli-windows-x64.zip.sha256
+
+artifacts/package/LibmemCli-windows-x86/
+artifacts/package/LibmemCli-windows-x86.zip
+artifacts/package/LibmemCli-windows-x86.zip.sha256
 ```
 
 ## Versioning and automated validation
@@ -282,15 +266,18 @@ Each runtime package contains a `manifest.json` recording:
 - the repository Git commit;
 - the pinned upstream libmem commit;
 - target framework (`net8.0`);
-- platform (`win-x64`);
-- build configuration (Debug / Release).
+- platform (`win-x64` or `win-x86`);
+- build configuration (Debug / Release);
+- the file name, byte length, and SHA-256 of every packaged file.
+
+Packaging also runs the shared `eng/verify-package.py` verifier. It checks every manifest file entry, byte length, and SHA-256, confirms the ZIP contains exactly the packaged directory contents, and validates the external `.zip.sha256`. Release publication additionally requires the manifest `repositoryCommit` to match the Git commit being released, preventing a correctly versioned package from being published from the wrong commit.
 
 CI validates more than compilation:
 
 1. **API Contract Check** parses the pinned submodule's `include/libmem/libmem.h`, extracts every public `LM_API`, and fails if upstream exposes a public API that the C++/CLI wrapper does not reference.
-2. **Runtime Smoke Tests** load `LibmemCli.dll + libmem.dll` and exercise process/module enumeration, memory allocation/read/write/protection, Data/Pattern/Signature scanning, assembly, and disassembly.
+2. **Runtime Smoke Tests** load `LibmemCli.dll + libmem.dll` and cover process/command-line APIs, threads, modules/exported symbols, memory segments, allocation/read/write/set/protection, DeepPointer, Data/Pattern/Signature scanning, assembly/disassembly, and CodeLength. Controlled memory tests only touch isolated allocations in the test process itself.
 
-Hook and VMT operations are intentionally kept out of the baseline smoke gate and validated by the separate `Hook VMT Runtime Tests` workflow. It allocates isolated executable memory in the current process and verifies hook redirection, trampoline execution, Remove, and VMT Hook / Unhook / Reset / Dispose without depending on Hearthstone or any external process.
+Hook and VMT operations are intentionally kept out of the baseline smoke gate and validated by the separate `Hook VMT Runtime Tests` workflow. Explicit `VmtManager.Dispose()` also uses deterministic restoration: if any tracked VMT entry cannot be restored, the manager remains undisposed and throws `LibmemException` instead of discarding the remaining hook bookkeeping. It allocates isolated executable memory in the current process and verifies hook redirection, trampoline execution, Remove, and VMT Hook / Unhook / Reset / Dispose without depending on Hearthstone or any external process.
 
 Injector behavior is also validated separately by `Injector Runtime Tests`. The test copies `libmem.dll` under a unique fixture name and performs real injection, module discovery, Unload, and Dispose against the current test process without depending on Hearthstone.
 
@@ -305,6 +292,7 @@ jobs:
     with:
       ref: main
       configuration: Release
+      platform: x64
       artifact-name: LibmemCli-windows-x64
 
   use-libmem:
@@ -320,6 +308,26 @@ jobs:
 The caller does not need to duplicate Libmem's build scripts; the artifact is uploaded directly to the caller's workflow run.
 
 > While this repository is private, cross-repository reuse requires GitHub Actions access settings that allow the caller repository to use this reusable workflow. If the repository becomes public later, public repositories can reference it directly.
+
+## API stability
+
+The repository now commits a shared x86/x64 public API baseline at `api/LibmemCli.PublicApi.txt`. Every `tests/check_sources.py` run extracts the actual public types, properties, methods, and enum members from `src/LibmemCli.h` and compares them with that baseline.
+
+Accidental removals, signature changes, public-member renames, or enum changes therefore fail CI. An intentional public API change must explicitly run:
+
+```powershell
+python .\eng\check-public-api.py --write
+```
+
+Then review the API diff, update `CHANGELOG.md`, and apply the appropriate version change. The project is still pre-1.0, so this is not a promise that breaking changes can never happen; it makes them explicit and reviewable instead of silent.
+
+## Error model
+
+When LibmemCli can determine that a **native libmem operation definitely failed**, it throws `LibmemException`. The type derives from `InvalidOperationException` and preserves the corresponding native operation name through the `Operation` property, for example `LM_EnumProcesses`, `LM_ProtMemoryEx`, or `LM_FreeMemoryEx`.
+
+`Find*` operations, scan misses, and APIs where upstream libmem uses `null` / `LM_ADDRESS_BAD` as the normal “not found” result keep their existing return semantics. The wrapper does not turn ordinary misses into exceptions merely for uniformity.
+
+Argument validation continues to use the standard .NET `ArgumentException` family, while lifetime misuse continues to use `ObjectDisposedException`.
 
 ## API mapping
 
@@ -393,7 +401,7 @@ The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libm
 
 ## Important behavior and limitations
 
-1. **The current sample project is x64 only.** Address arguments and results use `UInt64`; on x64, libmem's failure sentinel `LM_ADDRESS_BAD` is `UInt64.MaxValue`. `0` is not an error sentinel for every API. The wrapper does not automatically elevate privileges and does not provide remote-architecture translation or kernel-memory support.
+1. **Current builds support Windows x86 and x64.** The managed public API continues to use `UInt64` for addresses/sizes, but conversion to native values is range-checked for the current pointer width. On x86, addresses or sizes above `UInt32.MaxValue` throw `ArgumentOutOfRangeException` instead of being silently truncated. `LM_ADDRESS_BAD` is `UInt64.MaxValue` on x64 and `UInt32.MaxValue` on x86. The wrapper does not provide cross-bitness remote translation; injection still requires the current runtime and target process to have matching bitness.
 
 2. `ReadMemory` returns **only the bytes actually read**. `WriteMemory` returns the actual number of bytes written. Callers should check for short reads and partial writes. A zero-byte result may indicate an inaccessible address.
 

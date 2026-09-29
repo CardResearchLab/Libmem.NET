@@ -1,0 +1,211 @@
+# LibmemCli public API baseline
+# Generated from src/LibmemCli.h. Intentional public API changes must update this file and CHANGELOG.md.
+TYPE public enum class Architecture : unsigned int
+  Generic = LM_ARCH_GENERIC
+  ArmV7 = LM_ARCH_ARMV7
+  ArmV8 = LM_ARCH_ARMV8
+  ThumbV7 = LM_ARCH_THUMBV7
+  ThumbV8 = LM_ARCH_THUMBV8
+  ArmV7BigEndian = LM_ARCH_ARMV7EB
+  ThumbV7BigEndian = LM_ARCH_THUMBV7EB
+  ArmV8BigEndian = LM_ARCH_ARMV8EB
+  ThumbV8BigEndian = LM_ARCH_THUMBV8EB
+  Arm64 = LM_ARCH_AARCH64
+  Mips32 = LM_ARCH_MIPS
+  Mips64 = LM_ARCH_MIPS64
+  Mips32LittleEndian = LM_ARCH_MIPSEL
+  Mips64LittleEndian = LM_ARCH_MIPSEL64
+  X86_16 = LM_ARCH_X86_16
+  X86 = LM_ARCH_X86
+  X64 = LM_ARCH_X64
+  PowerPc32 = LM_ARCH_PPC32
+  PowerPc64 = LM_ARCH_PPC64
+  PowerPc64LittleEndian = LM_ARCH_PPC64LE
+  Sparc = LM_ARCH_SPARC
+  Sparc64 = LM_ARCH_SPARC64
+  SparcLittleEndian = LM_ARCH_SPARCEL
+  SystemZ = LM_ARCH_SYSZ
+TYPE [Flags] public enum class MemoryProtection : unsigned int
+  None = LM_PROT_NONE
+  Read = LM_PROT_R
+  Write = LM_PROT_W
+  Execute = LM_PROT_X
+  ReadWrite = LM_PROT_RW
+  ExecuteRead = LM_PROT_XR
+  ExecuteWrite = LM_PROT_XW
+  ExecuteReadWrite = LM_PROT_XRW
+TYPE public ref class LibmemException : InvalidOperationException
+  LibmemException(String^ operation, String^ message);
+  LibmemException(String^ operation, String^ message, Exception^ innerException);
+  property String^ Operation { String^ get(); }
+TYPE public ref class ProcessInfo sealed
+  property UInt32 Pid;
+  property UInt32 ParentPid;
+  property LibmemCli::Architecture Architecture;
+  property UInt64 Bits;
+  property UInt64 StartTime;
+  property String^ Name;
+  property String^ Path;
+  bool IsAlive();
+  array<Byte>^ Read(UInt64 address, int count);
+  int Write(UInt64 address, array<Byte>^ data);
+  Int32 ReadInt32(UInt64 address);
+  void WriteInt32(UInt64 address, Int32 value);
+  UInt64 SigScan(String^ signature, UInt64 address, UInt64 size);
+TYPE public ref class ThreadInfo sealed
+  property UInt32 Id;
+  property UInt32 OwnerPid;
+TYPE public ref class ModuleInfo sealed
+  property UInt64 Base;
+  property UInt64 End;
+  property UInt64 Size;
+  property String^ Name;
+  property String^ Path;
+TYPE public ref class SymbolInfo sealed
+  property UInt64 Address;
+  property String^ Name;
+TYPE public ref class SegmentInfo sealed
+  property UInt64 Base;
+  property UInt64 End;
+  property UInt64 Size;
+  property MemoryProtection Protection;
+TYPE public ref class InstructionInfo sealed
+  property UInt64 Address;
+  property UInt64 Size;
+  property array<Byte>^ Bytes;
+  property String^ Mnemonic;
+  property String^ OperandString;
+TYPE public ref class RemoteAllocation sealed : IDisposable
+  property UInt64 Address { UInt64 get(); }
+  property UInt64 Size { UInt64 get(); }
+  property bool IsDisposed { bool get(); }
+  bool Free();
+  ~RemoteAllocation();
+  !RemoteAllocation();
+TYPE public ref class ProcessSession sealed : IDisposable
+  property ProcessInfo^ Info { ProcessInfo^ get(); }
+  property UInt32 Pid { UInt32 get(); }
+  property String^ Name { String^ get(); }
+  property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+  property UInt64 Bits { UInt64 get(); }
+  property MemoryManager^ Memory { MemoryManager^ get(); }
+  property ModuleManager^ Modules { ModuleManager^ get(); }
+  property HookManager^ Hooks { HookManager^ get(); }
+  property InjectorManager^ Injector { InjectorManager^ get(); }
+  property bool IsDisposed { bool get(); }
+  bool IsAlive();
+  ProcessInfo^ Refresh();
+  RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);
+  void Detach();
+  ~ProcessSession();
+TYPE public ref class MemoryManager sealed
+  array<Byte>^ Read(UInt64 address, int count);
+  int Write(UInt64 address, array<Byte>^ data);
+  Int32 ReadInt32(UInt64 address);
+  void WriteInt32(UInt64 address, Int32 value);
+  UInt64 Set(UInt64 address, Byte value, UInt64 size);
+  MemoryProtection Protect(UInt64 address, UInt64 size, MemoryProtection protection);
+  RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);
+  bool Free(UInt64 address, UInt64 size);
+  UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
+  UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
+  UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
+  UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
+TYPE public ref class ModuleManager sealed
+  List<ModuleInfo^>^ Enumerate();
+  ModuleInfo^ Find(String^ name);
+  ModuleInfo^ Load(String^ path);
+  bool Unload(ModuleInfo^ module);
+TYPE public ref class InjectedModuleHandle sealed : IDisposable
+  property ModuleInfo^ Module { ModuleInfo^ get(); }
+  property String^ RequestedPath { String^ get(); }
+  property bool IsActive { bool get(); }
+  property bool IsDisposed { bool get(); }
+  bool Unload();
+  ~InjectedModuleHandle();
+  !InjectedModuleHandle();
+TYPE public ref class InjectorManager sealed
+  InjectedModuleHandle^ InjectLibrary(String^ path);
+TYPE public ref class HookManager sealed
+  HookHandle^ Install(UInt64 source, UInt64 destination);
+TYPE public ref class HookHandle sealed : IDisposable
+  property UInt64 Source { UInt64 get(); }
+  property UInt64 Destination { UInt64 get(); }
+  property UInt64 Trampoline { UInt64 get(); }
+  property UInt64 PatchedBytes { UInt64 get(); }
+  property bool IsInstalled { bool get(); }
+  property bool IsDisposed { bool get(); }
+  bool Remove();
+  ~HookHandle();
+  !HookHandle();
+TYPE public ref class VmtManager sealed : IDisposable
+  VmtManager(UInt64 vtableAddress);
+  property bool IsDisposed { bool get(); }
+  void Hook(UInt64 index, UInt64 replacementAddress);
+  bool Unhook(UInt64 index);
+  UInt64 GetOriginal(UInt64 index);
+  void Reset();
+  ~VmtManager();
+  !VmtManager();
+TYPE public ref class Libmem abstract sealed
+  static List<ProcessInfo^>^ EnumProcesses();
+  static ProcessInfo^ CurrentProcess();
+  static ProcessInfo^ GetProcess(UInt32 pid);
+  static ProcessInfo^ FindProcess(String^ name);
+  static ProcessSession^ Attach(UInt32 pid);
+  static ProcessSession^ Attach(String^ name);
+  static ProcessSession^ Attach(ProcessInfo^ process);
+  static bool IsProcessAlive(ProcessInfo^ process);
+  static array<String^>^ GetCommandLine(ProcessInfo^ process);
+  static UInt64 GetBits();
+  static UInt64 GetSystemBits();
+  static List<ThreadInfo^>^ EnumThreads();
+  static List<ThreadInfo^>^ EnumThreads(ProcessInfo^ process);
+  static ThreadInfo^ CurrentThread();
+  static ThreadInfo^ GetThread(ProcessInfo^ process);
+  static ProcessInfo^ GetThreadProcess(ThreadInfo^ thread);
+  static List<ModuleInfo^>^ EnumModules();
+  static List<ModuleInfo^>^ EnumModules(ProcessInfo^ process);
+  static ModuleInfo^ FindModule(String^ name);
+  static ModuleInfo^ FindModule(ProcessInfo^ process, String^ name);
+  static ModuleInfo^ LoadModule(String^ path);
+  static ModuleInfo^ LoadModule(ProcessInfo^ process, String^ path);
+  static bool UnloadModule(ModuleInfo^ module);
+  static bool UnloadModule(ProcessInfo^ process, ModuleInfo^ module);
+  static List<SymbolInfo^>^ EnumSymbols(ModuleInfo^ module, bool demangle);
+  static UInt64 FindSymbolAddress(ModuleInfo^ module, String^ name, bool demangle);
+  static String^ DemangleSymbol(String^ name);
+  static List<SegmentInfo^>^ EnumSegments();
+  static List<SegmentInfo^>^ EnumSegments(ProcessInfo^ process);
+  static SegmentInfo^ FindSegment(UInt64 address);
+  static SegmentInfo^ FindSegment(ProcessInfo^ process, UInt64 address);
+  static array<Byte>^ ReadMemory(UInt64 source, int count);
+  static array<Byte>^ ReadMemory(ProcessInfo^ process, UInt64 source, int count);
+  static int WriteMemory(UInt64 address, array<Byte>^ data);
+  static int WriteMemory(ProcessInfo^ process, UInt64 address, array<Byte>^ data);
+  static UInt64 SetMemory(UInt64 address, Byte value, UInt64 size);
+  static UInt64 SetMemory(ProcessInfo^ process, UInt64 address, Byte value, UInt64 size);
+  static MemoryProtection ProtectMemory(UInt64 address, UInt64 size, MemoryProtection prot);
+  static MemoryProtection ProtectMemory(ProcessInfo^ process, UInt64 address, UInt64 size, MemoryProtection prot);
+  static UInt64 AllocateMemory(UInt64 size, MemoryProtection prot);
+  static UInt64 AllocateMemory(ProcessInfo^ process, UInt64 size, MemoryProtection prot);
+  static bool FreeMemory(UInt64 address, UInt64 size);
+  static bool FreeMemory(ProcessInfo^ process, UInt64 address, UInt64 size);
+  static UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
+  static UInt64 DeepPointer(ProcessInfo^ process, UInt64 baseAddress, array<UInt64>^ offsets);
+  static UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
+  static UInt64 DataScan(ProcessInfo^ process, array<Byte>^ data, UInt64 address, UInt64 scanSize);
+  static UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
+  static UInt64 PatternScan(ProcessInfo^ process, array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
+  static UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
+  static UInt64 SigScan(ProcessInfo^ process, String^ signature, UInt64 address, UInt64 scanSize);
+  static LibmemCli::Architecture GetArchitecture();
+  static InstructionInfo^ Assemble(String^ code);
+  static array<Byte>^ Assemble(String^ code, LibmemCli::Architecture architecture, UInt64 runtimeAddress);
+  static InstructionInfo^ Disassemble(UInt64 codeAddress);
+  static List<InstructionInfo^>^ Disassemble(UInt64 codeAddress, LibmemCli::Architecture architecture, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
+  static List<InstructionInfo^>^ Disassemble(array<Byte>^ code, LibmemCli::Architecture architecture, UInt64 instructionCount, UInt64 runtimeAddress);
+  static UInt64 CodeLength(UInt64 codeAddress, UInt64 minimumLength);
+  static UInt64 CodeLength(ProcessInfo^ process, UInt64 codeAddress, UInt64 minimumLength);
+  static HookHandle^ HookCode(UInt64 source, UInt64 destination);
+  static HookHandle^ HookCode(ProcessInfo^ process, UInt64 source, UInt64 destination);
