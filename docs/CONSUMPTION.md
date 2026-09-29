@@ -54,7 +54,7 @@ Publication: disabled
 Target: Windows x64 / .NET 8
 ```
 
-The package ID is provisional until the package layout and runtime behavior are accepted.
+The package ID is provisional until the package layout and runtime behavior are accepted. CI also stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
 
 ### Prototype package layout
 
