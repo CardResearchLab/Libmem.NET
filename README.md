@@ -10,7 +10,7 @@
 
 LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装。**当前开发、CI 验收与正式发布以 Windows x64 / .NET 8 为主线。** 现有 x86 代码与构建配置暂时保留，但 x86 已延后，不再作为近期开发目标或正式 Release 产物。
 
-开发路线见 [ROADMAP.md](ROADMAP.md)，消费者行为与返回/异常/生命周期语义见 [API 参考](docs/API.md)。
+开发路线见 [ROADMAP.md](ROADMAP.md)，消费者行为与返回/异常/生命周期语义见 [API 参考](docs/API.md)，ZIP / Submodule / NuGet 等消费方式见 [消费指南](docs/CONSUMPTION.md)。
 
 除明确记录的兼容性豁免外，本项目覆盖当前固定版本 libmem 头文件中的公开函数，并使用托管模型、托管字节数组以及符合 .NET 使用习惯的 API 暴露给 C# / .NET。libmem 中普通函数与 `Ex` 函数通常在托管层对应为一组重载。
 
@@ -284,6 +284,12 @@ external/Libmem/src/LibmemCli.vcxproj
 请勿混用不同构建配置或不同提交生成的文件。
 
 
+## NuGet 原型
+
+仓库正在验证一个 **Windows x64 / .NET 8 的本地 NuGet 原型**，暂定包 ID 为 `HearthstoneModding.LibmemCli`。该包目前只在 CI 中生成并通过独立 `PackageReference` 消费者验证，**不会上传到 nuget.org，也不属于当前正式 Release 资产**。
+
+原型打包和验收细节见 [docs/CONSUMPTION.md](docs/CONSUMPTION.md)。在 NuGet 通过 restore / build / run / publish 全链路验证之前，正式消费仍优先使用 Release ZIP 或 Git Submodule / reusable workflow。
+
 ## Release 页面与发布说明
 
 正式 Release 不再直接使用 GitHub 自动生成的 PR 列表作为正文。发布工作流会从对应版本的 `CHANGELOG.md` 与已验证的 package manifest 自动生成**正式 Release Notes**，内容包括版本重点、Windows x64 / .NET 8 支持范围、下载资产、包内容、SHA-256、源码 commit、固定 libmem commit 与文档链接。
@@ -292,7 +298,7 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ## GitHub Actions 自动构建
 
-仓库内置六套自动化工作流：
+仓库内置七套自动化工作流：
 
 - \`.github/workflows/build.yml\`：向 `main` 推送、创建 PR 或手动运行时只构建并验证 Release x64，上传 `LibmemCli-windows-x64` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
@@ -300,6 +306,7 @@ external/Libmem/src/LibmemCli.vcxproj
 - \`.github/workflows/hook-vmt-tests.yml\`：在 x64 上独立运行真实 Hook / trampoline / VMT 生命周期测试，与基础 Smoke Test 分离。
 - \`.github/workflows/injector-tests.yml\`：在 x64 上独立验证 DLL 注入、模块发现、显式 Unload 与 Dispose 生命周期。
 - `.github/workflows/external-process-tests.yml`：启动仓库自带的 `LibmemCli.TestTarget` 子进程，验证真实跨进程 Attach、Read/Write、远程 Allocate/Protect/Free、Signature Scan、Segment 与进程退出检测。
+- `.github/workflows/nuget-consumer-tests.yml`：构建本地 `HearthstoneModding.LibmemCli` NuGet 原型，通过独立 `PackageReference` 消费者执行 pack → restore → build → run 验证；当前不会发布到 nuget.org。
 
 本地也可以生成与 CI 相同的 Runtime 包：
 
