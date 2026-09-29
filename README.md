@@ -107,7 +107,7 @@ foreach (var module in session.Modules.Enumerate())
 `ProcessSession` 是可选的通用进程上下文封装。它通过 **PID + 进程启动时间** 锁定一个具体进程身份，并为同一目标的内存、模块、Hook 与注入操作提供明确的 Attach / Detach 生命周期；它不承担应用状态管理：
 
 ```csharp
-using var target = Libmem.Attach("Hearthstone.exe");
+using var target = ProcessSession.Open("Hearthstone.exe");
 
 if (target is null)
     return;
@@ -120,9 +120,9 @@ if (!target.IsAlive())
 var latest = target.Refresh();
 ```
 
-当前 `ProcessSession` 不持有 Windows 原生进程句柄；`MemoryManager`、`ModuleManager`、`HookManager` 和 `InjectorManager` 只是在 libmem 调用之上增加目标绑定与必要的资源生命周期约束。
+当前 `ProcessSession` 不持有 Windows 原生进程句柄；它作为聚合入口，向下组合 `MemoryManager`、`ModuleManager`、`ThreadManager`、`ScanManager`、`HookManager` 和 `InjectorManager`。这些子系统只是在 libmem 调用之上增加目标绑定与必要的资源生命周期约束。
 
-现有 `Libmem.*` 静态 API 保持直接可用。应用如果需要 Snapshot、缓存、事件状态或游戏状态模型，应在调用方自己构建，而不是放进 LibmemCli。
+新代码推荐使用 `ProcessSession.Open(...)`；现有 `Libmem.Attach(...)` 和 `Libmem.*` 静态 API 继续保留兼容。应用如果需要 Snapshot、缓存、事件状态或游戏状态模型，应在调用方自己构建，而不是放进 LibmemCli。
 
 ### ModuleManager
 
@@ -138,6 +138,30 @@ var unity = modules.Find("UnityPlayer.dll");
 ```
 
 当前提供 `Enumerate / Find / Load / Unload`。它和 `MemoryManager` 一样遵循 Session 生命周期，Detach 后不可继续操作。
+
+### ThreadManager
+
+`ProcessSession.Threads` 将目标进程线程能力绑定到当前 Session：
+
+```csharp
+foreach (var thread in target.Threads.Enumerate())
+    Console.WriteLine(thread.Id);
+
+var mainThread = target.Threads.Main;
+```
+
+当前阶段只封装 libmem 已有的线程枚举与进程主线程查询，不额外引入 Suspend / Resume / Context 等 libmem 尚未提供的能力。
+
+### ScanManager
+
+扫描与指针解析从内存读写职责中独立出来，新代码推荐通过 `ProcessSession.Scanner` 使用：
+
+```csharp
+var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
+var resolved = target.Scanner.DeepPointer(baseAddress, offsets);
+```
+
+`ScanManager` 当前提供 `DeepPointer / DataScan / PatternScan / SigScan`。为保证 v0.x 兼容，`MemoryManager` 上原有的同名方法暂时继续保留。
 
 ### Injector
 
@@ -179,10 +203,10 @@ using var buffer = memory.Allocate(4096, MemoryProtection.ReadWrite)
 
 memory.Write(buffer.Address, payload);
 var copy = memory.Read(buffer.Address, payload.Length);
-var hit = memory.SigScan("48 8B ?? ??", start, size);
+var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
 ```
 
-当前提供 Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free / DeepPointer / DataScan / PatternScan / SigScan。Manager 与 `ProcessSession` 生命周期绑定；Session Detach 后继续调用会抛出 `ObjectDisposedException`。
+当前核心职责是 Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free。原有 DeepPointer / DataScan / PatternScan / SigScan 仍保留为兼容 API，新代码应优先使用 `ProcessSession.Scanner`。Manager 与 `ProcessSession` 生命周期绑定；Session Detach 后继续调用会抛出 `ObjectDisposedException`。
 
 ### RemoteAllocation
 
