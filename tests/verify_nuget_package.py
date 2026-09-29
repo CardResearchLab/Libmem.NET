@@ -96,10 +96,10 @@ def main() -> int:
 
         if (
             license_element is None
-            or license_element.attrib.get("type") != "expression"
-            or license_element.text != "AGPL-3.0-only"
+            or license_element.attrib.get("type") != "file"
+            or license_element.text != "LICENSE"
         ):
-            raise AssertionError("NuGet license expression mismatch.")
+            raise AssertionError("NuGet license file metadata mismatch.")
 
         if readme is None or readme.text != "README.md":
             raise AssertionError("NuGet readme metadata mismatch.")
