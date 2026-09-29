@@ -60,6 +60,8 @@ Completed freeze cleanup: the early convenience `ProcessInfo.Read / Write / Read
 
 Completed freeze cleanup: audited XML IntelliSense and `docs/API.md` against the frozen managed surface, completed documentation for the recommended `ProcessSession` / Manager / ownership members, and explicitly retained `ProcessSession.Allocate` as an ownership convenience. This does not change the public API baseline or runtime behavior.
 
+Completed contract freeze: `ProcessInfo` is now library-created read-only identity/metadata. Consumers can no longer rewrite `Pid / StartTime` or fabricate an empty identity through a public default constructor, so `IsAlive()`, `Open(ProcessInfo)`, and the PID + StartTime exact-identity model share the same immutable foundation.
+
 ## v0.4 — x64 architecture cleanup
 
 Focus:
