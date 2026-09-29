@@ -1,14 +1,16 @@
-# LibmemCli — libmem 5.x C++/CLI 封装（Windows x86/x64 / .NET 8）
+# LibmemCli — libmem 5.x C++/CLI 封装（Windows x64 / .NET 8）
 
 [简体中文](README.md) | [English](README.en.md)
 
 [![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
-![Windows x86/x64](https://img.shields.io/badge/Windows-x86%20%7C%20x64-0078D4)
+![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 
-LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装，面向 Windows x86/x64 / .NET 8 项目。
+LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装。**当前开发、CI 验收与正式发布以 Windows x64 / .NET 8 为主线。** 现有 x86 代码与构建配置暂时保留，但 x86 已延后，不再作为近期开发目标或正式 Release 产物。
+
+开发路线见 [ROADMAP.md](ROADMAP.md)。
 
 除明确记录的兼容性豁免外，本项目覆盖当前固定版本 libmem 头文件中的公开函数，并使用托管模型、托管字节数组以及符合 .NET 使用习惯的 API 暴露给 C# / .NET。libmem 中普通函数与 `Ex` 函数通常在托管层对应为一组重载。
 
@@ -22,7 +24,7 @@ LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复�
 
 ```mermaid
 flowchart LR
-    App["C# / .NET 8 x86/x64 项目"] --> Cli["LibmemCli.dll<br/>C++/CLI 托管封装"]
+    App["C# / .NET 8 x64 项目"] --> Cli["LibmemCli.dll<br/>C++/CLI 托管封装"]
     Cli --> Native["libmem.dll<br/>rdbo/libmem"]
     Native --> Win["Windows 原生进程 / 内存 API"]
 
@@ -37,7 +39,8 @@ flowchart LR
 
 ## 环境要求
 
-- Windows x86 或 x64
+- Windows x64（当前正式开发与发布目标）
+- x86 构建配置暂时保留，仅用于未来恢复或手动兼容验证，不作为当前支持承诺
 - Visual Studio，并安装：
   - **使用 C++ 的桌面开发**
   - **适用于 v143 生成工具的 C++/CLI 支持**
@@ -65,15 +68,15 @@ cd Libmem
 
 `bootstrap.ps1` 仍保留为兼容入口。
 
-也可以直接打开 `LibmemCli.sln`，使用 `Debug|x64`、`Release|x64`、`Debug|x86` 或 `Release|x86` 构建。Visual Studio/MSBuild 会自动执行相同的原生依赖构建流程。
+也可以直接打开 `LibmemCli.sln`，使用 `Debug|x64` 或 `Release|x64` 构建。Visual Studio/MSBuild 会自动执行相同的原生依赖构建流程。仓库仍保留 x86 配置，但当前不把它作为主线开发、默认 CI 或正式发布目标。
 
 生成文件不会写入源码目录，默认输出到：
 
 ```text
-artifacts/native/{x64|x86}/Release/bin/libmem.dll
-artifacts/native/{x64|x86}/Release/lib/libmem.lib
-artifacts/managed/{x64|x86}/Release/LibmemCli.dll
-artifacts/managed/{x64|x86}/Release/Ijwhost.dll
+artifacts/native/x64/Release/bin/libmem.dll
+artifacts/native/x64/Release/lib/libmem.lib
+artifacts/managed/x64/Release/LibmemCli.dll
+artifacts/managed/x64/Release/Ijwhost.dll
 ```
 
 
@@ -279,11 +282,11 @@ external/Libmem/src/LibmemCli.vcxproj
 
 仓库内置五套自动化工作流：
 
-- \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64 与 x86，并分别上传 \`LibmemCli-windows-x64\`、\`LibmemCli-windows-x86\` Artifact。
+- \`.github/workflows/build.yml\`：向 `main` 推送、创建 PR 或手动运行时只构建并验证 Release x64，上传 `LibmemCli-windows-x64` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
-- \`.github/workflows/release.yml\`：推送 \`v*\` 标签或 \`release/v*\` 发布分支时自动构建 x64/x86、校验包来源与 SHA-256，并创建 GitHub Release，同时附带两种架构的 ZIP 与校验文件。
-- \`.github/workflows/hook-vmt-tests.yml\`：独立运行真实 Hook / trampoline / VMT 生命周期测试，与基础 Smoke Test 分离。
-- \`.github/workflows/injector-tests.yml\`：独立验证 DLL 注入、模块发现、显式 Unload 与 Dispose 生命周期。
+- \`.github/workflows/release.yml\`：推送 `v*` 标签或 `release/v*` 发布分支时只构建、校验并发布 x64 包。x86 暂不生成正式 Release 资产。
+- \`.github/workflows/hook-vmt-tests.yml\`：在 x64 上独立运行真实 Hook / trampoline / VMT 生命周期测试，与基础 Smoke Test 分离。
+- \`.github/workflows/injector-tests.yml\`：在 x64 上独立验证 DLL 注入、模块发现、显式 Unload 与 Dispose 生命周期。
 
 本地也可以生成与 CI 相同的 Runtime 包：
 
@@ -298,10 +301,6 @@ external/Libmem/src/LibmemCli.vcxproj
 artifacts/package/LibmemCli-windows-x64/
 artifacts/package/LibmemCli-windows-x64.zip
 artifacts/package/LibmemCli-windows-x64.zip.sha256
-
-artifacts/package/LibmemCli-windows-x86/
-artifacts/package/LibmemCli-windows-x86.zip
-artifacts/package/LibmemCli-windows-x86.zip.sha256
 ```
 
 ## 版本与自动验证
@@ -314,7 +313,7 @@ Runtime 包中的 `manifest.json` 会记录：
 - 当前仓库 Git commit；
 - 固定的上游 libmem commit；
 - 目标框架（`net8.0`）；
-- 平台（`win-x64` 或 `win-x86`）；
+- 平台（当前正式发布为 `win-x64`）；
 - 构建配置（Debug / Release）；
 - 包内每个实际文件的文件名、字节数和 SHA-256。
 
@@ -359,7 +358,7 @@ jobs:
 
 ## API 稳定性
 
-仓库现在提交了一份 x86/x64 共用的公共 API 基线：`api/LibmemCli.PublicApi.txt`。每次 `tests/check_sources.py` 运行时，都会从 `src/LibmemCli.h` 提取实际公开类型、属性、方法和枚举，并与这份基线比较。
+仓库提交了一份公共 API 基线：`api/LibmemCli.PublicApi.txt`。每次 `tests/check_sources.py` 运行时，都会从 `src/LibmemCli.h` 提取实际公开类型、属性、方法和枚举，并与这份基线比较。
 
 这意味着误删方法、修改参数/返回类型、重命名公开成员或改变公开枚举成员都会直接让 CI 失败。确实需要调整公共 API 时，必须显式运行：
 
@@ -451,7 +450,7 @@ python .\eng\check-public-api.py --write
 
 ## 重要行为与限制
 
-1. **当前构建支持 Windows x86 与 x64。** 托管公开 API 继续统一使用 `UInt64` 表示地址和大小，但进入 native 层时会按当前进程的指针宽度做范围检查；x86 下超过 `UInt32.MaxValue` 的地址、size 或 index 会抛出 `ArgumentOutOfRangeException`，不会静默截断。`LM_ADDRESS_BAD` 在 x64 对应 `UInt64.MaxValue`，在 x86 对应 `UInt32.MaxValue`。本项目不提供跨位宽远程转换，注入仍要求当前 runtime 与目标进程位宽一致。
+1. **当前正式开发、默认 CI 与 Release 目标为 Windows x64。** x86 相关代码和构建配置暂时保留，但处于延后状态：不作为近期功能验收标准、不保证与 x64 同步新增能力、也不发布 x86 Release 包。后续恢复 x86 时再单独完成兼容性审计与测试矩阵恢复。远程注入仍要求当前 runtime 与目标进程位宽一致。
 
 2. `ReadMemory` **只返回实际成功读取的字节**；`WriteMemory` 返回实际写入长度。调用方应检查短读取和未完整写入的情况。返回 0 字节可能表示目标地址不可访问。
 
