@@ -339,6 +339,19 @@ for consumer_marker in [
     assert consumer_marker in nuget_consumer_source
 print("PASS local NuGet prototype contract")
 
+nuget_package_script = (root / "eng/package-nuget.ps1").read_text(encoding="utf-8")
+for package_script_marker in [
+    "HearthstoneModding.LibmemCli.csproj",
+    "LibmemCli.xml",
+    "RepositoryCommit",
+    "git -C $repoRoot rev-parse HEAD",
+    "verify_nuget_package.py",
+]:
+    assert package_script_marker in nuget_package_script, (
+        f"NuGet packaging script lost required behavior: {package_script_marker}"
+    )
+print("PASS NuGet packaging script contract")
+
 consumption_guide = (root / "docs/CONSUMPTION.md").read_text(encoding="utf-8")
 for consumption_marker in [
     "## 1. Runtime ZIP",
@@ -482,12 +495,8 @@ assert "LibmemCli.TestTarget" in external_process_workflow
 assert "LibmemCli.ExternalProcessTests" in external_process_workflow
 assert "setup-dotnet-x86.ps1" not in external_process_workflow
 assert "NuGet Consumer x64" in nuget_consumer_workflow
-assert "HearthstoneModding.LibmemCli.csproj" in nuget_consumer_workflow
+assert "package-nuget.ps1" in nuget_consumer_workflow
 assert "LibmemCli.NuGetConsumer" in nuget_consumer_workflow
-assert "verify_nuget_package.py" in nuget_consumer_workflow
-assert "--expected-version" in nuget_consumer_workflow
-assert "--expected-commit" in nuget_consumer_workflow
-assert "-p:RepositoryCommit=$env:GITHUB_SHA" in nuget_consumer_workflow
 assert "Publish NuGet consumer" in nuget_consumer_workflow
 assert "Reject non-x64 NuGet consumer" in nuget_consumer_workflow
 assert "LibmemCli.dll" in nuget_consumer_workflow
