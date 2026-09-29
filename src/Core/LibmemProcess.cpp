@@ -15,7 +15,27 @@ List<ProcessInfo^>^ Libmem::EnumProcesses() {
     auto r=gcnew List<ProcessInfo^>(); for(const auto& p : native) r->Add(process(p)); return r;
 }
 ProcessInfo^ Libmem::CurrentProcess() { lm_process_t p{}; return LM_GetProcess(&p) ? process(p) : nullptr; }
-ProcessInfo^ Libmem::GetProcess(UInt32 pid) { lm_process_t p{}; return LM_GetProcessEx(pid,&p) ? process(p) : nullptr; }
+ProcessInfo^ Libmem::GetProcess(UInt32 pid) {
+    lm_process_t p{};
+    if(!LM_GetProcessEx(pid,&p)) return nullptr;
+
+    lm_process_t self{};
+    if(LM_GetProcess(&self) && self.pid==p.pid)
+        return process(p);
+
+    // Pinned Windows libmem calls get_process_start_time(GetCurrentProcess())
+    // inside LM_GetProcessEx instead of using the opened target-process handle.
+    // Reconcile only start_time from LM_EnumProcesses so ProcessSession can keep
+    // PID + start-time identity checks without accepting PID reuse.
+    std::vector<lm_process_t> native;
+    if(!LM_EnumProcesses(cb_process,&native)) return nullptr;
+    auto match=std::find_if(native.begin(),native.end(),[pid](const lm_process_t& current) {
+        return current.pid==pid;
+    });
+    if(match==native.end()) return nullptr;
+    p.start_time=match->start_time;
+    return process(p);
+}
 ProcessInfo^ Libmem::FindProcess(String^ name) { lm_process_t p{}; auto n=utf8(name); return LM_FindProcess(n.c_str(),&p) ? process(p) : nullptr; }
 ProcessSession^ Libmem::Attach(UInt32 pid) {
     auto current=GetProcess(pid);
