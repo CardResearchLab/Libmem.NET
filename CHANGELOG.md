@@ -12,6 +12,7 @@
 
 ### Changed
 
+- Tightened the session-bound manager error contract: definite allocation, module-load, assembly, and code-length failures now surface as `LibmemException`, while static compatibility APIs retain their existing sentinel/nullable semantics.
 - Split the remaining static `Libmem.*`, `ProcessInfo`, and `LibmemException` implementations into subsystem translation units, leaving `LibmemCli.cpp` as a thin compatibility translation unit.
 - Extracted Hook/HookHandle and VMT implementations into dedicated `Hooks` source files while preserving the existing managed API and lifecycle semantics.
 - Extracted `RemoteAllocation` and injection ownership implementations from the static facade into dedicated Memory/Injection source files without changing the public API.
