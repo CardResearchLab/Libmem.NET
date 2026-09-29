@@ -74,6 +74,24 @@ assert "ProcessInfo::" not in libmem_facade_source
 assert "LibmemException::" not in libmem_facade_source
 print("PASS static facade domain split contract")
 
+project_source_text = (root / "src/LibmemCli.vcxproj").read_text(encoding="utf-8")
+for project_source in [
+    r"Core\LibmemException.cpp",
+    r"Core\ProcessInfo.cpp",
+    r"Core\LibmemProcess.cpp",
+    r"Threads\LibmemThread.cpp",
+    r"Modules\LibmemModule.cpp",
+    r"Symbols\LibmemSymbol.cpp",
+    r"Memory\LibmemSegment.cpp",
+    r"Memory\LibmemMemory.cpp",
+    r"Scanning\LibmemScan.cpp",
+    r"Assembly\LibmemAssembly.cpp",
+]:
+    assert f'Include="{project_source}"' in project_source_text, (
+        f"Split translation unit is not compiled by LibmemCli.vcxproj: {project_source}"
+    )
+print("PASS split translation units included in vcxproj")
+
 for file in [
     "src/LibmemCli.vcxproj",
     "samples/Example.csproj",
