@@ -12,6 +12,7 @@
 
 ### Changed
 
+- Extracted native/managed conversion, address/size validation, enumeration callbacks, and model translation into an internal `Interop/NativeConverter` boundary.
 - Split the high-level ProcessSession and manager implementations into dedicated Core, Memory, Modules, Threads, Scanning, Symbols, and Assembly source files without changing the public API.
 - Updated source-contract validation to aggregate all C++ implementation files under `src/`, so architectural file splits remain covered by CI.
 - Continued the Blackbone-inspired process aggregation refactor: `ProcessSession` now exposes memory, modules, threads, scanning, symbols, assembly/disassembly, hooks, and injection as explicit subsystems.
