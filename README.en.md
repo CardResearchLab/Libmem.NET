@@ -198,8 +198,7 @@ The address-based `Disassemble` overload first reads bytes through the current s
 `ProcessSession.Injector` is the higher-level DLL injection API above `ModuleManager.Load`. Its purpose is to make ownership of one LoadLibrary reference explicit:
 
 ```csharp
-using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll")
-    ?? throw new InvalidOperationException("Injection failed");
+using var injected = target.Injector.InjectLibrary(@"C:\Mods\NativeBootstrap.dll");
 
 Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 ```
@@ -213,8 +212,7 @@ Explicit `Unload()` returns the release result. `Dispose()` deterministically at
 `ProcessSession.Hooks` binds hook installation to the current target process:
 
 ```csharp
-using var hook = target.Hooks.Install(source, destination)
-    ?? throw new InvalidOperationException("Hook failed");
+using var hook = target.Hooks.Install(source, destination);
 
 Console.WriteLine($"source=0x{hook.Source:X} destination=0x{hook.Destination:X} trampoline=0x{hook.Trampoline:X}");
 ```
