@@ -98,6 +98,8 @@ for file in [
     "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj",
     "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj",
     "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj",
+    "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj",
+    "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj",
 ]:
     ET.parse(root / file)
     print("PASS XML", file)
@@ -190,6 +192,11 @@ assert 'LibmemException("LM_AssembleEx"' in assembly_manager_source
 assert 'LibmemException("LM_CodeLengthEx"' in assembly_manager_source
 print("PASS strict manager failure mapping contract")
 
+process_compat_source = (root / "src/Core/LibmemProcess.cpp").read_text(encoding="utf-8")
+assert "get_process_start_time(GetCurrentProcess())" in process_compat_source
+assert "p.start_time=match->start_time" in process_compat_source
+print("PASS pinned LM_GetProcessEx start-time compatibility contract")
+
 assert "ThreadManager^ ProcessSession::Threads::get()" in source
 assert "ScanManager^ ProcessSession::Scanner::get()" in source
 assert "SymbolManager^ ProcessSession::Symbols::get()" in source
@@ -258,6 +265,8 @@ smoke_project = (root / "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj"
 hook_project = (root / "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj").read_text(encoding="utf-8")
 injector_project = (root / "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj").read_text(encoding="utf-8")
 sample_project = (root / "samples/Example.csproj").read_text(encoding="utf-8")
+test_target_project = (root / "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj").read_text(encoding="utf-8")
+external_process_project = (root / "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj").read_text(encoding="utf-8")
 
 assert "Debug|x86 = Debug|x86" in solution
 assert "Release|x86 = Release|x86" in solution
@@ -274,12 +283,47 @@ for script in [
 for project in [sample_project, smoke_project, hook_project, injector_project]:
     assert "<Platforms>x64;x86</Platforms>" in project
     assert "<PlatformTarget>$(Platform)</PlatformTarget>" in project
+assert "<Platforms>x64</Platforms>" in test_target_project, "TestTarget must remain x64-only for the current roadmap."
+assert "<PlatformTarget>x64</PlatformTarget>" in test_target_project
+assert "<Platforms>x64</Platforms>" in external_process_project, "ExternalProcessTests must remain x64-only for the current roadmap."
+assert "<PlatformTarget>x64</PlatformTarget>" in external_process_project
 assert "lm_address_t native_address(UInt64 value" in source
 assert "lm_size_t native_size(UInt64 value" in source
 assert "bool bad_address(UInt64 value)" in source
 assert "Address does not fit the current process architecture." in source
 assert "Size or index does not fit the current process architecture." in source
 print("PASS x86/x64 architecture contract")
+
+test_target_source = (root / "tests/LibmemCli.TestTarget/Program.cs").read_text(encoding="utf-8")
+external_process_test_source = (root / "tests/LibmemCli.ExternalProcessTests/Program.cs").read_text(encoding="utf-8")
+assert "Marshal.AllocHGlobal" in test_target_source
+assert "READY pid=" in test_target_source
+for required_call in [
+    "ProcessSession.Open",
+    "ProcessSession.Open(ready.Pid)",
+    "Libmem.EnumProcesses",
+    "session.Memory.Read",
+    "session.Memory.Write",
+    "session.Memory.Allocate",
+    "session.Memory.Protect",
+    "session.Scanner.SigScan",
+    "Libmem.FindSegment",
+    "session.IsAlive",
+    "session.Refresh",
+]:
+    assert required_call in external_process_test_source, (
+        f"External-process runtime coverage lost required call: {required_call}"
+    )
+print("PASS external-process runtime coverage contract")
+
+readme_zh = (root / "README.md").read_text(encoding="utf-8")
+readme_en = (root / "README.en.md").read_text(encoding="utf-8")
+for readme in [readme_zh, readme_en]:
+    assert ".github/workflows/external-process-tests.yml" in readme
+    assert "LibmemCli.TestTarget" in readme
+assert "六套自动化工作流" in readme_zh
+assert "six automation workflows" in readme_en
+print("PASS external-process documentation contract")
 
 manifest_script = (root / "eng/write-manifest.ps1").read_text(encoding="utf-8")
 package_script = (root / "eng/package-runtime.ps1").read_text(encoding="utf-8")
@@ -291,6 +335,7 @@ reusable_workflow = (root / ".github/workflows/reusable-build.yml").read_text(en
 release_workflow = (root / ".github/workflows/release.yml").read_text(encoding="utf-8")
 hook_workflow = (root / ".github/workflows/hook-vmt-tests.yml").read_text(encoding="utf-8")
 injector_workflow = (root / ".github/workflows/injector-tests.yml").read_text(encoding="utf-8")
+external_process_workflow = (root / ".github/workflows/external-process-tests.yml").read_text(encoding="utf-8")
 
 assert "schemaVersion = 2" in manifest_script
 assert "Get-FileHash" in manifest_script
@@ -329,6 +374,10 @@ assert "Hook and VMT x64" in hook_workflow
 assert "setup-dotnet-x86.ps1" not in hook_workflow
 assert "Injector x64" in injector_workflow
 assert "setup-dotnet-x86.ps1" not in injector_workflow
+assert "External Process x64" in external_process_workflow
+assert "LibmemCli.TestTarget" in external_process_workflow
+assert "LibmemCli.ExternalProcessTests" in external_process_workflow
+assert "setup-dotnet-x86.ps1" not in external_process_workflow
 assert "needs: [build-x64]" in release_workflow
 assert "build-x86:" not in release_workflow
 

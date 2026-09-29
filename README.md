@@ -284,13 +284,14 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ## GitHub Actions 自动构建
 
-仓库内置五套自动化工作流：
+仓库内置六套自动化工作流：
 
 - \`.github/workflows/build.yml\`：向 `main` 推送、创建 PR 或手动运行时只构建并验证 Release x64，上传 `LibmemCli-windows-x64` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
 - \`.github/workflows/release.yml\`：推送 `v*` 标签或 `release/v*` 发布分支时只构建、校验并发布 x64 包。x86 暂不生成正式 Release 资产。
 - \`.github/workflows/hook-vmt-tests.yml\`：在 x64 上独立运行真实 Hook / trampoline / VMT 生命周期测试，与基础 Smoke Test 分离。
 - \`.github/workflows/injector-tests.yml\`：在 x64 上独立验证 DLL 注入、模块发现、显式 Unload 与 Dispose 生命周期。
+- `.github/workflows/external-process-tests.yml`：启动仓库自带的 `LibmemCli.TestTarget` 子进程，验证真实跨进程 Attach、Read/Write、远程 Allocate/Protect/Free、Signature Scan、Segment 与进程退出检测。
 
 本地也可以生成与 CI 相同的 Runtime 包：
 
@@ -331,6 +332,8 @@ CI 不只检查“能否编译”，还会执行两层自动验证：
 Hook / VMT 不作为基础 Smoke Test 的硬性门禁，而是在独立的 `Hook VMT Runtime Tests` 工作流中验证。 `VmtManager` 的显式 `Dispose()` 同样采用确定性恢复：若任一已跟踪 VMT 项无法恢复，对象保持未释放状态并抛出 `LibmemException`，不会丢掉剩余 hook bookkeeping。该测试会在当前进程分配隔离的可执行内存，验证 Hook 重定向、trampoline、Remove，以及 VMT Hook / Unhook / Reset / Dispose，不依赖炉石或其他外部进程。
 
 Injector 同样使用独立的 `Injector Runtime Tests`：测试会复制一份唯一文件名的 `libmem.dll` 作为隔离 fixture，在当前测试进程中实际执行注入、模块枚举、Unload 和 Dispose，避免依赖炉石进程。
+
+跨进程行为由独立的 `External Process Runtime Tests` 验证。该工作流启动仓库自带的 `LibmemCli.TestTarget`，在独立 PID/地址空间上验证 `ProcessSession.Open(pid)`、目标身份校验、远程读写、远程分配/保护/释放、扫描、Segment 查询和进程退出检测。
 
 ### 在其他项目中复用构建工作流
 
