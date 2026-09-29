@@ -434,6 +434,10 @@ for readme in [readme_zh, readme_en]:
 assert "七套自动化工作流" in readme_zh
 assert "seven automation workflows" in readme_en
 print("PASS NuGet prototype documentation contract")
+for readme in [readme_zh, readme_en]:
+    assert 'InvalidOperationException("Injection failed")' not in readme
+    assert 'InvalidOperationException("Hook failed")' not in readme
+print("PASS manager README semantics contract")
 
 manifest_script = (root / "eng/write-manifest.ps1").read_text(encoding="utf-8")
 package_script = (root / "eng/package-runtime.ps1").read_text(encoding="utf-8")
