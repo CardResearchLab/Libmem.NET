@@ -84,6 +84,8 @@
     <ClCompile Include="Symbols\SymbolManager.cpp" />
     <ClCompile Include="Assembly\AssemblyManager.cpp" />
     <ClCompile Include="Injection\InjectorManager.cpp" />
+    <ClCompile Include="Hooks\HookManager.cpp" />
+    <ClCompile Include="Hooks\VmtManager.cpp" />
     <ClCompile Include="Interop\NativeConverter.cpp" />
   </ItemGroup>
   <Target Name="BuildLibmemNative" BeforeTargets="PrepareForBuild" Condition="'$(SkipLibmemNativeBuild)' != 'true'">
