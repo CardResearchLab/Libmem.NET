@@ -8,6 +8,21 @@ static void Check(bool condition, string message)
         throw new InvalidOperationException(message);
 }
 
+static TException ExpectThrows<TException>(Action action, string message)
+    where TException : Exception
+{
+    try
+    {
+        action();
+    }
+    catch (TException ex)
+    {
+        return ex;
+    }
+
+    throw new Exception(message);
+}
+
 static string ResolveTargetDll()
 {
     var configured = Environment.GetEnvironmentVariable("LIBMEMCLI_TEST_TARGET_DLL");
@@ -151,6 +166,32 @@ try
     Check(child.WaitForExit(10_000), "TestTarget did not exit after the exit command.");
     Check(!session.IsAlive(), "ProcessSession should observe TestTarget exit.");
     Check(session.Refresh() is null, "ProcessSession.Refresh should return null after target exit.");
+    Check(!session.IsDisposed, "Target exit must not implicitly dispose ProcessSession.");
+    Check(session.Pid == process.Pid, "ProcessSession should retain the bound PID after target exit.");
+    Check(session.Name == process.Name, "ProcessSession should retain the bound process name after target exit.");
+    Check(session.Architecture == process.Architecture,
+        "ProcessSession should retain the bound architecture after target exit.");
+    Check(session.Bits == process.Bits, "ProcessSession should retain the bound bitness after target exit.");
+    Check(session.Info.Pid == process.Pid && session.Info.StartTime == process.StartTime,
+        "ProcessSession.Info should retain the original process identity after target exit.");
+
+    Check(session.Memory is not null
+          && session.Modules is not null
+          && session.Threads is not null
+          && session.Scanner is not null
+          && session.Symbols is not null
+          && session.Assembly is not null
+          && session.Hooks is not null
+          && session.Injector is not null,
+        "Target exit must not detach session-bound Managers.");
+
+    ExpectThrows<InvalidOperationException>(
+        () => session.Memory.Allocate(4096, MemoryProtection.ReadWrite),
+        "MemoryManager.Allocate should reject a dead target.");
+    ExpectThrows<InvalidOperationException>(
+        () => session.Injector.InjectLibrary("libmemcli-target-exit-probe.dll"),
+        "InjectorManager.InjectLibrary should reject a dead target before file resolution.");
+
     Check(exitReclaimedAllocation.Free(),
         "RemoteAllocation.Free should treat target-process exit as OS-reclaimed ownership.");
     Check(exitReclaimedAllocation.IsDisposed,
