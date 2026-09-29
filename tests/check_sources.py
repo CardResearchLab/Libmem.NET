@@ -283,6 +283,26 @@ for required_sample_api in [
 assert "Libmem.Attach" not in sample_source
 assert "Hearthstone" not in sample_source
 print("PASS C# consumer sample contract")
+
+api_reference = (root / "docs/API.md").read_text(encoding="utf-8")
+for api_reference_marker in [
+    "## Recommended entry point",
+    "## ProcessSession model",
+    "## Manager APIs",
+    "## Owned resources",
+    "## Exception model",
+    "## Normal non-exception results",
+    "## Static compatibility facade",
+    "## Upstream compatibility workarounds",
+    "LM_GetProcessEx start time",
+    "## IntelliSense documentation",
+    "api/LibmemCli.PublicApi.txt",
+]:
+    assert api_reference_marker in api_reference, (
+        f"API reference lost required section: {api_reference_marker}"
+    )
+assert "Hearthstone" not in api_reference
+print("PASS consumer API reference contract")
 test_target_project = (root / "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj").read_text(encoding="utf-8")
 external_process_project = (root / "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj").read_text(encoding="utf-8")
 
