@@ -83,6 +83,9 @@ TYPE public ref class RemoteAllocation sealed : IDisposable
   ~RemoteAllocation();
   !RemoteAllocation();
 TYPE public ref class ProcessSession sealed : IDisposable
+  static ProcessSession^ Open(UInt32 pid);
+  static ProcessSession^ Open(String^ name);
+  static ProcessSession^ Open(ProcessInfo^ process);
   property ProcessInfo^ Info { ProcessInfo^ get(); }
   property UInt32 Pid { UInt32 get(); }
   property String^ Name { String^ get(); }
@@ -90,6 +93,8 @@ TYPE public ref class ProcessSession sealed : IDisposable
   property UInt64 Bits { UInt64 get(); }
   property MemoryManager^ Memory { MemoryManager^ get(); }
   property ModuleManager^ Modules { ModuleManager^ get(); }
+  property ThreadManager^ Threads { ThreadManager^ get(); }
+  property ScanManager^ Scanner { ScanManager^ get(); }
   property HookManager^ Hooks { HookManager^ get(); }
   property InjectorManager^ Injector { InjectorManager^ get(); }
   property bool IsDisposed { bool get(); }
@@ -111,11 +116,19 @@ TYPE public ref class MemoryManager sealed
   UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
   UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
   UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
+TYPE public ref class ScanManager sealed
+  UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
+  UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
+  UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
+  UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
 TYPE public ref class ModuleManager sealed
   List<ModuleInfo^>^ Enumerate();
   ModuleInfo^ Find(String^ name);
   ModuleInfo^ Load(String^ path);
   bool Unload(ModuleInfo^ module);
+TYPE public ref class ThreadManager sealed
+  List<ThreadInfo^>^ Enumerate();
+  property ThreadInfo^ Main { ThreadInfo^ get(); }
 TYPE public ref class InjectedModuleHandle sealed : IDisposable
   property ModuleInfo^ Module { ModuleInfo^ get(); }
   property String^ RequestedPath { String^ get(); }
