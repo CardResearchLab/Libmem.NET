@@ -15,6 +15,8 @@ for file in [
     "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj",
     "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj",
     "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj",
+    "tests/LibmemCli.RemoteTests/LibmemCli.RemoteTests.csproj",
+    "tests/LoadFixture/LoadFixture.vcxproj",
 ]:
     ET.parse(root / file)
     print("PASS XML", file)
@@ -61,8 +63,11 @@ wrapper_native_calls = set(re.findall(r"\b(LM_[A-Za-z0-9_]+)\s*\(", source))
 # LibmemCli therefore serves current-process arguments from System.Environment and keeps
 # the upstream external-process "unsupported" behavior. LM_FreeCommandLine is paired
 # exclusively with that unsafe native allocation path, so neither native entry point is
-# executed by the managed wrapper.
-native_api_waivers = {"LM_GetCommandLine", "LM_FreeCommandLine"}
+# executed by the managed wrapper. LM_GetProcessEx reads the caller's start time for an
+# external PID, so GetProcess resolves its target through enumeration. LM_LoadModuleEx
+# waits forever on a remote thread and resolves output by name; the wrapper instead
+# uses a bounded LoadLibraryW call and resolves the result by full path.
+native_api_waivers = {"LM_GetCommandLine", "LM_FreeCommandLine", "LM_GetProcessEx", "LM_LoadModuleEx"}
 assert native_api_waivers <= upstream_apis, (
     "Compatibility waiver references APIs not exposed by the pinned libmem: "
     + ", ".join(sorted(native_api_waivers - upstream_apis))
@@ -87,7 +92,7 @@ for operation in [
     "LM_ProtMemoryEx",
     "LM_FreeMemoryEx",
     "LM_UnloadModuleEx",
-    "LM_LoadModuleEx",
+    "LoadLibraryW",
 ]:
     assert re.search(
         r'LibmemException\(\s*"' + re.escape(operation) + r'"',

@@ -179,6 +179,7 @@ namespace LibmemCli {
         List<ModuleInfo^>^ Enumerate();
         ModuleInfo^ Find(String^ name);
         ModuleInfo^ Load(String^ path);
+        ModuleInfo^ Load(String^ path, int timeoutMilliseconds);
         bool Unload(ModuleInfo^ module);
     };
 
@@ -212,6 +213,7 @@ namespace LibmemCli {
         InjectorManager(ProcessSession^ session);
     public:
         InjectedModuleHandle^ InjectLibrary(String^ path);
+        InjectedModuleHandle^ InjectLibrary(String^ path, int timeoutMilliseconds);
     };
 
     // Session-bound hook installation. Returned HookHandle objects own their own hook lifetime.
@@ -291,6 +293,7 @@ namespace LibmemCli {
         static ModuleInfo^ FindModule(ProcessInfo^ process, String^ name);
         static ModuleInfo^ LoadModule(String^ path);
         static ModuleInfo^ LoadModule(ProcessInfo^ process, String^ path);
+        static ModuleInfo^ LoadModule(ProcessInfo^ process, String^ path, int timeoutMilliseconds);
         static bool UnloadModule(ModuleInfo^ module);
         static bool UnloadModule(ProcessInfo^ process, ModuleInfo^ module);
         // Symbol

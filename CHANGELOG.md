@@ -4,6 +4,12 @@
 
 _No unreleased changes._
 
+## 0.3.1 - 2026-09-29
+
+- Fixed remote process identity on Windows: `GetProcess` and sessions now use the target's actual start time, and session managers reject an exited or replaced process.
+- Added bounded remote `LoadModule`, `ModuleManager.Load`, and `InjectorManager.InjectLibrary` overloads. Existing remote overloads use a 10-second default. Loaded modules are resolved by full path on x86 and x64.
+- A remote load timeout reports an indeterminate outcome. The loader never retries or unloads it automatically; its argument buffer is released after the remote thread exits when the caller remains alive.
+
 ## 0.3.0 - 2026-09-29
 
 LibmemCli 0.3.0 completes the wrapper's Windows x86/x64 stabilization and release pipeline while keeping the library independent from application-specific state models.

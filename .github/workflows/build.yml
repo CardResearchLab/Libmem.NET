@@ -58,6 +58,10 @@ jobs:
         shell: pwsh
         run: dotnet run --project .\tests\LibmemCli.SmokeTests\LibmemCli.SmokeTests.csproj -c Release -p:Platform=${{ matrix.platform }}
 
+      - name: Run remote process tests
+        shell: pwsh
+        run: .\eng\run-remote-tests.ps1 -Configuration Release -Platform ${{ matrix.platform }}
+
       - name: Package runtime
         shell: pwsh
         run: .\eng\package-runtime.ps1 -Configuration Release -Platform ${{ matrix.platform }}

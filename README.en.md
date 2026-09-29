@@ -139,6 +139,8 @@ var unity = modules.Find("UnityPlayer.dll");
 
 It currently provides `Enumerate / Find / Load / Unload`. Like `MemoryManager`, it follows the ProcessSession lifetime and rejects operations after Detach.
 
+Remote loading accepts a positive millisecond timeout via `modules.Load(path, timeoutMilliseconds)`; the default is 10 seconds. A `TimeoutException` means that the remote loading thread may still be running, so callers must not retry or unload automatically. Modules are resolved by normalized full path, and session operations verify the target process identity.
+
 ### Injector
 
 `ProcessSession.Injector` is the higher-level DLL injection API above `ModuleManager.Load`. Its purpose is to make ownership of one LoadLibrary reference explicit:
@@ -151,6 +153,8 @@ Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 ```
 
 `InjectLibrary` normalizes and validates the DLL path and rejects cross-bitness injection between the current runtime and target process. The returned `InjectedModuleHandle` preserves the managed module description and requested path. `IsActive` means **this handle still owns the load reference it created**; it does not claim that the module is the only loaded instance in the process.
+
+`InjectLibrary(path, timeoutMilliseconds)` uses the same bounded loader, with a 10-second default. To keep a DLL loaded after a session ends, use `Modules.Load` instead of an `InjectedModuleHandle`, whose `Dispose()` releases its load reference.
 
 Explicit `Unload()` returns the release result. `Dispose()` deterministically attempts to release the one `LoadLibrary` reference owned by the handle; if native cleanup fails, the failure is surfaced instead of silently marking live ownership as released. Because Windows DLLs are reference-counted and the pinned upstream `LM_UnloadModuleEx` only requests a release, a successful call does not guarantee the module disappears completely from the target process. The GC finalizer never calls `FreeLibrary` in the target process.
 
@@ -258,7 +262,7 @@ artifacts/package/LibmemCli-windows-x86.zip.sha256
 
 ## Versioning and automated validation
 
-The root `VERSION` file is the source of truth for release versioning. The current version is **0.3.0**, and the generated `LibmemCli.dll` carries matching assembly version metadata.
+The root `VERSION` file is the source of truth for release versioning. The current version is **0.3.1**, and the generated `LibmemCli.dll` carries matching assembly version metadata.
 
 Each runtime package contains a `manifest.json` recording:
 

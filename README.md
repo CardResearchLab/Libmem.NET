@@ -139,6 +139,8 @@ var unity = modules.Find("UnityPlayer.dll");
 
 当前提供 `Enumerate / Find / Load / Unload`。它和 `MemoryManager` 一样遵循 Session 生命周期，Detach 后不可继续操作。
 
+远程加载可调用 `modules.Load(path, timeoutMilliseconds)` 指定正数毫秒超时；不传时默认为 10 秒。超时抛出 `TimeoutException`，表示目标进程中的加载线程可能仍在运行，因此调用方不可自动重试或卸载。模块按规范化的完整路径确认，Session 也会在操作前核对目标进程身份。
+
 ### Injector
 
 `ProcessSession.Injector` 是比 `ModuleManager.Load` 更高一层的 DLL 注入接口，用来表达“这一次 LoadLibrary 引用由谁负责释放”：
@@ -151,6 +153,8 @@ Console.WriteLine($"0x{injected.Module.Base:X} {injected.Module.Name}");
 ```
 
 `InjectLibrary` 会规范化并检查 DLL 路径，并拒绝当前 runtime 与目标进程位宽不同的跨位宽注入。返回的 `InjectedModuleHandle` 保存模块描述与请求路径；`IsActive` 表示**这个 Handle 所拥有的一次加载引用尚未释放**，并不等价于“该 DLL 一定仍是目标进程中的唯一实例”。
+
+`InjectLibrary(path, timeoutMilliseconds)` 使用同一限时加载实现；不传超时默认为 10 秒。需要让 DLL 在会话结束后继续常驻时，应使用 `Modules.Load`，不要创建会在 `Dispose()` 时释放加载引用的 `InjectedModuleHandle`。
 
 显式 `Unload()` 会返回释放结果；`Dispose()` 会确定性尝试释放该 Handle 所拥有的一次 `LoadLibrary` 引用，失败时会向调用方报告，而不会把仍然有效的所有权静默标记为已释放。由于 Windows DLL 引用计数以及固定 libmem 上游 `LM_UnloadModuleEx` 的语义，即使调用成功，也不承诺模块一定完全从目标进程消失。GC Finalizer 不会对目标进程执行 `FreeLibrary`。
 
@@ -258,7 +262,7 @@ artifacts/package/LibmemCli-windows-x86.zip.sha256
 
 ## 版本与自动验证
 
-项目使用根目录的 `VERSION` 文件作为发布版本来源，当前版本为 **0.3.0**。构建后的 `LibmemCli.dll` 会写入对应的程序集版本信息。
+项目使用根目录的 `VERSION` 文件作为发布版本来源，当前版本为 **0.3.1**。构建后的 `LibmemCli.dll` 会写入对应的程序集版本信息。
 
 Runtime 包中的 `manifest.json` 会记录：
 

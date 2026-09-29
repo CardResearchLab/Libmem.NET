@@ -1,6 +1,11 @@
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#undef GetCommandLine
 #include "LibmemCli.h"
 #include <algorithm>
 #include <cstring>
+#include <cwchar>
 #include <limits>
 #include <string>
 #include <vector>
@@ -97,6 +102,75 @@ namespace {
     }
     lm_bool_t LM_CALL cb_symbol(lm_symbol_t* p, void* ctx) {
         static_cast<std::vector<NativeSymbol>*>(ctx)->push_back({p->address,p->name ? p->name : ""}); return LM_TRUE;
+    }
+
+    struct RemoteLoadCleanup {
+        HANDLE process;
+        HANDLE thread;
+        void* path;
+    };
+    DWORD WINAPI finish_remote_load(void* context) {
+        auto cleanup=static_cast<RemoteLoadCleanup*>(context);
+        WaitForSingleObject(cleanup->thread,INFINITE);
+        VirtualFreeEx(cleanup->process,cleanup->path,0,MEM_RELEASE);
+        CloseHandle(cleanup->thread);
+        CloseHandle(cleanup->process);
+        delete cleanup;
+        return 0;
+    }
+    enum class RemoteLoadState { Completed, TimedOut, Failed };
+    struct RemoteLoadResult { RemoteLoadState state; DWORD error; };
+    RemoteLoadResult remote_load(DWORD pid,const wchar_t* path,DWORD timeoutMilliseconds) {
+        HANDLE process=OpenProcess(PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION |
+            PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ,FALSE,pid);
+        if(!process) return {RemoteLoadState::Failed,GetLastError()};
+
+        const size_t bytes=(std::wcslen(path)+1)*sizeof(wchar_t);
+        void* remotePath=VirtualAllocEx(process,nullptr,bytes,MEM_COMMIT | MEM_RESERVE,PAGE_READWRITE);
+        if(!remotePath) {
+            const DWORD error=GetLastError(); CloseHandle(process);
+            return {RemoteLoadState::Failed,error};
+        }
+        SIZE_T written=0;
+        if(!WriteProcessMemory(process,remotePath,path,bytes,&written) || written!=bytes) {
+            const DWORD error=GetLastError();
+            VirtualFreeEx(process,remotePath,0,MEM_RELEASE); CloseHandle(process);
+            return {RemoteLoadState::Failed,error};
+        }
+        HMODULE kernel=GetModuleHandleW(L"kernel32.dll");
+        FARPROC load=kernel ? GetProcAddress(kernel,"LoadLibraryW") : nullptr;
+        if(!load) {
+            const DWORD error=GetLastError();
+            VirtualFreeEx(process,remotePath,0,MEM_RELEASE); CloseHandle(process);
+            return {RemoteLoadState::Failed,error};
+        }
+        HANDLE thread=CreateRemoteThread(process,nullptr,0,
+            reinterpret_cast<LPTHREAD_START_ROUTINE>(load),remotePath,0,nullptr);
+        if(!thread) {
+            const DWORD error=GetLastError();
+            VirtualFreeEx(process,remotePath,0,MEM_RELEASE); CloseHandle(process);
+            return {RemoteLoadState::Failed,error};
+        }
+
+        const DWORD wait=WaitForSingleObject(thread,timeoutMilliseconds);
+        if(wait!=WAIT_OBJECT_0) {
+            const DWORD waitError=wait==WAIT_FAILED ? GetLastError() : 0;
+            // The remote thread may still read its argument. Never free it until that thread exits.
+            auto cleanup=new RemoteLoadCleanup{process,thread,remotePath};
+            HANDLE worker=CreateThread(nullptr,0,finish_remote_load,cleanup,0,nullptr);
+            if(worker) CloseHandle(worker);
+            else {
+                // If the cleanup worker cannot start, the target owns this small allocation
+                // until it exits. Releasing the argument now would be unsafe.
+                delete cleanup; CloseHandle(thread); CloseHandle(process);
+            }
+            return {RemoteLoadState::TimedOut,waitError};
+        }
+
+        VirtualFreeEx(process,remotePath,0,MEM_RELEASE);
+        CloseHandle(thread);
+        CloseHandle(process);
+        return {RemoteLoadState::Completed,0};
     }
 #pragma managed(pop)
     array<Byte>^ read_common(const lm_process_t* p, UInt64 address, int count) {
@@ -229,6 +303,8 @@ ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_
 }
 ProcessInfo^ ProcessSession::Target::get() {
     ThrowIfDisposed();
+    if(!Libmem::IsProcessAlive(identity_))
+        throw gcnew InvalidOperationException("Target process is no longer alive or its PID was reused.");
     return identity_;
 }
 ProcessInfo^ ProcessSession::Info::get() {
@@ -362,6 +438,9 @@ ModuleInfo^ ModuleManager::Find(String^ name) {
 ModuleInfo^ ModuleManager::Load(String^ path) {
     return Libmem::LoadModule(Target(),path);
 }
+ModuleInfo^ ModuleManager::Load(String^ path,int timeoutMilliseconds) {
+    return Libmem::LoadModule(Target(),path,timeoutMilliseconds);
+}
 bool ModuleManager::Unload(ModuleInfo^ moduleInfo) {
     return Libmem::UnloadModule(Target(),moduleInfo);
 }
@@ -418,6 +497,9 @@ ProcessInfo^ InjectorManager::Target() {
     return session_->Target;
 }
 InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
+    return InjectLibrary(path,10000);
+}
+InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path,int timeoutMilliseconds) {
     if(String::IsNullOrWhiteSpace(path)) throw gcnew ArgumentException("Library path must not be empty.", "path");
 
     auto target=Target();
@@ -435,36 +517,9 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
     if(!System::IO::File::Exists(fullPath))
         throw gcnew System::IO::FileNotFoundException("Library to inject was not found.", fullPath);
 
-    auto nativeTarget=proc(target);
-    auto nativePath=utf8(fullPath);
-
-    // Ask libmem only to perform the LoadLibrary operation. Its module_out lookup is
-    // name/suffix based; resolve the resulting module ourselves by normalized full path
-    // so same-named DLLs from different directories cannot be confused.
-    if(LM_LoadModuleEx(&nativeTarget,nativePath.c_str(),nullptr)==LM_FALSE)
-        throw gcnew LibmemException("LM_LoadModuleEx", "Library injection failed.");
-
-    ModuleInfo^ loaded=nullptr;
-    for each(ModuleInfo^ candidate in Libmem::EnumModules(target)) {
-        if(candidate==nullptr || String::IsNullOrWhiteSpace(candidate->Path)) continue;
-
-        String^ candidatePath;
-        try {
-            candidatePath=System::IO::Path::GetFullPath(candidate->Path);
-        } catch(Exception^) {
-            continue;
-        }
-
-        if(String::Equals(candidatePath,fullPath,StringComparison::OrdinalIgnoreCase)) {
-            loaded=candidate;
-            break;
-        }
-    }
-
+    ModuleInfo^ loaded=Libmem::LoadModule(target,fullPath,timeoutMilliseconds);
     if(loaded==nullptr)
-        throw gcnew LibmemException(
-            "LM_EnumModulesEx",
-            "LoadLibrary completed but the injected module could not be resolved by full path.");
+        throw gcnew LibmemException("LoadLibraryW", "Library injection failed or the loaded module could not be resolved by full path.");
 
     return gcnew InjectedModuleHandle(target,loaded,fullPath);
 }
@@ -475,7 +530,15 @@ List<ProcessInfo^>^ Libmem::EnumProcesses() {
     auto r=gcnew List<ProcessInfo^>(); for(const auto& p : native) r->Add(process(p)); return r;
 }
 ProcessInfo^ Libmem::CurrentProcess() { lm_process_t p{}; return LM_GetProcess(&p) ? process(p) : nullptr; }
-ProcessInfo^ Libmem::GetProcess(UInt32 pid) { lm_process_t p{}; return LM_GetProcessEx(pid,&p) ? process(p) : nullptr; }
+ProcessInfo^ Libmem::GetProcess(UInt32 pid) {
+    // The pinned Windows LM_GetProcessEx mistakenly reads the caller's start time.
+    // Enumeration obtains the target process's actual identity from its own handle.
+    std::vector<lm_process_t> native;
+    if(!LM_EnumProcesses(cb_process,&native)) return nullptr;
+    for(const auto& candidate : native)
+        if(candidate.pid==pid) return process(candidate);
+    return nullptr;
+}
 ProcessInfo^ Libmem::FindProcess(String^ name) { lm_process_t p{}; auto n=utf8(name); return LM_FindProcess(n.c_str(),&p) ? process(p) : nullptr; }
 ProcessSession^ Libmem::Attach(UInt32 pid) {
     auto current=GetProcess(pid);
@@ -537,7 +600,7 @@ ThreadInfo^ Libmem::GetThread(ProcessInfo^ input) { auto p=proc(input); lm_threa
 ProcessInfo^ Libmem::GetThreadProcess(ThreadInfo^ input) {
     if(input==nullptr) throw gcnew ArgumentNullException("thread");
     lm_thread_t t{input->Id,input->OwnerPid}; lm_process_t p{};
-    return LM_GetThreadProcess(&t,&p) ? process(p) : nullptr;
+    return LM_GetThreadProcess(&t,&p) ? GetProcess(p.pid) : nullptr;
 }
 
 List<ModuleInfo^>^ Libmem::EnumModules() {
@@ -553,7 +616,44 @@ List<ModuleInfo^>^ Libmem::EnumModules(ProcessInfo^ input) {
 ModuleInfo^ Libmem::FindModule(String^ name) { lm_module_t m{}; auto n=utf8(name); return LM_FindModule(n.c_str(),&m) ? module(m) : nullptr; }
 ModuleInfo^ Libmem::FindModule(ProcessInfo^ input,String^ name) { auto p=proc(input); lm_module_t m{}; auto n=utf8(name); return LM_FindModuleEx(&p,n.c_str(),&m) ? module(m) : nullptr; }
 ModuleInfo^ Libmem::LoadModule(String^ path) { lm_module_t m{}; auto s=utf8(path); return LM_LoadModule(s.c_str(),&m) ? module(m) : nullptr; }
-ModuleInfo^ Libmem::LoadModule(ProcessInfo^ input,String^ path) { auto p=proc(input); lm_module_t m{}; auto s=utf8(path); return LM_LoadModuleEx(&p,s.c_str(),&m) ? module(m) : nullptr; }
+ModuleInfo^ Libmem::LoadModule(ProcessInfo^ input,String^ path) {
+    return LoadModule(input,path,10000);
+}
+ModuleInfo^ Libmem::LoadModule(ProcessInfo^ input,String^ path,int timeoutMilliseconds) {
+    if(input==nullptr) throw gcnew ArgumentNullException("process");
+    if(String::IsNullOrWhiteSpace(path)) throw gcnew ArgumentException("Library path must not be empty.","path");
+    if(timeoutMilliseconds<=0) throw gcnew ArgumentOutOfRangeException("timeoutMilliseconds");
+    if(input->Bits!=GetBits())
+        throw gcnew NotSupportedException("Cross-bitness library loading is not supported by the current runtime.");
+    if(!IsProcessAlive(input))
+        throw gcnew InvalidOperationException("Target process is no longer alive or its PID was reused.");
+
+    String^ fullPath=System::IO::Path::GetFullPath(path);
+    if(!System::IO::File::Exists(fullPath))
+        throw gcnew System::IO::FileNotFoundException("Library to load was not found.",fullPath);
+
+    pin_ptr<const wchar_t> nativePath=PtrToStringChars(fullPath);
+    auto outcome=remote_load(input->Pid,nativePath,static_cast<DWORD>(timeoutMilliseconds));
+    if(outcome.state==RemoteLoadState::TimedOut)
+        throw gcnew TimeoutException("Remote LoadLibraryW did not complete; the target may still load the library. Do not retry automatically.");
+    if(outcome.state==RemoteLoadState::Failed)
+        throw gcnew LibmemException("LoadLibraryW",String::Format("Remote library loading failed (Win32 error {0}).",outcome.error));
+
+    const Int64 deadline=Environment::TickCount64+500;
+    do {
+        for each(ModuleInfo^ candidate in EnumModules(input)) {
+            if(candidate==nullptr || String::IsNullOrWhiteSpace(candidate->Path)) continue;
+            String^ candidatePath;
+            try { candidatePath=System::IO::Path::GetFullPath(candidate->Path); }
+            catch(Exception^) { continue; }
+            if(String::Equals(candidatePath,fullPath,StringComparison::OrdinalIgnoreCase))
+                return candidate;
+        }
+        if(Environment::TickCount64>=deadline) break;
+        System::Threading::Thread::Sleep(25);
+    } while(true);
+    return nullptr;
+}
 bool Libmem::UnloadModule(ModuleInfo^ input) { auto m=mod(input); return LM_UnloadModule(&m)!=LM_FALSE; }
 bool Libmem::UnloadModule(ProcessInfo^ input,ModuleInfo^ m) { auto p=proc(input); auto native=mod(m); return LM_UnloadModuleEx(&p,&native)!=LM_FALSE; }
 

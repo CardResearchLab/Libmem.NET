@@ -115,6 +115,7 @@ TYPE public ref class ModuleManager sealed
   List<ModuleInfo^>^ Enumerate();
   ModuleInfo^ Find(String^ name);
   ModuleInfo^ Load(String^ path);
+  ModuleInfo^ Load(String^ path, int timeoutMilliseconds);
   bool Unload(ModuleInfo^ module);
 TYPE public ref class InjectedModuleHandle sealed : IDisposable
   property ModuleInfo^ Module { ModuleInfo^ get(); }
@@ -126,6 +127,7 @@ TYPE public ref class InjectedModuleHandle sealed : IDisposable
   !InjectedModuleHandle();
 TYPE public ref class InjectorManager sealed
   InjectedModuleHandle^ InjectLibrary(String^ path);
+  InjectedModuleHandle^ InjectLibrary(String^ path, int timeoutMilliseconds);
 TYPE public ref class HookManager sealed
   HookHandle^ Install(UInt64 source, UInt64 destination);
 TYPE public ref class HookHandle sealed : IDisposable
@@ -170,6 +172,7 @@ TYPE public ref class Libmem abstract sealed
   static ModuleInfo^ FindModule(ProcessInfo^ process, String^ name);
   static ModuleInfo^ LoadModule(String^ path);
   static ModuleInfo^ LoadModule(ProcessInfo^ process, String^ path);
+  static ModuleInfo^ LoadModule(ProcessInfo^ process, String^ path, int timeoutMilliseconds);
   static bool UnloadModule(ModuleInfo^ module);
   static bool UnloadModule(ProcessInfo^ process, ModuleInfo^ module);
   static List<SymbolInfo^>^ EnumSymbols(ModuleInfo^ module, bool demangle);
