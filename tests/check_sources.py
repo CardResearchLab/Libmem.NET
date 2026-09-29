@@ -265,6 +265,24 @@ smoke_project = (root / "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj"
 hook_project = (root / "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj").read_text(encoding="utf-8")
 injector_project = (root / "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj").read_text(encoding="utf-8")
 sample_project = (root / "samples/Example.csproj").read_text(encoding="utf-8")
+sample_source = (root / "samples/Example.cs").read_text(encoding="utf-8")
+for required_sample_api in [
+    "ProcessSession.Open",
+    "session.Modules.Enumerate",
+    "session.Threads.Enumerate",
+    "session.Memory.Allocate",
+    "session.Memory.Write",
+    "session.Memory.Read",
+    "session.Memory.Protect",
+    "session.Scanner.SigScan",
+    "LibmemException",
+]:
+    assert required_sample_api in sample_source, (
+        f"C# consumer sample lost recommended API: {required_sample_api}"
+    )
+assert "Libmem.Attach" not in sample_source
+assert "Hearthstone" not in sample_source
+print("PASS C# consumer sample contract")
 test_target_project = (root / "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj").read_text(encoding="utf-8")
 external_process_project = (root / "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj").read_text(encoding="utf-8")
 
