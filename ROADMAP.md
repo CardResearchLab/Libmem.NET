@@ -56,6 +56,8 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 已完成的收口项：目标进程退出不会隐式 Dispose `ProcessSession`；Session 保留原始身份元数据，`IsAlive()` 返回 false、`Refresh()` 返回 null，Manager 属性保持可访问。为避免外部进程精确身份检查污染读写/扫描热路径，不对所有 Manager 操作追加统一 liveness preflight。
 
+已完成的收口项：`ProcessInfo` 上仅用于早期便捷调用的 `Read / Write / ReadInt32 / WriteInt32 / SigScan` 已移除，仅保留与进程身份直接相关的 `IsAlive()`；Memory / Scan 操作统一归属 `ProcessSession` Managers，静态 `Libmem.*` 兼容层继续保留。
+
 ## v0.4 — x64 架构整理
 
 重点：
