@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added generated `LibmemCli.xml` IntelliSense documentation to x64 builds and runtime packages; MSVC `/doc` output is merged by XDCMake and shipped beside `LibmemCli.dll`.
 - Added an x64 external-process `LibmemCli.TestTarget` plus runtime tests for remote attach, read/write, signature scan, segment lookup, and process-exit observation.
 - Added `ProcessSession.Open(...)` as the preferred object-oriented factory while preserving `Libmem.Attach(...)` for compatibility.
 - Added session-bound `ThreadManager` through `ProcessSession.Threads`, including thread enumeration and main-thread lookup.
