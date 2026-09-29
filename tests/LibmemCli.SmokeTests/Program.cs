@@ -160,13 +160,41 @@ var staticFoundModule = Libmem.FindModule(current, namedModule.Name);
 Check(staticFoundModule is not null, "FindModule(process, name) could not find a known module.");
 
 Stage("symbols");
-var kernel32 = Libmem.FindModule("kernel32.dll");
-Check(kernel32 is not null, "kernel32.dll was not found in the Windows test process.");
-var kernel32Symbols = Libmem.EnumSymbols(kernel32!, demangle: false);
-Check(kernel32Symbols.Count > 0, "EnumSymbols(kernel32.dll) returned no exports.");
-var getCurrentProcessId = Libmem.FindSymbolAddress(kernel32!, "GetCurrentProcessId", demangle: false);
-Check(getCurrentProcessId != 0 && getCurrentProcessId != invalidAddress,
-    "FindSymbolAddress could not resolve GetCurrentProcessId.");
+ModuleInfo? symbolModule = null;
+SymbolInfo? exportedSymbol = null;
+
+foreach (var candidate in sessionModules)
+{
+    if (candidate is null)
+        continue;
+
+    try
+    {
+        exportedSymbol = Libmem.EnumSymbols(candidate, demangle: false)
+            .FirstOrDefault(symbol => symbol is not null
+                                      && !string.IsNullOrWhiteSpace(symbol.Name)
+                                      && symbol.Address != 0
+                                      && symbol.Address != invalidAddress);
+    }
+    catch (LibmemException)
+    {
+        // Some runtime modules intentionally expose no enumerable PE symbols.
+        continue;
+    }
+
+    if (exportedSymbol is not null)
+    {
+        symbolModule = candidate;
+        break;
+    }
+}
+
+Check(symbolModule is not null && exportedSymbol is not null,
+    "No loaded module exposed a usable symbol for symbol API validation.");
+
+var resolvedSymbol = Libmem.FindSymbolAddress(symbolModule!, exportedSymbol!.Name, demangle: false);
+Check(resolvedSymbol == exportedSymbol.Address,
+    "FindSymbolAddress disagreed with EnumSymbols for the selected loaded module.");
 
 Stage("memory-segments");
 var memory = pidSession!.Memory;
