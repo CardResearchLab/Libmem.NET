@@ -276,6 +276,12 @@ At runtime, deploy the following files beside the consuming executable:
 Do not mix outputs from different configurations or commits.
 
 
+## Release pages and release notes
+
+Official releases no longer use GitHub's auto-generated pull-request feed as the primary release body. The release workflow generates **formal Release Notes** from the matching version section in `CHANGELOG.md` plus the verified package manifest, including release highlights, Windows x64 / .NET 8 support, download assets, package contents, SHA-256, repository commit, pinned libmem commit, and documentation links.
+
+A matching version section must exist in `CHANGELOG.md` before publication; the release fails if it is missing, preventing PR/Actions-style placeholder pages.
+
 ## GitHub Actions automation
 
 The repository includes five automation workflows:
