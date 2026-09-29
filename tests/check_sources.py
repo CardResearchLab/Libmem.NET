@@ -12,6 +12,21 @@ source = "\n".join(path.read_text(encoding="utf-8") for path in source_files)
 assert source_files, "No C++ source files were found under src/"
 print("PASS source aggregation:", ", ".join(str(path.relative_to(root)) for path in source_files))
 
+native_converter_header = (root / "src/Interop/NativeConverter.h").read_text(encoding="utf-8")
+native_converter_source = (root / "src/Interop/NativeConverter.cpp").read_text(encoding="utf-8")
+libmem_facade_source = (root / "src/LibmemCli.cpp").read_text(encoding="utf-8")
+assert "namespace LibmemCli::Interop" in native_converter_header
+assert "lm_process_t proc(ProcessInfo^ input)" in native_converter_header
+assert "ProcessInfo^ process(const lm_process_t& value)" in native_converter_header
+assert "lm_address_t native_address(UInt64 value" in native_converter_header
+assert "std::vector<lm_address_t> offsets(array<UInt64>^ input)" in native_converter_header
+assert '#include "Interop/NativeConverter.h"' in libmem_facade_source
+assert "lm_process_t proc(ProcessInfo^ input)" not in libmem_facade_source
+assert "ProcessInfo^ process(const lm_process_t&" not in libmem_facade_source
+assert "lm_address_t native_address(UInt64 value" not in libmem_facade_source
+assert "LM_CALL cb_process" in native_converter_source
+print("PASS NativeConverter extraction contract")
+
 for file in [
     "src/LibmemCli.vcxproj",
     "samples/Example.csproj",
