@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added an unpublished `HearthstoneModding.LibmemCli` x64 NuGet prototype, package-layout verification, and an independent `PackageReference` consumer test covering restore/build/run with native runtime dependencies.
 - Added `docs/API.md` as a consumer-facing behavior reference for the session model, Managers, ownership types, result semantics, exceptions, static compatibility APIs, x64 policy, and pinned-upstream workarounds.
 - Added generated `LibmemCli.xml` IntelliSense documentation to x64 builds and runtime packages; MSVC `/doc` output is merged by XDCMake and shipped beside `LibmemCli.dll`.
 - Added an x64 external-process `LibmemCli.TestTarget` plus runtime tests for remote attach, read/write, remote allocation/protection/free, signature scan, segment lookup, and process-exit observation.
