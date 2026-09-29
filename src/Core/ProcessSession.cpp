@@ -100,8 +100,8 @@ ProcessInfo^ ProcessSession::Refresh() {
     ThrowIfDisposed();
     auto current=Libmem::GetProcess(identity_->Pid);
     if(current==nullptr || current->StartTime!=identity_->StartTime) return nullptr;
-    identity_=current;
-    return process(proc(identity_));
+    identity_=CloneProcessInfo(current);
+    return CloneProcessInfo(identity_);
 }
 RemoteAllocation^ ProcessSession::Allocate(UInt64 size,MemoryProtection protection) {
     ThrowIfDisposed();
