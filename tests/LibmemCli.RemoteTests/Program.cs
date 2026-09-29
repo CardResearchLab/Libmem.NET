@@ -138,7 +138,17 @@ try
         Check(loaded is not null && HasExactModule(session, modulePath),
             "Could not load a DLL before the child main thread was resumed.");
         Check(Win32.ResumeThread(suspended.hThread) != uint.MaxValue, "Could not resume child main thread.");
-        Check(HasExactModule(session, modulePath), "Resuming the child lost the loaded module.");
+        // Module enumeration can briefly fail while the resumed loader initializes.
+        bool stillLoaded = false;
+        var resumeDeadline = Stopwatch.StartNew();
+        while (resumeDeadline.Elapsed < TimeSpan.FromSeconds(5))
+        {
+            try { stillLoaded = HasExactModule(session, modulePath); }
+            catch (LibmemException) { }
+            if (stillLoaded) break;
+            Thread.Sleep(50);
+        }
+        Check(stillLoaded, "Resuming the child lost the loaded module.");
     }
     finally
     {
