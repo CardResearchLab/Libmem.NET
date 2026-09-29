@@ -483,6 +483,10 @@ assert "NuGet Consumer x64" in nuget_consumer_workflow
 assert "HearthstoneModding.LibmemCli.csproj" in nuget_consumer_workflow
 assert "LibmemCli.NuGetConsumer" in nuget_consumer_workflow
 assert "verify_nuget_package.py" in nuget_consumer_workflow
+assert "Publish NuGet consumer" in nuget_consumer_workflow
+assert "Reject non-x64 NuGet consumer" in nuget_consumer_workflow
+assert "LibmemCli.dll" in nuget_consumer_workflow
+assert "Ijwhost.dll" in nuget_consumer_workflow
 assert "nuget.org" not in nuget_consumer_workflow
 assert "setup-dotnet-x86.ps1" not in nuget_consumer_workflow
 assert "needs: [build-x64]" in release_workflow
