@@ -104,6 +104,32 @@ try
           && ready.Address < segment.End,
         "Remote FindSegment did not resolve the TestTarget allocation.");
 
+    using (var remoteAllocation = session.Memory.Allocate(4096, MemoryProtection.ReadWrite))
+    {
+        byte[] remotePayload = [0x52, 0x45, 0x4D, 0x4F, 0x54, 0x45, 0x2D, 0x58, 0x36, 0x34];
+        Check(session.Memory.Write(remoteAllocation.Address, remotePayload) == remotePayload.Length,
+            "Remote allocation Write did not write the full payload.");
+        Check(session.Memory.Read(remoteAllocation.Address, remotePayload.Length).SequenceEqual(remotePayload),
+            "Remote allocation Read returned different bytes.");
+
+        var oldProtection = session.Memory.Protect(
+            remoteAllocation.Address,
+            remoteAllocation.Size,
+            MemoryProtection.Read);
+        try
+        {
+            Check(session.Memory.Read(remoteAllocation.Address, remotePayload.Length).SequenceEqual(remotePayload),
+                "Remote allocation Read failed after Protect.");
+        }
+        finally
+        {
+            session.Memory.Protect(
+                remoteAllocation.Address,
+                remoteAllocation.Size,
+                oldProtection);
+        }
+    }
+
     child.StandardInput.WriteLine("ping");
     child.StandardInput.Flush();
     Check(child.StandardOutput.ReadLine() == "PONG", "TestTarget control channel did not respond to ping.");
