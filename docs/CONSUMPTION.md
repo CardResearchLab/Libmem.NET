@@ -54,7 +54,7 @@ Publication: disabled
 Target: Windows x64 / .NET 8
 ```
 
-The package ID is provisional until the package layout and runtime behavior are accepted. CI also stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
+The package ID is provisional until the package layout and runtime behavior are accepted. Development packages also use a commit-qualified prerelease version such as `0.3.0-dev.<commit>` rather than reusing the already released `0.3.0` version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
 
 ### Prototype package layout
 
