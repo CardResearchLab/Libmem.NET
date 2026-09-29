@@ -10,7 +10,7 @@
 
 LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). **Current development, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
 
-See [ROADMAP.en.md](ROADMAP.en.md) for the current development plan and the [API reference](docs/API.md) for consumer-facing result, exception, and lifetime semantics.
+See [ROADMAP.en.md](ROADMAP.en.md) for the current development plan, the [API reference](docs/API.md) for consumer-facing result/exception/lifetime semantics, and the [consumption guide](docs/CONSUMPTION.md) for ZIP, submodule, and NuGet options.
 
 Except for explicitly documented compatibility waivers, the wrapper covers the public functions in the pinned libmem header through managed models, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
 
@@ -284,6 +284,12 @@ At runtime, deploy the following files beside the consuming executable:
 Do not mix outputs from different configurations or commits.
 
 
+## NuGet prototype
+
+The repository is validating a **Windows x64 / .NET 8 local NuGet prototype** with the provisional package ID `HearthstoneModding.LibmemCli`. The package is generated only in CI and exercised by an independent `PackageReference` consumer. It is **not published to nuget.org and is not currently an official Release asset**.
+
+See [docs/CONSUMPTION.md](docs/CONSUMPTION.md) for the package layout and acceptance criteria. Until restore/build/run/publish behavior is fully accepted, the Release ZIP and Git submodule/reusable-workflow paths remain the stable consumption options.
+
 ## Release pages and release notes
 
 Official releases no longer use GitHub's auto-generated pull-request feed as the primary release body. The release workflow generates **formal Release Notes** from the matching version section in `CHANGELOG.md` plus the verified package manifest, including release highlights, Windows x64 / .NET 8 support, download assets, package contents, SHA-256, repository commit, pinned libmem commit, and documentation links.
@@ -292,7 +298,7 @@ A matching version section must exist in `CHANGELOG.md` before publication; the 
 
 ## GitHub Actions automation
 
-The repository includes six automation workflows:
+The repository includes seven automation workflows:
 
 - \`.github/workflows/build.yml\`: builds and validates Release x64 on pushes to `main`, pull requests, or manual runs, then uploads the `LibmemCli-windows-x64` artifact.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
@@ -300,6 +306,7 @@ The repository includes six automation workflows:
 - \`.github/workflows/hook-vmt-tests.yml\`: runs real Hook / trampoline / VMT lifecycle tests on x64 independently from the base smoke suite.
 - \`.github/workflows/injector-tests.yml\`: independently validates DLL injection, module discovery, explicit Unload, and Dispose lifetime behavior on x64.
 - `.github/workflows/external-process-tests.yml`: launches the repository-owned `LibmemCli.TestTarget` child process and validates real cross-process attach, read/write, remote allocate/protect/free, signature scan, segment lookup, and process-exit observation.
+- `.github/workflows/nuget-consumer-tests.yml`: builds the local `HearthstoneModding.LibmemCli` NuGet prototype and validates pack → restore → build → run through an independent `PackageReference` consumer; it is not published to nuget.org.
 
 You can create the same runtime package locally:
 
