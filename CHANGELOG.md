@@ -12,6 +12,7 @@
 
 ### Changed
 
+- Extracted native/managed conversion, address/size validation, enumeration callbacks, and model translation into an internal `Interop/NativeConverter` boundary.
 - Split the high-level ProcessSession and manager implementations into dedicated Core, Memory, Modules, Threads, Scanning, Symbols, and Assembly source files without changing the public API.
 - Updated source-contract validation to aggregate all C++ implementation files under `src/`, so architectural file splits remain covered by CI.
 - Switched the active development and release strategy to x64-first: Windows x64 is now the default CI, runtime-test, packaging, and official Release target.
