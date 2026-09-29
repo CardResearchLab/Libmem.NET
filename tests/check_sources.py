@@ -192,6 +192,11 @@ assert 'LibmemException("LM_AssembleEx"' in assembly_manager_source
 assert 'LibmemException("LM_CodeLengthEx"' in assembly_manager_source
 print("PASS strict manager failure mapping contract")
 
+process_compat_source = (root / "src/Core/LibmemProcess.cpp").read_text(encoding="utf-8")
+assert "get_process_start_time(GetCurrentProcess())" in process_compat_source
+assert "p.start_time=match->start_time" in process_compat_source
+print("PASS pinned LM_GetProcessEx start-time compatibility contract")
+
 assert "ThreadManager^ ProcessSession::Threads::get()" in source
 assert "ScanManager^ ProcessSession::Scanner::get()" in source
 assert "SymbolManager^ ProcessSession::Symbols::get()" in source
@@ -303,6 +308,8 @@ for required_call in [
     "Libmem.FindSegment",
     "session.IsAlive",
     "session.Refresh",
+    "ProcessSession.Open(ready.Pid)",
+    "Libmem.EnumProcesses",
 ]:
     assert required_call in external_process_test_source, (
         f"External-process runtime coverage lost required call: {required_call}"
