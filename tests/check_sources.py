@@ -150,9 +150,12 @@ for operation in [
     "LM_EnumThreadsEx",
     "LM_EnumModulesEx",
     "LM_ProtMemoryEx",
+    "LM_AllocMemoryEx",
     "LM_FreeMemoryEx",
     "LM_UnloadModuleEx",
     "LM_LoadModuleEx",
+    "LM_AssembleEx",
+    "LM_CodeLengthEx",
 ]:
     assert re.search(
         r'LibmemException\(\s*"' + re.escape(operation) + r'"',
