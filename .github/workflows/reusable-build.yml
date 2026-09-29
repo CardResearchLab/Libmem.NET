@@ -14,7 +14,7 @@ on:
         default: Release
         type: string
       platform:
-        description: Target platform (x64 or x86)
+        description: Target platform (x64 is the supported release target; x86 is compatibility/manual only)
         required: false
         default: x64
         type: string
