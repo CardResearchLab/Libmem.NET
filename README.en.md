@@ -140,7 +140,7 @@ foreach (var module in modules.Enumerate())
 var unity = modules.Find("UnityPlayer.dll");
 ```
 
-It currently provides `Enumerate / Find / Load / Unload`. Like `MemoryManager`, it follows the ProcessSession lifetime and rejects operations after Detach.
+It currently provides `Enumerate / Find / Load / Unload`. Like `MemoryManager`, it follows the ProcessSession lifetime and rejects operations after Detach. `Find` still returns `null` for a normal miss, while a definite native `Load` failure throws `LibmemException`.
 
 ### ThreadManager
 
@@ -188,7 +188,7 @@ var remote = target.Assembly.Disassemble(address, 32, 4, address);
 var length = target.Assembly.CodeLength(address, 5);
 ```
 
-The address-based `Disassemble` overload first reads bytes through the current session and then disassembles those bytes using the target architecture, so a remote address is never treated as a local pointer. Existing static assembly/disassembly APIs remain compatibility entry points.
+The address-based `Disassemble` overload first reads bytes through the current session and then disassembles those bytes using the target architecture, so a remote address is never treated as a local pointer. At the Manager layer, definite `Assemble` failures and failed non-zero `CodeLength` queries throw `LibmemException`; existing static assembly/disassembly APIs remain compatibility entry points.
 
 ### Injector
 
@@ -225,23 +225,21 @@ Console.WriteLine($"source=0x{hook.Source:X} destination=0x{hook.Destination:X} 
 ```csharp
 var memory = target.Memory;
 
-using var buffer = memory.Allocate(4096, MemoryProtection.ReadWrite)
-    ?? throw new InvalidOperationException("Allocation failed");
+using var buffer = memory.Allocate(4096, MemoryProtection.ReadWrite);
 
 memory.Write(buffer.Address, payload);
 var copy = memory.Read(buffer.Address, payload.Length);
 var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
 ```
 
-Its core responsibility is now Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free. The existing DeepPointer / DataScan / PatternScan / SigScan methods remain for compatibility, while new code should prefer `ProcessSession.Scanner`. It is bound to the `ProcessSession` lifetime; calls after the session is detached throw `ObjectDisposedException`.
+Its core responsibility is now Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free. The existing DeepPointer / DataScan / PatternScan / SigScan methods remain for compatibility, while new code should prefer `ProcessSession.Scanner`. It is bound to the `ProcessSession` lifetime; calls after the session is detached throw `ObjectDisposedException`. Manager operations such as `Allocate` that can identify a definite native failure throw `LibmemException` with the corresponding `Operation` instead of silently returning a failed address.
 
 ### RemoteAllocation
 
 `ProcessSession.Allocate(...)` now returns a disposable `RemoteAllocation`, making ownership of target-process memory explicit:
 
 ```csharp
-using var memory = target.Allocate(4096, MemoryProtection.ReadWrite)
-    ?? throw new InvalidOperationException("Allocation failed");
+using var memory = target.Allocate(4096, MemoryProtection.ReadWrite);
 
 Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
 ```

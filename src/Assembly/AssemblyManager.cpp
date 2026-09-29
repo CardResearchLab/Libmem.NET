@@ -15,7 +15,10 @@ LibmemCli::Architecture AssemblyManager::Architecture::get() {
 }
 array<Byte>^ AssemblyManager::Assemble(String^ code,UInt64 runtimeAddress) {
     auto target=Target();
-    return Libmem::Assemble(code,target->Architecture,runtimeAddress);
+    auto payload=Libmem::Assemble(code,target->Architecture,runtimeAddress);
+    if(payload==nullptr)
+        throw gcnew LibmemException("LM_AssembleEx", "Failed to assemble code for the target architecture.");
+    return payload;
 }
 List<InstructionInfo^>^ AssemblyManager::Disassemble(array<Byte>^ code,UInt64 instructionCount,UInt64 runtimeAddress) {
     auto target=Target();
@@ -30,5 +33,8 @@ List<InstructionInfo^>^ AssemblyManager::Disassemble(UInt64 address,UInt64 maxBy
     return Libmem::Disassemble(bytes,target->Architecture,instructionCount,runtimeAddress);
 }
 UInt64 AssemblyManager::CodeLength(UInt64 address,UInt64 minimumLength) {
-    return Libmem::CodeLength(Target(),address,minimumLength);
+    auto length=Libmem::CodeLength(Target(),address,minimumLength);
+    if(minimumLength>0 && length==0)
+        throw gcnew LibmemException("LM_CodeLengthEx", "Failed to calculate code length in the target process.");
+    return length;
 }

@@ -224,6 +224,20 @@ Check(staticModules.Count > 0, "EnumModules(process) returned no modules.");
 var staticFoundModule = Libmem.FindModule(current, namedModule.Name);
 Check(staticFoundModule is not null, "FindModule(process, name) could not find a known module.");
 
+var moduleLoadFailureMapped = false;
+try
+{
+    _ = moduleManager.Load(System.IO.Path.Combine(
+        System.IO.Path.GetTempPath(),
+        $"libmemcli-missing-{Guid.NewGuid():N}.dll"));
+}
+catch (LibmemException ex) when (ex.Operation == "LM_LoadModuleEx")
+{
+    moduleLoadFailureMapped = true;
+}
+Check(moduleLoadFailureMapped,
+    "ModuleManager.Load should map a definite native load failure to LibmemException.");
+
 Stage("symbols");
 ModuleInfo? symbolModule = null;
 SymbolInfo? exportedSymbol = null;
@@ -417,6 +431,18 @@ try
 
     var machineCode = assembly.Assemble("nop; ret", 0x1000);
     Check(machineCode is { Length: > 0 }, "AssemblyManager.Assemble returned no machine code.");
+
+    var assemblyFailureMapped = false;
+    try
+    {
+        _ = assembly.Assemble("definitely_not_a_valid_instruction %%%", 0x1000);
+    }
+    catch (LibmemException ex) when (ex.Operation == "LM_AssembleEx")
+    {
+        assemblyFailureMapped = true;
+    }
+    Check(assemblyFailureMapped,
+        "AssemblyManager.Assemble should map a definite native assembly failure to LibmemException.");
 
     var instructions = assembly.Disassemble(machineCode!, 2, 0x1000);
     Check(instructions.Count > 0, "AssemblyManager.Disassemble(byte[]) returned no instructions.");

@@ -140,7 +140,7 @@ foreach (var module in modules.Enumerate())
 var unity = modules.Find("UnityPlayer.dll");
 ```
 
-当前提供 `Enumerate / Find / Load / Unload`。它和 `MemoryManager` 一样遵循 Session 生命周期，Detach 后不可继续操作。
+当前提供 `Enumerate / Find / Load / Unload`。它和 `MemoryManager` 一样遵循 Session 生命周期，Detach 后不可继续操作。`Find` 未找到仍返回 `null`，而 `Load` 的明确原生失败会抛出 `LibmemException`。
 
 ### ThreadManager
 
@@ -188,7 +188,7 @@ var remote = target.Assembly.Disassemble(address, 32, 4, address);
 var length = target.Assembly.CodeLength(address, 5);
 ```
 
-地址版 `Disassemble` 会先通过当前 Session 从目标进程读取字节，再按目标架构进行反汇编，因此不会把远程地址直接当成本地指针使用。原有静态 Assembly / Disassembly API 继续作为兼容入口保留。
+地址版 `Disassemble` 会先通过当前 Session 从目标进程读取字节，再按目标架构进行反汇编，因此不会把远程地址直接当成本地指针使用。Manager 层的 `Assemble` 和非零最小长度的 `CodeLength` 在能够明确判断原生失败时会抛出 `LibmemException`；原有静态 Assembly / Disassembly API 继续作为兼容入口保留。
 
 ### Injector
 
@@ -225,23 +225,21 @@ Console.WriteLine($"source=0x{hook.Source:X} destination=0x{hook.Destination:X} 
 ```csharp
 var memory = target.Memory;
 
-using var buffer = memory.Allocate(4096, MemoryProtection.ReadWrite)
-    ?? throw new InvalidOperationException("Allocation failed");
+using var buffer = memory.Allocate(4096, MemoryProtection.ReadWrite);
 
 memory.Write(buffer.Address, payload);
 var copy = memory.Read(buffer.Address, payload.Length);
 var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
 ```
 
-当前核心职责是 Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free。原有 DeepPointer / DataScan / PatternScan / SigScan 仍保留为兼容 API，新代码应优先使用 `ProcessSession.Scanner`。Manager 与 `ProcessSession` 生命周期绑定；Session Detach 后继续调用会抛出 `ObjectDisposedException`。
+当前核心职责是 Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free。原有 DeepPointer / DataScan / PatternScan / SigScan 仍保留为兼容 API，新代码应优先使用 `ProcessSession.Scanner`。Manager 与 `ProcessSession` 生命周期绑定；Session Detach 后继续调用会抛出 `ObjectDisposedException`。对于 `Allocate` 这类能够明确判断为原生操作失败的 Manager 调用，会抛出带有对应 `Operation` 的 `LibmemException`，而不是静默返回失败地址。
 
 ### RemoteAllocation
 
 `ProcessSession.Allocate(...)` 现在返回可释放的 `RemoteAllocation`，用于明确表示“这块目标进程内存由当前对象拥有”：
 
 ```csharp
-using var memory = target.Allocate(4096, MemoryProtection.ReadWrite)
-    ?? throw new InvalidOperationException("Allocation failed");
+using var memory = target.Allocate(4096, MemoryProtection.ReadWrite);
 
 Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
 ```

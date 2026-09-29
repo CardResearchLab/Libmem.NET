@@ -43,7 +43,8 @@ RemoteAllocation^ MemoryManager::Allocate(UInt64 size,MemoryProtection protectio
     auto target=Target();
     if(!Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
     auto address=Libmem::AllocateMemory(target,size,protection);
-    if(address==0 || IsBadAddress(address)) return nullptr;
+    if(address==0 || IsBadAddress(address))
+        throw gcnew LibmemException("LM_AllocMemoryEx", "Failed to allocate memory in the target process.");
     return gcnew RemoteAllocation(target,address,size);
 }
 bool MemoryManager::Free(UInt64 address,UInt64 size) {

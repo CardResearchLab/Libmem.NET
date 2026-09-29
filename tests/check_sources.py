@@ -168,15 +168,27 @@ for operation in [
     "LM_EnumThreadsEx",
     "LM_EnumModulesEx",
     "LM_ProtMemoryEx",
+    "LM_AllocMemoryEx",
     "LM_FreeMemoryEx",
     "LM_UnloadModuleEx",
     "LM_LoadModuleEx",
+    "LM_AssembleEx",
+    "LM_CodeLengthEx",
 ]:
     assert re.search(
         r'LibmemException\(\s*"' + re.escape(operation) + r'"',
         source,
     ), f"{operation} is not mapped to LibmemException"
 print("PASS LibmemException core error mapping")
+
+memory_manager_source = (root / "src/Memory/MemoryManager.cpp").read_text(encoding="utf-8")
+module_manager_source = (root / "src/Modules/ModuleManager.cpp").read_text(encoding="utf-8")
+assembly_manager_source = (root / "src/Assembly/AssemblyManager.cpp").read_text(encoding="utf-8")
+assert 'LibmemException("LM_AllocMemoryEx"' in memory_manager_source
+assert 'LibmemException("LM_LoadModuleEx"' in module_manager_source
+assert 'LibmemException("LM_AssembleEx"' in assembly_manager_source
+assert 'LibmemException("LM_CodeLengthEx"' in assembly_manager_source
+print("PASS strict manager failure mapping contract")
 
 assert "ThreadManager^ ProcessSession::Threads::get()" in source
 assert "ScanManager^ ProcessSession::Scanner::get()" in source

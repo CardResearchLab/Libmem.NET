@@ -17,7 +17,10 @@ ModuleInfo^ ModuleManager::Find(String^ name) {
     return Libmem::FindModule(Target(),name);
 }
 ModuleInfo^ ModuleManager::Load(String^ path) {
-    return Libmem::LoadModule(Target(),path);
+    auto loaded=Libmem::LoadModule(Target(),path);
+    if(loaded==nullptr)
+        throw gcnew LibmemException("LM_LoadModuleEx", "Failed to load module into the target process.");
+    return loaded;
 }
 bool ModuleManager::Unload(ModuleInfo^ moduleInfo) {
     return Libmem::UnloadModule(Target(),moduleInfo);
