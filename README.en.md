@@ -167,7 +167,7 @@ var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
 var resolved = target.Scanner.DeepPointer(baseAddress, offsets);
 ```
 
-`ScanManager` currently exposes `DeepPointer / DataScan / PatternScan / SigScan`. The existing methods on `MemoryManager` remain as v0.x compatibility APIs during the migration.
+`ScanManager` exposes `DeepPointer / DataScan / PatternScan / SigScan` as the canonical session-bound scanning surface. The temporary v0.x forwarding aliases on `MemoryManager` were removed before the v1.0 API freeze; the static `Libmem.*` compatibility facade remains.
 
 ### SymbolManager
 
