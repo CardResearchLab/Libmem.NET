@@ -233,7 +233,7 @@ var copy = memory.Read(buffer.Address, payload.Length);
 var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
 ```
 
-当前核心职责是 Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free。原有 DeepPointer / DataScan / PatternScan / SigScan 仍保留为兼容 API，新代码应优先使用 `ProcessSession.Scanner`。Manager 与 `ProcessSession` 生命周期绑定；Session Detach 后继续调用会抛出 `ObjectDisposedException`。对于 `Allocate` 这类能够明确判断为原生操作失败的 Manager 调用，会抛出带有对应 `Operation` 的 `LibmemException`，而不是静默返回失败地址。
+当前核心职责是 Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free。DeepPointer / DataScan / PatternScan / SigScan 统一由 `ProcessSession.Scanner` 提供。Manager 与 `ProcessSession` 生命周期绑定；Session Detach 后继续调用会抛出 `ObjectDisposedException`。对于 `Allocate` 这类能够明确判断为原生操作失败的 Manager 调用，会抛出带有对应 `Operation` 的 `LibmemException`，而不是静默返回失败地址。
 
 ### RemoteAllocation
 
