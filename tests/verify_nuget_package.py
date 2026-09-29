@@ -40,6 +40,8 @@ def main() -> int:
             "runtimes/win-x64/native/Ijwhost.dll",
             "buildTransitive/HearthstoneModding.LibmemCli.targets",
             "README.md",
+            "LICENSE",
+            "THIRD_PARTY_NOTICES.md",
         }
         missing = sorted(required - names)
         if missing:
