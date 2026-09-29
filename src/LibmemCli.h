@@ -4,6 +4,7 @@ using namespace System;
 using namespace System::Collections::Generic;
 
 namespace LibmemCli {
+    /// <summary>CPU architectures exposed by the pinned libmem ABI.</summary>
     public enum class Architecture : unsigned int {
         Generic = LM_ARCH_GENERIC,
         ArmV7 = LM_ARCH_ARMV7, ArmV8 = LM_ARCH_ARMV8,
@@ -20,6 +21,7 @@ namespace LibmemCli {
         SparcLittleEndian = LM_ARCH_SPARCEL, SystemZ = LM_ARCH_SYSZ
     };
 
+    /// <summary>Memory protection flags used by allocation and protection APIs.</summary>
     [Flags] public enum class MemoryProtection : unsigned int {
         None = LM_PROT_NONE, Read = LM_PROT_R, Write = LM_PROT_W,
         Execute = LM_PROT_X, ReadWrite = LM_PROT_RW,
@@ -27,17 +29,20 @@ namespace LibmemCli {
         ExecuteReadWrite = LM_PROT_XRW
     };
 
-    // Represents a definite failure reported while executing a native libmem operation.
-    // Not-found and sentinel-return APIs keep their native-style result semantics.
+    /// <summary>Represents a definite failure reported by a native libmem operation.</summary>
+    /// <remarks>Normal not-found and sentinel results keep their native-style return semantics.</remarks>
     public ref class LibmemException : InvalidOperationException {
     private:
         String^ operation_;
     public:
         LibmemException(String^ operation, String^ message);
         LibmemException(String^ operation, String^ message, Exception^ innerException);
+        /// <summary>Gets the native libmem operation name associated with the failure.</summary>
         property String^ Operation { String^ get(); }
     };
 
+    /// <summary>Managed description of one native process identity.</summary>
+    /// <remarks>Process identity-sensitive APIs also use StartTime to reject PID reuse.</remarks>
     public ref class ProcessInfo sealed {
     public:
         property UInt32 Pid;
@@ -47,18 +52,25 @@ namespace LibmemCli {
         property UInt64 StartTime;
         property String^ Name;
         property String^ Path;
+        /// <summary>Checks whether this exact process identity is still alive.</summary>
         bool IsAlive();
+        /// <summary>Reads up to count bytes from this process.</summary>
+        /// <returns>Only the bytes actually read; the array can be shorter than count.</returns>
         array<Byte>^ Read(UInt64 address, int count);
+        /// <summary>Writes data to this process.</summary>
+        /// <returns>The number of bytes actually written.</returns>
         int Write(UInt64 address, array<Byte>^ data);
         Int32 ReadInt32(UInt64 address);
         void WriteInt32(UInt64 address, Int32 value);
         UInt64 SigScan(String^ signature, UInt64 address, UInt64 size);
     };
+    /// <summary>Managed description of a native thread.</summary>
     public ref class ThreadInfo sealed {
     public:
         property UInt32 Id;
         property UInt32 OwnerPid;
     };
+    /// <summary>Managed description of a loaded native module.</summary>
     public ref class ModuleInfo sealed {
     public:
         property UInt64 Base;
@@ -67,11 +79,13 @@ namespace LibmemCli {
         property String^ Name;
         property String^ Path;
     };
+    /// <summary>Managed description of a native symbol and its resolved address.</summary>
     public ref class SymbolInfo sealed {
     public:
         property UInt64 Address;
         property String^ Name;
     };
+    /// <summary>Managed description of a virtual-memory segment.</summary>
     public ref class SegmentInfo sealed {
     public:
         property UInt64 Base;
@@ -79,6 +93,7 @@ namespace LibmemCli {
         property UInt64 Size;
         property MemoryProtection Protection;
     };
+    /// <summary>Managed representation of one assembled or disassembled instruction.</summary>
     public ref class InstructionInfo sealed {
     public:
         property UInt64 Address;
@@ -88,8 +103,8 @@ namespace LibmemCli {
         property String^ OperandString;
     };
 
-    // RemoteAllocation owns one allocation in a target process.
-    // Explicit disposal deterministically frees it or surfaces failure; finalization never touches process memory.
+    /// <summary>Owns one allocation in a target process.</summary>
+    /// <remarks>Explicit disposal deterministically frees the allocation or surfaces failure. Finalization never modifies target-process memory.</remarks>
     public ref class RemoteAllocation sealed : IDisposable {
     private:
         ProcessInfo^ target_;
@@ -99,9 +114,14 @@ namespace LibmemCli {
     internal:
         RemoteAllocation(ProcessInfo^ process, UInt64 address, UInt64 size);
     public:
+        /// <summary>Gets the base address of the owned allocation.</summary>
         property UInt64 Address { UInt64 get(); }
+        /// <summary>Gets the allocation size in bytes.</summary>
         property UInt64 Size { UInt64 get(); }
+        /// <summary>Gets whether the managed ownership lifetime has ended.</summary>
         property bool IsDisposed { bool get(); }
+        /// <summary>Attempts to release the owned allocation.</summary>
+        /// <returns>true when the allocation is released or the target address space no longer exists.</returns>
         bool Free();
         ~RemoteAllocation();
         !RemoteAllocation();
@@ -118,8 +138,8 @@ namespace LibmemCli {
     ref class InjectorManager;
     ref class InjectedModuleHandle;
 
-    // ProcessSession represents an attachment to one concrete process identity (PID + start time).
-    // It does not own an OS process handle; it provides a stable lifetime boundary for higher-level APIs.
+    /// <summary>Represents a managed attachment to one concrete process identity.</summary>
+    /// <remarks>The session binds PID and process start time. It does not own a Windows process handle; it provides a stable lifetime and aggregation root for subsystem APIs.</remarks>
     public ref class ProcessSession sealed : IDisposable {
     private:
         ProcessInfo^ identity_;
@@ -137,9 +157,14 @@ namespace LibmemCli {
         ProcessSession(ProcessInfo^ process);
         property ProcessInfo^ Target { ProcessInfo^ get(); }
     public:
-        // Preferred factory for new code. Libmem.Attach remains available as a compatibility facade.
+        /// <summary>Opens a session for a process ID.</summary>
+        /// <returns>A session for the current process identity, or null if the process cannot be resolved.</returns>
         static ProcessSession^ Open(UInt32 pid);
+        /// <summary>Opens a session for the first process matching name.</summary>
+        /// <returns>A session, or null when no matching process is found.</returns>
         static ProcessSession^ Open(String^ name);
+        /// <summary>Opens a session only if the supplied process identity still matches PID and start time.</summary>
+        /// <returns>A session, or null when the identity is stale.</returns>
         static ProcessSession^ Open(ProcessInfo^ process);
         property ProcessInfo^ Info { ProcessInfo^ get(); }
         property UInt32 Pid { UInt32 get(); }
@@ -155,14 +180,20 @@ namespace LibmemCli {
         property HookManager^ Hooks { HookManager^ get(); }
         property InjectorManager^ Injector { InjectorManager^ get(); }
         property bool IsDisposed { bool get(); }
+        /// <summary>Checks whether the exact attached process identity is still alive.</summary>
         bool IsAlive();
+        /// <summary>Refreshes the process metadata without accepting PID reuse.</summary>
+        /// <returns>Updated process information, or null if the original process identity no longer exists.</returns>
         ProcessInfo^ Refresh();
+        /// <summary>Allocates owned memory in the target process.</summary>
+        /// <exception cref="LibmemException">Thrown when the native allocation definitely fails.</exception>
         RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);
+        /// <summary>Ends the session lifetime. Existing independently-owned resource handles keep their own lifetime.</summary>
         void Detach();
         ~ProcessSession();
     };
 
-    // Session-bound memory operations. All calls target the exact process identity held by ProcessSession.
+    /// <summary>Session-bound target-process memory operations.</summary>
     public ref class MemoryManager sealed {
     private:
         ProcessSession^ session_;
@@ -170,22 +201,32 @@ namespace LibmemCli {
     internal:
         MemoryManager(ProcessSession^ session);
     public:
+        /// <summary>Reads up to count bytes from the target process.</summary>
+        /// <returns>Only the bytes actually read.</returns>
         array<Byte>^ Read(UInt64 address, int count);
+        /// <summary>Writes bytes to the target process.</summary>
+        /// <returns>The number of bytes actually written.</returns>
         int Write(UInt64 address, array<Byte>^ data);
         Int32 ReadInt32(UInt64 address);
         void WriteInt32(UInt64 address, Int32 value);
         UInt64 Set(UInt64 address, Byte value, UInt64 size);
+        /// <summary>Changes target-process memory protection and returns the previous protection.</summary>
         MemoryProtection Protect(UInt64 address, UInt64 size, MemoryProtection protection);
+        /// <summary>Allocates memory in the target process and returns an owning handle.</summary>
+        /// <exception cref="LibmemException">Thrown when LM_AllocMemoryEx reports failure.</exception>
         RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);
+        /// <summary>Releases a target-process allocation described by address and size.</summary>
         bool Free(UInt64 address, UInt64 size);
         UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
         UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
         UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
+        /// <summary>Scans the target process for a textual signature.</summary>
+        /// <returns>The matching address, or the libmem bad-address sentinel when no match is found.</returns>
         UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
     };
 
-    // Session-bound scan and pointer-resolution operations.
-    // MemoryManager keeps compatibility forwarding methods for the v0.x API surface.
+    /// <summary>Session-bound pointer-resolution and memory scanning operations.</summary>
+    /// <remarks>MemoryManager retains compatibility forwarding methods during the v0.x migration.</remarks>
     public ref class ScanManager sealed {
     private:
         ProcessSession^ session_;
@@ -199,7 +240,7 @@ namespace LibmemCli {
         UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
     };
 
-    // Session-bound symbol operations. ModuleInfo remains a value object and does not own symbol behavior.
+    /// <summary>Session-bound symbol enumeration, lookup, and demangling operations.</summary>
     public ref class SymbolManager sealed {
     private:
         ProcessSession^ session_;
@@ -212,8 +253,8 @@ namespace LibmemCli {
         String^ Demangle(String^ name);
     };
 
-    // Session-bound assembler/disassembler operations.
-    // Architecture defaults to the target process architecture.
+    /// <summary>Session-bound assembly, disassembly, and code-length operations.</summary>
+    /// <remarks>Operations default to the target process architecture.</remarks>
     public ref class AssemblyManager sealed {
     private:
         ProcessSession^ session_;
@@ -222,13 +263,17 @@ namespace LibmemCli {
         AssemblyManager(ProcessSession^ session);
     public:
         property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+        /// <summary>Assembles source text for the target architecture.</summary>
+        /// <exception cref="LibmemException">Thrown when LM_AssembleEx reports failure.</exception>
         array<Byte>^ Assemble(String^ code, UInt64 runtimeAddress);
         List<InstructionInfo^>^ Disassemble(array<Byte>^ code, UInt64 instructionCount, UInt64 runtimeAddress);
         List<InstructionInfo^>^ Disassemble(UInt64 address, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
+        /// <summary>Calculates the amount of target code required to cover at least minimumLength bytes.</summary>
+        /// <exception cref="LibmemException">Thrown when a non-zero query fails.</exception>
         UInt64 CodeLength(UInt64 address, UInt64 minimumLength);
     };
 
-    // Session-bound module operations for one concrete target process.
+    /// <summary>Session-bound module enumeration, lookup, load, and unload operations.</summary>
     public ref class ModuleManager sealed {
     private:
         ProcessSession^ session_;
@@ -237,12 +282,17 @@ namespace LibmemCli {
         ModuleManager(ProcessSession^ session);
     public:
         List<ModuleInfo^>^ Enumerate();
+        /// <summary>Finds a loaded module by name.</summary>
+        /// <returns>The module, or null for a normal miss.</returns>
         ModuleInfo^ Find(String^ name);
+        /// <summary>Loads a module into the target process.</summary>
+        /// <exception cref="LibmemException">Thrown when LM_LoadModuleEx reports failure.</exception>
         ModuleInfo^ Load(String^ path);
+        /// <summary>Requests unload of a module from the target process.</summary>
         bool Unload(ModuleInfo^ module);
     };
 
-    // Session-bound thread operations for one concrete target process.
+    /// <summary>Session-bound thread enumeration and main-thread lookup.</summary>
     public ref class ThreadManager sealed {
     private:
         ProcessSession^ session_;
@@ -254,8 +304,8 @@ namespace LibmemCli {
         property ThreadInfo^ Main { ThreadInfo^ get(); }
     };
 
-    // One owned LoadLibrary reference in the target process.
-    // Explicit disposal releases it or surfaces failure; finalization never changes the target process.
+    /// <summary>Owns one LoadLibrary reference created in the target process.</summary>
+    /// <remarks>Explicit disposal releases the owned reference or surfaces failure. Finalization never calls into the target process.</remarks>
     public ref class InjectedModuleHandle sealed : IDisposable {
     private:
         ProcessInfo^ target_;
@@ -270,12 +320,13 @@ namespace LibmemCli {
         property String^ RequestedPath { String^ get(); }
         property bool IsActive { bool get(); }
         property bool IsDisposed { bool get(); }
+        /// <summary>Attempts to release the load reference owned by this handle.</summary>
         bool Unload();
         ~InjectedModuleHandle();
         !InjectedModuleHandle();
     };
 
-    // Higher-level injection API. ModuleManager.Load remains the low-level direct wrapper.
+    /// <summary>Higher-level DLL injection API with explicit ownership semantics.</summary>
     public ref class InjectorManager sealed {
     private:
         ProcessSession^ session_;
@@ -283,10 +334,13 @@ namespace LibmemCli {
     internal:
         InjectorManager(ProcessSession^ session);
     public:
+        /// <summary>Injects a native library into the target process and returns an owning module handle.</summary>
+        /// <exception cref="NotSupportedException">Thrown for cross-bitness injection.</exception>
+        /// <exception cref="LibmemException">Thrown when injection or post-load module resolution fails.</exception>
         InjectedModuleHandle^ InjectLibrary(String^ path);
     };
 
-    // Session-bound hook installation. Returned HookHandle objects own their own hook lifetime.
+    /// <summary>Session-bound native code hook installation.</summary>
     public ref class HookManager sealed {
     private:
         ProcessSession^ session_;
@@ -294,10 +348,13 @@ namespace LibmemCli {
     internal:
         HookManager(ProcessSession^ session);
     public:
+        /// <summary>Installs a hook in the target process.</summary>
+        /// <exception cref="LibmemException">Thrown when LM_HookCodeEx reports failure.</exception>
         HookHandle^ Install(UInt64 source, UInt64 destination);
     };
 
-    // HookHandle owns a native trampoline. Explicit disposal restores the original code.
+    /// <summary>Owns one installed native hook and its trampoline.</summary>
+    /// <remarks>Explicit disposal restores original code. Finalization never patches target-process code.</remarks>
     public ref class HookHandle sealed : IDisposable {
     private:
         ProcessInfo^ target_;
@@ -313,12 +370,14 @@ namespace LibmemCli {
         property UInt64 PatchedBytes { UInt64 get(); }
         property bool IsInstalled { bool get(); }
         property bool IsDisposed { bool get(); }
+        /// <summary>Attempts to restore the original code and release the installed hook.</summary>
         bool Remove();
         ~HookHandle();
         !HookHandle();
     };
 
-    // Local process only. The VMT and its code must remain valid throughout this object's lifetime.
+    /// <summary>Owns local-process VMT hook bookkeeping.</summary>
+    /// <remarks>The target VMT and replacement code must remain valid for this object's lifetime. VMT operations are local-process only.</remarks>
     public ref class VmtManager sealed : IDisposable {
     private:
         lm_vmt_t* native_;
@@ -335,6 +394,8 @@ namespace LibmemCli {
         !VmtManager();
     };
 
+    /// <summary>Low-level static compatibility facade over the pinned libmem C ABI.</summary>
+    /// <remarks>New code should prefer ProcessSession and its subsystem managers when target binding or ownership semantics matter.</remarks>
     public ref class Libmem abstract sealed {
     public:
         // Process
@@ -342,7 +403,8 @@ namespace LibmemCli {
         static ProcessInfo^ CurrentProcess();
         static ProcessInfo^ GetProcess(UInt32 pid);
         static ProcessInfo^ FindProcess(String^ name);
-        // Attach creates a long-lived process context bound to PID + start time.
+        /// <summary>Creates a session bound to PID and process start time.</summary>
+        /// <returns>A session, or null when the process cannot be resolved.</returns>
         static ProcessSession^ Attach(UInt32 pid);
         static ProcessSession^ Attach(String^ name);
         static ProcessSession^ Attach(ProcessInfo^ process);
@@ -374,9 +436,12 @@ namespace LibmemCli {
         static List<SegmentInfo^>^ EnumSegments(ProcessInfo^ process);
         static SegmentInfo^ FindSegment(UInt64 address);
         static SegmentInfo^ FindSegment(ProcessInfo^ process, UInt64 address);
-        // Memory. Read returns only bytes actually read; short writes return their actual byte count.
+        /// <summary>Reads memory from the current process.</summary>
+        /// <returns>Only the bytes actually read.</returns>
         static array<Byte>^ ReadMemory(UInt64 source, int count);
         static array<Byte>^ ReadMemory(ProcessInfo^ process, UInt64 source, int count);
+        /// <summary>Writes memory in the current process.</summary>
+        /// <returns>The number of bytes actually written.</returns>
         static int WriteMemory(UInt64 address, array<Byte>^ data);
         static int WriteMemory(ProcessInfo^ process, UInt64 address, array<Byte>^ data);
         static UInt64 SetMemory(UInt64 address, Byte value, UInt64 size);
@@ -389,7 +454,8 @@ namespace LibmemCli {
         static bool FreeMemory(ProcessInfo^ process, UInt64 address, UInt64 size);
         static UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
         static UInt64 DeepPointer(ProcessInfo^ process, UInt64 baseAddress, array<UInt64>^ offsets);
-        // Scan. Libmem uses UINTPTR_MAX to indicate an address was not found.
+        /// <summary>Scans current-process memory for an exact byte sequence.</summary>
+        /// <returns>The matching address, or the libmem bad-address sentinel when no match is found.</returns>
         static UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
         static UInt64 DataScan(ProcessInfo^ process, array<Byte>^ data, UInt64 address, UInt64 scanSize);
         static UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
@@ -405,7 +471,8 @@ namespace LibmemCli {
         static List<InstructionInfo^>^ Disassemble(array<Byte>^ code, LibmemCli::Architecture architecture, UInt64 instructionCount, UInt64 runtimeAddress);
         static UInt64 CodeLength(UInt64 codeAddress, UInt64 minimumLength);
         static UInt64 CodeLength(ProcessInfo^ process, UInt64 codeAddress, UInt64 minimumLength);
-        // Hooks: destination must be executable native code in the respective address space.
+        /// <summary>Installs a native code hook in the current process.</summary>
+        /// <remarks>The destination must point to executable native code in the same address space.</remarks>
         static HookHandle^ HookCode(UInt64 source, UInt64 destination);
         static HookHandle^ HookCode(ProcessInfo^ process, UInt64 source, UInt64 destination);
     };

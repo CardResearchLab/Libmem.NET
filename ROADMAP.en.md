@@ -96,7 +96,7 @@ Focus:
 - Injector Tests;
 - independent TestTarget (x64 external-process target established);
 - C# consumer sample;
-- XML documentation;
+- XML documentation (the `LibmemCli.xml` build/package pipeline is established; public API comments continue to expand);
 - README / API documentation.
 
 All default acceptance runs target x64.

@@ -76,6 +76,7 @@ Generated files are kept outside the source directories:
 artifacts/native/x64/Release/bin/libmem.dll
 artifacts/native/x64/Release/lib/libmem.lib
 artifacts/managed/x64/Release/LibmemCli.dll
+artifacts/managed/x64/Release/LibmemCli.xml
 artifacts/managed/x64/Release/Ijwhost.dll
 ```
 
@@ -103,7 +104,7 @@ foreach (var module in session.Modules.Enumerate())
 }
 ```
 
-At runtime, keep `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll` beside the application executable.
+At runtime, keep `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll` beside the application executable. Keep `LibmemCli.xml` beside the managed assembly as well when IntelliSense API documentation is desired in Visual Studio / C# editors.
 
 ## ProcessSession
 
@@ -246,6 +247,10 @@ Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
 
 Calling `Free()` explicitly lets callers inspect the release result. Leaving the `using` scope makes `Dispose()` deterministically release the allocation; if native cleanup fails, the failure is surfaced instead of silently discarding ownership. If the target process has already exited, its address space is considered reclaimed by the OS. The finalizer never mutates another process from the GC thread.
 
+## XML API documentation
+
+Release/runtime packages ship `LibmemCli.xml` beside `LibmemCli.dll`. The C++/CLI build enables MSVC `/doc` for public XML comments and XDCMake merges the generated XDC data into an XML file with the same base name as the assembly. When consumers keep both files together, Visual Studio can surface IntelliSense documentation for `ProcessSession`, subsystem managers, owned resource handles, Hook/VMT APIs, and the static compatibility facade.
+
 ## Consume as a Git submodule
 
 Add this repository to another project as a submodule:
@@ -270,6 +275,7 @@ Project and output paths are based on this repository rather than the consuming 
 At runtime, deploy the following files beside the consuming executable:
 
 - `LibmemCli.dll`
+- `LibmemCli.xml` (IntelliSense XML documentation)
 - `Ijwhost.dll`
 - `libmem.dll`
 
