@@ -77,6 +77,12 @@ Return behavior:
 
 Checks the exact attached process identity, not only whether the PID currently exists.
 
+### ProcessSession.Allocate
+
+`ProcessSession.Allocate(size, protection)` is intentionally retained as a session-level ownership convenience. It delegates to the session's `MemoryManager.Allocate` contract and returns a `RemoteAllocation` owning handle.
+
+Both entry points therefore share the same allocation, liveness, exception, and disposal semantics. A dead target is rejected with `InvalidOperationException`; a definite native allocation failure is surfaced as `LibmemException`.
+
 ### ProcessSession lifetime
 
 `Detach()` and `Dispose()` are idempotent. After the first detach/dispose, session members and previously obtained session-bound Managers reject operational use with `ObjectDisposedException`. Independently owned resource handles keep their own lifetime and are not bulk-cleaned by session detachment.
