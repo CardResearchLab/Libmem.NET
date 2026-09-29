@@ -107,7 +107,7 @@ At runtime, keep `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll` beside the app
 `ProcessSession` is an optional general-purpose process context. It binds to one concrete process identity using **PID + process start time** and gives memory, module, hook, and injection calls for the same target an explicit Attach / Detach lifetime; it does not own application state:
 
 ```csharp
-using var target = Libmem.Attach("Hearthstone.exe");
+using var target = ProcessSession.Open("Hearthstone.exe");
 
 if (target is null)
     return;
@@ -120,9 +120,9 @@ if (!target.IsAlive())
 var latest = target.Refresh();
 ```
 
-`ProcessSession` does not own a native Windows process handle. `MemoryManager`, `ModuleManager`, `HookManager`, and `InjectorManager` only add target binding and necessary resource-lifetime constraints around libmem calls.
+`ProcessSession` does not own a native Windows process handle. It acts as the aggregation root for `MemoryManager`, `ModuleManager`, `ThreadManager`, `ScanManager`, `HookManager`, and `InjectorManager`; those subsystems only add target binding and necessary resource-lifetime constraints around libmem calls.
 
-The static `Libmem.*` API remains directly usable. Applications that need snapshots, caches, event state, or game-state models should build those models in the caller rather than in LibmemCli.
+New code should prefer `ProcessSession.Open(...)`. Existing `Libmem.Attach(...)` and static `Libmem.*` APIs remain available for compatibility. Applications that need snapshots, caches, event state, or game-state models should build those models in the caller rather than in LibmemCli.
 
 ### ModuleManager
 
@@ -138,6 +138,30 @@ var unity = modules.Find("UnityPlayer.dll");
 ```
 
 It currently provides `Enumerate / Find / Load / Unload`. Like `MemoryManager`, it follows the ProcessSession lifetime and rejects operations after Detach.
+
+### ThreadManager
+
+`ProcessSession.Threads` binds thread operations to the current process session:
+
+```csharp
+foreach (var thread in target.Threads.Enumerate())
+    Console.WriteLine(thread.Id);
+
+var mainThread = target.Threads.Main;
+```
+
+This phase intentionally wraps only the thread enumeration and process-main-thread capabilities already exposed by libmem. It does not invent Suspend / Resume / Context APIs that are outside the current native wrapper surface.
+
+### ScanManager
+
+Scanning and pointer resolution are now separated from raw memory read/write responsibilities. New code should use `ProcessSession.Scanner`:
+
+```csharp
+var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
+var resolved = target.Scanner.DeepPointer(baseAddress, offsets);
+```
+
+`ScanManager` currently exposes `DeepPointer / DataScan / PatternScan / SigScan`. The existing methods on `MemoryManager` remain as v0.x compatibility APIs during the migration.
 
 ### Injector
 
@@ -179,10 +203,10 @@ using var buffer = memory.Allocate(4096, MemoryProtection.ReadWrite)
 
 memory.Write(buffer.Address, payload);
 var copy = memory.Read(buffer.Address, payload.Length);
-var hit = memory.SigScan("48 8B ?? ??", start, size);
+var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
 ```
 
-The manager currently exposes Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free / DeepPointer / DataScan / PatternScan / SigScan. It is bound to the `ProcessSession` lifetime; calls after the session is detached throw `ObjectDisposedException`.
+Its core responsibility is now Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free. The existing DeepPointer / DataScan / PatternScan / SigScan methods remain for compatibility, while new code should prefer `ProcessSession.Scanner`. It is bound to the `ProcessSession` lifetime; calls after the session is detached throw `ObjectDisposedException`.
 
 ### RemoteAllocation
 
