@@ -10,7 +10,7 @@
 
 LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). **Current development, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
 
-See [ROADMAP.en.md](ROADMAP.en.md) for the current development plan.
+See [ROADMAP.en.md](ROADMAP.en.md) for the current development plan and the [API reference](docs/API.md) for consumer-facing result, exception, and lifetime semantics.
 
 Except for explicitly documented compatibility waivers, the wrapper covers the public functions in the pinned libmem header through managed models, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
 
