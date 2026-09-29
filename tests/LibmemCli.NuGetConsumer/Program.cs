@@ -1,0 +1,25 @@
+using LibmemCli;
+
+Console.WriteLine("LibmemCli NuGet consumer test");
+
+var process = Libmem.CurrentProcess()
+    ?? throw new InvalidOperationException("Current process could not be resolved through the NuGet package.");
+
+using var session = ProcessSession.Open(process)
+    ?? throw new InvalidOperationException("ProcessSession.Open failed through the NuGet package.");
+
+using var allocation = session.Memory.Allocate(
+    4096,
+    MemoryProtection.ReadWrite);
+
+byte[] payload = [0x4E, 0x55, 0x47, 0x45, 0x54, 0x2D, 0x58, 0x36, 0x34];
+
+if (session.Memory.Write(allocation.Address, payload) != payload.Length)
+    throw new InvalidOperationException("NuGet consumer short write.");
+
+var copy = session.Memory.Read(allocation.Address, payload.Length);
+if (!copy.SequenceEqual(payload))
+    throw new InvalidOperationException("NuGet consumer read-back mismatch.");
+
+Console.WriteLine(
+    $"NUGET CONSUMER PASS pid={session.Pid} allocation=0x{allocation.Address:X}");

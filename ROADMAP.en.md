@@ -109,7 +109,7 @@ Focus:
 - manifest / SHA-256;
 - GitHub Release;
 - reusable workflow;
-- evaluate NuGet or a more standard consumption model.
+- evaluate NuGet or a more standard consumption model (a local x64 `.nupkg` plus independent `PackageReference` consumer test is established; public publication still requires full-path acceptance).
 
 Official releases publish only:
 

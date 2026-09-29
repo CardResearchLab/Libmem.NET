@@ -378,6 +378,14 @@ libmem.dll
 
 Keep `LibmemCli.xml` beside `LibmemCli.dll` so Visual Studio / C# editors can load generated IntelliSense documentation.
 
+## Distribution and consumption
+
+Stable distribution currently remains the Windows x64 Runtime ZIP and source/reusable-workflow integration.
+
+The repository also contains an **unpublished local NuGet prototype** with the provisional package ID `HearthstoneModding.LibmemCli`. It is validated through an independent PackageReference consumer before any public package publication is considered.
+
+See [CONSUMPTION.md](CONSUMPTION.md) for the package layout, x64 constraints, and NuGet acceptance criteria.
+
 ## Public API stability
 
 The repository maintains:
