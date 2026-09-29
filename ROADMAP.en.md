@@ -94,7 +94,7 @@ Focus:
 - Smoke Tests;
 - Hook/VMT Tests;
 - Injector Tests;
-- independent TestTarget;
+- independent TestTarget (x64 external-process target established);
 - C# consumer sample;
 - XML documentation;
 - README / API documentation.
