@@ -50,15 +50,3 @@ RemoteAllocation^ MemoryManager::Allocate(UInt64 size,MemoryProtection protectio
 bool MemoryManager::Free(UInt64 address,UInt64 size) {
     return Libmem::FreeMemory(Target(),address,size);
 }
-UInt64 MemoryManager::DeepPointer(UInt64 baseAddress,array<UInt64>^ offsets) {
-    return Libmem::DeepPointer(Target(),baseAddress,offsets);
-}
-UInt64 MemoryManager::DataScan(array<Byte>^ data,UInt64 address,UInt64 scanSize) {
-    return Libmem::DataScan(Target(),data,address,scanSize);
-}
-UInt64 MemoryManager::PatternScan(array<Byte>^ pattern,String^ mask,UInt64 address,UInt64 scanSize) {
-    return Libmem::PatternScan(Target(),pattern,mask,address,scanSize);
-}
-UInt64 MemoryManager::SigScan(String^ signature,UInt64 address,UInt64 scanSize) {
-    return Libmem::SigScan(Target(),signature,address,scanSize);
-}
