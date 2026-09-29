@@ -503,10 +503,21 @@ bool Libmem::IsProcessAlive(ProcessInfo^ input) {
     });
 }
 array<String^>^ Libmem::GetCommandLine(ProcessInfo^ input) {
-    auto p=proc(input); lm_char_t** cmd=LM_GetCommandLine(&p);
-    if(!cmd) return nullptr;
-    try { auto result=gcnew List<String^>(); for(size_t i=0;cmd[i];++i) result->Add(str(cmd[i])); return result->ToArray(); }
-    finally { LM_FreeCommandLine(cmd); }
+    if(input==nullptr) throw gcnew ArgumentNullException("process");
+
+    // The pinned Windows libmem implementation only supports the current process.
+    // Its LM_GetCommandLine implementation at the pinned revision also mutates the
+    // supplied PID and passes an uninitialized pointer to realloc, so calling it can
+    // return the wrong process command line or trigger undefined behavior. Preserve
+    // the intended upstream contract without exposing that native bug to managed code.
+    lm_process_t current{};
+    if(!LM_GetProcess(&current))
+        throw gcnew LibmemException("LM_GetProcess", "Could not resolve the current process for GetCommandLine.");
+
+    if(input->Pid!=current.pid || input->StartTime!=current.start_time)
+        return nullptr;
+
+    return Environment::GetCommandLineArgs();
 }
 UInt64 Libmem::GetBits() { return LM_GetBits(); }
 UInt64 Libmem::GetSystemBits() { return LM_GetSystemBits(); }
