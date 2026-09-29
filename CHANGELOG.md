@@ -2,7 +2,16 @@
 
 ## Unreleased
 
-_No unreleased changes._
+### Added
+
+- Added `ProcessSession.Open(...)` as the preferred object-oriented factory while preserving `Libmem.Attach(...)` for compatibility.
+- Added session-bound `ThreadManager` through `ProcessSession.Threads`, including thread enumeration and main-thread lookup.
+- Added session-bound `ScanManager` through `ProcessSession.Scanner` for DeepPointer, data, pattern, and signature scanning.
+
+### Changed
+
+- Began the Blackbone-inspired process aggregation refactor: `ProcessSession` now exposes memory, modules, threads, scanning, hooks, and injection as explicit subsystems.
+- Kept the existing scan methods on `MemoryManager` as v0.x compatibility APIs so current consumers are not broken during the migration.
 
 ## 0.3.0 - 2026-09-29
 

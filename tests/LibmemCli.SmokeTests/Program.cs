@@ -67,6 +67,19 @@ Check(session!.Pid == current.Pid, "ProcessSession PID does not match the attach
 Check(session.Architecture == current.Architecture, "ProcessSession architecture does not match.");
 Check(session.Bits == current.Bits, "ProcessSession bitness does not match.");
 Check(session.IsAlive(), "Attached ProcessSession should report the current process as alive.");
+Check(session.Threads is not null, "ProcessSession.Threads returned null.");
+Check(session.Scanner is not null, "ProcessSession.Scanner returned null.");
+Check(session.Threads.Enumerate().Any(x => x.Id == currentThread.Id),
+    "ThreadManager.Enumerate did not include the current thread.");
+Check(session.Threads.Main is not null && session.Threads.Main.OwnerPid == current.Pid,
+    "ThreadManager.Main did not resolve a thread owned by the session process.");
+
+using (var openedSession = ProcessSession.Open(current)
+       ?? throw new InvalidOperationException("ProcessSession.Open(ProcessInfo) failed for the current process."))
+{
+    Check(openedSession.Pid == current.Pid,
+        "ProcessSession.Open(ProcessInfo) returned the wrong process.");
+}
 
 var sessionSnapshot = session.Info;
 sessionSnapshot.Pid = 0;
@@ -78,6 +91,8 @@ Check(refreshed is not null && refreshed.Pid == current.Pid, "ProcessSession.Ref
 Stage("session-detach");
 var detachedMemory = session.Memory;
 var detachedModules = session.Modules;
+var detachedThreads = session.Threads;
+var detachedScanner = session.Scanner;
 var detachedHooks = session.Hooks;
 var detachedInjector = session.Injector;
 session.Detach();
@@ -115,6 +130,28 @@ catch (ObjectDisposedException)
     detachedModuleManagerThrows = true;
 }
 Check(detachedModuleManagerThrows, "ModuleManager should reject operations after its ProcessSession is detached.");
+
+var detachedThreadManagerThrows = false;
+try
+{
+    _ = detachedThreads.Enumerate();
+}
+catch (ObjectDisposedException)
+{
+    detachedThreadManagerThrows = true;
+}
+Check(detachedThreadManagerThrows, "ThreadManager should reject operations after its ProcessSession is detached.");
+
+var detachedScanManagerThrows = false;
+try
+{
+    _ = detachedScanner.SigScan("90", 0, 1);
+}
+catch (ObjectDisposedException)
+{
+    detachedScanManagerThrows = true;
+}
+Check(detachedScanManagerThrows, "ScanManager should reject operations after its ProcessSession is detached.");
 
 var detachedHookManagerThrows = false;
 try
@@ -198,6 +235,7 @@ Check(resolvedSymbol == exportedSymbol.Address,
 
 Stage("memory-segments");
 var memory = pidSession!.Memory;
+var scanner = pidSession.Scanner;
 var ownedAllocation = memory.Allocate(4096, MemoryProtection.ReadWrite);
 Check(ownedAllocation is not null, "MemoryManager.Allocate returned null.");
 Check(ownedAllocation!.Address != 0 && ownedAllocation.Address != invalidAddress, "RemoteAllocation has an invalid address.");
@@ -229,14 +267,18 @@ Check(ownedWritten == ownedPayload.Length, "MemoryManager.Write failed.");
 var ownedRead = memory.Read(ownedAllocation.Address, ownedPayload.Length);
 Check(ownedRead.SequenceEqual(ownedPayload), "MemoryManager.Read returned different data.");
 
-Check(memory.DataScan(ownedPayload, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
-    "MemoryManager.DataScan failed.");
+Check(scanner.DataScan(ownedPayload, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
+    "ScanManager.DataScan failed.");
 var ownedMask = new string('x', ownedPayload.Length);
-Check(memory.PatternScan(ownedPayload, ownedMask, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
-    "MemoryManager.PatternScan failed.");
+Check(scanner.PatternScan(ownedPayload, ownedMask, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
+    "ScanManager.PatternScan failed.");
 var ownedSignature = string.Join(" ", ownedPayload.Select(b => b.ToString("X2")));
+Check(scanner.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
+    "ScanManager.SigScan failed.");
+
+// v0.x compatibility while consumers migrate to ProcessSession.Scanner.
 Check(memory.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
-    "MemoryManager.SigScan failed.");
+    "MemoryManager.SigScan compatibility API failed.");
 
 Stage("deep-pointer");
 using (var pointerLayer0 = memory.Allocate(4096, MemoryProtection.ReadWrite)
@@ -253,8 +295,10 @@ using (var pointerLayer2 = memory.Allocate(4096, MemoryProtection.ReadWrite)
 
     ulong[] offsets = [0xA0, 0x10];
     var expectedDeepPointer = pointerLayer2.Address + 0x10;
+    Check(scanner.DeepPointer(pointerLayer0.Address, offsets) == expectedDeepPointer,
+        "ScanManager.DeepPointer returned an unexpected address.");
     Check(memory.DeepPointer(pointerLayer0.Address, offsets) == expectedDeepPointer,
-        "MemoryManager.DeepPointer returned an unexpected address.");
+        "MemoryManager.DeepPointer compatibility API returned an unexpected address.");
     Check(Libmem.DeepPointer(pointerLayer0.Address, offsets) == expectedDeepPointer,
         "Libmem.DeepPointer returned an unexpected address.");
     Check(Libmem.DeepPointer(current, pointerLayer0.Address, offsets) == expectedDeepPointer,

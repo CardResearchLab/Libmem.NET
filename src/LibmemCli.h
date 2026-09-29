@@ -109,6 +109,8 @@ namespace LibmemCli {
 
     ref class MemoryManager;
     ref class ModuleManager;
+    ref class ThreadManager;
+    ref class ScanManager;
     ref class HookManager;
     ref class HookHandle;
     ref class InjectorManager;
@@ -121,6 +123,8 @@ namespace LibmemCli {
         ProcessInfo^ identity_;
         MemoryManager^ memory_;
         ModuleManager^ modules_;
+        ThreadManager^ threads_;
+        ScanManager^ scanner_;
         HookManager^ hooks_;
         InjectorManager^ injector_;
         bool disposed_;
@@ -129,6 +133,10 @@ namespace LibmemCli {
         ProcessSession(ProcessInfo^ process);
         property ProcessInfo^ Target { ProcessInfo^ get(); }
     public:
+        // Preferred factory for new code. Libmem.Attach remains available as a compatibility facade.
+        static ProcessSession^ Open(UInt32 pid);
+        static ProcessSession^ Open(String^ name);
+        static ProcessSession^ Open(ProcessInfo^ process);
         property ProcessInfo^ Info { ProcessInfo^ get(); }
         property UInt32 Pid { UInt32 get(); }
         property String^ Name { String^ get(); }
@@ -136,6 +144,8 @@ namespace LibmemCli {
         property UInt64 Bits { UInt64 get(); }
         property MemoryManager^ Memory { MemoryManager^ get(); }
         property ModuleManager^ Modules { ModuleManager^ get(); }
+        property ThreadManager^ Threads { ThreadManager^ get(); }
+        property ScanManager^ Scanner { ScanManager^ get(); }
         property HookManager^ Hooks { HookManager^ get(); }
         property InjectorManager^ Injector { InjectorManager^ get(); }
         property bool IsDisposed { bool get(); }
@@ -168,6 +178,21 @@ namespace LibmemCli {
         UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
     };
 
+    // Session-bound scan and pointer-resolution operations.
+    // MemoryManager keeps compatibility forwarding methods for the v0.x API surface.
+    public ref class ScanManager sealed {
+    private:
+        ProcessSession^ session_;
+        ProcessInfo^ Target();
+    internal:
+        ScanManager(ProcessSession^ session);
+    public:
+        UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
+        UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
+        UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
+        UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
+    };
+
     // Session-bound module operations for one concrete target process.
     public ref class ModuleManager sealed {
     private:
@@ -180,6 +205,18 @@ namespace LibmemCli {
         ModuleInfo^ Find(String^ name);
         ModuleInfo^ Load(String^ path);
         bool Unload(ModuleInfo^ module);
+    };
+
+    // Session-bound thread operations for one concrete target process.
+    public ref class ThreadManager sealed {
+    private:
+        ProcessSession^ session_;
+        ProcessInfo^ Target();
+    internal:
+        ThreadManager(ProcessSession^ session);
+    public:
+        List<ThreadInfo^>^ Enumerate();
+        property ThreadInfo^ Main { ThreadInfo^ get(); }
     };
 
     // One owned LoadLibrary reference in the target process.
