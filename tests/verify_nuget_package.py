@@ -72,6 +72,11 @@ def main() -> int:
 
         package_id = find_child(metadata, "id")
         version = find_child(metadata, "version")
+        authors = find_child(metadata, "authors")
+        description = find_child(metadata, "description")
+        license_element = find_child(metadata, "license")
+        readme = find_child(metadata, "readme")
+        project_url = find_child(metadata, "projectUrl")
         repository = find_child(metadata, "repository")
 
         if package_id is None or package_id.text != "HearthstoneModding.LibmemCli":
@@ -82,6 +87,28 @@ def main() -> int:
                 f"NuGet version mismatch: expected {args.expected_version!r}, "
                 f"got {None if version is None else version.text!r}"
             )
+
+        if authors is None or authors.text != "HearthstoneModding":
+            raise AssertionError("Unexpected NuGet authors metadata.")
+
+        if description is None or "Windows x64" not in (description.text or ""):
+            raise AssertionError("NuGet description does not declare the Windows x64 scope.")
+
+        if (
+            license_element is None
+            or license_element.attrib.get("type") != "expression"
+            or license_element.text != "AGPL-3.0-only"
+        ):
+            raise AssertionError("NuGet license expression mismatch.")
+
+        if readme is None or readme.text != "README.md":
+            raise AssertionError("NuGet readme metadata mismatch.")
+
+        if (
+            project_url is None
+            or project_url.text != "https://github.com/HearthstoneModding/Libmem"
+        ):
+            raise AssertionError("NuGet project URL mismatch.")
 
         if repository is None:
             raise AssertionError("NuGet package has no repository metadata.")
