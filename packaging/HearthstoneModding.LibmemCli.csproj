@@ -39,7 +39,7 @@
           PackagePath="README.md" />
     <None Include="..\LICENSE"
           Pack="true"
-          PackagePath="LICENSE" />
+          PackagePath="" />
     <None Include="..\THIRD_PARTY_NOTICES.md"
           Pack="true"
           PackagePath="THIRD_PARTY_NOTICES.md" />
