@@ -12,6 +12,8 @@
 
 ### Changed
 
+- Split the high-level ProcessSession and manager implementations into dedicated Core, Memory, Modules, Threads, Scanning, Symbols, and Assembly source files without changing the public API.
+- Updated source-contract validation to aggregate all C++ implementation files under `src/`, so architectural file splits remain covered by CI.
 - Switched the active development and release strategy to x64-first: Windows x64 is now the default CI, runtime-test, packaging, and official Release target.
 - Deferred x86 feature work and official x86 Release assets while keeping existing x86 code/configuration available for future manual compatibility work.
 - Added dedicated x64-first roadmap documents in `ROADMAP.md` and `ROADMAP.en.md`.
