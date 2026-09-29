@@ -20,7 +20,6 @@ assert "lm_process_t proc(ProcessInfo^ input)" in native_converter_header
 assert "ProcessInfo^ process(const lm_process_t& value)" in native_converter_header
 assert "lm_address_t native_address(UInt64 value" in native_converter_header
 assert "std::vector<lm_address_t> offsets(array<UInt64>^ input)" in native_converter_header
-assert '#include "Interop/NativeConverter.h"' in libmem_facade_source
 assert "lm_process_t proc(ProcessInfo^ input)" not in libmem_facade_source
 assert "ProcessInfo^ process(const lm_process_t&" not in libmem_facade_source
 assert "lm_address_t native_address(UInt64 value" not in libmem_facade_source
@@ -49,6 +48,49 @@ assert "HookManager::HookManager" not in libmem_facade_source
 assert "HookHandle::HookHandle" not in libmem_facade_source
 assert "VmtManager::VmtManager" not in libmem_facade_source
 print("PASS Hook VMT extraction contract")
+
+domain_sources = {
+    "process": (root / "src/Core/LibmemProcess.cpp").read_text(encoding="utf-8"),
+    "thread": (root / "src/Threads/LibmemThread.cpp").read_text(encoding="utf-8"),
+    "module": (root / "src/Modules/LibmemModule.cpp").read_text(encoding="utf-8"),
+    "symbol": (root / "src/Symbols/LibmemSymbol.cpp").read_text(encoding="utf-8"),
+    "segment": (root / "src/Memory/LibmemSegment.cpp").read_text(encoding="utf-8"),
+    "memory": (root / "src/Memory/LibmemMemory.cpp").read_text(encoding="utf-8"),
+    "scan": (root / "src/Scanning/LibmemScan.cpp").read_text(encoding="utf-8"),
+    "assembly": (root / "src/Assembly/LibmemAssembly.cpp").read_text(encoding="utf-8"),
+}
+assert "LibmemException::LibmemException" in (root / "src/Core/LibmemException.cpp").read_text(encoding="utf-8")
+assert "ProcessInfo::IsAlive" in (root / "src/Core/ProcessInfo.cpp").read_text(encoding="utf-8")
+assert "Libmem::EnumProcesses" in domain_sources["process"]
+assert "Libmem::EnumThreads" in domain_sources["thread"]
+assert "Libmem::EnumModules" in domain_sources["module"]
+assert "Libmem::EnumSymbols" in domain_sources["symbol"]
+assert "Libmem::EnumSegments" in domain_sources["segment"]
+assert "Libmem::ReadMemory" in domain_sources["memory"]
+assert "Libmem::DataScan" in domain_sources["scan"]
+assert "Libmem::GetArchitecture" in domain_sources["assembly"]
+assert "Libmem::" not in libmem_facade_source
+assert "ProcessInfo::" not in libmem_facade_source
+assert "LibmemException::" not in libmem_facade_source
+print("PASS static facade domain split contract")
+
+project_source_text = (root / "src/LibmemCli.vcxproj").read_text(encoding="utf-8")
+for project_source in [
+    r"Core\LibmemException.cpp",
+    r"Core\ProcessInfo.cpp",
+    r"Core\LibmemProcess.cpp",
+    r"Threads\LibmemThread.cpp",
+    r"Modules\LibmemModule.cpp",
+    r"Symbols\LibmemSymbol.cpp",
+    r"Memory\LibmemSegment.cpp",
+    r"Memory\LibmemMemory.cpp",
+    r"Scanning\LibmemScan.cpp",
+    r"Assembly\LibmemAssembly.cpp",
+]:
+    assert f'Include="{project_source}"' in project_source_text, (
+        f"Split translation unit is not compiled by LibmemCli.vcxproj: {project_source}"
+    )
+print("PASS split translation units included in vcxproj")
 
 for file in [
     "src/LibmemCli.vcxproj",

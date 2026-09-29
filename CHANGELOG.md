@@ -12,6 +12,7 @@
 
 ### Changed
 
+- Split the remaining static `Libmem.*`, `ProcessInfo`, and `LibmemException` implementations into subsystem translation units, leaving `LibmemCli.cpp` as a thin compatibility translation unit.
 - Extracted Hook/HookHandle and VMT implementations into dedicated `Hooks` source files while preserving the existing managed API and lifecycle semantics.
 - Extracted `RemoteAllocation` and injection ownership implementations from the static facade into dedicated Memory/Injection source files without changing the public API.
 - Extracted native/managed conversion, address/size validation, enumeration callbacks, and model translation into an internal `Interop/NativeConverter` boundary.

@@ -75,6 +75,16 @@
     <ClInclude Include="Interop\NativeConverter.h" />
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="LibmemCli.cpp" />
+    <ClCompile Include="Assembly\LibmemAssembly.cpp" />
+    <ClCompile Include="Scanning\LibmemScan.cpp" />
+    <ClCompile Include="Memory\LibmemMemory.cpp" />
+    <ClCompile Include="Memory\LibmemSegment.cpp" />
+    <ClCompile Include="Symbols\LibmemSymbol.cpp" />
+    <ClCompile Include="Modules\LibmemModule.cpp" />
+    <ClCompile Include="Threads\LibmemThread.cpp" />
+    <ClCompile Include="Core\LibmemProcess.cpp" />
+    <ClCompile Include="Core\ProcessInfo.cpp" />
+    <ClCompile Include="Core\LibmemException.cpp" />
     <ClCompile Include="Core\ProcessSession.cpp" />
     <ClCompile Include="Memory\MemoryManager.cpp" />
     <ClCompile Include="Memory\RemoteAllocation.cpp" />
