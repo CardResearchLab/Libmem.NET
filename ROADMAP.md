@@ -102,7 +102,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - 独立 TestTarget（已建立 x64 外部进程测试靶）；
 - C# consumer sample（已更新为推荐的 `ProcessSession` / Manager / IDisposable / `LibmemException` 使用方式）；
 - XML 文档（已建立 `LibmemCli.xml` 生成与打包链路，持续补全公开 API 注释）；
-- README / API 文档。
+- README / API 文档（已建立 `docs/API.md` 消费者行为参考）。
 
 全部以 x64 为默认验收平台。
 
