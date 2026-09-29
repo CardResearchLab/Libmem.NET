@@ -3,6 +3,13 @@ using namespace System;
 using namespace System::Collections::Generic;
 using namespace LibmemCli;
 
+namespace {
+    bool IsBadAddress(UInt64 value) {
+        return value == UInt64::MaxValue ||
+               (IntPtr::Size == 4 && value == static_cast<UInt64>(UInt32::MaxValue));
+    }
+}
+
 MemoryManager::MemoryManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");
 }
@@ -36,7 +43,7 @@ RemoteAllocation^ MemoryManager::Allocate(UInt64 size,MemoryProtection protectio
     auto target=Target();
     if(!Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
     auto address=Libmem::AllocateMemory(target,size,protection);
-    if(address==0 || bad_address(address)) return nullptr;
+    if(address==0 || IsBadAddress(address)) return nullptr;
     return gcnew RemoteAllocation(target,address,size);
 }
 bool MemoryManager::Free(UInt64 address,UInt64 size) {
