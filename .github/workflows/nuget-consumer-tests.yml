@@ -59,6 +59,7 @@ jobs:
           dotnet pack .\packaging\HearthstoneModding.LibmemCli.csproj `
             -c Release `
             -p:PackageVersion=$version `
+            -p:RepositoryCommit=$env:GITHUB_SHA `
             -p:NuGetAudit=false `
             -o .\artifacts\nuget
 
@@ -67,7 +68,10 @@ jobs:
         run: |
           $version = (Get-Content .\VERSION -Raw).Trim()
           $package = ".\artifacts\nuget\HearthstoneModding.LibmemCli.$version.nupkg"
-          python .\tests\verify_nuget_package.py --package $package
+          python .\tests\verify_nuget_package.py `
+            --package $package `
+            --expected-version $version `
+            --expected-commit $env:GITHUB_SHA
 
       - name: Restore NuGet consumer from local feed
         shell: pwsh
