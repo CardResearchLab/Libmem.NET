@@ -18,6 +18,7 @@ $archiveChecksum = "$archive.sha256"
 
 $requiredFiles = @(
     (Join-Path $managed 'LibmemCli.dll'),
+    (Join-Path $managed 'LibmemCli.xml'),
     (Join-Path $managed 'Ijwhost.dll'),
     (Join-Path $native 'libmem.dll'),
     (Join-Path $root 'VERSION'),
