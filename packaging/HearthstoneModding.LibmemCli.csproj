@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <PackageId>HearthstoneModding.LibmemCli</PackageId>
+    <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.0-local</PackageVersion>
+    <Authors>HearthstoneModding</Authors>
+    <Description>Windows x64 / .NET 8 C++/CLI wrapper around the pinned rdbo/libmem C ABI.</Description>
+    <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/HearthstoneModding/Libmem</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>libmem memory interop cpp-cli windows x64</PackageTags>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <NoBuild>true</NoBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\artifacts\managed\x64\$(Configuration)\LibmemCli.dll"
+          Pack="true"
+          PackagePath="lib\net8.0\LibmemCli.dll" />
+    <None Include="..\artifacts\managed\x64\$(Configuration)\LibmemCli.xml"
+          Pack="true"
+          PackagePath="lib\net8.0\LibmemCli.xml" />
+    <None Include="..\artifacts\native\x64\$(Configuration)\bin\libmem.dll"
+          Pack="true"
+          PackagePath="runtimes\win-x64\native\libmem.dll" />
+    <None Include="..\artifacts\managed\x64\$(Configuration)\Ijwhost.dll"
+          Pack="true"
+          PackagePath="runtimes\win-x64\native\Ijwhost.dll" />
+    <None Include="HearthstoneModding.LibmemCli.targets"
+          Pack="true"
+          PackagePath="buildTransitive\HearthstoneModding.LibmemCli.targets" />
+    <None Include="..\README.en.md"
+          Pack="true"
+          PackagePath="README.md" />
+  </ItemGroup>
+</Project>
