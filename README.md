@@ -76,6 +76,7 @@ cd Libmem
 artifacts/native/x64/Release/bin/libmem.dll
 artifacts/native/x64/Release/lib/libmem.lib
 artifacts/managed/x64/Release/LibmemCli.dll
+artifacts/managed/x64/Release/LibmemCli.xml
 artifacts/managed/x64/Release/Ijwhost.dll
 ```
 
@@ -103,7 +104,7 @@ foreach (var module in session.Modules.Enumerate())
 }
 ```
 
-运行时请确保 `LibmemCli.dll`、`Ijwhost.dll` 和 `libmem.dll` 位于应用程序可执行文件旁。
+运行时请确保 `LibmemCli.dll`、`Ijwhost.dll` 和 `libmem.dll` 位于应用程序可执行文件旁。建议同时保留同目录的 `LibmemCli.xml`，Visual Studio / C# 编辑器可据此显示 LibmemCli 的 IntelliSense API 说明。
 
 ## ProcessSession
 
@@ -246,6 +247,10 @@ Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
 
 显式调用 `Free()` 可以检查释放是否成功；离开 `using` 作用域时，`Dispose()` 会确定性释放这块内存，若原生释放失败则直接向调用方报告失败，而不会静默丢失所有权。如果目标进程已经退出，则视为地址空间已被操作系统回收。Finalizer 不会在 GC 线程里修改其他进程内存。
 
+## XML API 文档
+
+Release / Runtime package 会把 `LibmemCli.xml` 与 `LibmemCli.dll` 一起发布。C++/CLI 编译使用 MSVC `/doc` 处理公开 API 上的 XML 注释，再由 XDCMake 合并成与程序集同名的 XML 文件。消费者将两者放在同一目录后，Visual Studio 可以为 `ProcessSession`、各 Manager、资源句柄、Hook/VMT 和静态兼容 API 提供 IntelliSense 说明。
+
 ## 作为 Git Submodule 引用
 
 可以在其他项目中将本仓库作为 Submodule 引入：
@@ -270,6 +275,7 @@ external/Libmem/src/LibmemCli.vcxproj
 运行时需要将以下文件部署到使用方可执行文件同目录：
 
 - `LibmemCli.dll`
+- `LibmemCli.xml`（IntelliSense XML 文档）
 - `Ijwhost.dll`
 - `libmem.dll`
 
