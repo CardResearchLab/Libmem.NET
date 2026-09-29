@@ -5,15 +5,14 @@ using namespace LibmemCli;
 namespace {
     ProcessInfo^ CloneProcessInfo(ProcessInfo^ input) {
         if(input==nullptr) throw gcnew ArgumentNullException("process");
-        auto copy=gcnew ProcessInfo();
-        copy->Pid=input->Pid;
-        copy->ParentPid=input->ParentPid;
-        copy->Architecture=input->Architecture;
-        copy->Bits=input->Bits;
-        copy->StartTime=input->StartTime;
-        copy->Name=input->Name;
-        copy->Path=input->Path;
-        return copy;
+        return gcnew ProcessInfo(
+            input->Pid,
+            input->ParentPid,
+            input->Architecture,
+            input->Bits,
+            input->StartTime,
+            input->Name,
+            input->Path);
     }
 }
 
