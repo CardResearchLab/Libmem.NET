@@ -2,12 +2,12 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
     <PackageId>HearthstoneModding.LibmemCli</PackageId>
     <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.0-local</PackageVersion>
     <Authors>HearthstoneModding</Authors>
     <Description>Windows x64 / .NET 8 C++/CLI wrapper around the pinned rdbo/libmem C ABI.</Description>
-    <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/HearthstoneModding/Libmem</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
