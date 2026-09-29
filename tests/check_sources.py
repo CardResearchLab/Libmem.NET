@@ -19,7 +19,7 @@ for file in [
     ET.parse(root / file)
     print("PASS XML", file)
 
-for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ModuleManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
+for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ScanManager", "ModuleManager", "ThreadManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
     match = re.search(r"\bpublic ref class\s+" + re.escape(owner) + r"\b", header)
     assert match is not None, f"{owner} public class declaration not found"
     body = header[match.end():].split("\n    };", 1)[0]
@@ -94,6 +94,13 @@ for operation in [
         source,
     ), f"{operation} is not mapped to LibmemException"
 print("PASS LibmemException core error mapping")
+
+assert "ThreadManager^ ProcessSession::Threads::get()" in source
+assert "ScanManager^ ProcessSession::Scanner::get()" in source
+assert "List<ThreadInfo^>^ ThreadManager::Enumerate()" in source
+assert "UInt64 ScanManager::SigScan(String^ signature,UInt64 address,UInt64 scanSize)" in source
+assert "ProcessSession^ ProcessSession::Open(UInt32 pid)" in source
+print("PASS ProcessSession subsystem aggregation contract")
 
 assert "HookManager^ ProcessSession::Hooks::get()" in source
 assert "HookHandle^ HookManager::Install(UInt64 source,UInt64 destination)" in source
