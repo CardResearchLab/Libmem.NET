@@ -114,7 +114,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - manifest / SHA-256；
 - GitHub Release；
 - 可复用 workflow；
-- NuGet 或更标准的消费方式评估。
+- NuGet 或更标准的消费方式评估（已建立本地 x64 `.nupkg` + 独立 `PackageReference` 消费者验证，公开发布仍待全链路验收）。
 
 正式 Release 只发布：
 
