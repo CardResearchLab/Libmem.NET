@@ -233,7 +233,7 @@ var copy = memory.Read(buffer.Address, payload.Length);
 var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
 ```
 
-Its core responsibility is now Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free. The existing DeepPointer / DataScan / PatternScan / SigScan methods remain for compatibility, while new code should prefer `ProcessSession.Scanner`. It is bound to the `ProcessSession` lifetime; calls after the session is detached throw `ObjectDisposedException`. Manager operations such as `Allocate` that can identify a definite native failure throw `LibmemException` with the corresponding `Operation` instead of silently returning a failed address.
+Its core responsibility is Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free. DeepPointer / DataScan / PatternScan / SigScan are exposed through `ProcessSession.Scanner`. It is bound to the `ProcessSession` lifetime; calls after the session is detached throw `ObjectDisposedException`. Manager operations such as `Allocate` that can identify a definite native failure throw `LibmemException` with the corresponding `Operation` instead of silently returning a failed address.
 
 ### RemoteAllocation
 
