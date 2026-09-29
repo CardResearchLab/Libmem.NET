@@ -27,6 +27,18 @@ assert "lm_address_t native_address(UInt64 value" not in libmem_facade_source
 assert "LM_CALL cb_process" in native_converter_source
 print("PASS NativeConverter extraction contract")
 
+remote_allocation_source = (root / "src/Memory/RemoteAllocation.cpp").read_text(encoding="utf-8")
+injector_source = (root / "src/Injection/InjectorManager.cpp").read_text(encoding="utf-8")
+assert "RemoteAllocation::RemoteAllocation" in remote_allocation_source
+assert "RemoteAllocation::~RemoteAllocation()" in remote_allocation_source
+assert "InjectedModuleHandle::InjectedModuleHandle" in injector_source
+assert "InjectedModuleHandle::~InjectedModuleHandle()" in injector_source
+assert "InjectorManager::InjectLibrary" in injector_source
+assert "RemoteAllocation::RemoteAllocation" not in libmem_facade_source
+assert "InjectedModuleHandle::InjectedModuleHandle" not in libmem_facade_source
+assert "InjectorManager::InjectLibrary" not in libmem_facade_source
+print("PASS resource lifetime extraction contract")
+
 for file in [
     "src/LibmemCli.vcxproj",
     "samples/Example.csproj",
