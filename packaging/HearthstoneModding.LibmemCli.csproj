@@ -11,6 +11,9 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/HearthstoneModding/Libmem</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <RepositoryCommit Condition="'$(RepositoryCommit)' == '' and '$(GITHUB_SHA)' != ''">$(GITHUB_SHA)</RepositoryCommit>
+    <RepositoryCommit Condition="'$(RepositoryCommit)' == ''">local</RepositoryCommit>
+    <PackageProjectUrl>https://github.com/HearthstoneModding/Libmem</PackageProjectUrl>
     <PackageTags>libmem memory interop cpp-cli windows x64</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <NoBuild>true</NoBuild>
