@@ -285,6 +285,7 @@ The repository includes six automation workflows:
 - \`.github/workflows/release.yml\`: builds, verifies, and publishes only the x64 package for `v*` tags or `release/v*` release branches. x86 release assets are not currently produced.
 - \`.github/workflows/hook-vmt-tests.yml\`: runs real Hook / trampoline / VMT lifecycle tests on x64 independently from the base smoke suite.
 - \`.github/workflows/injector-tests.yml\`: independently validates DLL injection, module discovery, explicit Unload, and Dispose lifetime behavior on x64.
+- \`.github/workflows/external-process-tests.yml\`: launches the repository-owned `LibmemCli.TestTarget` child process and validates real cross-process attach, read/write, remote allocate/protect/free, signature scan, segment lookup, and process-exit observation.
 
 You can create the same runtime package locally:
 
