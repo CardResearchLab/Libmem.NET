@@ -376,7 +376,8 @@ for consumption_marker in [
     assert consumption_marker in consumption_guide, (
         f"Consumption guide lost required section: {consumption_marker}"
     )
-assert "not published to nuget.org" in consumption_guide
+assert "Publication: disabled" in consumption_guide
+assert "development prototype" in consumption_guide
 print("PASS consumption guide contract")
 test_target_project = (root / "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj").read_text(encoding="utf-8")
 external_process_project = (root / "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj").read_text(encoding="utf-8")
