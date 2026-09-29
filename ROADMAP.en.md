@@ -58,6 +58,8 @@ Completed contract freeze: target-process exit does not implicitly dispose `Proc
 
 Completed freeze cleanup: the early convenience `ProcessInfo.Read / Write / ReadInt32 / WriteInt32 / SigScan` methods have been removed. `ProcessInfo` now keeps only identity-related behavior through `IsAlive()`; memory and scanning belong to the `ProcessSession` Managers, while the static `Libmem.*` compatibility facade remains.
 
+Completed freeze cleanup: audited XML IntelliSense and `docs/API.md` against the frozen managed surface, completed documentation for the recommended `ProcessSession` / Manager / ownership members, and explicitly retained `ProcessSession.Allocate` as an ownership convenience. This does not change the public API baseline or runtime behavior.
+
 ## v0.4 — x64 architecture cleanup
 
 Focus:
