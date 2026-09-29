@@ -74,6 +74,13 @@
     <ClInclude Include="LibmemCli.h" />
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="LibmemCli.cpp" />
+    <ClCompile Include="Core\ProcessSession.cpp" />
+    <ClCompile Include="Memory\MemoryManager.cpp" />
+    <ClCompile Include="Modules\ModuleManager.cpp" />
+    <ClCompile Include="Threads\ThreadManager.cpp" />
+    <ClCompile Include="Scanning\ScanManager.cpp" />
+    <ClCompile Include="Symbols\SymbolManager.cpp" />
+    <ClCompile Include="Assembly\AssemblyManager.cpp" />
   </ItemGroup>
   <Target Name="BuildLibmemNative" BeforeTargets="PrepareForBuild" Condition="'$(SkipLibmemNativeBuild)' != 'true'">
     <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(LibmemRepositoryRoot)eng\build-native.ps1&quot; -Configuration &quot;$(Configuration)&quot; -Platform &quot;$(LibmemPlatformLabel)&quot;" />
