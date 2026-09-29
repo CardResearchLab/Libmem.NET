@@ -84,6 +84,8 @@ try
 
     using var session = ProcessSession.Open(process!)
         ?? throw new InvalidOperationException("ProcessSession.Open failed for TestTarget.");
+    var exitReclaimedAllocation = session.Memory.Allocate(4096, MemoryProtection.ReadWrite)
+        ?? throw new InvalidOperationException("Could not allocate target-exit ownership probe.");
 
     Check(session.Pid == ready.Pid, "ProcessSession attached to the wrong PID.");
     Check(session.IsAlive(), "TestTarget should be alive after attach.");
@@ -149,6 +151,12 @@ try
     Check(child.WaitForExit(10_000), "TestTarget did not exit after the exit command.");
     Check(!session.IsAlive(), "ProcessSession should observe TestTarget exit.");
     Check(session.Refresh() is null, "ProcessSession.Refresh should return null after target exit.");
+    Check(exitReclaimedAllocation.Free(),
+        "RemoteAllocation.Free should treat target-process exit as OS-reclaimed ownership.");
+    Check(exitReclaimedAllocation.IsDisposed,
+        "RemoteAllocation should become disposed after target-process exit is observed during Free.");
+    ((IDisposable)exitReclaimedAllocation).Dispose();
+    ((IDisposable)exitReclaimedAllocation).Dispose();
 
     Console.WriteLine("EXTERNAL PROCESS TESTS PASS");
 }

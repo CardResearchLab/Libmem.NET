@@ -17,6 +17,7 @@
 
 ### Changed
 
+- Froze ownership-lifetime idempotency with runtime coverage for repeated session detach/dispose, repeated resource disposal, and remote-allocation cleanup after target-process exit.
 - Extended the committed public API baseline to freeze the managed `LibmemCli` namespace in addition to public types and members, and updated the roadmap to the active v0.9 x64 API Freeze phase.
 - Started the v0.9 API-freeze contract hardening by normalizing null/blank process/module/library arguments to standard .NET argument exceptions and treating a zero VMT address as `ArgumentOutOfRangeException` before native dispatch.
 - Modernized the C# consumer sample around the recommended `ProcessSession` and Manager APIs, including owned memory, scanning, protection restore, deterministic disposal, and `LibmemException` handling.

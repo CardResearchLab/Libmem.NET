@@ -77,6 +77,10 @@ Return behavior:
 
 Checks the exact attached process identity, not only whether the PID currently exists.
 
+### ProcessSession lifetime
+
+`Detach()` and `Dispose()` are idempotent. After the first detach/dispose, session members and previously obtained session-bound Managers reject operational use with `ObjectDisposedException`. Independently owned resource handles keep their own lifetime and are not bulk-cleaned by session detachment.
+
 ## Manager APIs
 
 ### MemoryManager
@@ -214,7 +218,7 @@ Relevant state:
 - `Size`
 - `IsDisposed`
 
-`Free()` exposes the release result directly.
+`Free()` exposes the release result directly. A successful release, a prior release, or target-process exit leaves the handle released; repeated `Free()` / `Dispose()` calls are idempotent. If native cleanup fails while the target is still alive, ownership is preserved so the caller can retry.
 
 Explicit disposal performs deterministic cleanup. The finalizer does **not** mutate another process from the GC thread.
 
@@ -234,7 +238,7 @@ Relevant state:
 - `IsInstalled`
 - `IsDisposed`
 
-`Remove()` attempts explicit unhooking.
+`Remove()` attempts explicit unhooking. After a successful removal, repeated `Remove()` / `Dispose()` calls are idempotent.
 
 A failed explicit restoration does not silently mark the hook as released. The finalizer never rewrites target code.
 
@@ -253,7 +257,7 @@ Relevant state:
 - `IsActive`
 - `IsDisposed`
 
-`Unload()` releases the reference owned by this handle.
+`Unload()` releases the reference owned by this handle. After a successful release or target-process exit, repeated `Unload()` / `Dispose()` calls are idempotent.
 
 A successful unload request does not guarantee the DLL disappears from the target process, because Windows DLL loading is reference-counted.
 
@@ -270,7 +274,7 @@ Primary operations:
 
 The VTable and replacement code must remain valid throughout the manager lifetime.
 
-Explicit disposal restores tracked entries deterministically. The finalizer does not rewrite VTable entries.
+Explicit disposal restores tracked entries deterministically. After successful cleanup, repeated `Dispose()` calls are idempotent; operational methods after disposal throw `ObjectDisposedException`. The finalizer does not rewrite VTable entries.
 
 ## Exception model
 

@@ -65,8 +65,9 @@ try
     Check(session.Modules.Find(disposeName) is not null, "Dispose fixture is not visible in the target module list.");
 
     ((IDisposable)disposable).Dispose();
-    Check(disposable.IsDisposed, "InjectedModuleHandle should report disposed after Dispose.");
-    Check(!disposable.IsActive, "InjectedModuleHandle should be inactive after successful Dispose cleanup.");
+    ((IDisposable)disposable).Dispose();
+    Check(disposable.IsDisposed, "InjectedModuleHandle should report disposed after repeated Dispose calls.");
+    Check(!disposable.IsActive, "InjectedModuleHandle should be inactive after repeated Dispose calls.");
     Check(disposable.Unload(), "InjectedModuleHandle.Unload should remain idempotent after successful Dispose.");
     Check(session.Modules.Find(disposeName) is null, "Dispose fixture is still present after Dispose.");
 
