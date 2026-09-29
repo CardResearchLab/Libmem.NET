@@ -35,6 +35,10 @@
 - Continued the Blackbone-inspired process aggregation refactor: `ProcessSession` now exposes memory, modules, threads, scanning, symbols, assembly/disassembly, hooks, and injection as explicit subsystems.
 - Kept the existing scan methods on `MemoryManager` as v0.x compatibility APIs so current consumers are not broken during the migration.
 
+### Removed
+
+- Removed the temporary v0.x `MemoryManager.DeepPointer`, `DataScan`, `PatternScan`, and `SigScan` forwarding aliases before the v1.0 API freeze. Session-bound scanning now lives only on `ProcessSession.Scanner`; static `Libmem.*` compatibility APIs remain available.
+
 ## 0.3.0 - 2026-09-29
 
 LibmemCli 0.3.0 completes the wrapper's Windows x86/x64 stabilization and release pipeline while keeping the library independent from application-specific state models.
