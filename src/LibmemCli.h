@@ -111,6 +111,8 @@ namespace LibmemCli {
     ref class ModuleManager;
     ref class ThreadManager;
     ref class ScanManager;
+    ref class SymbolManager;
+    ref class AssemblyManager;
     ref class HookManager;
     ref class HookHandle;
     ref class InjectorManager;
@@ -125,6 +127,8 @@ namespace LibmemCli {
         ModuleManager^ modules_;
         ThreadManager^ threads_;
         ScanManager^ scanner_;
+        SymbolManager^ symbols_;
+        AssemblyManager^ assembly_;
         HookManager^ hooks_;
         InjectorManager^ injector_;
         bool disposed_;
@@ -146,6 +150,8 @@ namespace LibmemCli {
         property ModuleManager^ Modules { ModuleManager^ get(); }
         property ThreadManager^ Threads { ThreadManager^ get(); }
         property ScanManager^ Scanner { ScanManager^ get(); }
+        property SymbolManager^ Symbols { SymbolManager^ get(); }
+        property AssemblyManager^ Assembly { AssemblyManager^ get(); }
         property HookManager^ Hooks { HookManager^ get(); }
         property InjectorManager^ Injector { InjectorManager^ get(); }
         property bool IsDisposed { bool get(); }
@@ -191,6 +197,35 @@ namespace LibmemCli {
         UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
         UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
         UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
+    };
+
+    // Session-bound symbol operations. ModuleInfo remains a value object and does not own symbol behavior.
+    public ref class SymbolManager sealed {
+    private:
+        ProcessSession^ session_;
+        ProcessInfo^ Target();
+    internal:
+        SymbolManager(ProcessSession^ session);
+    public:
+        List<SymbolInfo^>^ Enumerate(ModuleInfo^ module, bool demangle);
+        UInt64 FindAddress(ModuleInfo^ module, String^ name, bool demangle);
+        String^ Demangle(String^ name);
+    };
+
+    // Session-bound assembler/disassembler operations.
+    // Architecture defaults to the target process architecture.
+    public ref class AssemblyManager sealed {
+    private:
+        ProcessSession^ session_;
+        ProcessInfo^ Target();
+    internal:
+        AssemblyManager(ProcessSession^ session);
+    public:
+        property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+        array<Byte>^ Assemble(String^ code, UInt64 runtimeAddress);
+        List<InstructionInfo^>^ Disassemble(array<Byte>^ code, UInt64 instructionCount, UInt64 runtimeAddress);
+        List<InstructionInfo^>^ Disassemble(UInt64 address, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
+        UInt64 CodeLength(UInt64 address, UInt64 minimumLength);
     };
 
     // Session-bound module operations for one concrete target process.
