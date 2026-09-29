@@ -87,3 +87,39 @@ jobs:
             -c Release `
             --no-restore `
             -p:LibmemCliTestPackageVersion=$version
+
+      - name: Publish NuGet consumer
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\VERSION -Raw).Trim()
+          $output = ".\artifacts\nuget-consumer-publish"
+          dotnet publish `
+            .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
+            -c Release `
+            --no-restore `
+            -p:LibmemCliTestPackageVersion=$version `
+            -o $output
+
+          foreach ($required in @("LibmemCli.dll", "libmem.dll", "Ijwhost.dll")) {
+            $path = Join-Path $output $required
+            if (-not (Test-Path $path -PathType Leaf)) {
+              throw "Published NuGet consumer is missing $required"
+            }
+          }
+
+      - name: Reject non-x64 NuGet consumer
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\VERSION -Raw).Trim()
+          dotnet build `
+            .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
+            -c Release `
+            --no-restore `
+            -p:LibmemCliTestPackageVersion=$version `
+            -p:PlatformTarget=AnyCPU
+
+          if ($LASTEXITCODE -eq 0) {
+            throw "NuGet prototype unexpectedly accepted a non-x64 consumer."
+          }
+
+          $global:LASTEXITCODE = 0
