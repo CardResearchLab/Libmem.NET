@@ -16,7 +16,6 @@
     <PackageProjectUrl>https://github.com/HearthstoneModding/Libmem</PackageProjectUrl>
     <PackageTags>libmem memory interop cpp-cli windows x64</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <NoBuild>true</NoBuild>
   </PropertyGroup>
 
   <ItemGroup>
