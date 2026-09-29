@@ -121,6 +121,7 @@ namespace LibmemCli {
         /// <summary>Gets whether the managed ownership lifetime has ended.</summary>
         property bool IsDisposed { bool get(); }
         /// <summary>Attempts to release the owned allocation.</summary>
+        /// <remarks>Successful release, prior release, or target-process exit are treated as released; repeated calls are idempotent.</remarks>
         /// <returns>true when the allocation is released or the target address space no longer exists.</returns>
         bool Free();
         ~RemoteAllocation();
@@ -189,6 +190,7 @@ namespace LibmemCli {
         /// <exception cref="LibmemException">Thrown when the native allocation definitely fails.</exception>
         RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);
         /// <summary>Ends the session lifetime. Existing independently-owned resource handles keep their own lifetime.</summary>
+        /// <remarks>This operation is idempotent.</remarks>
         void Detach();
         ~ProcessSession();
     };
@@ -321,6 +323,7 @@ namespace LibmemCli {
         property bool IsActive { bool get(); }
         property bool IsDisposed { bool get(); }
         /// <summary>Attempts to release the load reference owned by this handle.</summary>
+        /// <remarks>After successful release or target-process exit, repeated calls are idempotent.</remarks>
         bool Unload();
         ~InjectedModuleHandle();
         !InjectedModuleHandle();
@@ -371,13 +374,14 @@ namespace LibmemCli {
         property bool IsInstalled { bool get(); }
         property bool IsDisposed { bool get(); }
         /// <summary>Attempts to restore the original code and release the installed hook.</summary>
+        /// <remarks>After successful removal, repeated calls are idempotent.</remarks>
         bool Remove();
         ~HookHandle();
         !HookHandle();
     };
 
     /// <summary>Owns local-process VMT hook bookkeeping.</summary>
-    /// <remarks>The target VMT and replacement code must remain valid for this object's lifetime. VMT operations are local-process only.</remarks>
+    /// <remarks>The target VMT and replacement code must remain valid for this object's lifetime. VMT operations are local-process only. Successful disposal is idempotent; operational methods after disposal throw ObjectDisposedException.</remarks>
     public ref class VmtManager sealed : IDisposable {
     private:
         lm_vmt_t* native_;
