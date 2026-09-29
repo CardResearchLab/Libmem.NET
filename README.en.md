@@ -284,13 +284,14 @@ A matching version section must exist in `CHANGELOG.md` before publication; the 
 
 ## GitHub Actions automation
 
-The repository includes five automation workflows:
+The repository includes six automation workflows:
 
 - \`.github/workflows/build.yml\`: builds and validates Release x64 on pushes to `main`, pull requests, or manual runs, then uploads the `LibmemCli-windows-x64` artifact.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
 - \`.github/workflows/release.yml\`: builds, verifies, and publishes only the x64 package for `v*` tags or `release/v*` release branches. x86 release assets are not currently produced.
 - \`.github/workflows/hook-vmt-tests.yml\`: runs real Hook / trampoline / VMT lifecycle tests on x64 independently from the base smoke suite.
 - \`.github/workflows/injector-tests.yml\`: independently validates DLL injection, module discovery, explicit Unload, and Dispose lifetime behavior on x64.
+- `.github/workflows/external-process-tests.yml`: launches the repository-owned `LibmemCli.TestTarget` child process and validates real cross-process attach, read/write, remote allocate/protect/free, signature scan, segment lookup, and process-exit observation.
 
 You can create the same runtime package locally:
 
@@ -331,6 +332,8 @@ CI validates more than compilation:
 Hook and VMT operations are intentionally kept out of the baseline smoke gate and validated by the separate `Hook VMT Runtime Tests` workflow. Explicit `VmtManager.Dispose()` also uses deterministic restoration: if any tracked VMT entry cannot be restored, the manager remains undisposed and throws `LibmemException` instead of discarding the remaining hook bookkeeping. It allocates isolated executable memory in the current process and verifies hook redirection, trampoline execution, Remove, and VMT Hook / Unhook / Reset / Dispose without depending on Hearthstone or any external process.
 
 Injector behavior is also validated separately by `Injector Runtime Tests`. The test copies `libmem.dll` under a unique fixture name and performs real injection, module discovery, Unload, and Dispose against the current test process without depending on Hearthstone.
+
+Cross-process behavior is validated by the dedicated `External Process Runtime Tests` workflow. It launches the repository-owned `LibmemCli.TestTarget` in a separate PID/address space and verifies `ProcessSession.Open(pid)`, process-identity checks, remote read/write, remote allocate/protect/free, scanning, segment lookup, and target-process exit observation.
 
 ### Reuse the build from another repository
 
