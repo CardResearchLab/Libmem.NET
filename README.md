@@ -10,7 +10,7 @@
 
 LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装，面向 Windows x86/x64 / .NET 8 项目。
 
-本项目封装了当前固定版本 libmem 头文件中公开的全部函数，并使用托管模型、托管字节数组以及符合 .NET 使用习惯的 API 暴露给 C# / .NET。libmem 中普通函数与 `Ex` 函数通常在托管层对应为一组重载。
+除明确记录的兼容性豁免外，本项目覆盖当前固定版本 libmem 头文件中的公开函数，并使用托管模型、托管字节数组以及符合 .NET 使用习惯的 API 暴露给 C# / .NET。libmem 中普通函数与 `Ex` 函数通常在托管层对应为一组重载。
 
 原生 libmem 以固定版本的 Git Submodule 引入，并会在构建 C++/CLI 封装前自动编译。
 
@@ -231,9 +231,9 @@ external/Libmem/src/LibmemCli.vcxproj
 
 仓库内置五套自动化工作流：
 
-- \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64，并上传 \`LibmemCli-windows-x64\` Artifact。
+- \`.github/workflows/build.yml\`：向 \`main\` 推送、创建 PR 或手动运行时自动构建 Release x64 与 x86，并分别上传 \`LibmemCli-windows-x64\`、\`LibmemCli-windows-x86\` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
-- \`.github/workflows/release.yml\`：推送 \`v*\` 标签时自动构建并创建 GitHub Release，同时附带 \`LibmemCli-windows-x64.zip\`。
+- \`.github/workflows/release.yml\`：推送 \`v*\` 标签或 \`release/v*\` 发布分支时自动构建 x64/x86、校验包来源与 SHA-256，并创建 GitHub Release，同时附带两种架构的 ZIP 与校验文件。
 - \`.github/workflows/hook-vmt-tests.yml\`：独立运行真实 Hook / trampoline / VMT 生命周期测试，与基础 Smoke Test 分离。
 - \`.github/workflows/injector-tests.yml\`：独立验证 DLL 注入、模块发现、显式 Unload 与 Dispose 生命周期。
 
@@ -258,7 +258,7 @@ artifacts/package/LibmemCli-windows-x86.zip.sha256
 
 ## 版本与自动验证
 
-项目使用根目录的 `VERSION` 文件作为发布版本来源，当前版本为 **0.2.0**。构建后的 `LibmemCli.dll` 会写入对应的程序集版本信息。
+项目使用根目录的 `VERSION` 文件作为发布版本来源，当前版本为 **0.3.0**。构建后的 `LibmemCli.dll` 会写入对应的程序集版本信息。
 
 Runtime 包中的 `manifest.json` 会记录：
 
@@ -274,7 +274,7 @@ Runtime 包中的 `manifest.json` 会记录：
 
 CI 不只检查“能否编译”，还会执行两层自动验证：
 
-1. **API Contract Check**：直接解析固定 Submodule 中的 `include/libmem/libmem.h`，提取所有公开 `LM_API`，如果上游新增公开 API 但 C++/CLI wrapper 尚未引用，构建会失败。
+1. **API Contract Check**：直接解析固定 Submodule 中的 `include/libmem/libmem.h`，提取所有公开 `LM_API`；除源码中明确记录并解释原因的兼容性豁免外，如果上游新增公开 API 但 C++/CLI wrapper 尚未覆盖，构建会失败。
 2. **Runtime Smoke Tests**：实际加载 `LibmemCli.dll + libmem.dll`，覆盖进程/命令行、线程、模块/导出符号、内存段、内存申请/读写/填充/保护、DeepPointer、Data/Pattern/Signature Scan、汇编/反汇编与 CodeLength。所有可控的内存测试都只操作测试进程自己的隔离分配。
 
 Hook / VMT 不作为基础 Smoke Test 的硬性门禁，而是在独立的 `Hook VMT Runtime Tests` 工作流中验证。 `VmtManager` 的显式 `Dispose()` 同样采用确定性恢复：若任一已跟踪 VMT 项无法恢复，对象保持未释放状态并抛出 `LibmemException`，不会丢掉剩余 hook bookkeeping。该测试会在当前进程分配隔离的可执行内存，验证 Hook 重定向、trampoline、Remove，以及 VMT Hook / Unhook / Reset / Dispose，不依赖炉石或其他外部进程。
@@ -345,6 +345,8 @@ python .\eng\check-public-api.py --write
 - `LM_GetBits`
 - `LM_GetSystemBits`
 
+> 兼容性说明：固定 Windows 上游中的 `LM_GetCommandLine` / `LM_FreeCommandLine` 当前被列为显式兼容性豁免。托管 `Libmem.GetCommandLine` 保留预期调用语义，但不会执行这两个存在风险的原生入口。
+
 ### 线程、模块、符号与内存段
 
 线程、模块、符号和 Segment 相关的 `LM_*` 枚举、查找、获取、加载与卸载函数会映射到 `Libmem` 中对应的方法。
@@ -393,7 +395,7 @@ python .\eng\check-public-api.py --write
 - `IsInstalled`：目标代码当前是否仍被该 Handle 视为已 Hook；
 - `IsDisposed`：托管 Handle 生命周期是否已经结束；
 - `Remove()`：尝试卸载 Hook，成功后将 `IsInstalled` 置为 false，但不会自动 Dispose；
-- `Dispose()`：best-effort 清理，不再因 Unhook 失败而抛异常。
+- `Dispose()`：确定性尝试卸载 Hook；若原生 Unhook 失败，会抛出 `LibmemException`，并保留 `IsInstalled=true`，不会把仍然存在的 Hook 静默标记为已释放。
 
 这样如果卸载失败，`IsInstalled` 不会被错误地清零。Finalizer 仍然不会在 GC 线程中修改目标进程代码。
 
@@ -407,7 +409,7 @@ python .\eng\check-public-api.py --write
 
 3. `ProcessInfo` 和 `ModuleInfo` 是状态快照，而不是操作系统句柄。目标进程可能已经退出，模块与地址也可能失效。`IsProcessAlive` 会根据原始身份（`pid` + 启动时间）进行检查。
 
-4. `GetCommandLine` 返回 UTF-8 字符串，并负责释放原生分配。`string` 辅助方法拒绝包含嵌入式 NUL 的字符串。枚举回调为同步执行。
+4. `GetCommandLine` 当前只支持**当前进程**。由于固定的 Windows 上游 `LM_GetCommandLine` 在该版本存在未定义行为，LibmemCli 不直接调用它，而是对当前进程使用 `System.Environment.GetCommandLineArgs()`；对其他进程保持上游“暂不支持”的语义并返回 `null`。枚举回调为同步执行。
 
 5. `Disassemble(codeAddress, arch, ...)` 要求 `codeAddress` 指向**当前调用进程**中可读的机器码，而不是远程进程地址。需要反汇编远程代码时，应先调用 `ReadMemory`，再将返回的字节数组传给安全的固定缓冲区重载 `Disassemble(byte[], ...)`。
 

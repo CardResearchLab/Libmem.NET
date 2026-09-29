@@ -2,35 +2,32 @@
 
 ## Unreleased
 
+_No unreleased changes._
+
+## 0.3.0 - 2026-09-29
+
+LibmemCli 0.3.0 completes the wrapper's Windows x86/x64 stabilization and release pipeline while keeping the library independent from application-specific state models.
+
+### Added
+
+- Full Windows x86 support alongside x64 across native builds, C++/CLI configurations, samples, runtime tests, CI matrices, reusable builds, packaging, and release assets.
+- A unified `LibmemException` error model that preserves the underlying native operation name for definite libmem failures.
+- A committed shared public API baseline with CI enforcement so accidental signature or enum changes cannot land silently.
+- Manifest schema v2 with per-file size/SHA-256 metadata, archive checksums, package verification, and repository-commit provenance validation.
+- Architecture-aware Runtime Smoke, Hook/VMT, and Injector validation for both x86 and x64.
+
 ### Changed
 
-- Added Windows x86 alongside x64 across native builds, C++/CLI solution configurations, sample/test projects, CI matrices, reusable builds, packaging, and release assets.
-- Added pointer-width-safe address and size conversion so x86 rejects values that do not fit instead of silently truncating them.
-- Made smoke and Hook/VMT runtime tests architecture-aware, including pointer-size VMT slots and x86-specific overflow guards.
-- Kept the committed public API baseline unchanged across the dual-architecture implementation.
+- Removed `ProcessSnapshot` / `ModuleSnapshot` and snapshot-specific workflow code; snapshots, caches, events, and game-state models remain responsibilities of wrapper consumers.
+- Hardened `RemoteAllocation`, `InjectedModuleHandle`, `HookHandle`, and `VmtManager` deterministic cleanup so failed native restoration/release is surfaced without silently discarding ownership state.
+- Added pointer-width-safe address/size/index conversion so x86 rejects values above `UInt32.MaxValue` instead of truncating them.
+- Expanded smoke coverage for processes, command lines, threads, modules, exported symbols, memory segments, allocation/read/write/set/protection, DeepPointer, scans, assembly/disassembly, and CodeLength.
+- Release automation now produces and verifies both `LibmemCli-windows-x64` and `LibmemCli-windows-x86` packages.
 
-- Added a committed x64 public API baseline and compatibility checker so accidental public signature changes fail source-contract CI.
-- Documented the explicit process for intentional pre-1.0 API changes: regenerate the baseline, review the diff, update the changelog, and version accordingly.
+### Fixed
 
-- Upgraded the x64 runtime package manifest to schema v2 with per-file size and SHA-256 metadata.
-- Added an external SHA-256 checksum for the runtime ZIP and a shared package verifier used by build/reusable/release workflows.
-- Release publication now verifies package version, platform/configuration, file integrity, archive integrity, and repository commit provenance before creating a GitHub Release.
-
-- Expanded x64 runtime smoke coverage across process command lines, threads, modules/exported symbols, memory segments, SetMemory, DeepPointer, single-instruction assembly/disassembly, and CodeLength.
-- Kept mutation-oriented tests isolated to memory allocated inside the test process.
-
-- Hardened Hook/VMT ownership: `HookHandle` now retains `Destination`, explicit hook disposal surfaces unhook failure, and `VmtManager.Dispose()` preserves native bookkeeping when restoration fails.
-- Mapped Hook/VMT setup and restoration failures to `LibmemException` while keeping GC finalizers non-mutating.
-
-- Added `LibmemException` with an `Operation` property for definite native libmem failures while preserving normal not-found/sentinel return semantics.
-- Mapped core enumeration, protection, allocation-release, injection-release, and fixed-size read/write failures to the unified exception type.
-
-- Hardened owned-resource disposal: `RemoteAllocation` and `InjectedModuleHandle` no longer silently discard ownership when native cleanup fails.
-- Kept GC finalizers non-mutating for remote-process resources; deterministic cleanup remains the caller's responsibility.
-
-- Removed `ProcessSnapshot` / `ModuleSnapshot` and snapshot-specific APIs/workflow; application snapshots, caches, and game-state models belong to wrapper consumers.
-- Reaffirmed the x64-first boundary: the pinned libmem public C API is fully referenced by LibmemCli, while x86/x64 dual-architecture work remains deferred.
-- Clarified `ProcessSession` as an optional target-bound convenience wrapper rather than an application state container.
+- Avoided the pinned Windows upstream `LM_GetCommandLine` undefined-behavior path; current-process command-line arguments are now provided safely from the managed runtime while unsupported external-process queries return `null`.
+- Made symbol smoke validation runtime-independent by selecting a loaded module with usable exports instead of assuming `kernel32.dll` is discoverable by name in every runner environment.
 
 ## 0.2.0
 
