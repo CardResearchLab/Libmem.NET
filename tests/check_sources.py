@@ -345,6 +345,8 @@ for package_script_marker in [
     "LibmemCli.xml",
     "RepositoryCommit",
     "git -C $repoRoot rev-parse HEAD",
+    "-dev.$shortCommit",
+    "package-version.txt",
     "verify_nuget_package.py",
 ]:
     assert package_script_marker in nuget_package_script, (
@@ -496,6 +498,7 @@ assert "LibmemCli.ExternalProcessTests" in external_process_workflow
 assert "setup-dotnet-x86.ps1" not in external_process_workflow
 assert "NuGet Consumer x64" in nuget_consumer_workflow
 assert "package-nuget.ps1" in nuget_consumer_workflow
+assert "package-version.txt" in nuget_consumer_workflow
 assert "LibmemCli.NuGetConsumer" in nuget_consumer_workflow
 assert "Publish NuGet consumer" in nuget_consumer_workflow
 assert "Reject non-x64 NuGet consumer" in nuget_consumer_workflow
