@@ -52,26 +52,9 @@ jobs:
         shell: pwsh
         run: .\build.ps1 -Configuration Release -Platform x64
 
-      - name: Pack local NuGet prototype
+      - name: Pack and verify local NuGet prototype
         shell: pwsh
-        run: |
-          $version = (Get-Content .\VERSION -Raw).Trim()
-          dotnet pack .\packaging\HearthstoneModding.LibmemCli.csproj `
-            -c Release `
-            -p:PackageVersion=$version `
-            -p:RepositoryCommit=$env:GITHUB_SHA `
-            -p:NuGetAudit=false `
-            -o .\artifacts\nuget
-
-      - name: Verify NuGet package layout
-        shell: pwsh
-        run: |
-          $version = (Get-Content .\VERSION -Raw).Trim()
-          $package = ".\artifacts\nuget\HearthstoneModding.LibmemCli.$version.nupkg"
-          python .\tests\verify_nuget_package.py `
-            --package $package `
-            --expected-version $version `
-            --expected-commit $env:GITHUB_SHA
+        run: .\eng\package-nuget.ps1 -Configuration Release
 
       - name: Restore NuGet consumer from local feed
         shell: pwsh
