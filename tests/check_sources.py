@@ -321,6 +321,7 @@ for package_marker in [
         f"NuGet prototype lost package asset: {package_marker}"
     )
 assert "ContentWithTargetPath" in nuget_targets
+assert "'$(OS)' != 'Windows_NT'" in nuget_targets
 assert "currently supports only Windows x64" in nuget_targets
 for consumer_marker in [
     "ProcessSession.Open",
@@ -330,6 +331,22 @@ for consumer_marker in [
 ]:
     assert consumer_marker in nuget_consumer_source
 print("PASS local NuGet prototype contract")
+
+consumption_guide = (root / "docs/CONSUMPTION.md").read_text(encoding="utf-8")
+for consumption_marker in [
+    "## 1. Runtime ZIP",
+    "## 2. Git Submodule",
+    "## 3. Local NuGet prototype",
+    "HearthstoneModding.LibmemCli",
+    "runtimes/win-x64/native",
+    "PackageReference",
+    "## Acceptance criteria before NuGet publication",
+]:
+    assert consumption_marker in consumption_guide, (
+        f"Consumption guide lost required section: {consumption_marker}"
+    )
+assert "not published to nuget.org" in consumption_guide
+print("PASS consumption guide contract")
 test_target_project = (root / "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj").read_text(encoding="utf-8")
 external_process_project = (root / "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj").read_text(encoding="utf-8")
 nuget_package_project = (root / "packaging/HearthstoneModding.LibmemCli.csproj").read_text(encoding="utf-8")
