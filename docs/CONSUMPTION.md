@@ -96,6 +96,10 @@ restore an independent PackageReference consumer
     ↓
 build/run the consumer
     ↓
+publish the consumer and verify runtime files
+    ↓
+reject a non-x64 consumer
+    ↓
 ProcessSession.Open
     ↓
 Allocate / Write / Read / Dispose
@@ -103,7 +107,7 @@ Allocate / Write / Read / Dispose
 
 The consumer test references **only the local NuGet package**. It does not use a project reference to LibmemCli.
 
-This proves more than package creation: it verifies that the restored package is actually loadable and executable on Windows x64.
+This proves more than package creation: it verifies that the restored package is loadable and executable on Windows x64, that publish output receives the required native runtime files, and that unsupported non-x64 consumption fails early.
 
 ## Why NuGet is still experimental
 
