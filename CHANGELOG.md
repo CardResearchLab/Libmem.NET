@@ -37,6 +37,7 @@
 
 ### Removed
 
+- Removed the early convenience `ProcessInfo.Read`, `Write`, `ReadInt32`, `WriteInt32`, and `SigScan` forwarding methods before v1.0. `ProcessInfo` now remains focused on process identity/metadata plus `IsAlive()`; session-bound memory/scanning lives on Managers and static `Libmem.*` compatibility APIs remain available.
 - Removed the temporary v0.x `MemoryManager.DeepPointer`, `DataScan`, `PatternScan`, and `SigScan` forwarding aliases before the v1.0 API freeze. Session-bound scanning now lives only on `ProcessSession.Scanner`; static `Libmem.*` compatibility APIs remain available.
 
 ## 0.3.0 - 2026-09-29

@@ -48,11 +48,6 @@ TYPE public ref class ProcessInfo sealed
   property String^ Name;
   property String^ Path;
   bool IsAlive();
-  array<Byte>^ Read(UInt64 address, int count);
-  int Write(UInt64 address, array<Byte>^ data);
-  Int32 ReadInt32(UInt64 address);
-  void WriteInt32(UInt64 address, Int32 value);
-  UInt64 SigScan(String^ signature, UInt64 address, UInt64 size);
 TYPE public ref class ThreadInfo sealed
   property UInt32 Id;
   property UInt32 OwnerPid;

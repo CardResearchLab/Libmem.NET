@@ -54,15 +54,6 @@ namespace LibmemCli {
         property String^ Path;
         /// <summary>Checks whether this exact process identity is still alive.</summary>
         bool IsAlive();
-        /// <summary>Reads up to count bytes from this process.</summary>
-        /// <returns>Only the bytes actually read; the array can be shorter than count.</returns>
-        array<Byte>^ Read(UInt64 address, int count);
-        /// <summary>Writes data to this process.</summary>
-        /// <returns>The number of bytes actually written.</returns>
-        int Write(UInt64 address, array<Byte>^ data);
-        Int32 ReadInt32(UInt64 address);
-        void WriteInt32(UInt64 address, Int32 value);
-        UInt64 SigScan(String^ signature, UInt64 address, UInt64 size);
     };
     /// <summary>Managed description of a native thread.</summary>
     public ref class ThreadInfo sealed {

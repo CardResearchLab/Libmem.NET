@@ -56,6 +56,8 @@ Completed freeze cleanup: the temporary v0.x `MemoryManager` forwarding aliases 
 
 Completed contract freeze: target-process exit does not implicitly dispose `ProcessSession`; the bound identity remains readable, `IsAlive()` returns false, `Refresh()` returns null, and Manager properties remain accessible. A universal Manager liveness preflight is intentionally avoided so exact external-process identity checks do not pollute read/write/scan hot paths.
 
+Completed freeze cleanup: the early convenience `ProcessInfo.Read / Write / ReadInt32 / WriteInt32 / SigScan` methods have been removed. `ProcessInfo` now keeps only identity-related behavior through `IsAlive()`; memory and scanning belong to the `ProcessSession` Managers, while the static `Libmem.*` compatibility facade remains.
+
 ## v0.4 — x64 architecture cleanup
 
 Focus:
