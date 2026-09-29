@@ -54,6 +54,8 @@ This phase still excludes Snapshot, GameState, Entity, IPC, Hearthstone-specific
 
 Completed freeze cleanup: the temporary v0.x `MemoryManager` forwarding aliases for `DeepPointer / DataScan / PatternScan / SigScan` have been removed. Session-bound scanning is frozen on `ProcessSession.Scanner`, while the static `Libmem.*` compatibility facade remains.
 
+Completed contract freeze: target-process exit does not implicitly dispose `ProcessSession`; the bound identity remains readable, `IsAlive()` returns false, `Refresh()` returns null, and Manager properties remain accessible. A universal Manager liveness preflight is intentionally avoided so exact external-process identity checks do not pollute read/write/scan hot paths.
+
 ## v0.4 — x64 architecture cleanup
 
 Focus:

@@ -140,7 +140,7 @@ namespace LibmemCli {
     ref class InjectedModuleHandle;
 
     /// <summary>Represents a managed attachment to one concrete process identity.</summary>
-    /// <remarks>The session binds PID and process start time. It does not own a Windows process handle; it provides a stable lifetime and aggregation root for subsystem APIs.</remarks>
+    /// <remarks>The session binds PID and process start time. It does not own a Windows process handle; it provides a stable lifetime and aggregation root for subsystem APIs. Target-process exit does not implicitly dispose the session; bound identity metadata remains readable until Detach or Dispose.</remarks>
     public ref class ProcessSession sealed : IDisposable {
     private:
         ProcessInfo^ identity_;
