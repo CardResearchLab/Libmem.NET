@@ -53,12 +53,31 @@ assert len(upstream_apis) >= 50, (
 )
 
 wrapper_native_calls = set(re.findall(r"\b(LM_[A-Za-z0-9_]+)\s*\(", source))
-missing_native_apis = sorted(upstream_apis - wrapper_native_calls)
+
+# Explicit compatibility waivers are allowed only when LibmemCli deliberately replaces
+# an unsafe or unusable pinned-upstream implementation while preserving the managed API.
+# At the pinned Windows revision LM_GetCommandLine has undefined behavior (uninitialized
+# realloc input) and mutates the supplied PID due to an assignment in its PID check.
+# LibmemCli therefore serves current-process arguments from System.Environment and keeps
+# the upstream external-process "unsupported" behavior. LM_FreeCommandLine is paired
+# exclusively with that unsafe native allocation path, so neither native entry point is
+# executed by the managed wrapper.
+native_api_waivers = {"LM_GetCommandLine", "LM_FreeCommandLine"}
+assert native_api_waivers <= upstream_apis, (
+    "Compatibility waiver references APIs not exposed by the pinned libmem: "
+    + ", ".join(sorted(native_api_waivers - upstream_apis))
+)
+missing_native_apis = sorted(upstream_apis - wrapper_native_calls - native_api_waivers)
 assert not missing_native_apis, (
-    "Pinned libmem exposes public APIs that LibmemCli does not reference: "
+    "Pinned libmem exposes public APIs that LibmemCli does not reference or explicitly waive: "
     + ", ".join(missing_native_apis)
 )
-print("PASS upstream public API coverage:", len(upstream_apis))
+print(
+    "PASS upstream public API coverage:",
+    len(upstream_apis),
+    "with compatibility waivers:",
+    ", ".join(sorted(native_api_waivers)),
+)
 
 assert "public ref class LibmemException : InvalidOperationException" in header
 for operation in [
