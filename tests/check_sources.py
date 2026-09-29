@@ -303,6 +303,19 @@ assert "verify-package.py" in release_workflow
 assert "--expected-repository-commit" in release_workflow
 assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
 assert "LibmemCli-windows-x86.zip.sha256" not in release_workflow
+release_notes_script_path = root / "eng/render-release-notes.py"
+release_notes_script = release_notes_script_path.read_text(encoding="utf-8")
+compile(release_notes_script, str(release_notes_script_path), "exec")
+assert "render-release-notes.py" in release_workflow
+assert "--notes-file dist/release-notes.md" in release_workflow
+assert '--title "LibmemCli $TAG_NAME"' in release_workflow
+assert "--generate-notes" not in release_workflow
+subprocess.run(
+    [sys.executable, str(root / "tests/test_release_notes.py")],
+    cwd=root,
+    check=True,
+)
+print("PASS formal GitHub Release notes contract")
 x86_runtime_setup = (root / "eng/setup-dotnet-x86.ps1").read_text(encoding="utf-8")
 assert "-Architecture x86" in x86_runtime_setup
 assert "DOTNET_ROOT_X86" in x86_runtime_setup
