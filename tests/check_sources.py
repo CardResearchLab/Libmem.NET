@@ -207,22 +207,28 @@ assert "verify-package.py" in reusable_workflow
 assert "verify-package.py" in release_workflow
 assert "--expected-repository-commit" in release_workflow
 assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
-assert "LibmemCli-windows-x86.zip.sha256" in release_workflow
+assert "LibmemCli-windows-x86.zip.sha256" not in release_workflow
 x86_runtime_setup = (root / "eng/setup-dotnet-x86.ps1").read_text(encoding="utf-8")
 assert "-Architecture x86" in x86_runtime_setup
 assert "DOTNET_ROOT_X86" in x86_runtime_setup
 assert "DOTNET_ROOT(x86)" in x86_runtime_setup
-assert "setup-dotnet-x86.ps1" in build_workflow
-assert "setup-dotnet-x86.ps1" in reusable_workflow
-assert "setup-dotnet-x86.ps1" in hook_workflow
-assert "setup-dotnet-x86.ps1" in injector_workflow
 
-assert "platform: [x64, x86]" in build_workflow
-assert "platform: [x64, x86]" in hook_workflow
-assert "platform: [x64, x86]" in injector_workflow
-assert "platform:" in reusable_workflow and "Target platform (x64 or x86)" in reusable_workflow
-assert "needs: [build-x64, build-x86]" in release_workflow
-print("PASS package integrity and release provenance contract")
+# x64 is the supported/default CI and release target.
+assert "Release x64" in build_workflow
+assert "Platform x86" not in build_workflow
+assert "setup-dotnet-x86.ps1" not in build_workflow
+assert "Hook and VMT x64" in hook_workflow
+assert "setup-dotnet-x86.ps1" not in hook_workflow
+assert "Injector x64" in injector_workflow
+assert "setup-dotnet-x86.ps1" not in injector_workflow
+assert "needs: [build-x64]" in release_workflow
+assert "build-x86:" not in release_workflow
+
+# Keep the reusable/manual x86 path available for future compatibility work.
+assert "setup-dotnet-x86.ps1" in reusable_workflow
+assert "platform:" in reusable_workflow
+assert "x64 is the supported release target" in reusable_workflow
+print("PASS x64-first package integrity and release provenance contract")
 
 subprocess.run(
     [
