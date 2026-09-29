@@ -72,8 +72,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="LibmemCli.h" />
+    <ClInclude Include="Interop\NativeConverter.h" />
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="LibmemCli.cpp" />
+    <ClCompile Include="Interop\NativeConverter.cpp" />
     <ClCompile Include="Core\ProcessSession.cpp" />
     <ClCompile Include="Memory\MemoryManager.cpp" />
     <ClCompile Include="Modules\ModuleManager.cpp" />
