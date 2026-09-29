@@ -45,6 +45,16 @@ static unsafe int CallNoArgs(ulong address)
 Console.WriteLine("LibmemCli Hook/VMT runtime tests");
 var invalidAddress = IntPtr.Size == sizeof(ulong) ? ulong.MaxValue : uint.MaxValue;
 
+try
+{
+    _ = new VmtManager(0);
+    throw new InvalidOperationException("VmtManager(0) should reject a zero VTable address.");
+}
+catch (ArgumentOutOfRangeException ex)
+{
+    Check(ex.ParamName == "vtableAddress", "VmtManager(0) reported the wrong parameter name.");
+}
+
 using var session = Libmem.Attach((uint)Environment.ProcessId)
     ?? throw new InvalidOperationException("Could not attach to the current process.");
 
