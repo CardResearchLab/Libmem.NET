@@ -18,12 +18,8 @@ concurrency:
 
 jobs:
   build:
-    name: Release ${{ matrix.platform }}
+    name: Release x64
     runs-on: windows-2022
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [x64, x86]
 
     steps:
       - name: Checkout
@@ -36,11 +32,6 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Setup .NET 8 x86 runtime
-        if: matrix.platform == 'x86'
-        shell: pwsh
-        run: .\eng\setup-dotnet-x86.ps1
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -52,29 +43,29 @@ jobs:
 
       - name: Build LibmemCli
         shell: pwsh
-        run: .\build.ps1 -Configuration Release -Platform ${{ matrix.platform }}
+        run: .\build.ps1 -Configuration Release -Platform x64
 
       - name: Run runtime smoke tests
         shell: pwsh
-        run: dotnet run --project .\tests\LibmemCli.SmokeTests\LibmemCli.SmokeTests.csproj -c Release -p:Platform=${{ matrix.platform }}
+        run: dotnet run --project .\tests\LibmemCli.SmokeTests\LibmemCli.SmokeTests.csproj -c Release -p:Platform=x64
 
       - name: Package runtime
         shell: pwsh
-        run: .\eng\package-runtime.ps1 -Configuration Release -Platform ${{ matrix.platform }}
+        run: .\eng\package-runtime.ps1 -Configuration Release -Platform x64
 
       - name: Verify runtime package
         shell: pwsh
         run: |
           $commit = (git rev-parse HEAD).Trim()
-          python .\eng\verify-package.py --package-dir .\artifacts\package\LibmemCli-windows-${{ matrix.platform }} --archive .\artifacts\package\LibmemCli-windows-${{ matrix.platform }}.zip --checksum .\artifacts\package\LibmemCli-windows-${{ matrix.platform }}.zip.sha256 --expected-repository-commit $commit --expected-platform win-${{ matrix.platform }} --expected-configuration Release
+          python .\eng\verify-package.py --package-dir .\artifacts\package\LibmemCli-windows-x64 --archive .\artifacts\package\LibmemCli-windows-x64.zip --checksum .\artifacts\package\LibmemCli-windows-x64.zip.sha256 --expected-repository-commit $commit --expected-platform win-x64 --expected-configuration Release
 
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LibmemCli-windows-${{ matrix.platform }}
+          name: LibmemCli-windows-x64
           path: |
-            artifacts/package/LibmemCli-windows-${{ matrix.platform }}/
-            artifacts/package/LibmemCli-windows-${{ matrix.platform }}.zip
-            artifacts/package/LibmemCli-windows-${{ matrix.platform }}.zip.sha256
+            artifacts/package/LibmemCli-windows-x64/
+            artifacts/package/LibmemCli-windows-x64.zip
+            artifacts/package/LibmemCli-windows-x64.zip.sha256
           if-no-files-found: error
           retention-days: 14
