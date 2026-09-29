@@ -74,10 +74,11 @@ Check(session.Threads.Enumerate().Any(x => x.Id == currentThread.Id),
 Check(session.Threads.Main is not null && session.Threads.Main.OwnerPid == current.Pid,
     "ThreadManager.Main did not resolve a thread owned by the session process.");
 
-using (var openedSession = ProcessSession.Open(current))
+using (var openedSession = ProcessSession.Open(current)
+       ?? throw new InvalidOperationException("ProcessSession.Open(ProcessInfo) failed for the current process."))
 {
-    Check(openedSession is not null && openedSession.Pid == current.Pid,
-        "ProcessSession.Open(ProcessInfo) failed for the current process.");
+    Check(openedSession.Pid == current.Pid,
+        "ProcessSession.Open(ProcessInfo) returned the wrong process.");
 }
 
 var sessionSnapshot = session.Info;
