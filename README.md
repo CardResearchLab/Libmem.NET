@@ -306,7 +306,7 @@ external/Libmem/src/LibmemCli.vcxproj
 - \`.github/workflows/hook-vmt-tests.yml\`：在 x64 上独立运行真实 Hook / trampoline / VMT 生命周期测试，与基础 Smoke Test 分离。
 - \`.github/workflows/injector-tests.yml\`：在 x64 上独立验证 DLL 注入、模块发现、显式 Unload 与 Dispose 生命周期。
 - `.github/workflows/external-process-tests.yml`：启动仓库自带的 `LibmemCli.TestTarget` 子进程，验证真实跨进程 Attach、Read/Write、远程 Allocate/Protect/Free、Signature Scan、Segment 与进程退出检测。
-- `.github/workflows/nuget-consumer-tests.yml`：构建本地 `HearthstoneModding.LibmemCli` NuGet 原型，通过独立 `PackageReference` 消费者执行 pack → restore → build → run 验证；当前不会发布到 nuget.org。
+- `.github/workflows/nuget-consumer-tests.yml`：构建本地 `HearthstoneModding.LibmemCli` NuGet 原型，通过独立 `PackageReference` 消费者执行 pack → restore → run → publish 验证；当前不会发布到 nuget.org。
 
 本地也可以生成与 CI 相同的 Runtime 包：
 
