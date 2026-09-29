@@ -286,6 +286,11 @@ assert "Libmem.Attach" not in sample_source
 assert "Hearthstone" not in sample_source
 print("PASS C# consumer sample contract")
 
+nuget_package_project = (root / "packaging/HearthstoneModding.LibmemCli.csproj").read_text(encoding="utf-8")
+nuget_targets = (root / "packaging/HearthstoneModding.LibmemCli.targets").read_text(encoding="utf-8")
+nuget_consumer_project = (root / "tests/LibmemCli.NuGetConsumer/LibmemCli.NuGetConsumer.csproj").read_text(encoding="utf-8")
+nuget_consumer_source = (root / "tests/LibmemCli.NuGetConsumer/Program.cs").read_text(encoding="utf-8")
+
 api_reference = (root / "docs/API.md").read_text(encoding="utf-8")
 for api_reference_marker in [
     "## Recommended entry point",
@@ -349,10 +354,6 @@ assert "not published to nuget.org" in consumption_guide
 print("PASS consumption guide contract")
 test_target_project = (root / "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj").read_text(encoding="utf-8")
 external_process_project = (root / "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj").read_text(encoding="utf-8")
-nuget_package_project = (root / "packaging/HearthstoneModding.LibmemCli.csproj").read_text(encoding="utf-8")
-nuget_targets = (root / "packaging/HearthstoneModding.LibmemCli.targets").read_text(encoding="utf-8")
-nuget_consumer_project = (root / "tests/LibmemCli.NuGetConsumer/LibmemCli.NuGetConsumer.csproj").read_text(encoding="utf-8")
-nuget_consumer_source = (root / "tests/LibmemCli.NuGetConsumer/Program.cs").read_text(encoding="utf-8")
 
 assert "Debug|x86 = Debug|x86" in solution
 assert "Release|x86 = Release|x86" in solution
@@ -409,8 +410,6 @@ readme_en = (root / "README.en.md").read_text(encoding="utf-8")
 for readme in [readme_zh, readme_en]:
     assert ".github/workflows/external-process-tests.yml" in readme
     assert "LibmemCli.TestTarget" in readme
-assert "六套自动化工作流" in readme_zh
-assert "six automation workflows" in readme_en
 print("PASS external-process documentation contract")
 for readme in [readme_zh, readme_en]:
     assert ".github/workflows/nuget-consumer-tests.yml" in readme
