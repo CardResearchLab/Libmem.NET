@@ -278,7 +278,7 @@ external/Libmem/src/LibmemCli.vcxproj
 
 ## GitHub Actions 自动构建
 
-仓库内置五套自动化工作流：
+仓库内置六套自动化工作流：
 
 - \`.github/workflows/build.yml\`：向 `main` 推送、创建 PR 或手动运行时只构建并验证 Release x64，上传 `LibmemCli-windows-x64` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
