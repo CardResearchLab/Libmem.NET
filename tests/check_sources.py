@@ -316,6 +316,12 @@ for readme in [readme_zh, readme_en]:
     assert "LibmemCli.TestTarget" in readme
 print("PASS external-process documentation contract")
 
+assert "<GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>" in vcxproj
+assert "<Xdcmake>" in vcxproj
+assert "<OutputFile>$(OutDir)$(TargetName).xml</OutputFile>" in vcxproj
+assert "(Join-Path $managed 'LibmemCli.xml')" in package_script
+print("PASS XML documentation build/package contract")
+
 manifest_script = (root / "eng/write-manifest.ps1").read_text(encoding="utf-8")
 package_script = (root / "eng/package-runtime.ps1").read_text(encoding="utf-8")
 verify_script_path = root / "eng/verify-package.py"
