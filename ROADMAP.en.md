@@ -95,7 +95,7 @@ Focus:
 - Hook/VMT Tests;
 - Injector Tests;
 - independent TestTarget (x64 external-process target established);
-- C# consumer sample;
+- C# consumer sample (updated to the recommended `ProcessSession` / Manager / IDisposable / `LibmemException` usage);
 - XML documentation (the `LibmemCli.xml` build/package pipeline is established; public API comments continue to expand);
 - README / API documentation.
 

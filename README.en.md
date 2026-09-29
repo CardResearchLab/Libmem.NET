@@ -91,7 +91,7 @@ using LibmemCli;
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process not found");
 
-using var session = Libmem.Attach(process)
+using var session = ProcessSession.Open(process)
     ?? throw new InvalidOperationException("Attach failed");
 
 Console.WriteLine(
@@ -103,6 +103,8 @@ foreach (var module in session.Modules.Enumerate())
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
 }
 ```
+
+See [`samples/Example.cs`](samples/Example.cs) for the complete runnable consumer example. It uses the recommended `ProcessSession` / Manager APIs and only operates on isolated memory owned by the sample process.
 
 At runtime, keep `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll` beside the application executable. Keep `LibmemCli.xml` beside the managed assembly as well when IntelliSense API documentation is desired in Visual Studio / C# editors.
 

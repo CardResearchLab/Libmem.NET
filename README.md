@@ -91,7 +91,7 @@ using LibmemCli;
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process not found");
 
-using var session = Libmem.Attach(process)
+using var session = ProcessSession.Open(process)
     ?? throw new InvalidOperationException("Attach failed");
 
 Console.WriteLine(
@@ -103,6 +103,8 @@ foreach (var module in session.Modules.Enumerate())
         $"{module.Name}  Base=0x{module.Base:X}  Size=0x{module.Size:X}");
 }
 ```
+
+完整的可运行消费者示例见 [`samples/Example.cs`](samples/Example.cs)，示例使用推荐的 `ProcessSession` / Manager API，并只操作示例进程自己的隔离内存。
 
 运行时请确保 `LibmemCli.dll`、`Ijwhost.dll` 和 `libmem.dll` 位于应用程序可执行文件旁。建议同时保留同目录的 `LibmemCli.xml`，Visual Studio / C# 编辑器可据此显示 LibmemCli 的 IntelliSense API 说明。
 

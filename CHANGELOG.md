@@ -14,6 +14,7 @@
 
 ### Changed
 
+- Modernized the C# consumer sample around the recommended `ProcessSession` and Manager APIs, including owned memory, scanning, protection restore, deterministic disposal, and `LibmemException` handling.
 - Replaced GitHub auto-generated PR-feed release bodies with formal user-facing Release Notes generated from the versioned changelog and verified package metadata.
 - Tightened the session-bound manager error contract: definite allocation, module-load, assembly, and code-length failures now surface as `LibmemException`, while static compatibility APIs retain their existing sentinel/nullable semantics.
 - Split the remaining static `Libmem.*`, `ProcessInfo`, and `LibmemException` implementations into subsystem translation units, leaving `LibmemCli.cpp` as a thin compatibility translation unit.
