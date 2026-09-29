@@ -1,4 +1,5 @@
 #include "LibmemCli.h"
+#include "Interop/NativeConverter.h"
 #include <algorithm>
 #include <cstring>
 #include <limits>
@@ -10,141 +11,43 @@ using namespace System::Text;
 using namespace System::Runtime::InteropServices;
 using namespace System::Collections::Generic;
 using namespace LibmemCli;
+using namespace LibmemCli::Interop;
 
 namespace {
-    lm_address_t native_address(UInt64 value, String^ parameterName);
-    lm_size_t native_size(UInt64 value, String^ parameterName);
-    bool bad_address(UInt64 value);
-
-    std::string utf8(String^ value) {
-        if (value == nullptr) throw gcnew ArgumentNullException("value");
-        if (value->IndexOf('\0') >= 0) throw gcnew ArgumentException("Embedded NUL is not supported.");
-        array<Byte>^ bytes = Encoding::UTF8->GetBytes(value);
-        if (bytes->Length == 0) return std::string();
-        pin_ptr<Byte> p = &bytes[0];
-        return std::string(reinterpret_cast<const char*>(p), bytes->Length);
-    }
-    String^ str(const char* text) {
-        if (!text) return nullptr;
-        int n = static_cast<int>(std::strlen(text));
-        auto bytes = gcnew array<Byte>(n);
-        if(n) Marshal::Copy(IntPtr((void*)text),bytes,0,n);
-        return Encoding::UTF8->GetString(bytes);
-    }
-    lm_process_t proc(ProcessInfo^ input) {
-        if (input == nullptr) throw gcnew ArgumentNullException("process");
-        lm_process_t p{};
-        p.pid = input->Pid; p.ppid = input->ParentPid; p.arch = static_cast<lm_arch_t>(input->Architecture);
-        p.bits = static_cast<lm_size_t>(input->Bits); p.start_time = input->StartTime;
-        std::string name = utf8(input->Name == nullptr ? String::Empty : input->Name);
-        std::string path = utf8(input->Path == nullptr ? String::Empty : input->Path);
-        std::memcpy(p.name, name.data(), std::min(name.size(), sizeof(p.name) - 1));
-        std::memcpy(p.path, path.data(), std::min(path.size(), sizeof(p.path) - 1));
-        return p;
-    }
-    lm_module_t mod(ModuleInfo^ input) {
-        if (input == nullptr) throw gcnew ArgumentNullException("module");
-        lm_module_t m{};
-        m.base = native_address(input->Base,"module.Base");
-        m.end = native_address(input->End,"module.End");
-        m.size = native_size(input->Size,"module.Size");
-        std::string name = utf8(input->Name == nullptr ? String::Empty : input->Name);
-        std::string path = utf8(input->Path == nullptr ? String::Empty : input->Path);
-        std::memcpy(m.name, name.data(), std::min(name.size(), sizeof(m.name) - 1));
-        std::memcpy(m.path, path.data(), std::min(path.size(), sizeof(m.path) - 1));
-        return m;
-    }
-    ProcessInfo^ process(const lm_process_t& p) {
-        auto r = gcnew ProcessInfo();
-        r->Pid=p.pid; r->ParentPid=p.ppid; r->Architecture=static_cast<LibmemCli::Architecture>(p.arch);
-        r->Bits=p.bits; r->StartTime=p.start_time;
-        r->Name=str(p.name); r->Path=str(p.path);
-        return r;
-    }
-    ThreadInfo^ thread(const lm_thread_t& t) {
-        auto r = gcnew ThreadInfo(); r->Id=t.tid; r->OwnerPid=t.owner_pid; return r;
-    }
-    ModuleInfo^ module(const lm_module_t& m) {
-        auto r = gcnew ModuleInfo(); r->Base=m.base; r->End=m.end; r->Size=m.size;
-        r->Path=str(m.path); r->Name=str(m.name); return r;
-    }
-    SegmentInfo^ segment(const lm_segment_t& s) {
-        auto r=gcnew SegmentInfo(); r->Base=s.base; r->End=s.end; r->Size=s.size;
-        r->Protection=static_cast<MemoryProtection>(s.prot); return r;
-    }
-    InstructionInfo^ instruction(const lm_inst_t& i) {
-        auto r=gcnew InstructionInfo(); r->Address=i.address; r->Size=i.size;
-        int n=static_cast<int>(std::min(static_cast<size_t>(i.size), sizeof(i.bytes)));
-        r->Bytes=gcnew array<Byte>(n);
-        if(n) Marshal::Copy(IntPtr((void*)i.bytes),r->Bytes,0,n);
-        r->Mnemonic=str(i.mnemonic); r->OperandString=str(i.op_str); return r;
-    }
-    // Callbacks must remain completely native; they copy native data into temporary vectors.
-    // Managed objects are created only after synchronous native enumeration returns.
-#pragma managed(push, off)
-    struct NativeSymbol { lm_address_t address; std::string name; };
-    lm_bool_t LM_CALL cb_process(lm_process_t* p, void* ctx) {
-        static_cast<std::vector<lm_process_t>*>(ctx)->push_back(*p); return LM_TRUE;
-    }
-    lm_bool_t LM_CALL cb_thread(lm_thread_t* p, void* ctx) {
-        static_cast<std::vector<lm_thread_t>*>(ctx)->push_back(*p); return LM_TRUE;
-    }
-    lm_bool_t LM_CALL cb_module(lm_module_t* p, void* ctx) {
-        static_cast<std::vector<lm_module_t>*>(ctx)->push_back(*p); return LM_TRUE;
-    }
-    lm_bool_t LM_CALL cb_segment(lm_segment_t* p, void* ctx) {
-        static_cast<std::vector<lm_segment_t>*>(ctx)->push_back(*p); return LM_TRUE;
-    }
-    lm_bool_t LM_CALL cb_symbol(lm_symbol_t* p, void* ctx) {
-        static_cast<std::vector<NativeSymbol>*>(ctx)->push_back({p->address,p->name ? p->name : ""}); return LM_TRUE;
-    }
-#pragma managed(pop)
-    array<Byte>^ read_common(const lm_process_t* p, UInt64 address, int count) {
+    array<Byte>^ read_common(const lm_process_t* processInfo, UInt64 address, int count) {
         if(count < 0) throw gcnew ArgumentOutOfRangeException("count");
-        array<Byte>^ bytes=gcnew array<Byte>(count);
+
+        array<Byte>^ bytes = gcnew array<Byte>(count);
         if(!count) return bytes;
-        pin_ptr<Byte> dest=&bytes[0];
-        lm_size_t got=p ? LM_ReadMemoryEx(p,native_address(address,"address"),dest,count)
-                        : LM_ReadMemory(native_address(address,"address"),dest,count);
-        if(got > native_size(count,"count")) throw gcnew InvalidOperationException("Native read exceeded buffer.");
-        if(got == native_size(count,"count")) return bytes;
-        auto partial = gcnew array<Byte>(static_cast<int>(got));
+
+        pin_ptr<Byte> destination = &bytes[0];
+        lm_size_t read = processInfo
+            ? LM_ReadMemoryEx(processInfo, native_address(address, "address"), destination, count)
+            : LM_ReadMemory(native_address(address, "address"), destination, count);
+
+        if(read > native_size(count, "count"))
+            throw gcnew InvalidOperationException("Native read exceeded buffer.");
+
+        if(read == native_size(count, "count")) return bytes;
+
+        auto partial = gcnew array<Byte>(static_cast<int>(read));
         Array::Copy(bytes, partial, partial->Length);
         return partial;
     }
-    int write_common(const lm_process_t* p, UInt64 address, array<Byte>^ bytes) {
-        if(bytes==nullptr) throw gcnew ArgumentNullException("data");
+
+    int write_common(const lm_process_t* processInfo, UInt64 address, array<Byte>^ bytes) {
+        if(bytes == nullptr) throw gcnew ArgumentNullException("data");
         if(!bytes->Length) return 0;
-        pin_ptr<Byte> src=&bytes[0];
-        lm_size_t n=p ? LM_WriteMemoryEx(p,native_address(address,"address"),src,bytes->Length)
-                      : LM_WriteMemory(native_address(address,"address"),src,bytes->Length);
-        if(n>static_cast<lm_size_t>(bytes->Length)) throw gcnew InvalidOperationException("Native write exceeded buffer.");
-        return static_cast<int>(n);
-    }
-    lm_address_t native_address(UInt64 value, String^ parameterName) {
-        const UInt64 maximum=static_cast<UInt64>(std::numeric_limits<lm_address_t>::max());
-        if(value>maximum)
-            throw gcnew ArgumentOutOfRangeException(
-                parameterName,
-                "Address does not fit the current process architecture.");
-        return static_cast<lm_address_t>(value);
-    }
-    lm_size_t native_size(UInt64 value, String^ parameterName) {
-        const UInt64 maximum=static_cast<UInt64>(std::numeric_limits<lm_size_t>::max());
-        if(value>maximum)
-            throw gcnew ArgumentOutOfRangeException(
-                parameterName,
-                "Size or index does not fit the current process architecture.");
-        return static_cast<lm_size_t>(value);
-    }
-    bool bad_address(UInt64 value) {
-        return value==static_cast<UInt64>(LM_ADDRESS_BAD);
-    }
-    std::vector<lm_address_t> offsets(array<UInt64>^ input) {
-        if (input==nullptr) throw gcnew ArgumentNullException("offsets");
-        std::vector<lm_address_t> result; result.reserve(input->Length);
-        for each (UInt64 item in input) result.push_back(native_address(item,"offsets"));
-        return result;
+
+        pin_ptr<Byte> source = &bytes[0];
+        lm_size_t written = processInfo
+            ? LM_WriteMemoryEx(processInfo, native_address(address, "address"), source, bytes->Length)
+            : LM_WriteMemory(native_address(address, "address"), source, bytes->Length);
+
+        if(written > static_cast<lm_size_t>(bytes->Length))
+            throw gcnew InvalidOperationException("Native write exceeded buffer.");
+
+        return static_cast<int>(written);
     }
 }
 
