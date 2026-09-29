@@ -98,6 +98,8 @@ for file in [
     "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj",
     "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj",
     "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj",
+    "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj",
+    "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj",
 ]:
     ET.parse(root / file)
     print("PASS XML", file)
@@ -249,6 +251,8 @@ smoke_project = (root / "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj"
 hook_project = (root / "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj").read_text(encoding="utf-8")
 injector_project = (root / "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj").read_text(encoding="utf-8")
 sample_project = (root / "samples/Example.csproj").read_text(encoding="utf-8")
+test_target_project = (root / "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj").read_text(encoding="utf-8")
+external_process_project = (root / "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj").read_text(encoding="utf-8")
 
 assert "Debug|x86 = Debug|x86" in solution
 assert "Release|x86 = Release|x86" in solution
@@ -265,6 +269,10 @@ for script in [
 for project in [sample_project, smoke_project, hook_project, injector_project]:
     assert "<Platforms>x64;x86</Platforms>" in project
     assert "<PlatformTarget>$(Platform)</PlatformTarget>" in project
+assert "<Platforms>x64</Platforms>" in test_target_project, "TestTarget must remain x64-only for the current roadmap."
+assert "<PlatformTarget>x64</PlatformTarget>" in test_target_project
+assert "<Platforms>x64</Platforms>" in external_process_project, "ExternalProcessTests must remain x64-only for the current roadmap."
+assert "<PlatformTarget>x64</PlatformTarget>" in external_process_project
 assert "lm_address_t native_address(UInt64 value" in source
 assert "lm_size_t native_size(UInt64 value" in source
 assert "bool bad_address(UInt64 value)" in source
@@ -282,6 +290,7 @@ reusable_workflow = (root / ".github/workflows/reusable-build.yml").read_text(en
 release_workflow = (root / ".github/workflows/release.yml").read_text(encoding="utf-8")
 hook_workflow = (root / ".github/workflows/hook-vmt-tests.yml").read_text(encoding="utf-8")
 injector_workflow = (root / ".github/workflows/injector-tests.yml").read_text(encoding="utf-8")
+external_process_workflow = (root / ".github/workflows/external-process-tests.yml").read_text(encoding="utf-8")
 
 assert "schemaVersion = 2" in manifest_script
 assert "Get-FileHash" in manifest_script
@@ -307,6 +316,10 @@ assert "Hook and VMT x64" in hook_workflow
 assert "setup-dotnet-x86.ps1" not in hook_workflow
 assert "Injector x64" in injector_workflow
 assert "setup-dotnet-x86.ps1" not in injector_workflow
+assert "External Process x64" in external_process_workflow
+assert "LibmemCli.TestTarget" in external_process_workflow
+assert "LibmemCli.ExternalProcessTests" in external_process_workflow
+assert "setup-dotnet-x86.ps1" not in external_process_workflow
 assert "needs: [build-x64]" in release_workflow
 assert "build-x86:" not in release_workflow
 
