@@ -36,18 +36,21 @@ ProcessSession
 
 Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适配属于调用方。
 
-## 当前阶段：架构拆分
+## 当前阶段：v0.9 — x64 API Freeze
 
-目标是把历史上的大型 `LibmemCli.cpp` 拆成职责清晰的实现层，同时保持 Public API 稳定。
+当前主线已经完成 x64 API、资源生命周期、错误模型、Hook/VMT、外部进程测试、消费者文档与本地 NuGet 消费原型。现在停止无目的扩展，转入 **Windows x64 managed contract 冻结**。
 
-优先顺序：
+当前审计重点：
 
-1. 拆分 `ProcessSession` 与各 Manager 实现；
-2. 抽离 `Interop / NativeConverter`；
-3. 抽离 native address / size / string / callback 转换；
-4. 拆分 Resource Lifetime：RemoteAllocation、InjectedModuleHandle；
-5. 拆分 Hook / VMT；
-6. 最后让 `LibmemCli.cpp` 只保留必要的静态兼容 facade，或继续按职责拆除。
+1. 冻结 managed namespace、public 类型、方法名、签名与 overload 形状；
+2. 固定 `ProcessSession` / Manager 的目标进程、退出与 Dispose 行为；
+3. 固定 `RemoteAllocation`、`HookHandle`、`VmtManager`、`InjectedModuleHandle` 的 ownership / 幂等语义；
+4. 统一 null、非法参数、正常 miss、native failure 的返回值与异常契约；
+5. 清理仅为 v0.x 迁移保留、若进入 v1.0 会形成长期负担的 public API；
+6. 核对 XML IntelliSense、`docs/API.md` 与 public API baseline；
+7. 识别任何会迫使 v1.0 之后 breaking change 的设计。
+
+这一阶段仍然不加入 Snapshot、GameState、Entity、IPC、Hearthstone 或游戏版本业务逻辑。
 
 ## v0.4 — x64 架构整理
 

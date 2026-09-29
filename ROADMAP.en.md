@@ -36,18 +36,21 @@ ProcessSession
 
 Snapshots, caches, entities, game state, event state, IPC, and game-version adaptation belong to consumers.
 
-## Current phase: source architecture split
+## Current phase: v0.9 — x64 API Freeze
 
-The goal is to break up the historical large `LibmemCli.cpp` into clear implementation boundaries while keeping the public API stable.
+The x64 API, resource lifetimes, error model, Hook/VMT layer, external-process tests, consumer documentation, and local NuGet consumption prototype are now established. Development is therefore moving from broad expansion to a **Windows x64 managed-contract freeze**.
 
-Priority order:
+Current audit priorities:
 
-1. split ProcessSession and manager implementations;
-2. extract Interop / NativeConverter;
-3. extract native address / size / string / callback conversion helpers;
-4. split resource-lifetime types such as RemoteAllocation and InjectedModuleHandle;
-5. split Hook / VMT;
-6. leave `LibmemCli.cpp` only as a necessary static compatibility facade, or continue splitting by responsibility.
+1. freeze the managed namespace, public types, method names, signatures, and overload shapes;
+2. define `ProcessSession` / Manager behavior for target identity, process exit, and disposal;
+3. freeze ownership and idempotency semantics for `RemoteAllocation`, `HookHandle`, `VmtManager`, and `InjectedModuleHandle`;
+4. normalize null/invalid arguments, normal misses, native failures, return sentinels, and exception semantics;
+5. remove public APIs that exist only for v0.x migration when carrying them into v1.0 would create permanent compatibility debt;
+6. reconcile XML IntelliSense, `docs/API.md`, and the committed public API baseline;
+7. identify any design that would otherwise force a post-v1.0 breaking change.
+
+This phase still excludes Snapshot, GameState, Entity, IPC, Hearthstone-specific behavior, and game-version logic.
 
 ## v0.4 — x64 architecture cleanup
 

@@ -22,7 +22,16 @@ def public_api_lines(header_text: str) -> list[str]:
         if raw:
             lines.append(raw)
 
-    result: list[str] = []
+    namespace_name = None
+    for line in lines:
+        match = re.match(r"^namespace\s+([A-Za-z_][A-Za-z0-9_:]*)\s*\{", line)
+        if match:
+            namespace_name = match.group(1).replace("::", ".")
+            break
+    if namespace_name is None:
+        raise ValueError("No namespace declaration found for the public API.")
+
+    result: list[str] = [f"NAMESPACE {namespace_name}"]
     i = 0
     while i < len(lines):
         line = lines[i]
@@ -88,7 +97,7 @@ def main() -> int:
     rendered = "\n".join(
         [
             "# LibmemCli public API baseline",
-            "# Generated from src/LibmemCli.h. Intentional public API changes must update this file and CHANGELOG.md.",
+            "# Generated from src/LibmemCli.h, including the managed namespace. Intentional public API changes must update this file and CHANGELOG.md.",
             *current,
             "",
         ]
