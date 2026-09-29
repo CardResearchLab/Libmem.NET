@@ -1,5 +1,6 @@
 # LibmemCli public API baseline
-# Generated from src/LibmemCli.h. Intentional public API changes must update this file and CHANGELOG.md.
+# Generated from src/LibmemCli.h, including the managed namespace. Intentional public API changes must update this file and CHANGELOG.md.
+NAMESPACE LibmemCli
 TYPE public enum class Architecture : unsigned int
   Generic = LM_ARCH_GENERIC
   ArmV7 = LM_ARCH_ARMV7
