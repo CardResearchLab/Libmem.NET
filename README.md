@@ -120,7 +120,7 @@ if (!target.IsAlive())
 var latest = target.Refresh();
 ```
 
-当前 `ProcessSession` 不持有 Windows 原生进程句柄；它作为聚合入口，向下组合 `MemoryManager`、`ModuleManager`、`ThreadManager`、`ScanManager`、`HookManager` 和 `InjectorManager`。这些子系统只是在 libmem 调用之上增加目标绑定与必要的资源生命周期约束。
+当前 `ProcessSession` 不持有 Windows 原生进程句柄；它作为聚合入口，向下组合 `MemoryManager`、`ModuleManager`、`ThreadManager`、`ScanManager`、`SymbolManager`、`AssemblyManager`、`HookManager` 和 `InjectorManager`。这些子系统只是在 libmem 调用之上增加目标绑定与必要的资源生命周期约束。
 
 新代码推荐使用 `ProcessSession.Open(...)`；现有 `Libmem.Attach(...)` 和 `Libmem.*` 静态 API 继续保留兼容。应用如果需要 Snapshot、缓存、事件状态或游戏状态模型，应在调用方自己构建，而不是放进 LibmemCli。
 
@@ -162,6 +162,30 @@ var resolved = target.Scanner.DeepPointer(baseAddress, offsets);
 ```
 
 `ScanManager` 当前提供 `DeepPointer / DataScan / PatternScan / SigScan`。为保证 v0.x 兼容，`MemoryManager` 上原有的同名方法暂时继续保留。
+
+### SymbolManager
+
+`ProcessSession.Symbols` 负责模块符号能力，不把行为塞进 `ModuleInfo` 数据对象：
+
+```csharp
+var symbols = target.Symbols.Enumerate(module, demangle: false);
+var address = target.Symbols.FindAddress(module, "ExportedName", demangle: false);
+```
+
+当前提供符号枚举、地址查找与 Demangle；原有 `Libmem.EnumSymbols / FindSymbolAddress / DemangleSymbol` 静态 API 保持兼容。
+
+### AssemblyManager
+
+`ProcessSession.Assembly` 默认使用目标进程的 `Architecture`，用于汇编、反汇编和目标代码长度计算：
+
+```csharp
+var code = target.Assembly.Assemble("nop; ret", runtimeAddress);
+var instructions = target.Assembly.Disassemble(code, 2, runtimeAddress);
+var remote = target.Assembly.Disassemble(address, 32, 4, address);
+var length = target.Assembly.CodeLength(address, 5);
+```
+
+地址版 `Disassemble` 会先通过当前 Session 从目标进程读取字节，再按目标架构进行反汇编，因此不会把远程地址直接当成本地指针使用。原有静态 Assembly / Disassembly API 继续作为兼容入口保留。
 
 ### Injector
 

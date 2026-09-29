@@ -95,6 +95,8 @@ TYPE public ref class ProcessSession sealed : IDisposable
   property ModuleManager^ Modules { ModuleManager^ get(); }
   property ThreadManager^ Threads { ThreadManager^ get(); }
   property ScanManager^ Scanner { ScanManager^ get(); }
+  property SymbolManager^ Symbols { SymbolManager^ get(); }
+  property AssemblyManager^ Assembly { AssemblyManager^ get(); }
   property HookManager^ Hooks { HookManager^ get(); }
   property InjectorManager^ Injector { InjectorManager^ get(); }
   property bool IsDisposed { bool get(); }
@@ -121,6 +123,16 @@ TYPE public ref class ScanManager sealed
   UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
   UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
   UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
+TYPE public ref class SymbolManager sealed
+  List<SymbolInfo^>^ Enumerate(ModuleInfo^ module, bool demangle);
+  UInt64 FindAddress(ModuleInfo^ module, String^ name, bool demangle);
+  String^ Demangle(String^ name);
+TYPE public ref class AssemblyManager sealed
+  property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+  array<Byte>^ Assemble(String^ code, UInt64 runtimeAddress);
+  List<InstructionInfo^>^ Disassemble(array<Byte>^ code, UInt64 instructionCount, UInt64 runtimeAddress);
+  List<InstructionInfo^>^ Disassemble(UInt64 address, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
+  UInt64 CodeLength(UInt64 address, UInt64 minimumLength);
 TYPE public ref class ModuleManager sealed
   List<ModuleInfo^>^ Enumerate();
   ModuleInfo^ Find(String^ name);

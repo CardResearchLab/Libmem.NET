@@ -120,7 +120,7 @@ if (!target.IsAlive())
 var latest = target.Refresh();
 ```
 
-`ProcessSession` does not own a native Windows process handle. It acts as the aggregation root for `MemoryManager`, `ModuleManager`, `ThreadManager`, `ScanManager`, `HookManager`, and `InjectorManager`; those subsystems only add target binding and necessary resource-lifetime constraints around libmem calls.
+`ProcessSession` does not own a native Windows process handle. It acts as the aggregation root for `MemoryManager`, `ModuleManager`, `ThreadManager`, `ScanManager`, `SymbolManager`, `AssemblyManager`, `HookManager`, and `InjectorManager`; those subsystems only add target binding and necessary resource-lifetime constraints around libmem calls.
 
 New code should prefer `ProcessSession.Open(...)`. Existing `Libmem.Attach(...)` and static `Libmem.*` APIs remain available for compatibility. Applications that need snapshots, caches, event state, or game-state models should build those models in the caller rather than in LibmemCli.
 
@@ -162,6 +162,30 @@ var resolved = target.Scanner.DeepPointer(baseAddress, offsets);
 ```
 
 `ScanManager` currently exposes `DeepPointer / DataScan / PatternScan / SigScan`. The existing methods on `MemoryManager` remain as v0.x compatibility APIs during the migration.
+
+### SymbolManager
+
+`ProcessSession.Symbols` owns symbol operations without turning `ModuleInfo` into an active service object:
+
+```csharp
+var symbols = target.Symbols.Enumerate(module, demangle: false);
+var address = target.Symbols.FindAddress(module, "ExportedName", demangle: false);
+```
+
+It currently exposes symbol enumeration, address lookup, and demangling. The existing static `Libmem.EnumSymbols / FindSymbolAddress / DemangleSymbol` APIs remain available for compatibility.
+
+### AssemblyManager
+
+`ProcessSession.Assembly` defaults to the target process `Architecture` for assembly, disassembly, and target code-length queries:
+
+```csharp
+var code = target.Assembly.Assemble("nop; ret", runtimeAddress);
+var instructions = target.Assembly.Disassemble(code, 2, runtimeAddress);
+var remote = target.Assembly.Disassemble(address, 32, 4, address);
+var length = target.Assembly.CodeLength(address, 5);
+```
+
+The address-based `Disassemble` overload first reads bytes through the current session and then disassembles those bytes using the target architecture, so a remote address is never treated as a local pointer. Existing static assembly/disassembly APIs remain compatibility entry points.
 
 ### Injector
 

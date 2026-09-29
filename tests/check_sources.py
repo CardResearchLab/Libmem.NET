@@ -19,7 +19,7 @@ for file in [
     ET.parse(root / file)
     print("PASS XML", file)
 
-for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ScanManager", "ModuleManager", "ThreadManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
+for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "MemoryManager", "ScanManager", "SymbolManager", "AssemblyManager", "ModuleManager", "ThreadManager", "InjectorManager", "InjectedModuleHandle", "HookManager", "HookHandle", "VmtManager"]:
     match = re.search(r"\bpublic ref class\s+" + re.escape(owner) + r"\b", header)
     assert match is not None, f"{owner} public class declaration not found"
     body = header[match.end():].split("\n    };", 1)[0]
@@ -97,9 +97,15 @@ print("PASS LibmemException core error mapping")
 
 assert "ThreadManager^ ProcessSession::Threads::get()" in source
 assert "ScanManager^ ProcessSession::Scanner::get()" in source
+assert "SymbolManager^ ProcessSession::Symbols::get()" in source
+assert "AssemblyManager^ ProcessSession::Assembly::get()" in source
 assert "List<ThreadInfo^>^ ThreadManager::Enumerate()" in source
 assert "UInt64 ScanManager::SigScan(String^ signature,UInt64 address,UInt64 scanSize)" in source
 assert "ProcessSession^ ProcessSession::Open(UInt32 pid)" in source
+assert "List<SymbolInfo^>^ SymbolManager::Enumerate(ModuleInfo^ moduleInfo,bool demangle)" in source
+assert "array<Byte>^ AssemblyManager::Assemble(String^ code,UInt64 runtimeAddress)" in source
+assert "List<InstructionInfo^>^ AssemblyManager::Disassemble(UInt64 address,UInt64 maxBytes,UInt64 instructionCount,UInt64 runtimeAddress)" in source
+assert "UInt64 AssemblyManager::CodeLength(UInt64 address,UInt64 minimumLength)" in source
 print("PASS ProcessSession subsystem aggregation contract")
 
 assert "HookManager^ ProcessSession::Hooks::get()" in source
