@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added an x64 external-process `LibmemCli.TestTarget` plus runtime tests for remote attach, read/write, remote allocation/protection/free, signature scan, segment lookup, and process-exit observation.
 - Added `ProcessSession.Open(...)` as the preferred object-oriented factory while preserving `Libmem.Attach(...)` for compatibility.
 - Added session-bound `ThreadManager` through `ProcessSession.Threads`, including thread enumeration and main-thread lookup.
 - Added session-bound `ScanManager` through `ProcessSession.Scanner` for DeepPointer, data, pattern, and signature scanning.
@@ -48,6 +49,7 @@ LibmemCli 0.3.0 completes the wrapper's Windows x86/x64 stabilization and releas
 
 ### Fixed
 
+- Worked around the pinned Windows `LM_GetProcessEx` start-time bug for external processes by reconciling the target start time through `LM_EnumProcesses`, preserving PID + start-time identity checks for `ProcessSession`.
 - Avoided the pinned Windows upstream `LM_GetCommandLine` undefined-behavior path; current-process command-line arguments are now provided safely from the managed runtime while unsupported external-process queries return `null`.
 - Made symbol smoke validation runtime-independent by selecting a loaded module with usable exports instead of assuming `kernel32.dll` is discoverable by name in every runner environment.
 
