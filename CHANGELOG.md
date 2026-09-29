@@ -48,6 +48,7 @@ LibmemCli 0.3.0 completes the wrapper's Windows x86/x64 stabilization and releas
 
 ### Fixed
 
+- Worked around the pinned Windows `LM_GetProcessEx` start-time bug for external processes by reconciling the target start time through `LM_EnumProcesses`, preserving PID + start-time identity checks for `ProcessSession`.
 - Avoided the pinned Windows upstream `LM_GetCommandLine` undefined-behavior path; current-process command-line arguments are now provided safely from the managed runtime while unsupported external-process queries return `null`.
 - Made symbol smoke validation runtime-independent by selecting a loaded module with usable exports instead of assuming `kernel32.dll` is discoverable by name in every runner environment.
 
