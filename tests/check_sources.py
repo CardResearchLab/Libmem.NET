@@ -315,6 +315,9 @@ for readme in [readme_zh, readme_en]:
     assert ".github/workflows/external-process-tests.yml" in readme
     assert "LibmemCli.TestTarget" in readme
 print("PASS external-process documentation contract")
+assert "六套自动化工作流" in readme_zh
+assert "six automation workflows" in readme_en
+print("PASS external-process workflow count contract")
 
 manifest_script = (root / "eng/write-manifest.ps1").read_text(encoding="utf-8")
 package_script = (root / "eng/package-runtime.ps1").read_text(encoding="utf-8")
