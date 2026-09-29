@@ -88,6 +88,26 @@ try
     var process = Libmem.GetProcess(ready.Pid);
     Check(process is not null, "Libmem.GetProcess could not resolve the TestTarget process.");
 
+    var processInfoType = typeof(ProcessInfo);
+    Check(processInfoType.GetConstructor(Type.EmptyTypes) is null,
+        "ProcessInfo must not expose a public parameterless constructor.");
+    foreach (var propertyName in new[]
+    {
+        nameof(ProcessInfo.Pid),
+        nameof(ProcessInfo.ParentPid),
+        nameof(ProcessInfo.Architecture),
+        nameof(ProcessInfo.Bits),
+        nameof(ProcessInfo.StartTime),
+        nameof(ProcessInfo.Name),
+        nameof(ProcessInfo.Path),
+    })
+    {
+        var property = processInfoType.GetProperty(propertyName)
+            ?? throw new InvalidOperationException($"ProcessInfo.{propertyName} was not found.");
+        Check(property.CanRead && !property.CanWrite,
+            $"ProcessInfo.{propertyName} must remain public read-only metadata.");
+    }
+
     var enumeratedProcess = Libmem.EnumProcesses().FirstOrDefault(candidate => candidate.Pid == ready.Pid);
     Check(enumeratedProcess is not null, "Libmem.EnumProcesses did not include the TestTarget process.");
     Check(process!.StartTime == enumeratedProcess!.StartTime,
