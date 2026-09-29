@@ -59,7 +59,7 @@ jobs:
       - name: Restore NuGet consumer from local feed
         shell: pwsh
         run: |
-          $version = (Get-Content .\VERSION -Raw).Trim()
+          $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
           dotnet restore .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
             --source .\artifacts\nuget `
             -p:LibmemCliTestPackageVersion=$version `
@@ -68,7 +68,7 @@ jobs:
       - name: Run NuGet consumer
         shell: pwsh
         run: |
-          $version = (Get-Content .\VERSION -Raw).Trim()
+          $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
           dotnet run `
             --project .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
             -c Release `
@@ -78,7 +78,7 @@ jobs:
       - name: Publish NuGet consumer
         shell: pwsh
         run: |
-          $version = (Get-Content .\VERSION -Raw).Trim()
+          $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
           $output = ".\artifacts\nuget-consumer-publish"
           dotnet publish `
             .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
@@ -97,7 +97,7 @@ jobs:
       - name: Reject non-x64 NuGet consumer
         shell: pwsh
         run: |
-          $version = (Get-Content .\VERSION -Raw).Trim()
+          $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
           dotnet build `
             .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
             -c Release `
