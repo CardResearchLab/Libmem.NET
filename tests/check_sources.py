@@ -289,6 +289,26 @@ assert "Address does not fit the current process architecture." in source
 assert "Size or index does not fit the current process architecture." in source
 print("PASS x86/x64 architecture contract")
 
+test_target_source = (root / "tests/LibmemCli.TestTarget/Program.cs").read_text(encoding="utf-8")
+external_process_test_source = (root / "tests/LibmemCli.ExternalProcessTests/Program.cs").read_text(encoding="utf-8")
+assert "Marshal.AllocHGlobal" in test_target_source
+assert "READY pid=" in test_target_source
+for required_call in [
+    "ProcessSession.Open",
+    "session.Memory.Read",
+    "session.Memory.Write",
+    "session.Memory.Allocate",
+    "session.Memory.Protect",
+    "session.Scanner.SigScan",
+    "Libmem.FindSegment",
+    "session.IsAlive",
+    "session.Refresh",
+]:
+    assert required_call in external_process_test_source, (
+        f"External-process runtime coverage lost required call: {required_call}"
+    )
+print("PASS external-process runtime coverage contract")
+
 manifest_script = (root / "eng/write-manifest.ps1").read_text(encoding="utf-8")
 package_script = (root / "eng/package-runtime.ps1").read_text(encoding="utf-8")
 verify_script_path = root / "eng/verify-package.py"
