@@ -81,6 +81,17 @@ A transitive MSBuild target:
 - copies `libmem.dll` and `Ijwhost.dll` into build/publish output;
 - keeps the package usable for normal x64 PackageReference projects without requiring consumers to manually copy the two native runtime files.
 
+### Build the prototype locally
+
+After building LibmemCli x64:
+
+```powershell
+.\build.ps1 -Configuration Release -Platform x64
+.\eng\package-nuget.ps1 -Configuration Release
+```
+
+The script reads `VERSION`, resolves the current Git commit, validates the required x64 binaries, creates the local package, and immediately runs the package layout/provenance verifier.
+
 ### Local package test
 
 The CI prototype performs the complete flow:
