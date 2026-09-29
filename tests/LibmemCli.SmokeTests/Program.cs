@@ -152,7 +152,9 @@ var detachedAssembly = session.Assembly;
 var detachedHooks = session.Hooks;
 var detachedInjector = session.Injector;
 session.Detach();
-Check(session.IsDisposed, "ProcessSession should be disposed after Detach.");
+session.Detach();
+((IDisposable)session).Dispose();
+Check(session.IsDisposed, "ProcessSession should remain disposed after repeated Detach/Dispose calls.");
 
 var disposedThrows = false;
 try
@@ -420,7 +422,8 @@ Check(ownedAllocation.Free(), "RemoteAllocation.Free should be idempotent.");
 var disposeAllocation = memory.Allocate(4096, MemoryProtection.ReadWrite)
     ?? throw new InvalidOperationException("MemoryManager.Allocate returned null for Dispose coverage.");
 ((IDisposable)disposeAllocation).Dispose();
-Check(disposeAllocation.IsDisposed, "RemoteAllocation should report disposed after successful Dispose.");
+((IDisposable)disposeAllocation).Dispose();
+Check(disposeAllocation.IsDisposed, "RemoteAllocation should report disposed after repeated Dispose calls.");
 Check(disposeAllocation.Free(), "RemoteAllocation.Free should remain idempotent after Dispose.");
 
 Stage("static-enumeration");
