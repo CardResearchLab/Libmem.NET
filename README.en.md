@@ -10,7 +10,7 @@
 
 LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem), intended for Windows x86/x64 / .NET 8 projects.
 
-The wrapper exposes every public function in the pinned libmem header through managed models, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
+Except for explicitly documented compatibility waivers, the wrapper covers the public functions in the pinned libmem header through managed models, managed byte arrays, and .NET-friendly APIs. Normal libmem functions and their `Ex` variants are generally represented as overload pairs.
 
 The native libmem library is included as a pinned Git submodule and is built automatically before the C++/CLI wrapper.
 
@@ -231,9 +231,9 @@ Do not mix outputs from different configurations or commits.
 
 The repository includes five automation workflows:
 
-- \`.github/workflows/build.yml\`: builds Release x64 on pushes to \`main\`, pull requests, or manual runs, then uploads the \`LibmemCli-windows-x64\` artifact.
+- \`.github/workflows/build.yml\`: builds Release x64 and x86 on pushes to \`main\`, pull requests, or manual runs, then uploads separate \`LibmemCli-windows-x64\` and \`LibmemCli-windows-x86\` artifacts.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
-- \`.github/workflows/release.yml\`: builds tags matching \`v*\`, creates a GitHub Release, and attaches \`LibmemCli-windows-x64.zip\`.
+- \`.github/workflows/release.yml\`: builds both architectures for \`v*\` tags or \`release/v*\` release branches, verifies package provenance and SHA-256 integrity, creates a GitHub Release, and attaches both architecture ZIPs and checksum files.
 - \`.github/workflows/hook-vmt-tests.yml\`: runs dedicated real Hook / trampoline / VMT lifecycle tests separately from the baseline smoke suite.
 - \`.github/workflows/injector-tests.yml\`: independently validates DLL injection, module discovery, explicit Unload, and Dispose lifetime behavior.
 
@@ -258,7 +258,7 @@ artifacts/package/LibmemCli-windows-x86.zip.sha256
 
 ## Versioning and automated validation
 
-The root `VERSION` file is the source of truth for release versioning. The current version is **0.2.0**, and the generated `LibmemCli.dll` carries matching assembly version metadata.
+The root `VERSION` file is the source of truth for release versioning. The current version is **0.3.0**, and the generated `LibmemCli.dll` carries matching assembly version metadata.
 
 Each runtime package contains a `manifest.json` recording:
 
@@ -274,7 +274,7 @@ Packaging also runs the shared `eng/verify-package.py` verifier. It checks every
 
 CI validates more than compilation:
 
-1. **API Contract Check** parses the pinned submodule's `include/libmem/libmem.h`, extracts every public `LM_API`, and fails if upstream exposes a public API that the C++/CLI wrapper does not reference.
+1. **API Contract Check** parses the pinned submodule's `include/libmem/libmem.h` and extracts every public `LM_API`. Except for compatibility waivers that are explicitly documented in source with their rationale, CI fails if upstream exposes a public API that the C++/CLI wrapper does not cover.
 2. **Runtime Smoke Tests** load `LibmemCli.dll + libmem.dll` and cover process/command-line APIs, threads, modules/exported symbols, memory segments, allocation/read/write/set/protection, DeepPointer, Data/Pattern/Signature scanning, assembly/disassembly, and CodeLength. Controlled memory tests only touch isolated allocations in the test process itself.
 
 Hook and VMT operations are intentionally kept out of the baseline smoke gate and validated by the separate `Hook VMT Runtime Tests` workflow. Explicit `VmtManager.Dispose()` also uses deterministic restoration: if any tracked VMT entry cannot be restored, the manager remains undisposed and throws `LibmemException` instead of discarding the remaining hook bookkeeping. It allocates isolated executable memory in the current process and verifies hook redirection, trampoline execution, Remove, and VMT Hook / Unhook / Reset / Dispose without depending on Hearthstone or any external process.
@@ -345,6 +345,8 @@ The following libmem APIs are exposed through `Libmem` process methods:
 - `LM_GetBits`
 - `LM_GetSystemBits`
 
+> Compatibility note: `LM_GetCommandLine` / `LM_FreeCommandLine` are explicit waivers for the pinned Windows upstream revision. Managed `Libmem.GetCommandLine` preserves the intended contract without executing those unsafe native entry points.
+
 ### Threads, modules, symbols, and segments
 
 Thread, module, symbol, and segment `LM_*` enumeration/find/get/load/unload APIs are mapped to their corresponding `Libmem` methods.
@@ -393,7 +395,7 @@ Native assembly-result buffers are freed after being copied into managed memory.
 - `IsInstalled` reports whether the handle still considers the target code hooked;
 - `IsDisposed` reports whether the managed lifetime has ended;
 - `Remove()` attempts to unhook and clears `IsInstalled` only on success;
-- `Dispose()` performs best-effort cleanup and no longer throws if unhooking fails.
+- `Dispose()` deterministically attempts to unhook; if native restoration fails it throws `LibmemException` and leaves `IsInstalled=true` rather than silently reporting the live hook as released.
 
 This prevents a failed removal from being reported as a successful unhook. The finalizer still never modifies target-process code from the GC thread.
 
@@ -407,7 +409,7 @@ The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libm
 
 3. `ProcessInfo` and `ModuleInfo` are snapshots, not operating-system handles. A process can exit and module/address information can become stale. `IsProcessAlive` checks the original identity using `pid` plus startup time.
 
-4. `GetCommandLine` returns UTF-8 strings and frees native allocations. The string helper rejects embedded NUL characters. Enumeration callbacks are synchronous.
+4. `GetCommandLine` currently supports the **current process only**. The pinned Windows upstream `LM_GetCommandLine` has undefined behavior at this revision, so LibmemCli does not invoke it; current-process arguments come from `System.Environment.GetCommandLineArgs()`, while other processes preserve the upstream unsupported behavior and return `null`. Enumeration callbacks are synchronous.
 
 5. `Disassemble(codeAddress, arch, ...)` expects `codeAddress` to point to readable machine code in the **calling process**, not a remote-process address. For remote code, call `ReadMemory` first and pass the resulting byte array to the safe pinned-buffer `Disassemble(byte[], ...)` overload.
 
