@@ -352,6 +352,11 @@ assert "(Join-Path $managed 'LibmemCli.xml')" in package_script
 assert "/// <summary>" in header
 assert "ProcessSession" in header and "LibmemException" in header
 print("PASS XML documentation build/package contract")
+assert "LibmemCli.xml" in readme_zh
+assert "IntelliSense" in readme_zh
+assert "LibmemCli.xml" in readme_en
+assert "IntelliSense" in readme_en
+print("PASS XML documentation README contract")
 verify_script_path = root / "eng/verify-package.py"
 verify_script = verify_script_path.read_text(encoding="utf-8")
 compile(verify_script, str(verify_script_path), "exec")
