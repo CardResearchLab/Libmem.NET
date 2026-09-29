@@ -278,7 +278,7 @@ Do not mix outputs from different configurations or commits.
 
 ## GitHub Actions automation
 
-The repository includes five automation workflows:
+The repository includes six automation workflows:
 
 - \`.github/workflows/build.yml\`: builds and validates Release x64 on pushes to `main`, pull requests, or manual runs, then uploads the `LibmemCli-windows-x64` artifact.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
