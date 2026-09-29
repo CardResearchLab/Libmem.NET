@@ -33,7 +33,10 @@
 - Deferred x86 feature work and official x86 Release assets while keeping existing x86 code/configuration available for future manual compatibility work.
 - Added dedicated x64-first roadmap documents in `ROADMAP.md` and `ROADMAP.en.md`.
 - Continued the Blackbone-inspired process aggregation refactor: `ProcessSession` now exposes memory, modules, threads, scanning, symbols, assembly/disassembly, hooks, and injection as explicit subsystems.
-- Kept the existing scan methods on `MemoryManager` as v0.x compatibility APIs so current consumers are not broken during the migration.
+
+### Removed
+
+- Removed the temporary v0.x `MemoryManager.DeepPointer`, `DataScan`, `PatternScan`, and `SigScan` forwarding aliases before the v1.0 API freeze. Session-bound scanning now lives only on `ProcessSession.Scanner`; static `Libmem.*` compatibility APIs remain available.
 
 ## 0.3.0 - 2026-09-29
 

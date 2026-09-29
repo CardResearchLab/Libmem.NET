@@ -52,6 +52,8 @@ Current audit priorities:
 
 This phase still excludes Snapshot, GameState, Entity, IPC, Hearthstone-specific behavior, and game-version logic.
 
+Completed freeze cleanup: the temporary v0.x `MemoryManager` forwarding aliases for `DeepPointer / DataScan / PatternScan / SigScan` have been removed. Session-bound scanning is frozen on `ProcessSession.Scanner`, while the static `Libmem.*` compatibility facade remains.
+
 ## v0.4 — x64 architecture cleanup
 
 Focus:

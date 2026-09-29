@@ -219,16 +219,9 @@ namespace LibmemCli {
         RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);
         /// <summary>Releases a target-process allocation described by address and size.</summary>
         bool Free(UInt64 address, UInt64 size);
-        UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
-        UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
-        UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
-        /// <summary>Scans the target process for a textual signature.</summary>
-        /// <returns>The matching address, or the libmem bad-address sentinel when no match is found.</returns>
-        UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
     };
 
     /// <summary>Session-bound pointer-resolution and memory scanning operations.</summary>
-    /// <remarks>MemoryManager retains compatibility forwarding methods during the v0.x migration.</remarks>
     public ref class ScanManager sealed {
     private:
         ProcessSession^ session_;

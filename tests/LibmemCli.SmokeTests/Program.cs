@@ -374,10 +374,6 @@ var ownedSignature = string.Join(" ", ownedPayload.Select(b => b.ToString("X2"))
 Check(scanner.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
     "ScanManager.SigScan failed.");
 
-// v0.x compatibility while consumers migrate to ProcessSession.Scanner.
-Check(memory.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
-    "MemoryManager.SigScan compatibility API failed.");
-
 Stage("deep-pointer");
 using (var pointerLayer0 = memory.Allocate(4096, MemoryProtection.ReadWrite)
        ?? throw new InvalidOperationException("Could not allocate pointer layer 0."))
@@ -395,8 +391,6 @@ using (var pointerLayer2 = memory.Allocate(4096, MemoryProtection.ReadWrite)
     var expectedDeepPointer = pointerLayer2.Address + 0x10;
     Check(scanner.DeepPointer(pointerLayer0.Address, offsets) == expectedDeepPointer,
         "ScanManager.DeepPointer returned an unexpected address.");
-    Check(memory.DeepPointer(pointerLayer0.Address, offsets) == expectedDeepPointer,
-        "MemoryManager.DeepPointer compatibility API returned an unexpected address.");
     Check(Libmem.DeepPointer(pointerLayer0.Address, offsets) == expectedDeepPointer,
         "Libmem.DeepPointer returned an unexpected address.");
     Check(Libmem.DeepPointer(current, pointerLayer0.Address, offsets) == expectedDeepPointer,

@@ -96,14 +96,7 @@ Primary operations:
 - `Allocate`
 - `Free`
 
-Compatibility forwarding methods still present during the v0.x migration:
-
-- `DeepPointer`
-- `DataScan`
-- `PatternScan`
-- `SigScan`
-
-New scan code should prefer `ProcessSession.Scanner`.
+Pointer resolution and scanning are owned by `ProcessSession.Scanner`. The temporary `MemoryManager` scan-forwarding aliases from earlier v0.x builds were removed before the v1.0 API freeze.
 
 #### Read / Write result semantics
 

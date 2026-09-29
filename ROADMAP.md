@@ -52,6 +52,8 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 这一阶段仍然不加入 Snapshot、GameState、Entity、IPC、Hearthstone 或游戏版本业务逻辑。
 
+已完成的收口项：`MemoryManager` 上仅用于 v0.x 迁移的 `DeepPointer / DataScan / PatternScan / SigScan` 转发入口已移除，session-bound 扫描统一冻结在 `ProcessSession.Scanner`；静态 `Libmem.*` 兼容层继续保留。
+
 ## v0.4 — x64 架构整理
 
 重点：

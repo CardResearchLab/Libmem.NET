@@ -167,7 +167,7 @@ var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
 var resolved = target.Scanner.DeepPointer(baseAddress, offsets);
 ```
 
-`ScanManager` currently exposes `DeepPointer / DataScan / PatternScan / SigScan`. The existing methods on `MemoryManager` remain as v0.x compatibility APIs during the migration.
+`ScanManager` exposes `DeepPointer / DataScan / PatternScan / SigScan` as the canonical session-bound scanning surface. The temporary v0.x forwarding aliases on `MemoryManager` were removed before the v1.0 API freeze; the static `Libmem.*` compatibility facade remains.
 
 ### SymbolManager
 
@@ -233,7 +233,7 @@ var copy = memory.Read(buffer.Address, payload.Length);
 var hit = target.Scanner.SigScan("48 8B ?? ??", start, size);
 ```
 
-Its core responsibility is now Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free. The existing DeepPointer / DataScan / PatternScan / SigScan methods remain for compatibility, while new code should prefer `ProcessSession.Scanner`. It is bound to the `ProcessSession` lifetime; calls after the session is detached throw `ObjectDisposedException`. Manager operations such as `Allocate` that can identify a definite native failure throw `LibmemException` with the corresponding `Operation` instead of silently returning a failed address.
+Its core responsibility is Read / Write / ReadInt32 / WriteInt32 / Set / Protect / Allocate / Free. DeepPointer / DataScan / PatternScan / SigScan are exposed through `ProcessSession.Scanner`. It is bound to the `ProcessSession` lifetime; calls after the session is detached throw `ObjectDisposedException`. Manager operations such as `Allocate` that can identify a definite native failure throw `LibmemException` with the corresponding `Operation` instead of silently returning a failed address.
 
 ### RemoteAllocation
 

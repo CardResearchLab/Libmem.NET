@@ -115,10 +115,6 @@ TYPE public ref class MemoryManager sealed
   MemoryProtection Protect(UInt64 address, UInt64 size, MemoryProtection protection);
   RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);
   bool Free(UInt64 address, UInt64 size);
-  UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
-  UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
-  UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
-  UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
 TYPE public ref class ScanManager sealed
   UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
   UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
