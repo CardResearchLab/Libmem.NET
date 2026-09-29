@@ -276,6 +276,12 @@ external/Libmem/src/LibmemCli.vcxproj
 请勿混用不同构建配置或不同提交生成的文件。
 
 
+## Release 页面与发布说明
+
+正式 Release 不再直接使用 GitHub 自动生成的 PR 列表作为正文。发布工作流会从对应版本的 `CHANGELOG.md` 与已验证的 package manifest 自动生成**正式 Release Notes**，内容包括版本重点、Windows x64 / .NET 8 支持范围、下载资产、包内容、SHA-256、源码 commit、固定 libmem commit 与文档链接。
+
+发布前必须先在 `CHANGELOG.md` 中建立对应版本章节；如果版本章节缺失，发布会直接失败，避免生成只有 Action / PR 链接的 Release 页面。
+
 ## GitHub Actions 自动构建
 
 仓库内置五套自动化工作流：
