@@ -59,9 +59,9 @@ Important fields:
 - `Name`
 - `Path`
 
-Convenience methods such as `Read`, `Write`, `ReadInt32`, `WriteInt32`, and `SigScan` are retained for compatibility.
+`ProcessInfo` is intentionally an identity/metadata object. Its only behavior method is `IsAlive()`, which checks the exact PID + start-time identity.
 
-For new multi-operation code, prefer a `ProcessSession`.
+Memory and scan operations are not exposed on `ProcessInfo`. Use `ProcessSession.Memory` / `ProcessSession.Scanner` for session-bound operations, or the static `Libmem.*` compatibility facade for one-shot calls.
 
 ### ProcessSession.Refresh
 
