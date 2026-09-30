@@ -477,6 +477,15 @@ var ownedSignature = string.Join(" ", ownedPayload.Select(b => b.ToString("X2"))
 Check(scanner.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
     "ScanManager.SigScan failed.");
 
+var noScanRange = scanner.SigScan(ownedSignature, ownedAllocation.Address, 0);
+Check(noScanRange == ulong.MaxValue,
+    "A valid non-empty signature with zero scan size should remain a normal miss sentinel.");
+
+var missingPayload = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
+var missingScan = scanner.DataScan(missingPayload, ownedAllocation.Address, ownedAllocation.Size);
+Check(missingScan == ulong.MaxValue,
+    "A valid non-empty scan with no match should remain the native bad-address sentinel.");
+
 Stage("deep-pointer");
 using (var pointerLayer0 = memory.Allocate(4096, MemoryProtection.ReadWrite)
        ?? throw new InvalidOperationException("Could not allocate pointer layer 0."))
