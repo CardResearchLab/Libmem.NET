@@ -18,6 +18,8 @@ namespace LibmemCli::Interop {
 
     lm_address_t native_address(UInt64 value, String^ parameterName);
     lm_size_t native_size(UInt64 value, String^ parameterName);
+    LibmemCli::Architecture native_architecture(LibmemCli::Architecture value, String^ parameterName);
+    MemoryProtection native_protection(MemoryProtection value, String^ parameterName);
     bool bad_address(UInt64 value);
 
     lm_process_t proc(ProcessInfo^ input);

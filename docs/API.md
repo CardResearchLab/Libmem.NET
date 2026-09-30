@@ -359,6 +359,8 @@ Examples:
 
 During the v0.9 freeze, public string identifiers/paths are normalized to the same managed contract: null values are rejected with `ArgumentNullException`, while empty or whitespace-only process names, module names, and module/library paths are rejected with `ArgumentException`. `VmtManager` also treats a zero VTable address as an invalid managed argument rather than reporting it as a native `LM_VmtNew` failure.
 
+Caller-supplied enums are validated at the managed boundary as well. Undefined `Architecture` values and `MemoryProtection` flag combinations containing unknown bits are rejected with `ArgumentOutOfRangeException` before native libmem is called.
+
 ## Normal non-exception results
 
 The wrapper intentionally does **not** turn every unsuccessful result into an exception.

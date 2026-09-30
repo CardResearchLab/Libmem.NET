@@ -16,6 +16,7 @@ InstructionInfo^ Libmem::Assemble(String^ code) {
 }
 array<Byte>^ Libmem::Assemble(String^ code,LibmemCli::Architecture arch,UInt64 runtimeAddress) {
     if(code==nullptr) throw gcnew ArgumentNullException("code");
+    native_architecture(arch,"architecture");
     auto s=utf8(code); lm_byte_t* payload=nullptr;
     lm_size_t n=LM_AssembleEx(s.c_str(),static_cast<lm_arch_t>(arch),native_address(runtimeAddress,"runtimeAddress"),&payload);
     if(n==0 || !payload) return nullptr;
@@ -26,6 +27,7 @@ array<Byte>^ Libmem::Assemble(String^ code,LibmemCli::Architecture arch,UInt64 r
 }
 InstructionInfo^ Libmem::Disassemble(UInt64 address) { lm_inst_t i{}; return LM_Disassemble(native_address(address,"address"),&i) ? instruction(i) : nullptr; }
 List<InstructionInfo^>^ Libmem::Disassemble(UInt64 address,LibmemCli::Architecture arch,UInt64 maxBytes,UInt64 count,UInt64 runtimeAddress) {
+    native_architecture(arch,"architecture");
     if(!maxBytes && !count) throw gcnew ArgumentException("Specify maxBytes or instructionCount.");
     lm_inst_t* instructions=nullptr;
     lm_size_t n=LM_DisassembleEx(native_address(address,"address"),static_cast<lm_arch_t>(arch),native_size(maxBytes,"maxBytes"),native_size(count,"count"),native_address(runtimeAddress,"runtimeAddress"),&instructions);
@@ -37,6 +39,7 @@ List<InstructionInfo^>^ Libmem::Disassemble(UInt64 address,LibmemCli::Architectu
 }
 List<InstructionInfo^>^ Libmem::Disassemble(array<Byte>^ code,LibmemCli::Architecture arch,UInt64 count,UInt64 runtimeAddress) {
     if(code==nullptr) throw gcnew ArgumentNullException("code");
+    native_architecture(arch,"architecture");
     if(code->Length==0) return gcnew List<InstructionInfo^>();
     pin_ptr<Byte> pinned=&code[0]; lm_inst_t* instructions=nullptr;
     lm_byte_t* raw=pinned;
