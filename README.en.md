@@ -293,7 +293,7 @@ The repository uses layered validation:
 - pinned libmem public API coverage validation
 - runtime package integrity validation
 
-Specialized runtime workflows use domain-specific path filters so unrelated changes do not consume GitHub-hosted Windows runners unnecessarily. Full validation remains available through manual workflow dispatch.
+Specialized runtime workflows are separated from the baseline Build gate, and full validation remains available through manual workflow dispatch.
 
 ## Public API stability
 
