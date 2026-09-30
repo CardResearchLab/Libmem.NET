@@ -64,7 +64,9 @@ Completed contract freeze: `ProcessInfo` is now library-created read-only identi
 
 Completed freeze cleanup: `ModuleInfo` is now a LibmemCli-created read-only module descriptor. Consumers can no longer rewrite `Base / End / Size / Name / Path` and then pass a forged or mutated native module record back into unload or symbol APIs.
 
-Current freeze cleanup: `ThreadInfo` is being frozen as a LibmemCli-created read-only thread descriptor. Consumers can no longer rewrite `Id / OwnerPid` and then pass a forged or mutated native thread record back into `GetThreadProcess`.
+Completed freeze cleanup: `ThreadInfo` is now a LibmemCli-created read-only thread descriptor. Consumers can no longer rewrite `Id / OwnerPid` and then pass a forged or mutated native thread record back into `GetThreadProcess`.
+
+Current freeze cleanup: `SymbolInfo` is being frozen as a LibmemCli-created read-only symbol result. Consumers can read `Address / Name` but cannot construct or mutate forged symbol results.
 
 ## v0.4 — x64 architecture cleanup
 
