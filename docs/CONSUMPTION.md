@@ -1,12 +1,18 @@
 # LibmemCli Consumption Guide
 
-> Current official target: Windows x64 / .NET 8.
+> Current stable release: **v1.0.0**. Official target: **Windows x64 / .NET 8**.
 
-LibmemCli currently supports two established consumption paths and one experimental packaging path.
+LibmemCli supports two established consumption paths and one experimental packaging path. For most consumers, the **GitHub Release ZIP is the recommended starting point**.
 
 ## 1. Runtime ZIP — official release consumption
 
 Use the GitHub Release asset when the consuming project only needs built binaries.
+
+Current v1.0.0 release:
+
+- Release page: https://github.com/HearthstoneModding/Libmem/releases/tag/v1.0.0
+- Runtime ZIP: https://github.com/HearthstoneModding/Libmem/releases/download/v1.0.0/LibmemCli-windows-x64.zip
+- SHA-256 file: https://github.com/HearthstoneModding/Libmem/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256
 
 Official release assets:
 
@@ -26,7 +32,15 @@ Ijwhost.dll
 libmem.dll
 ```
 
-The consumer should reference `LibmemCli.dll` and keep the runtime files together with the executable.
+The consumer should reference `LibmemCli.dll` and keep the runtime files together with the executable. Do not mix files from different LibmemCli releases or different build commits.
+
+For a normal .NET 8 x64 application:
+
+1. download and extract the runtime ZIP;
+2. reference `LibmemCli.dll`;
+3. copy `LibmemCli.dll`, `libmem.dll`, and `Ijwhost.dll` into the application output directory;
+4. keep `LibmemCli.xml` beside the assembly for IDE documentation;
+5. target x64 explicitly rather than AnyCPU.
 
 This remains the **primary stable distribution model** until a package-manager path passes the same runtime acceptance level.
 
@@ -54,7 +68,7 @@ Publication: disabled
 Target: Windows x64 / .NET 8
 ```
 
-The package ID is provisional until the package layout and runtime behavior are accepted. Development packages also use a commit-qualified prerelease version such as `0.3.0-dev.<commit>` rather than reusing the already released `0.3.0` version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
+The package ID is provisional until the package layout and runtime behavior are accepted. Development packages use a commit-qualified prerelease version derived from the current repository `VERSION`, for example `1.0.0-dev.<commit>`; they do not reuse an already published stable package identity. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
 
 ### Prototype package layout
 
@@ -168,7 +182,8 @@ A future public NuGet release requires all of the following:
 
 For stable consumption today:
 
-- use the GitHub Release x64 runtime ZIP for prebuilt binaries; or
-- use the repository/submodule/reusable workflow for source-level integration.
+- **default:** use the v1.0.0 GitHub Release x64 runtime ZIP for prebuilt binaries;
+- use the repository/submodule/reusable workflow when source-level reproducibility or build integration is required;
+- treat the NuGet package as a development prototype until the repository explicitly marks it as an official release asset.
 
-Treat the NuGet package as a development prototype until the repository explicitly marks it as an official release asset.
+For release history, support boundaries, integrity information, and versioning policy, see [RELEASES.md](RELEASES.md).
