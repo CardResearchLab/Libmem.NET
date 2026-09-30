@@ -87,15 +87,14 @@ namespace LibmemCli::Interop {
     }
 
     ProcessInfo^ process(const lm_process_t& value) {
-        auto result = gcnew ProcessInfo();
-        result->Pid = value.pid;
-        result->ParentPid = value.ppid;
-        result->Architecture = static_cast<LibmemCli::Architecture>(value.arch);
-        result->Bits = value.bits;
-        result->StartTime = value.start_time;
-        result->Name = str(value.name);
-        result->Path = str(value.path);
-        return result;
+        return gcnew ProcessInfo(
+            value.pid,
+            value.ppid,
+            static_cast<LibmemCli::Architecture>(value.arch),
+            value.bits,
+            value.start_time,
+            str(value.name),
+            str(value.path));
     }
 
     ThreadInfo^ thread(const lm_thread_t& value) {

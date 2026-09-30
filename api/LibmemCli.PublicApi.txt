@@ -40,13 +40,13 @@ TYPE public ref class LibmemException : InvalidOperationException
   LibmemException(String^ operation, String^ message, Exception^ innerException);
   property String^ Operation { String^ get(); }
 TYPE public ref class ProcessInfo sealed
-  property UInt32 Pid;
-  property UInt32 ParentPid;
-  property LibmemCli::Architecture Architecture;
-  property UInt64 Bits;
-  property UInt64 StartTime;
-  property String^ Name;
-  property String^ Path;
+  property UInt32 Pid { UInt32 get(); }
+  property UInt32 ParentPid { UInt32 get(); }
+  property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+  property UInt64 Bits { UInt64 get(); }
+  property UInt64 StartTime { UInt64 get(); }
+  property String^ Name { String^ get(); }
+  property String^ Path { String^ get(); }
   bool IsAlive();
 TYPE public ref class ThreadInfo sealed
   property UInt32 Id;

@@ -136,8 +136,8 @@ using (var openedSession = ProcessSession.Open(current)
 }
 
 var sessionSnapshot = session.Info;
-sessionSnapshot.Pid = 0;
-Check(session.Pid == current.Pid, "Mutating a returned ProcessInfo snapshot changed ProcessSession identity.");
+Check(sessionSnapshot.Pid == current.Pid && sessionSnapshot.StartTime == current.StartTime,
+    "ProcessSession.Info returned the wrong immutable process identity.");
 
 var refreshed = session.Refresh();
 Check(refreshed is not null && refreshed.Pid == current.Pid, "ProcessSession.Refresh failed for the current process.");

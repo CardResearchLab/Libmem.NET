@@ -17,6 +17,7 @@
 
 ### Changed
 
+- Froze `ProcessInfo` as library-created read-only identity metadata so PID/start-time and related process fields cannot be rewritten after capture; this intentionally removes the pre-v1.0 public setter/default-construction surface while preserving all process lookup, liveness, session, and static-operation entry points.
 - Completed the v0.9 managed-contract documentation audit: expanded XML IntelliSense coverage for the frozen `ProcessSession` / Manager / ownership surface and documented `ProcessSession.Allocate` as an intentional ownership convenience, with no public API or runtime behavior change.
 - Froze target-process exit semantics: process exit no longer implies session disposal, bound identity metadata remains readable, `IsAlive()`/`Refresh()` expose staleness, Manager accessors remain available, and hot-path Manager calls do not gain a universal exact-identity preflight.
 - Froze ownership-lifetime idempotency with runtime coverage for repeated session detach/dispose, repeated resource disposal, and remote-allocation cleanup after target-process exit.
