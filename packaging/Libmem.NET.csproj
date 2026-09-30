@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
+    <PackageId>Libmem.NET</PackageId>
+    <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.0-local</PackageVersion>
+    <Authors>HearthstoneModding</Authors>
+    <Description>Libmem.NET: Windows x64 / .NET 8 C++/CLI wrapper around the pinned rdbo/libmem C ABI.</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/HearthstoneModding/Libmem.NET</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryCommit Condition="'$(RepositoryCommit)' == '' and '$(GITHUB_SHA)' != ''">$(GITHUB_SHA)</RepositoryCommit>
+    <RepositoryCommit Condition="'$(RepositoryCommit)' == ''">local</RepositoryCommit>
+    <PackageProjectUrl>https://github.com/HearthstoneModding/Libmem.NET</PackageProjectUrl>
+    <PackageTags>libmem memory interop cpp-cli windows x64</PackageTags>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\artifacts\managed\x64\$(Configuration)\LibmemCli.dll"
+          Pack="true"
+          PackagePath="lib\net8.0\LibmemCli.dll" />
+    <None Include="..\artifacts\managed\x64\$(Configuration)\LibmemCli.xml"
+          Pack="true"
+          PackagePath="lib\net8.0\LibmemCli.xml" />
+    <None Include="..\artifacts\native\x64\$(Configuration)\bin\libmem.dll"
+          Pack="true"
+          PackagePath="runtimes\win-x64\native\libmem.dll" />
+    <None Include="..\artifacts\managed\x64\$(Configuration)\Ijwhost.dll"
+          Pack="true"
+          PackagePath="runtimes\win-x64\native\Ijwhost.dll" />
+    <None Include="Libmem.NET.targets"
+          Pack="true"
+          PackagePath="buildTransitive\Libmem.NET.targets" />
+    <None Include="..\README.en.md"
+          Pack="true"
+          PackagePath="README.md" />
+    <None Include="..\LICENSE"
+          Pack="true"
+          PackagePath="" />
+    <None Include="..\THIRD_PARTY_NOTICES.md"
+          Pack="true"
+          PackagePath="THIRD_PARTY_NOTICES.md" />
+  </ItemGroup>
+</Project>
