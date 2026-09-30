@@ -20,6 +20,19 @@ LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复�
 - C API：[include/libmem/libmem.h](https://github.com/rdbo/libmem/blob/master/include/libmem/libmem.h)
 
 
+## 稳定版本：v1.0.0
+
+LibmemCli **v1.0.0** 已正式发布，当前稳定支持目标为 **Windows x64 / .NET 8**。
+
+- 下载：[`LibmemCli-windows-x64.zip`](https://github.com/HearthstoneModding/Libmem/releases/download/v1.0.0/LibmemCli-windows-x64.zip)
+- 校验：[`LibmemCli-windows-x64.zip.sha256`](https://github.com/HearthstoneModding/Libmem/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256)
+- Release：[LibmemCli v1.0.0](https://github.com/HearthstoneModding/Libmem/releases/tag/v1.0.0)
+- 完整发布与版本策略：[docs/RELEASES.md](docs/RELEASES.md)
+
+如果只需要在 C# / .NET 8 x64 项目中使用 LibmemCli，**优先下载 Release ZIP，不需要自行编译仓库**。将 `LibmemCli.dll` 作为引用，并确保 `LibmemCli.dll`、`libmem.dll`、`Ijwhost.dll` 位于应用程序输出目录；`LibmemCli.xml` 建议同时保留以获得 IntelliSense 文档。
+
+> NuGet 目前仍是本地/CI 原型，不是 v1.0.0 的正式分发渠道；x86 也不属于 v1.0 的稳定支持范围。
+
 ## 项目架构
 
 ```mermaid
