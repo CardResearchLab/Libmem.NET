@@ -58,8 +58,8 @@ TYPE public ref class ModuleInfo sealed
   property String^ Name { String^ get(); }
   property String^ Path { String^ get(); }
 TYPE public ref class SymbolInfo sealed
-  property UInt64 Address;
-  property String^ Name;
+  property UInt64 Address { UInt64 get(); }
+  property String^ Name { String^ get(); }
 TYPE public ref class SegmentInfo sealed
   property UInt64 Base;
   property UInt64 End;
