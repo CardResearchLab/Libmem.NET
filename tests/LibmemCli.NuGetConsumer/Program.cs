@@ -15,6 +15,19 @@ foreach (var propertyName in new[] { "Base", "End", "Size", "Name", "Path" })
         throw new InvalidOperationException($"ModuleInfo.{propertyName} must be read-only.");
 }
 
+var threadType = typeof(ThreadInfo);
+if (threadType.GetConstructors().Length != 0)
+    throw new InvalidOperationException("ThreadInfo must not expose a public constructor.");
+
+foreach (var propertyName in new[] { "Id", "OwnerPid" })
+{
+    var property = threadType.GetProperty(propertyName)
+        ?? throw new InvalidOperationException($"ThreadInfo.{propertyName} is missing.");
+
+    if (property.CanWrite)
+        throw new InvalidOperationException($"ThreadInfo.{propertyName} must be read-only.");
+}
+
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process could not be resolved through the NuGet package.");
 
