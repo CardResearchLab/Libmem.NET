@@ -434,16 +434,18 @@ print("PASS external-process runtime coverage contract")
 
 readme_zh = (root / "README.md").read_text(encoding="utf-8")
 readme_en = (root / "README.en.md").read_text(encoding="utf-8")
+consumption_doc = (root / "docs/CONSUMPTION.md").read_text(encoding="utf-8")
+release_doc = (root / "docs/RELEASES.md").read_text(encoding="utf-8")
 for readme in [readme_zh, readme_en]:
-    assert ".github/workflows/external-process-tests.yml" in readme
-    assert "LibmemCli.TestTarget" in readme
-print("PASS external-process documentation contract")
-for readme in [readme_zh, readme_en]:
-    assert ".github/workflows/nuget-consumer-tests.yml" in readme
+    assert "External Process Runtime Tests" in readme
+    assert "NuGet Consumer Tests" in readme
     assert "HearthstoneModding.LibmemCli" in readme
-assert "七套自动化工作流" in readme_zh
-assert "seven automation workflows" in readme_en
-print("PASS NuGet prototype documentation contract")
+    assert "docs/CONSUMPTION.md" in readme
+    assert "docs/RELEASES.md" in readme
+assert "LibmemCli.TestTarget" in external_process_test_source
+assert "PackageReference" in consumption_doc
+assert "v1.0.0" in release_doc
+print("PASS consumer documentation contract")
 for readme in [readme_zh, readme_en]:
     assert 'InvalidOperationException("Injection failed")' not in readme
     assert 'InvalidOperationException("Hook failed")' not in readme
