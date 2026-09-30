@@ -5,10 +5,12 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
+      - 'src/Injection/**'
+      - 'src/Modules/**'
+      - 'src/Interop/**'
+      - 'src/Core/ProcessSession.cpp'
+      - 'src/Core/LibmemProcess.cpp'
       - 'tests/LibmemCli.InjectorTests/**'
-      - 'tests/check_sources.py'
-      - 'eng/**'
       - 'build.ps1'
       - '.gitmodules'
       - '.github/workflows/injector-tests.yml'
