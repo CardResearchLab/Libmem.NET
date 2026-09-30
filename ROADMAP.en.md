@@ -72,7 +72,9 @@ Completed freeze cleanup: `SegmentInfo` is now a LibmemCli-created read-only mem
 
 Completed freeze cleanup: `InstructionInfo` is now a LibmemCli-created deeply read-only instruction result. Scalar/string properties are getter-only and `Bytes` returns a defensive copy so callers cannot mutate the stored instruction state.
 
-Current freeze cleanup: `ModuleInfo` now records internal process provenance (PID + StartTime) without expanding its public surface. Session-bound `ModuleManager.Unload` and `SymbolManager` reject module descriptors captured from another process identity before native dispatch.
+Completed freeze cleanup: `ModuleInfo` now records internal process provenance (PID + StartTime) without expanding its public surface. Session-bound `ModuleManager.Unload` / `SymbolManager` and the static unload overloads reject module descriptors captured from another process identity before native dispatch.
+
+Current freeze cleanup: freeze caller-supplied enum contracts. Undefined `Architecture` values and `MemoryProtection` flags containing unknown bits are rejected with `ArgumentOutOfRangeException` at the managed boundary instead of being forwarded to native libmem.
 
 ## v0.4 — x64 architecture cleanup
 
