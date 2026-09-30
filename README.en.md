@@ -20,6 +20,19 @@ The native libmem library is included as a pinned Git submodule and is built aut
 - C API: [include/libmem/libmem.h](https://github.com/rdbo/libmem/blob/master/include/libmem/libmem.h)
 
 
+## Stable release: v1.0.0
+
+LibmemCli **v1.0.0** is officially released. The stable support target is **Windows x64 / .NET 8**.
+
+- Download: [`LibmemCli-windows-x64.zip`](https://github.com/HearthstoneModding/Libmem/releases/download/v1.0.0/LibmemCli-windows-x64.zip)
+- Checksum: [`LibmemCli-windows-x64.zip.sha256`](https://github.com/HearthstoneModding/Libmem/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256)
+- Release: [LibmemCli v1.0.0](https://github.com/HearthstoneModding/Libmem/releases/tag/v1.0.0)
+- Release/version policy: [docs/RELEASES.md](docs/RELEASES.md)
+
+If you only need LibmemCli from a C# / .NET 8 x64 application, **prefer the Release ZIP; you do not need to build this repository yourself**. Reference `LibmemCli.dll`, keep `LibmemCli.dll`, `libmem.dll`, and `Ijwhost.dll` beside the application output, and keep `LibmemCli.xml` there as well for IntelliSense documentation.
+
+> NuGet remains a local/CI prototype and is not an official v1.0.0 distribution channel. x86 is also outside the v1.0 stable support target.
+
 ## Architecture
 
 ```mermaid
