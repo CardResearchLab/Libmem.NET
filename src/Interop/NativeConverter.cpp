@@ -111,12 +111,11 @@ namespace LibmemCli::Interop {
     }
 
     SegmentInfo^ segment(const lm_segment_t& value) {
-        auto result = gcnew SegmentInfo();
-        result->Base = value.base;
-        result->End = value.end;
-        result->Size = value.size;
-        result->Protection = static_cast<MemoryProtection>(value.prot);
-        return result;
+        return gcnew SegmentInfo(
+            value.base,
+            value.end,
+            value.size,
+            static_cast<MemoryProtection>(value.prot));
     }
 
     InstructionInfo^ instruction(const lm_inst_t& value) {
