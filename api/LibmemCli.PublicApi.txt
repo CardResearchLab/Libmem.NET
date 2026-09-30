@@ -61,10 +61,10 @@ TYPE public ref class SymbolInfo sealed
   property UInt64 Address { UInt64 get(); }
   property String^ Name { String^ get(); }
 TYPE public ref class SegmentInfo sealed
-  property UInt64 Base;
-  property UInt64 End;
-  property UInt64 Size;
-  property MemoryProtection Protection;
+  property UInt64 Base { UInt64 get(); }
+  property UInt64 End { UInt64 get(); }
+  property UInt64 Size { UInt64 get(); }
+  property MemoryProtection Protection { MemoryProtection get(); }
 TYPE public ref class InstructionInfo sealed
   property UInt64 Address;
   property UInt64 Size;

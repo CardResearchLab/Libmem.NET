@@ -41,6 +41,19 @@ foreach (var propertyName in new[] { "Address", "Name" })
         throw new InvalidOperationException($"SymbolInfo.{propertyName} must be read-only.");
 }
 
+var segmentType = typeof(SegmentInfo);
+if (segmentType.GetConstructors().Length != 0)
+    throw new InvalidOperationException("SegmentInfo must not expose a public constructor.");
+
+foreach (var propertyName in new[] { "Base", "End", "Size", "Protection" })
+{
+    var property = segmentType.GetProperty(propertyName)
+        ?? throw new InvalidOperationException($"SegmentInfo.{propertyName} is missing.");
+
+    if (property.CanWrite)
+        throw new InvalidOperationException($"SegmentInfo.{propertyName} must be read-only.");
+}
+
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process could not be resolved through the NuGet package.");
 
