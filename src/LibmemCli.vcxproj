@@ -87,6 +87,7 @@
     <ClCompile Include="Modules\LibmemModule.cpp" />
     <ClCompile Include="Modules\ModuleInfo.cpp" />
     <ClCompile Include="Threads\LibmemThread.cpp" />
+    <ClCompile Include="Threads\ThreadInfo.cpp" />
     <ClCompile Include="Core\LibmemProcess.cpp" />
     <ClCompile Include="Core\ProcessInfo.cpp" />
     <ClCompile Include="Core\LibmemException.cpp" />
