@@ -168,6 +168,8 @@ On x64, the bad-address sentinel corresponds to `UInt64.MaxValue`.
 
 This matters because a resolved `ModuleInfo` may later be passed back to module unload and symbol APIs. Freezing the descriptor prevents consumer-side mutation from silently changing the native module record used by those operations.
 
+LibmemCli also tracks the originating process identity internally. Session-bound `ModuleManager.Unload` and `SymbolManager` operations, plus the static `UnloadModule` overloads, reject a `ModuleInfo` captured from a different PID + start-time identity with `ArgumentException("module")`. This validation is an in-memory identity comparison and does not enumerate modules or add a target-liveness preflight. The internal provenance is intentionally not exposed as additional public `ModuleInfo` metadata.
+
 ### ModuleManager
 
 Primary operations:

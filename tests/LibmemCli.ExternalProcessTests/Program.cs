@@ -125,6 +125,41 @@ try
     Check(session.Pid == ready.Pid, "ProcessSession attached to the wrong PID.");
     Check(session.IsAlive(), "TestTarget should be alive after attach.");
 
+    var foreignModule = Libmem.EnumModules().FirstOrDefault(module => module is not null)
+        ?? throw new InvalidOperationException("Current process exposed no module for provenance validation.");
+
+    var foreignUnload = ExpectThrows<ArgumentException>(
+        () => session.Modules.Unload(foreignModule),
+        "ModuleManager.Unload should reject a ModuleInfo from another process.");
+    Check(foreignUnload.ParamName == "module",
+        "ModuleManager.Unload reported the wrong parameter name for a foreign ModuleInfo.");
+
+    var staticForeignUnload = ExpectThrows<ArgumentException>(
+        () => Libmem.UnloadModule(process!, foreignModule),
+        "UnloadModule(process, module) should reject a ModuleInfo from another process.");
+    Check(staticForeignUnload.ParamName == "module",
+        "UnloadModule(process, foreign module) reported the wrong parameter name.");
+
+    var childModule = session.Modules.Enumerate().FirstOrDefault(module => module is not null)
+        ?? throw new InvalidOperationException("TestTarget exposed no module for provenance validation.");
+    var currentProcessUnload = ExpectThrows<ArgumentException>(
+        () => Libmem.UnloadModule(childModule),
+        "UnloadModule(module) should reject a module captured from another process.");
+    Check(currentProcessUnload.ParamName == "module",
+        "UnloadModule(foreign module) reported the wrong parameter name.");
+
+    var foreignSymbolEnumeration = ExpectThrows<ArgumentException>(
+        () => session.Symbols.Enumerate(foreignModule, demangle: false),
+        "SymbolManager.Enumerate should reject a ModuleInfo from another process.");
+    Check(foreignSymbolEnumeration.ParamName == "module",
+        "SymbolManager.Enumerate reported the wrong parameter name for a foreign ModuleInfo.");
+
+    var foreignSymbolLookup = ExpectThrows<ArgumentException>(
+        () => session.Symbols.FindAddress(foreignModule, "unused", demangle: false),
+        "SymbolManager.FindAddress should reject a ModuleInfo from another process.");
+    Check(foreignSymbolLookup.ParamName == "module",
+        "SymbolManager.FindAddress reported the wrong parameter name for a foreign ModuleInfo.");
+
     byte[] expected =
     [
         0x4C, 0x49, 0x42, 0x4D, 0x45, 0x4D,
