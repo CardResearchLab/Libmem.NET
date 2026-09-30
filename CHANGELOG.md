@@ -8,8 +8,8 @@ _No unreleased changes._
 
 ### Added
 
-- Added `eng/package-nuget.ps1` so local and CI NuGet prototype packaging share the same version/provenance/layout verification path.
-- Added an unpublished `HearthstoneModding.LibmemCli` x64 NuGet prototype, package-layout verification, and an independent `PackageReference` consumer test covering restore/build/run with native runtime dependencies.
+- Added `eng/package-nuget.ps1` so local, CI, and release NuGet packaging share the same version/provenance/layout verification path.
+- Added the `Libmem.NET` x64 NuGet package path, package-layout/provenance verification, an independent `PackageReference` consumer test covering restore/build/run/publish with native runtime dependencies, and Trusted Publishing (OIDC) release integration.
 - Added `docs/API.md` as a consumer-facing behavior reference for the session model, Managers, ownership types, result semantics, exceptions, static compatibility APIs, x64 policy, and pinned-upstream workarounds.
 - Added generated `LibmemCli.xml` IntelliSense documentation to x64 builds and runtime packages; MSVC `/doc` output is merged by XDCMake and shipped beside `LibmemCli.dll`.
 - Added an x64 external-process `LibmemCli.TestTarget` plus runtime tests for remote attach, read/write, remote allocation/protection/free, signature scan, segment lookup, and process-exit observation.
