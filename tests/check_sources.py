@@ -334,7 +334,7 @@ for package_marker in [
     "<RepositoryCommit",
 ]:
     assert package_marker in nuget_package_project, (
-        f"NuGet prototype lost package asset: {package_marker}"
+        f"NuGet package lost required asset: {package_marker}"
     )
 assert "ContentWithTargetPath" in nuget_targets
 assert "'$(OS)' != 'Windows_NT'" in nuget_targets
@@ -346,7 +346,7 @@ for consumer_marker in [
     "session.Memory.Read",
 ]:
     assert consumer_marker in nuget_consumer_source
-print("PASS local NuGet prototype contract")
+print("PASS local NuGet package contract")
 
 nuget_package_script = (root / "eng/package-nuget.ps1").read_text(encoding="utf-8")
 for package_script_marker in [
@@ -367,7 +367,7 @@ consumption_guide = (root / "docs/CONSUMPTION.md").read_text(encoding="utf-8")
 for consumption_marker in [
     "## 1. Runtime ZIP",
     "## 2. Git Submodule",
-    "## 3. Local NuGet prototype",
+    "## 3. NuGet package",
     "Libmem.NET",
     "runtimes/win-x64/native",
     "PackageReference",
@@ -376,8 +376,8 @@ for consumption_marker in [
     assert consumption_marker in consumption_guide, (
         f"Consumption guide lost required section: {consumption_marker}"
     )
-assert "Publication: disabled" in consumption_guide
-assert "development prototype" in consumption_guide
+assert "Trusted Publishing" in consumption_guide
+assert "NUGET_USER" in consumption_guide
 print("PASS consumption guide contract")
 test_target_project = (root / "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj").read_text(encoding="utf-8")
 external_process_project = (root / "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj").read_text(encoding="utf-8")
@@ -443,7 +443,7 @@ for readme in [readme_zh, readme_en]:
     assert "Libmem.NET" in readme
 assert "七套自动化工作流" in readme_zh
 assert "seven automation workflows" in readme_en
-print("PASS NuGet prototype documentation contract")
+print("PASS NuGet package documentation contract")
 for readme in [readme_zh, readme_en]:
     assert 'InvalidOperationException("Injection failed")' not in readme
     assert 'InvalidOperationException("Hook failed")' not in readme
@@ -481,8 +481,17 @@ assert '$archiveChecksum = "$archive.sha256"' in package_script
 assert "Get-FileHash -Path $archive -Algorithm SHA256" in package_script
 assert "verify-package.py" in build_workflow
 assert "verify-package.py" in reusable_workflow
+assert "include-nuget:" in reusable_workflow
+assert "Package official NuGet release" in reusable_workflow
+assert "package-nuget.ps1" in reusable_workflow
 assert "verify-package.py" in release_workflow
 assert "--expected-repository-commit" in release_workflow
+assert "id-token: write" in release_workflow
+assert "NuGet/login@v1" in release_workflow
+assert "secrets.NUGET_USER" in release_workflow
+assert "Libmem.NET.${EXPECTED_VERSION}.nupkg" in release_workflow
+assert "dotnet nuget push" in release_workflow
+assert "https://api.nuget.org/v3/index.json" in release_workflow
 assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
 assert "LibmemCli-windows-x86.zip.sha256" not in release_workflow
 release_notes_script_path = root / "eng/render-release-notes.py"
