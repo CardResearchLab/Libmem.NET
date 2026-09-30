@@ -355,7 +355,7 @@ Injector 同样使用独立的 `Injector Runtime Tests`：测试会复制一份�
 ```yaml
 jobs:
   build-libmem:
-    uses: HearthstoneModding/Libmem/.github/workflows/reusable-build.yml@main
+    uses: HearthstoneModding/Libmem.NET/.github/workflows/reusable-build.yml@main
     with:
       ref: main
       configuration: Release
