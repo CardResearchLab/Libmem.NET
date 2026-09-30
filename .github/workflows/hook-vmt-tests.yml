@@ -5,10 +5,14 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
+      - 'src/Hooks/**'
+      - 'src/Interop/**'
+      - 'src/Core/ProcessSession.cpp'
+      - 'src/Core/LibmemProcess.cpp'
+      - 'src/Memory/LibmemMemory.cpp'
+      - 'src/Memory/MemoryManager.cpp'
+      - 'src/Memory/RemoteAllocation.cpp'
       - 'tests/LibmemCli.HookVmtTests/**'
-      - 'tests/check_sources.py'
-      - 'eng/**'
       - 'build.ps1'
       - '.gitmodules'
       - '.github/workflows/hook-vmt-tests.yml'
