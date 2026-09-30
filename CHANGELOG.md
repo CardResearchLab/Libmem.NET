@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-_No unreleased changes._
+### Documentation
+
+- Expanded the v1.0 consumer documentation with direct stable-release downloads, clearer runtime deployment steps, an official release/versioning guide, and updated stable-support boundaries.
 
 ## 1.0.0 - 2026-09-30
 
