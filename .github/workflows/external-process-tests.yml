@@ -5,11 +5,12 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
+      - 'src/Core/**'
+      - 'src/Memory/**'
+      - 'src/Scanning/**'
+      - 'src/Interop/**'
       - 'tests/LibmemCli.TestTarget/**'
       - 'tests/LibmemCli.ExternalProcessTests/**'
-      - 'tests/check_sources.py'
-      - 'eng/**'
       - 'build.ps1'
       - '.gitmodules'
       - '.github/workflows/external-process-tests.yml'
