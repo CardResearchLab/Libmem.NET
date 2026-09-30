@@ -17,6 +17,8 @@
 
 ### Changed
 
+- Preserved public parameter names when rejecting embedded NUL characters in process/module names, module paths, scan strings, symbol names, and assembly source; internal UTF-8 helper details no longer leak through `ArgumentException.ParamName`.
+
 - Added managed-boundary validation for caller-supplied `Architecture` and `MemoryProtection` values. Undefined architectures and protection flags containing unknown bits now fail with `ArgumentOutOfRangeException` before native dispatch.
 
 - Bound `ModuleInfo` results to their originating PID + start-time identity internally. Session-bound module unload/symbol operations and static module-unload overloads now reject cross-process `ModuleInfo` values before native dispatch, without expanding the public `ModuleInfo` surface or adding module-enumeration preflights.

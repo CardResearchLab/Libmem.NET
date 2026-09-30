@@ -25,7 +25,7 @@ ModuleInfo^ Libmem::FindModule(String^ name) {
     if(String::IsNullOrWhiteSpace(name))
         throw gcnew ArgumentException("Module name must not be empty.", "name");
     lm_module_t m{};
-    auto n=utf8(name);
+    auto n=utf8(name,"name");
     if(!LM_FindModule(n.c_str(),&m)) return nullptr;
     auto owner=CurrentProcess();
     if(owner==nullptr) throw gcnew LibmemException("LM_GetProcess", "Could not resolve the current process for module provenance.");
@@ -37,7 +37,7 @@ ModuleInfo^ Libmem::FindModule(ProcessInfo^ input,String^ name) {
         throw gcnew ArgumentException("Module name must not be empty.", "name");
     auto p=proc(input);
     lm_module_t m{};
-    auto n=utf8(name);
+    auto n=utf8(name,"name");
     return LM_FindModuleEx(&p,n.c_str(),&m) ? module(m,input) : nullptr;
 }
 ModuleInfo^ Libmem::LoadModule(String^ path) {
@@ -45,7 +45,7 @@ ModuleInfo^ Libmem::LoadModule(String^ path) {
     if(String::IsNullOrWhiteSpace(path))
         throw gcnew ArgumentException("Module path must not be empty.", "path");
     lm_module_t m{};
-    auto s=utf8(path);
+    auto s=utf8(path,"path");
     if(!LM_LoadModule(s.c_str(),&m)) return nullptr;
     auto owner=CurrentProcess();
     if(owner==nullptr) throw gcnew LibmemException("LM_GetProcess", "Could not resolve the current process for module provenance.");
@@ -57,7 +57,7 @@ ModuleInfo^ Libmem::LoadModule(ProcessInfo^ input,String^ path) {
         throw gcnew ArgumentException("Module path must not be empty.", "path");
     auto p=proc(input);
     lm_module_t m{};
-    auto s=utf8(path);
+    auto s=utf8(path,"path");
     return LM_LoadModuleEx(&p,s.c_str(),&m) ? module(m,input) : nullptr;
 }
 bool Libmem::UnloadModule(ModuleInfo^ input) {

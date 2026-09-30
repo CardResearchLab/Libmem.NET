@@ -14,6 +14,7 @@ namespace LibmemCli::Interop {
     };
 
     std::string utf8(String^ value);
+    std::string utf8(String^ value, String^ parameterName);
     String^ str(const char* text);
 
     lm_address_t native_address(UInt64 value, String^ parameterName);

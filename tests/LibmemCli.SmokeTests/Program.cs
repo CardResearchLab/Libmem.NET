@@ -163,6 +163,47 @@ var nullAssemblyCode = ExpectThrows<ArgumentNullException>(
     "Assemble(null) should throw ArgumentNullException.");
 Check(nullAssemblyCode.ParamName == "code", "Assemble(null) reported the wrong parameter name.");
 
+var nulProcessName = ExpectThrows<ArgumentException>(
+    () => Libmem.FindProcess("bad\0name"),
+    "FindProcess should reject embedded NUL.");
+Check(nulProcessName.ParamName == "name", "FindProcess embedded NUL reported the wrong parameter name.");
+
+var nulModuleName = ExpectThrows<ArgumentException>(
+    () => session.Modules.Find("bad\0module"),
+    "ModuleManager.Find should reject embedded NUL.");
+Check(nulModuleName.ParamName == "name", "ModuleManager.Find embedded NUL reported the wrong parameter name.");
+
+var nulModulePath = ExpectThrows<ArgumentException>(
+    () => session.Modules.Load("bad\0path.dll"),
+    "ModuleManager.Load should reject embedded NUL.");
+Check(nulModulePath.ParamName == "path", "ModuleManager.Load embedded NUL reported the wrong parameter name.");
+
+var nulMask = ExpectThrows<ArgumentException>(
+    () => Libmem.PatternScan([0x90], "x\0", 0, 1),
+    "PatternScan should reject embedded NUL in mask.");
+Check(nulMask.ParamName == "mask", "PatternScan embedded NUL reported the wrong parameter name.");
+
+var nulSignature = ExpectThrows<ArgumentException>(
+    () => Libmem.SigScan("90\0", 0, 1),
+    "SigScan should reject embedded NUL in signature.");
+Check(nulSignature.ParamName == "signature", "SigScan embedded NUL reported the wrong parameter name.");
+
+var symbolProbeModule = session.Modules.Enumerate().First();
+var nulSymbolName = ExpectThrows<ArgumentException>(
+    () => Libmem.FindSymbolAddress(symbolProbeModule, "bad\0symbol", false),
+    "FindSymbolAddress should reject embedded NUL.");
+Check(nulSymbolName.ParamName == "name", "FindSymbolAddress embedded NUL reported the wrong parameter name.");
+
+var nulDemangleName = ExpectThrows<ArgumentException>(
+    () => Libmem.DemangleSymbol("bad\0symbol"),
+    "DemangleSymbol should reject embedded NUL.");
+Check(nulDemangleName.ParamName == "name", "DemangleSymbol embedded NUL reported the wrong parameter name.");
+
+var nulAssemblyCode = ExpectThrows<ArgumentException>(
+    () => Libmem.Assemble("nop\0ret"),
+    "Assemble should reject embedded NUL.");
+Check(nulAssemblyCode.ParamName == "code", "Assemble embedded NUL reported the wrong parameter name.");
+
 using (var openedSession = ProcessSession.Open(current)
        ?? throw new InvalidOperationException("ProcessSession.Open(ProcessInfo) failed for the current process."))
 {
