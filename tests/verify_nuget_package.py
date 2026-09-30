@@ -106,7 +106,7 @@ def main() -> int:
 
         if (
             project_url is None
-            or project_url.text != "https://github.com/HearthstoneModding/Libmem"
+            or project_url.text != "https://github.com/HearthstoneModding/Libmem.NET"
         ):
             raise AssertionError("NuGet project URL mismatch.")
 
@@ -116,7 +116,7 @@ def main() -> int:
         if repository.attrib.get("type") != "git":
             raise AssertionError("NuGet repository type is not git.")
 
-        if repository.attrib.get("url") != "https://github.com/HearthstoneModding/Libmem":
+        if repository.attrib.get("url") != "https://github.com/HearthstoneModding/Libmem.NET":
             raise AssertionError("NuGet repository URL mismatch.")
 
         if repository.attrib.get("commit") != args.expected_commit:
