@@ -134,6 +134,20 @@ Pointer resolution and scanning are owned by `ProcessSession.Scanner`. The tempo
 
 Short operations are therefore observable results and are not automatically converted into exceptions.
 
+#### Zero-size memory operations
+
+Zero is not treated uniformly across all memory APIs because the pinned Windows libmem ABI assigns different meanings to it.
+
+- `Read(address, 0)` / static `ReadMemory(..., 0)` -> empty byte array.
+- `Write(address, Array.Empty<byte>())` / static `WriteMemory(..., empty)` -> `0` bytes written.
+- `Set(address, value, 0)` / static `SetMemory(..., 0)` -> `0` bytes set.
+- `Protect(address, 0, protection)` preserves the pinned Windows libmem behavior where zero means one system page.
+- Static `Libmem.AllocateMemory(0, protection)` preserves the pinned Windows libmem behavior where zero requests one system page.
+- `MemoryManager.Allocate(0, protection)` throws `ArgumentOutOfRangeException("size")` because the owned `RemoteAllocation` contract requires a non-zero managed size.
+- On the pinned Windows implementation, `FreeMemory(..., size)` releases the whole region with `MEM_RELEASE`; the supplied size is not a release length.
+
+These differences are intentional parts of the managed contract rather than candidates for blanket normalization.
+
 #### Allocate
 
 ```csharp
@@ -234,6 +248,11 @@ Primary operations:
 The session's target architecture is used automatically.
 
 The address-based `Disassemble` overload first reads bytes through the current session and then disassembles those bytes. It does not treat a remote address as a local pointer.
+
+Zero-size / empty-input behavior:
+
+- `Disassemble(byte[0], ...)` returns an empty list.
+- `CodeLength(..., minimumLength: 0)` returns `0`; zero is the natural result for a zero-length request, not a native failure.
 
 Definite failures:
 

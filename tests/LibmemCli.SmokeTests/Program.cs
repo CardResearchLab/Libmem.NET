@@ -442,6 +442,12 @@ Check(ownedAllocation is not null, "MemoryManager.Allocate returned null.");
 Check(ownedAllocation!.Address != 0 && ownedAllocation.Address != invalidAddress, "RemoteAllocation has an invalid address.");
 Check(ownedAllocation.Size == 4096, "RemoteAllocation did not preserve its requested size.");
 
+var zeroOwnedAllocation = ExpectThrows<ArgumentOutOfRangeException>(
+    () => memory.Allocate(0, MemoryProtection.ReadWrite),
+    "MemoryManager.Allocate(0) should reject a zero-sized owned allocation.");
+Check(zeroOwnedAllocation.ParamName == "size",
+    "MemoryManager.Allocate(0) reported the wrong parameter name.");
+
 var localSegment = Libmem.FindSegment(ownedAllocation.Address);
 Check(localSegment is not null
       && localSegment.Base <= ownedAllocation.Address
@@ -469,6 +475,15 @@ var invalidStaticProtection = ExpectThrows<ArgumentOutOfRangeException>(
     "AllocateMemory should reject unsupported protection flags.");
 Check(invalidStaticProtection.ParamName == "prot",
     "AllocateMemory reported the wrong parameter name for invalid protection.");
+
+Check(memory.Read(ownedAllocation.Address, 0).Length == 0,
+    "MemoryManager.Read(count=0) should return an empty array.");
+Check(memory.Write(ownedAllocation.Address, []) == 0,
+    "MemoryManager.Write(empty) should be a zero-byte no-op.");
+Check(memory.Set(ownedAllocation.Address, 0xA5, 0) == 0,
+    "MemoryManager.Set(size=0) should be a zero-byte no-op.");
+var zeroProtectOld = memory.Protect(ownedAllocation.Address, 0, MemoryProtection.ReadWrite);
+_ = memory.Protect(ownedAllocation.Address, 0, zeroProtectOld);
 
 Check(memory.Set(ownedAllocation.Address, 0xA5, 16) == 16, "MemoryManager.Set failed.");
 Check(memory.Read(ownedAllocation.Address, 16).All(x => x == 0xA5),
@@ -553,6 +568,12 @@ Check(modules.Count > 0, "EnumModules returned no modules.");
 Check(modules.Any(m => m.Base != 0 && m.Size != 0), "EnumModules returned no usable module.");
 
 Stage("static-memory");
+var zeroSizedNativeAllocation = Libmem.AllocateMemory(0, MemoryProtection.ReadWrite);
+Check(zeroSizedNativeAllocation != 0 && zeroSizedNativeAllocation != invalidAddress,
+    "AllocateMemory(0) should preserve the pinned Windows libmem page-allocation contract.");
+Check(Libmem.FreeMemory(zeroSizedNativeAllocation, 0),
+    "FreeMemory should release the zero-size-request allocation.");
+
 const ulong allocationSize = 4096;
 var address = Libmem.AllocateMemory(allocationSize, MemoryProtection.ReadWrite);
 Check(address != 0 && address != invalidAddress, "AllocateMemory failed.");
@@ -565,6 +586,15 @@ try
 
     var read = Libmem.ReadMemory(address, payload.Length);
     Check(read.SequenceEqual(payload), "ReadMemory did not return the bytes that were written.");
+
+    Check(Libmem.ReadMemory(address, 0).Length == 0,
+        "ReadMemory(count=0) should return an empty array.");
+    Check(Libmem.WriteMemory(address, []) == 0,
+        "WriteMemory(empty) should be a zero-byte no-op.");
+    Check(Libmem.SetMemory(address, 0x5A, 0) == 0,
+        "SetMemory(size=0) should be a zero-byte no-op.");
+    var zeroStaticProtectOld = Libmem.ProtectMemory(address, 0, MemoryProtection.ReadWrite);
+    _ = Libmem.ProtectMemory(address, 0, zeroStaticProtectOld);
 
     Check(Libmem.SetMemory(address + 32, 0x5A, 8) == 8, "SetMemory failed.");
     Check(Libmem.ReadMemory(address + 32, 8).All(x => x == 0x5A), "SetMemory did not fill local memory.");
@@ -609,6 +639,13 @@ try
         "Disassemble reported the wrong parameter name for invalid architecture.");
 
     var assembly = pidSession.Assembly;
+    Check(assembly.Disassemble([], 0, 0).Count == 0,
+        "AssemblyManager.Disassemble(empty) should return an empty list.");
+    Check(assembly.CodeLength(address, 0) == 0,
+        "AssemblyManager.CodeLength(minimumLength=0) should return 0.");
+    Check(Libmem.CodeLength(address, 0) == 0,
+        "Static CodeLength(minimumLength=0) should return 0.");
+
     var singleInstruction = Libmem.Assemble("nop");
     Check(singleInstruction is not null && singleInstruction.Size > 0,
         "Single-instruction Assemble compatibility API returned no instruction.");
