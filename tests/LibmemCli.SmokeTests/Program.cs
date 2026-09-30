@@ -148,6 +148,21 @@ var nullSignature = ExpectThrows<ArgumentNullException>(
     "SigScan(null) should throw ArgumentNullException.");
 Check(nullSignature.ParamName == "signature", "SigScan(null) reported the wrong parameter name.");
 
+var emptyMask = ExpectThrows<ArgumentException>(
+    () => Libmem.PatternScan([0x90], "", 0, 1),
+    "PatternScan(empty mask) should throw ArgumentException.");
+Check(emptyMask.ParamName == "mask", "PatternScan(empty mask) reported the wrong parameter name.");
+
+var emptySignature = ExpectThrows<ArgumentException>(
+    () => Libmem.SigScan("", 0, 1),
+    "SigScan(empty) should throw ArgumentException.");
+Check(emptySignature.ParamName == "signature", "SigScan(empty) reported the wrong parameter name.");
+
+var blankSignature = ExpectThrows<ArgumentException>(
+    () => Libmem.SigScan("   ", 0, 1),
+    "SigScan(blank) should throw ArgumentException.");
+Check(blankSignature.ParamName == "signature", "SigScan(blank) reported the wrong parameter name.");
+
 var nullSymbolName = ExpectThrows<ArgumentNullException>(
     () => Libmem.FindSymbolAddress(session.Modules.Enumerate().First(), null!, false),
     "FindSymbolAddress(null name) should throw ArgumentNullException.");
