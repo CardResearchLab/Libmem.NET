@@ -39,6 +39,7 @@
 
 ### Changed
 
+- Froze `InstructionInfo` as a LibmemCli-created deeply read-only instruction result. All public properties are getter-only, and `Bytes` returns a defensive copy so callers cannot mutate the stored instruction bytes.
 - Froze `SegmentInfo` as a LibmemCli-created read-only memory-segment result. `Base / End / Size / Protection` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
 - Froze `SymbolInfo` as a LibmemCli-created read-only symbol result. `Address / Name` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
 - Froze `ThreadInfo` as a LibmemCli-created read-only thread descriptor. `Id / OwnerPid` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
