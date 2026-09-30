@@ -17,6 +17,8 @@
 
 ### Changed
 
+- Frozen sentinel/definite-failure layering: process/module/segment lookups keep nullable miss results, symbol/scan/deep-pointer misses keep the native bad-address sentinel, and the low-level static compatibility facade preserves native-style failure values while Manager/ownership APIs promote definite failures where their contract already requires exceptions.
+
 - Frozen zero-size contracts without broad normalization: read/write/set remain no-ops, Windows protect/allocation preserve pinned libmem page-size semantics, owned `MemoryManager.Allocate(0)` remains invalid, and zero-length code/disassembly queries keep natural empty/zero results.
 
 - Normalized empty scan-input contracts: empty pattern masks and empty/whitespace signatures now fail with `ArgumentException` before native dispatch, while valid non-empty scan misses continue to return the native bad-address sentinel.

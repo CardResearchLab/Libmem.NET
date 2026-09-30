@@ -393,6 +393,12 @@ catch (LibmemException ex) when (ex.Operation == "LM_LoadModuleEx")
 Check(moduleLoadFailureMapped,
     "ModuleManager.Load should map a definite native load failure to LibmemException.");
 
+var missingStaticModulePath = System.IO.Path.Combine(
+    System.IO.Path.GetTempPath(),
+    $"libmemcli-static-missing-{Guid.NewGuid():N}.dll");
+Check(Libmem.LoadModule(current, missingStaticModulePath) is null,
+    "Static LoadModule(process) should preserve null on native load failure.");
+
 Stage("symbols");
 ModuleInfo? symbolModule = null;
 SymbolInfo? exportedSymbol = null;
@@ -434,6 +440,12 @@ Check(resolvedSymbol == exportedSymbol.Address,
 Check(Libmem.FindSymbolAddress(symbolModule!, exportedSymbol.Name, demangle: false) == exportedSymbol.Address,
     "Static FindSymbolAddress compatibility API disagreed with SymbolManager.");
 
+var missingSymbolName = $"__libmemcli_missing_symbol_{Guid.NewGuid():N}";
+Check(pidSession.Symbols.FindAddress(symbolModule!, missingSymbolName, demangle: false) == invalidAddress,
+    "SymbolManager.FindAddress miss should preserve the native bad-address sentinel.");
+Check(Libmem.FindSymbolAddress(symbolModule!, missingSymbolName, demangle: false) == invalidAddress,
+    "Static FindSymbolAddress miss should preserve the native bad-address sentinel.");
+
 Stage("memory-segments");
 var memory = pidSession!.Memory;
 var scanner = pidSession.Scanner;
@@ -458,6 +470,10 @@ Check(remoteSegment is not null
       && remoteSegment.Base <= ownedAllocation.Address
       && ownedAllocation.Address < remoteSegment.End,
     "FindSegment(process, address) could not resolve the owned allocation.");
+Check(Libmem.FindSegment(invalidAddress) is null,
+    "FindSegment miss should return null.");
+Check(Libmem.FindSegment(current, invalidAddress) is null,
+    "FindSegment(process) miss should return null.");
 Check(Libmem.EnumSegments().Any(x => x.Base <= ownedAllocation.Address && ownedAllocation.Address < x.End),
     "EnumSegments did not include the owned allocation.");
 Check(Libmem.EnumSegments(current).Any(x => x.Base <= ownedAllocation.Address && ownedAllocation.Address < x.End),
@@ -534,6 +550,10 @@ using (var pointerLayer2 = memory.Allocate(4096, MemoryProtection.ReadWrite)
         "Libmem.DeepPointer returned an unexpected address.");
     Check(Libmem.DeepPointer(current, pointerLayer0.Address, offsets) == expectedDeepPointer,
         "Libmem.DeepPointer(process) returned an unexpected address.");
+    Check(scanner.DeepPointer(pointerLayer0.Address, []) == invalidAddress,
+        "ScanManager.DeepPointer(empty offsets) should preserve the native bad-address sentinel.");
+    Check(Libmem.DeepPointer(pointerLayer0.Address, []) == invalidAddress,
+        "Static DeepPointer(empty offsets) should preserve the native bad-address sentinel.");
 }
 
 Stage("ownership-protection");

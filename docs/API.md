@@ -390,7 +390,9 @@ The wrapper intentionally does **not** turn every unsuccessful result into an ex
 | --- | --- |
 | `FindProcess` miss | `null` |
 | `ModuleManager.Find` miss | `null` |
-| scan miss | libmem bad-address sentinel |
+| `FindSegment` miss | `null` |
+| `FindSymbolAddress` miss | libmem bad-address sentinel |
+| scan / `DeepPointer` miss | libmem bad-address sentinel |
 | short read | shorter byte array |
 | short write | actual byte count |
 | explicit Free / Unload style operation | `bool` where the public API exposes a result |
@@ -401,6 +403,10 @@ This distinction is part of the public error contract.
 ## Static compatibility facade
 
 `Libmem` remains the low-level compatibility facade over the pinned native ABI.
+
+The compatibility facade intentionally preserves native-style failure values where practical. For example, static/process `LoadModule` returns `null` when native loading fails, while `ModuleManager.Load` promotes that same definite failure to `LibmemException("LM_LoadModuleEx", ...)`. Likewise, `HookCode` compatibility calls may return `null`, while `HookManager.Install` throws on installation failure. This split is intentional: the static surface tracks the pinned ABI closely, while Manager/ownership APIs provide stronger managed failure semantics.
+
+
 
 It includes static process, thread, module, symbol, segment, memory, scan, assembly/disassembly, and Hook APIs.
 
