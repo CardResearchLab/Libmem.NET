@@ -10,15 +10,20 @@ using namespace System::Text;
 using namespace System::Runtime::InteropServices;
 
 namespace LibmemCli::Interop {
-    std::string utf8(String^ value) {
-        if(value == nullptr) throw gcnew ArgumentNullException("value");
-        if(value->IndexOf('\0') >= 0) throw gcnew ArgumentException("Embedded NUL is not supported.");
+    std::string utf8(String^ value, String^ parameterName) {
+        if(value == nullptr) throw gcnew ArgumentNullException(parameterName);
+        if(value->IndexOf('\0') >= 0)
+            throw gcnew ArgumentException("Embedded NUL is not supported.", parameterName);
 
         array<Byte>^ bytes = Encoding::UTF8->GetBytes(value);
         if(bytes->Length == 0) return std::string();
 
         pin_ptr<Byte> pinned = &bytes[0];
         return std::string(reinterpret_cast<const char*>(pinned), bytes->Length);
+    }
+
+    std::string utf8(String^ value) {
+        return utf8(value, "value");
     }
 
     String^ str(const char* text) {
