@@ -119,17 +119,16 @@ namespace LibmemCli::Interop {
     }
 
     InstructionInfo^ instruction(const lm_inst_t& value) {
-        auto result = gcnew InstructionInfo();
-        result->Address = value.address;
-        result->Size = value.size;
-
         int byteCount = static_cast<int>(std::min(static_cast<size_t>(value.size), sizeof(value.bytes)));
-        result->Bytes = gcnew array<Byte>(byteCount);
-        if(byteCount) Marshal::Copy(IntPtr((void*)value.bytes), result->Bytes, 0, byteCount);
+        auto bytes = gcnew array<Byte>(byteCount);
+        if(byteCount) Marshal::Copy(IntPtr((void*)value.bytes), bytes, 0, byteCount);
 
-        result->Mnemonic = str(value.mnemonic);
-        result->OperandString = str(value.op_str);
-        return result;
+        return gcnew InstructionInfo(
+            value.address,
+            value.size,
+            bytes,
+            str(value.mnemonic),
+            str(value.op_str));
     }
 
     std::vector<lm_address_t> offsets(array<UInt64>^ input) {

@@ -80,6 +80,7 @@
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="LibmemCli.cpp" />
     <ClCompile Include="Assembly\LibmemAssembly.cpp" />
+    <ClCompile Include="Assembly\InstructionInfo.cpp" />
     <ClCompile Include="Scanning\LibmemScan.cpp" />
     <ClCompile Include="Memory\LibmemMemory.cpp" />
     <ClCompile Include="Memory\LibmemSegment.cpp" />

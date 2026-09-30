@@ -54,6 +54,32 @@ foreach (var propertyName in new[] { "Base", "End", "Size", "Protection" })
         throw new InvalidOperationException($"SegmentInfo.{propertyName} must be read-only.");
 }
 
+var instructionType = typeof(InstructionInfo);
+if (instructionType.GetConstructors().Length != 0)
+    throw new InvalidOperationException("InstructionInfo must not expose a public constructor.");
+
+foreach (var propertyName in new[] { "Address", "Size", "Bytes", "Mnemonic", "OperandString" })
+{
+    var property = instructionType.GetProperty(propertyName)
+        ?? throw new InvalidOperationException($"InstructionInfo.{propertyName} is missing.");
+
+    if (property.CanWrite)
+        throw new InvalidOperationException($"InstructionInfo.{propertyName} must be read-only.");
+}
+
+var assembledInstruction = Libmem.Assemble("nop")
+    ?? throw new InvalidOperationException("Could not assemble an instruction for immutability validation.");
+
+var originalBytes = assembledInstruction.Bytes;
+if (originalBytes.Length == 0)
+    throw new InvalidOperationException("InstructionInfo.Bytes returned no bytes.");
+
+var expectedFirstByte = originalBytes[0];
+originalBytes[0] ^= 0xFF;
+
+if (assembledInstruction.Bytes[0] != expectedFirstByte)
+    throw new InvalidOperationException("InstructionInfo.Bytes must return a defensive copy.");
+
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process could not be resolved through the NuGet package.");
 

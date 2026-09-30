@@ -214,6 +214,12 @@ Primary operations:
 
 `ModuleInfo` remains a value object; symbol behavior belongs to `SymbolManager`.
 
+### InstructionInfo
+
+`InstructionInfo` is a LibmemCli-created, deeply read-only assembly/disassembly result. `Address`, `Size`, `Mnemonic`, and `OperandString` are getter-only.
+
+`Bytes` is also getter-only and returns a defensive copy. Mutating the returned `byte[]` therefore does not modify the instruction state retained by the `InstructionInfo` instance.
+
 ### AssemblyManager
 
 Primary operations:

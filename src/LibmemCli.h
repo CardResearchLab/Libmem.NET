@@ -143,19 +143,28 @@ namespace LibmemCli {
         /// <summary>Gets the segment memory protection flags.</summary>
         property MemoryProtection Protection { MemoryProtection get(); }
     };
-    /// <summary>Managed representation of one assembled or disassembled instruction.</summary>
+    /// <summary>Deeply read-only managed representation of one assembled or disassembled instruction.</summary>
+    /// <remarks>Instances are created by LibmemCli. The Bytes getter returns a copy so callers cannot mutate stored instruction state.</remarks>
     public ref class InstructionInfo sealed {
+    private:
+        UInt64 address_;
+        UInt64 size_;
+        array<Byte>^ bytes_;
+        String^ mnemonic_;
+        String^ operandString_;
+    internal:
+        InstructionInfo(UInt64 address, UInt64 size, array<Byte>^ bytes, String^ mnemonic, String^ operandString);
     public:
         /// <summary>Gets the instruction address.</summary>
-        property UInt64 Address;
+        property UInt64 Address { UInt64 get(); }
         /// <summary>Gets the instruction size in bytes.</summary>
-        property UInt64 Size;
-        /// <summary>Gets the encoded instruction bytes.</summary>
-        property array<Byte>^ Bytes;
+        property UInt64 Size { UInt64 get(); }
+        /// <summary>Gets a copy of the encoded instruction bytes.</summary>
+        property array<Byte>^ Bytes { array<Byte>^ get(); }
         /// <summary>Gets the instruction mnemonic.</summary>
-        property String^ Mnemonic;
+        property String^ Mnemonic { String^ get(); }
         /// <summary>Gets the formatted instruction operand string.</summary>
-        property String^ OperandString;
+        property String^ OperandString { String^ get(); }
     };
 
     /// <summary>Owns one allocation in a target process.</summary>
