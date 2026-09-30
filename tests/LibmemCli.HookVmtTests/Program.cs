@@ -97,6 +97,7 @@ Check(CallNoArgs(source.Address) == 2, "Dispose coverage hook did not redirect s
 ((IDisposable)disposeHook).Dispose();
 Check(disposeHook.IsDisposed, "HookHandle should report disposed after repeated Dispose calls.");
 Check(!disposeHook.IsInstalled, "HookHandle should report uninstalled after repeated Dispose calls.");
+Check(disposeHook.Remove(), "HookHandle.Remove should remain idempotent after successful Dispose.");
 Check(CallNoArgs(source.Address) == 1, "HookHandle.Dispose did not restore source behavior.");
 
 // VmtManager lifecycle on an isolated page owned by this test process.
