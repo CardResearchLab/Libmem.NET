@@ -78,7 +78,9 @@ Completed freeze cleanup: caller-supplied enum contracts are frozen. Undefined `
 
 Completed freeze cleanup: embedded NUL characters are rejected before UTF-8/native dispatch while preserving the real public parameter name rather than leaking the internal helper's `value` parameter.
 
-Current freeze cleanup: freeze empty scan-input semantics. Empty pattern/mask/signature inputs are managed argument errors; only well-formed non-empty scans that find no match return the native bad-address sentinel.
+Completed freeze cleanup: empty scan-input semantics are frozen. Empty pattern/mask/signature inputs are managed argument errors; only well-formed non-empty scans that find no match return the native bad-address sentinel.
+
+Current freeze cleanup: freeze zero-size managed contracts. Do not mechanically turn every `size=0` into an exception: Read/Write/Set remain no-ops; Windows Protect/static Allocate preserve the pinned libmem page-size semantics; owned `MemoryManager.Allocate(0)` continues to reject zero; CodeLength(0) and empty byte-array disassembly keep their natural zero/empty results.
 
 ## v0.4 — x64 architecture cleanup
 
