@@ -62,6 +62,8 @@ Completed freeze cleanup: audited XML IntelliSense and `docs/API.md` against the
 
 Completed contract freeze: `ProcessInfo` is now library-created read-only identity/metadata. Consumers can no longer rewrite `Pid / StartTime` or fabricate an empty identity through a public default constructor, so `IsAlive()`, `Open(ProcessInfo)`, and the PID + StartTime exact-identity model share the same immutable foundation.
 
+Current freeze cleanup: `ModuleInfo` is being frozen as a LibmemCli-created read-only module descriptor. Consumers can no longer rewrite `Base / End / Size / Name / Path` and then pass a forged or mutated native module record back into unload or symbol APIs.
+
 ## v0.4 — x64 architecture cleanup
 
 Focus:
