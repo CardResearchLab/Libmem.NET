@@ -80,19 +80,28 @@ namespace LibmemCli {
         /// <summary>Gets the identifier of the process that owns the thread.</summary>
         property UInt32 OwnerPid;
     };
-    /// <summary>Managed description of a loaded native module.</summary>
+    /// <summary>Read-only managed description of a loaded native module.</summary>
+    /// <remarks>Instances are created by LibmemCli from native module metadata.</remarks>
     public ref class ModuleInfo sealed {
+    private:
+        UInt64 base_;
+        UInt64 end_;
+        UInt64 size_;
+        String^ name_;
+        String^ path_;
+    internal:
+        ModuleInfo(UInt64 baseAddress, UInt64 endAddress, UInt64 size, String^ name, String^ path);
     public:
         /// <summary>Gets the module base address.</summary>
-        property UInt64 Base;
+        property UInt64 Base { UInt64 get(); }
         /// <summary>Gets the module end address.</summary>
-        property UInt64 End;
+        property UInt64 End { UInt64 get(); }
         /// <summary>Gets the mapped module size in bytes.</summary>
-        property UInt64 Size;
+        property UInt64 Size { UInt64 get(); }
         /// <summary>Gets the module name.</summary>
-        property String^ Name;
+        property String^ Name { String^ get(); }
         /// <summary>Gets the module path when available.</summary>
-        property String^ Path;
+        property String^ Path { String^ get(); }
     };
     /// <summary>Managed description of a native symbol and its resolved address.</summary>
     public ref class SymbolInfo sealed {
