@@ -36,9 +36,9 @@ ProcessSession
 
 Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适配属于调用方。
 
-## 当前阶段：v0.9 — x64 API Freeze
+## 当前阶段：v1.0 — Stable x64
 
-当前主线已经完成 x64 API、资源生命周期、错误模型、Hook/VMT、外部进程测试、消费者文档与本地 NuGet 消费原型。现在停止无目的扩展，转入 **Windows x64 managed contract 冻结**。
+Windows x64 managed contract 冻结已经完成，主线进入 **v1.0 Stable x64** 发布与稳定维护阶段。后续变更默认保持 public API 与行为兼容；x86 继续延后，NuGet 仍作为独立发布议题。
 
 当前审计重点：
 
@@ -84,7 +84,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 已完成的收口项：冻结 sentinel / definite native failure 分层。FindProcess/FindModule/FindSegment miss 保持 null，symbol/scan/DeepPointer miss 保持 native bad-address sentinel；低层静态 `Libmem.*` 兼容层尽量保留 native-style failure values，而 Manager/ownership API 仅对已定义为“确定失败”的操作提升为 `LibmemException`。
 
-当前收口项：最终 API consistency audit。核对 Public API baseline、XML IntelliSense、Manager/static 分层、ownership/Dispose 幂等语义与文档，确认没有遗留会迫使 v1.0 后 breaking change 的契约问题。
+已完成的收口项：最终 API consistency audit 已完成。Public API baseline、XML IntelliSense、Manager/static 分层、ownership/Dispose 幂等语义与文档已核对，未发现需要在 v1.0 前继续进行 breaking change 的遗留契约问题。
 
 ## v0.4 — x64 架构整理
 
