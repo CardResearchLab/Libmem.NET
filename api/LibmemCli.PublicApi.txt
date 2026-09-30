@@ -66,11 +66,11 @@ TYPE public ref class SegmentInfo sealed
   property UInt64 Size { UInt64 get(); }
   property MemoryProtection Protection { MemoryProtection get(); }
 TYPE public ref class InstructionInfo sealed
-  property UInt64 Address;
-  property UInt64 Size;
-  property array<Byte>^ Bytes;
-  property String^ Mnemonic;
-  property String^ OperandString;
+  property UInt64 Address { UInt64 get(); }
+  property UInt64 Size { UInt64 get(); }
+  property array<Byte>^ Bytes { array<Byte>^ get(); }
+  property String^ Mnemonic { String^ get(); }
+  property String^ OperandString { String^ get(); }
 TYPE public ref class RemoteAllocation sealed : IDisposable
   property UInt64 Address { UInt64 get(); }
   property UInt64 Size { UInt64 get(); }
