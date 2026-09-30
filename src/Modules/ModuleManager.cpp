@@ -23,5 +23,9 @@ ModuleInfo^ ModuleManager::Load(String^ path) {
     return loaded;
 }
 bool ModuleManager::Unload(ModuleInfo^ moduleInfo) {
-    return Libmem::UnloadModule(Target(),moduleInfo);
+    if(moduleInfo==nullptr) throw gcnew ArgumentNullException("module");
+    auto target=Target();
+    if(!moduleInfo->BelongsTo(target))
+        throw gcnew ArgumentException("ModuleInfo belongs to a different process identity.", "module");
+    return Libmem::UnloadModule(target,moduleInfo);
 }
