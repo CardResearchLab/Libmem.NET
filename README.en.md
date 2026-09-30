@@ -1,14 +1,14 @@
-# LibmemCli — libmem 5.x C++/CLI wrapper (Windows x64 / .NET 8)
+# Libmem.NET — libmem 5.x C++/CLI wrapper (Windows x64 / .NET 8)
 
 [简体中文](README.md) | [English](README.en.md)
 
-[![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
+[![CI Build](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 
-LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). **The v1.0 stable line, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
+Libmem.NET is a reusable .NET / C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). The managed assembly, namespace, and binary names remain `LibmemCli` to preserve the frozen v1.0 public API and consumer compatibility. **The v1.0 stable line, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
 
 See [ROADMAP.en.md](ROADMAP.en.md) for the current development plan, the [API reference](docs/API.md) for consumer-facing result/exception/lifetime semantics, and the [consumption guide](docs/CONSUMPTION.md) for ZIP, submodule, and NuGet options.
 
@@ -54,8 +54,8 @@ The runtime call chain is **C#/.NET → LibmemCli.dll → libmem.dll → Windows
 Clone recursively so the pinned libmem source and its dependencies are available:
 
 ```powershell
-git clone --recursive https://github.com/HearthstoneModding/Libmem.git
-cd Libmem
+git clone --recursive https://github.com/HearthstoneModding/Libmem.NET.git
+cd Libmem.NET
 .\build.ps1 -Configuration Release
 ```
 
@@ -256,14 +256,14 @@ Release/runtime packages ship `LibmemCli.xml` beside `LibmemCli.dll`. The C++/CL
 Add this repository to another project as a submodule:
 
 ```powershell
-git submodule add https://github.com/HearthstoneModding/Libmem.git external/Libmem
+git submodule add https://github.com/HearthstoneModding/Libmem.NET.git external/Libmem
 git submodule update --init --recursive
 ```
 
 Then add:
 
 ```text
-external/Libmem/src/LibmemCli.vcxproj
+external/Libmem.NET/src/LibmemCli.vcxproj
 ```
 
 to the consuming solution and reference it from a matching-architecture .NET 8 project with a `ProjectReference`.
@@ -369,7 +369,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: LibmemCli-windows-x64
-          path: external/Libmem
+          path: external/Libmem.NET
 ```
 
 The caller does not need to duplicate Libmem's build scripts; the artifact is uploaded directly to the caller's workflow run.

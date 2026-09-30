@@ -1,8 +1,8 @@
-# LibmemCli Consumption Guide
+# Libmem.NET Consumption Guide
 
 > Current official target: Windows x64 / .NET 8.
 
-LibmemCli currently supports two established consumption paths and one experimental packaging path.
+Libmem.NET currently supports two established consumption paths and one experimental packaging path. The managed assembly and namespace remain `LibmemCli` for v1.0 compatibility.
 
 ## 1. Runtime ZIP — official release consumption
 
