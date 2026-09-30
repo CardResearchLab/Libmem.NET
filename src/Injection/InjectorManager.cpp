@@ -79,7 +79,7 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
         throw gcnew System::IO::FileNotFoundException("Library to inject was not found.", fullPath);
 
     auto nativeTarget=proc(target);
-    auto nativePath=utf8(fullPath);
+    auto nativePath=utf8(fullPath,"path");
 
     // Ask libmem only to perform the LoadLibrary operation. Its module_out lookup is
     // name/suffix based; resolve the resulting module ourselves by normalized full path
