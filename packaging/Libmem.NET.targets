@@ -5,9 +5,9 @@
 
   <Target Name="LibmemCliValidateX64" BeforeTargets="ResolveReferences">
     <Error Condition="'$(OS)' != 'Windows_NT'"
-           Text="HearthstoneModding.LibmemCli currently supports only Windows x64." />
+           Text="Libmem.NET currently supports only Windows x64." />
     <Error Condition="'$(PlatformTarget)' != 'x64' and '$(Platform)' != 'x64'"
-           Text="HearthstoneModding.LibmemCli currently supports only Windows x64. Set PlatformTarget or Platform to x64." />
+           Text="Libmem.NET currently supports only Windows x64. Set PlatformTarget or Platform to x64." />
   </Target>
 
   <ItemGroup>

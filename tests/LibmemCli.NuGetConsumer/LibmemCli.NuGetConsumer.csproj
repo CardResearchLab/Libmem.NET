@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HearthstoneModding.LibmemCli"
+    <PackageReference Include="Libmem.NET"
                       Version="$(LibmemCliTestPackageVersion)" />
   </ItemGroup>
 </Project>

@@ -48,13 +48,13 @@ It is more operationally complex than consuming a prebuilt package.
 The repository contains an **unpublished** PackageReference prototype:
 
 ```text
-Package ID: HearthstoneModding.LibmemCli
+Package ID: Libmem.NET
 Status: local/CI prototype only
 Publication: disabled
 Target: Windows x64 / .NET 8
 ```
 
-The package ID is provisional until the package layout and runtime behavior are accepted. Development packages also use a commit-qualified prerelease version such as `0.3.0-dev.<commit>` rather than reusing the already released `0.3.0` version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
+The package ID is now fixed as `Libmem.NET` before first public publication. Development packages also use a commit-qualified prerelease version such as `0.3.0-dev.<commit>` rather than reusing the already released `0.3.0` version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
 
 ### Prototype package layout
 
@@ -68,7 +68,7 @@ runtimes/win-x64/native/
 └─ Ijwhost.dll
 
 buildTransitive/
-└─ HearthstoneModding.LibmemCli.targets
+└─ Libmem.NET.targets
 ```
 
 The mixed-mode `LibmemCli.dll` is currently exposed from `lib/net8.0` so PackageReference can provide the compile-time reference directly.

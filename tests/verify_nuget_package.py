@@ -38,7 +38,7 @@ def main() -> int:
             "lib/net8.0/LibmemCli.xml",
             "runtimes/win-x64/native/libmem.dll",
             "runtimes/win-x64/native/Ijwhost.dll",
-            "buildTransitive/HearthstoneModding.LibmemCli.targets",
+            "buildTransitive/Libmem.NET.targets",
             "README.md",
             "LICENSE",
             "THIRD_PARTY_NOTICES.md",
@@ -79,7 +79,7 @@ def main() -> int:
         project_url = find_child(metadata, "projectUrl")
         repository = find_child(metadata, "repository")
 
-        if package_id is None or package_id.text != "HearthstoneModding.LibmemCli":
+        if package_id is None or package_id.text != "Libmem.NET":
             raise AssertionError("Unexpected NuGet package ID.")
 
         if version is None or version.text != args.expected_version:
