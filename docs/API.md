@@ -363,6 +363,8 @@ Caller-supplied enums are validated at the managed boundary as well. Undefined `
 
 ## Normal non-exception results
 
+Empty scan patterns and textual scan definitions are treated as managed argument errors rather than normal misses: empty data/pattern inputs, an empty pattern mask, and empty/whitespace signatures are rejected with `ArgumentException`. A valid non-empty scan that finds no match still returns the native bad-address sentinel.
+
 The wrapper intentionally does **not** turn every unsuccessful result into an exception.
 
 | Situation | Managed result |
