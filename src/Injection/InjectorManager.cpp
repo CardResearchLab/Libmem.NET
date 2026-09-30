@@ -9,11 +9,13 @@ InjectedModuleHandle::InjectedModuleHandle(ProcessInfo^ target,ModuleInfo^ modul
     : target_(nullptr),module_(nullptr),requestedPath_(requestedPath),active_(true),disposed_(false) {
     if(target==nullptr) throw gcnew ArgumentNullException("target");
     if(moduleInfo==nullptr) throw gcnew ArgumentNullException("module");
+    if(!moduleInfo->BelongsTo(target))
+        throw gcnew ArgumentException("ModuleInfo belongs to a different process identity.", "module");
     target_=process(proc(target));
-    module_=module(mod(moduleInfo));
+    module_=moduleInfo->Clone();
 }
 ModuleInfo^ InjectedModuleHandle::Module::get() {
-    return module_==nullptr ? nullptr : module(mod(module_));
+    return module_==nullptr ? nullptr : module_->Clone();
 }
 String^ InjectedModuleHandle::RequestedPath::get() { return requestedPath_; }
 bool InjectedModuleHandle::IsActive::get() { return active_; }
