@@ -156,6 +156,12 @@ Scan misses keep libmem-style sentinel semantics. A normal miss is not an except
 
 On x64, the bad-address sentinel corresponds to `UInt64.MaxValue`.
 
+### ModuleInfo
+
+`ModuleInfo` is a library-created, read-only description of one native module mapping. Consumers can read `Base`, `End`, `Size`, `Name`, and `Path`, but cannot construct an empty descriptor or rewrite those values after LibmemCli resolves the module.
+
+This matters because a resolved `ModuleInfo` may later be passed back to module unload and symbol APIs. Freezing the descriptor prevents consumer-side mutation from silently changing the native module record used by those operations.
+
 ### ModuleManager
 
 Primary operations:
