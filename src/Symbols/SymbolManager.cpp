@@ -11,11 +11,17 @@ ProcessInfo^ SymbolManager::Target() {
     return session_->Target;
 }
 List<SymbolInfo^>^ SymbolManager::Enumerate(ModuleInfo^ moduleInfo,bool demangle) {
-    Target();
+    if(moduleInfo==nullptr) throw gcnew ArgumentNullException("module");
+    auto target=Target();
+    if(!moduleInfo->BelongsTo(target))
+        throw gcnew ArgumentException("ModuleInfo belongs to a different process identity.", "module");
     return Libmem::EnumSymbols(moduleInfo,demangle);
 }
 UInt64 SymbolManager::FindAddress(ModuleInfo^ moduleInfo,String^ name,bool demangle) {
-    Target();
+    if(moduleInfo==nullptr) throw gcnew ArgumentNullException("module");
+    auto target=Target();
+    if(!moduleInfo->BelongsTo(target))
+        throw gcnew ArgumentException("ModuleInfo belongs to a different process identity.", "module");
     return Libmem::FindSymbolAddress(moduleInfo,name,demangle);
 }
 String^ SymbolManager::Demangle(String^ name) {
