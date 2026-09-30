@@ -139,4 +139,6 @@ Public NuGet publication will be treated as a separate release decision after pa
 
 Detailed release notes: [releases/v1.0.0.md](releases/v1.0.0.md).
 
+Recommended concise GitHub Release body: [releases/v1.0.0-github.md](releases/v1.0.0-github.md).
+
 For change details, see [../CHANGELOG.md](../CHANGELOG.md). For API behavior, see [API.md](API.md). For installation and consumption options, see [CONSUMPTION.md](CONSUMPTION.md).
