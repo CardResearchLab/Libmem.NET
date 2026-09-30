@@ -60,6 +60,8 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 已完成的收口项：完成冻结后 managed surface 的 XML IntelliSense / `docs/API.md` 一致性审计；补齐推荐 `ProcessSession` / Manager / ownership 类型的成员说明，并明确 `ProcessSession.Allocate` 作为正式 ownership convenience 保留。该项不改变 Public API baseline 或 runtime 行为。
 
+已完成的收口项：`ProcessInfo` 冻结为只读进程身份对象；调用方不能再公开构造或改写 `Pid / StartTime / Name / Path` 等身份元数据，实例只由 LibmemCli 从 native process data 内部创建，并由 NuGet consumer contract 验证不可写性。
+
 ## v0.4 — x64 架构整理
 
 重点：
