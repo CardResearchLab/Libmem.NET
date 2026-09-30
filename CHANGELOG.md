@@ -17,6 +17,8 @@
 
 ### Changed
 
+- Added managed-boundary validation for caller-supplied `Architecture` and `MemoryProtection` values. Undefined architectures and protection flags containing unknown bits now fail with `ArgumentOutOfRangeException` before native dispatch.
+
 - Bound `ModuleInfo` results to their originating PID + start-time identity internally. Session-bound module unload/symbol operations and static module-unload overloads now reject cross-process `ModuleInfo` values before native dispatch, without expanding the public `ModuleInfo` surface or adding module-enumeration preflights.
 
 - Normalized public argument contracts for scan, symbol, and assembly inputs so null and clearly single-parameter invalid cases report the public parameter name instead of leaking internal helper names or omitting `ParamName`.
