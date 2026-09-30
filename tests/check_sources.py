@@ -490,7 +490,7 @@ release_notes_script = release_notes_script_path.read_text(encoding="utf-8")
 compile(release_notes_script, str(release_notes_script_path), "exec")
 assert "render-release-notes.py" in release_workflow
 assert "--notes-file dist/release-notes.md" in release_workflow
-assert '--title "LibmemCli $TAG_NAME"' in release_workflow
+assert '--title "Libmem.NET $TAG_NAME"' in release_workflow
 assert "--generate-notes" not in release_workflow
 subprocess.run(
     [sys.executable, str(root / "tests/test_release_notes.py")],
