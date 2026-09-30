@@ -23,6 +23,11 @@ on:
         required: false
         default: LibmemCli-windows-x64
         type: string
+      include-nuget:
+        description: Also create the official Libmem.NET NuGet package (x64 only)
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -77,6 +82,13 @@ jobs:
           $commit = (git rev-parse HEAD).Trim()
           python .\eng\verify-package.py --package-dir .\artifacts\package\LibmemCli-windows-${{ inputs.platform }} --archive .\artifacts\package\LibmemCli-windows-${{ inputs.platform }}.zip --checksum .\artifacts\package\LibmemCli-windows-${{ inputs.platform }}.zip.sha256 --expected-repository-commit $commit --expected-platform win-${{ inputs.platform }} --expected-configuration "${{ inputs.configuration }}"
 
+      - name: Package official NuGet release
+        if: inputs.include-nuget && inputs.platform == 'x64'
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\VERSION -Raw).Trim()
+          .\eng\package-nuget.ps1 -Configuration "${{ inputs.configuration }}" -PackageVersion $version
+
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
         with:
@@ -85,5 +97,6 @@ jobs:
             artifacts/package/LibmemCli-windows-${{ inputs.platform }}/
             artifacts/package/LibmemCli-windows-${{ inputs.platform }}.zip
             artifacts/package/LibmemCli-windows-${{ inputs.platform }}.zip.sha256
+            ${{ inputs.include-nuget && inputs.platform == 'x64' && 'artifacts/nuget/*.nupkg' || '' }}
           if-no-files-found: error
           retention-days: 14

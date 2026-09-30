@@ -2,7 +2,7 @@
 
 > Current official target: Windows x64 / .NET 8.
 
-Libmem.NET currently supports two established consumption paths and one experimental packaging path. The managed assembly and namespace remain `LibmemCli` for v1.0 compatibility.
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validated NuGet package path. The managed assembly and namespace remain `LibmemCli` for v1.0 compatibility.
 
 ## 1. Runtime ZIP — official release consumption
 
@@ -43,20 +43,20 @@ This is useful when the consumer wants:
 
 It is more operationally complex than consuming a prebuilt package.
 
-## 3. Local NuGet prototype — experimental
+## 3. NuGet package
 
-The repository contains an **unpublished** PackageReference prototype:
+The repository contains a validated PackageReference package. Public publication is wired into the release workflow, but the first nuget.org publish still requires the one-time Trusted Publishing account setup described below:
 
 ```text
 Package ID: Libmem.NET
-Status: local/CI prototype only
-Publication: disabled
+Status: validated for Windows x64 / .NET 8
+Publication: release workflow via nuget.org Trusted Publishing (OIDC)
 Target: Windows x64 / .NET 8
 ```
 
 The package ID is now fixed as `Libmem.NET` before first public publication. Development packages also use a commit-qualified prerelease version such as `0.3.0-dev.<commit>` rather than reusing the already released `0.3.0` version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
 
-### Prototype package layout
+### Package layout
 
 ```text
 lib/net8.0/
@@ -133,9 +133,9 @@ References:
 - [NuGet multi-targeting and architecture-specific assets](https://learn.microsoft.com/en-us/nuget/create-packages/supporting-multiple-target-frameworks)
 - [.NET Runtime Identifier catalog](https://learn.microsoft.com/en-us/dotnet/core/rid-catalog)
 
-The prototype therefore uses the portable `win-x64` RID for native assets and fails early outside Windows x64.
+The package therefore uses the portable `win-x64` RID for native assets and fails early outside Windows x64.
 
-## Why NuGet is still experimental
+## NuGet platform constraints
 
 LibmemCli is not a normal AnyCPU managed library:
 
@@ -147,11 +147,11 @@ LibmemCli is not a normal AnyCPU managed library:
 
 NuGet's conventional architecture-specific model supports RID-specific runtime assets, but architecture-specific compile-time assembly design needs careful validation for this mixed-mode case.
 
-For that reason, the project will not publish the package merely because `dotnet pack` succeeds.
+For that reason, release publication remains gated by the independent PackageReference consumer tests, package provenance verification, and x64 runtime validation.
 
-## Acceptance criteria before NuGet publication
+## NuGet release acceptance criteria
 
-A future public NuGet release requires all of the following:
+A public NuGet release requires all of the following:
 
 1. local package layout verification passes;
 2. an independent x64 PackageReference consumer restores successfully;
@@ -164,11 +164,22 @@ A future public NuGet release requires all of the following:
 9. package version/provenance matches the repository release;
 10. package publication does not replace ZIP releases until both paths are independently reliable.
 
+## Trusted Publishing setup
+
+The release workflow publishes `Libmem.NET` with nuget.org Trusted Publishing (OIDC), so no long-lived NuGet API key is stored in GitHub.
+
+One-time setup:
+
+1. Sign in to nuget.org and open **Trusted Publishing**.
+2. Add a GitHub policy with:
+   - Repository owner: `HearthstoneModding`
+   - Repository: `Libmem.NET`
+   - Workflow file: `release.yml`
+   - Environment: leave empty unless the workflow is later moved behind a GitHub Environment.
+3. In GitHub Actions secrets, add `NUGET_USER` containing the nuget.org profile username (not the email address).
+
+On a `v*` tag or `release/v*` release branch, the release workflow builds once, creates the runtime ZIP and exact-version `Libmem.NET.<version>.nupkg`, validates both, exchanges GitHub OIDC for a short-lived NuGet credential, publishes the NuGet package, and then creates the GitHub Release.
+
 ## Current recommendation
 
-For stable consumption today:
-
-- use the GitHub Release x64 runtime ZIP for prebuilt binaries; or
-- use the repository/submodule/reusable workflow for source-level integration.
-
-Treat the NuGet package as a development prototype until the repository explicitly marks it as an official release asset.
+For stable consumption, use either the GitHub Release x64 runtime ZIP, the `Libmem.NET` NuGet package once its first public version is visible on nuget.org, or the repository/submodule/reusable workflow for source-level integration.

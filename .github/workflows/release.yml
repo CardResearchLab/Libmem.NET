@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   build-x64:
@@ -18,6 +19,7 @@ jobs:
       configuration: Release
       platform: x64
       artifact-name: LibmemCli-windows-x64
+      include-nuget: true
 
   release:
     name: Publish release
@@ -32,6 +34,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
       - name: Download x64 build artifact
         uses: actions/download-artifact@v4
@@ -50,6 +57,41 @@ jobs:
 
           EXPECTED_VERSION="${TAG_NAME#v}"
           python eng/verify-package.py --package-dir dist/x64/LibmemCli-windows-x64 --archive dist/x64/LibmemCli-windows-x64.zip --checksum dist/x64/LibmemCli-windows-x64.zip.sha256 --expected-version "$EXPECTED_VERSION" --expected-repository-commit "$GITHUB_SHA" --expected-platform win-x64 --expected-configuration Release
+
+      - name: Validate NuGet package
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
+            TAG_NAME="${GITHUB_REF_NAME#release/}"
+          else
+            TAG_NAME="$GITHUB_REF_NAME"
+          fi
+
+          EXPECTED_VERSION="${TAG_NAME#v}"
+          PACKAGE="dist/x64/Libmem.NET.${EXPECTED_VERSION}.nupkg"
+
+          test -f "$PACKAGE" || {
+            echo "Expected NuGet package is missing: $PACKAGE"
+            exit 1
+          }
+
+      - name: NuGet login (OIDC)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Publish Libmem.NET to nuget.org
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
+            TAG_NAME="${GITHUB_REF_NAME#release/}"
+          else
+            TAG_NAME="$GITHUB_REF_NAME"
+          fi
+
+          EXPECTED_VERSION="${TAG_NAME#v}"
+          dotnet nuget push "dist/x64/Libmem.NET.${EXPECTED_VERSION}.nupkg"             --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}"             --source https://api.nuget.org/v3/index.json             --skip-duplicate
 
       - name: Render formal release notes
         shell: bash
