@@ -462,11 +462,11 @@ Keep `LibmemCli.xml` beside `LibmemCli.dll` so Visual Studio / C# editors can lo
 
 ## Distribution and consumption
 
-Stable distribution currently remains the Windows x64 Runtime ZIP and source/reusable-workflow integration.
+Stable distribution targets Windows x64 / .NET 8 through the Runtime ZIP, source/reusable-workflow integration, and the validated `Libmem.NET` NuGet package path.
 
-The repository also contains an **unpublished local NuGet prototype** with the provisional package ID `HearthstoneModding.LibmemCli`. It is validated through an independent PackageReference consumer before any public package publication is considered.
+The NuGet package is validated through an independent PackageReference consumer. Public nuget.org publication is wired through Trusted Publishing (OIDC) in the tag-only release path; account-side Trusted Publishing configuration remains a release prerequisite.
 
-See [CONSUMPTION.md](CONSUMPTION.md) for the package layout, x64 constraints, and NuGet acceptance criteria.
+See [CONSUMPTION.md](CONSUMPTION.md) for package layout, x64 constraints, release gating, and Trusted Publishing setup.
 
 ## Public API stability
 
