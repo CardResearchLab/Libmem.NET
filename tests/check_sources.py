@@ -492,6 +492,9 @@ assert "secrets.NUGET_USER" in release_workflow
 assert "Libmem.NET.${EXPECTED_VERSION}.nupkg" in release_workflow
 assert "dotnet nuget push" in release_workflow
 assert "https://api.nuget.org/v3/index.json" in release_workflow
+assert release_workflow.count("if: github.ref_type == 'tag'") >= 3
+assert "Release dry run complete" in release_workflow
+assert "No GitHub Release or nuget.org package was published." in release_workflow
 assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
 assert "LibmemCli-windows-x86.zip.sha256" not in release_workflow
 release_notes_script_path = root / "eng/render-release-notes.py"
@@ -541,6 +544,17 @@ assert "build-x86:" not in release_workflow
 assert "setup-dotnet-x86.ps1" in reusable_workflow
 assert "platform:" in reusable_workflow
 assert "x64 is the supported release target" in reusable_workflow
+release_checklist = (root / "docs/V1_RELEASE_CHECKLIST.md").read_text(encoding="utf-8")
+for release_checklist_marker in [
+    "Public API freeze",
+    "Independent NuGet consumer",
+    "NuGet account-side setup",
+    "First live `v1.0.0` publication",
+    "BLOCKED",
+]:
+    assert release_checklist_marker in release_checklist
+print("PASS v1.0 release readiness checklist contract")
+
 print("PASS x64-first package integrity and release provenance contract")
 
 subprocess.run(
