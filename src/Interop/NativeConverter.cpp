@@ -50,6 +50,21 @@ namespace LibmemCli::Interop {
         return static_cast<lm_size_t>(value);
     }
 
+    LibmemCli::Architecture native_architecture(LibmemCli::Architecture value, String^ parameterName) {
+        auto raw = static_cast<unsigned int>(value);
+        if(raw > static_cast<unsigned int>(LibmemCli::Architecture::SystemZ))
+            throw gcnew ArgumentOutOfRangeException(parameterName, "Unsupported architecture value.");
+        return value;
+    }
+
+    MemoryProtection native_protection(MemoryProtection value, String^ parameterName) {
+        auto raw = static_cast<unsigned int>(value);
+        auto validMask = static_cast<unsigned int>(MemoryProtection::ExecuteReadWrite);
+        if((raw & ~validMask) != 0)
+            throw gcnew ArgumentOutOfRangeException(parameterName, "Unsupported memory protection flags.");
+        return value;
+    }
+
     bool bad_address(UInt64 value) {
         return value == static_cast<UInt64>(LM_ADDRESS_BAD);
     }
