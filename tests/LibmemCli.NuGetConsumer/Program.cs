@@ -2,6 +2,27 @@ using LibmemCli;
 
 Console.WriteLine("LibmemCli NuGet consumer test");
 
+var processInfoType = typeof(ProcessInfo);
+if (processInfoType.GetConstructors().Length != 0)
+    throw new InvalidOperationException("ProcessInfo must not expose a public constructor.");
+
+foreach (var propertyName in new[]
+{
+    nameof(ProcessInfo.Pid),
+    nameof(ProcessInfo.ParentPid),
+    nameof(ProcessInfo.Architecture),
+    nameof(ProcessInfo.Bits),
+    nameof(ProcessInfo.StartTime),
+    nameof(ProcessInfo.Name),
+    nameof(ProcessInfo.Path),
+})
+{
+    var property = processInfoType.GetProperty(propertyName)
+        ?? throw new InvalidOperationException($"ProcessInfo.{propertyName} is missing.");
+    if (property.CanWrite)
+        throw new InvalidOperationException($"ProcessInfo.{propertyName} must be read-only.");
+}
+
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process could not be resolved through the NuGet package.");
 
