@@ -70,7 +70,9 @@ Completed freeze cleanup: `SymbolInfo` is now a LibmemCli-created read-only symb
 
 Completed freeze cleanup: `SegmentInfo` is now a LibmemCli-created read-only memory-segment result. Consumers can read `Base / End / Size / Protection` but cannot construct or mutate forged segment metadata.
 
-Current freeze cleanup: `InstructionInfo` is being frozen as a LibmemCli-created deeply read-only instruction result. Scalar/string properties are getter-only and `Bytes` returns a defensive copy so callers cannot mutate the stored instruction state.
+Completed freeze cleanup: `InstructionInfo` is now a LibmemCli-created deeply read-only instruction result. Scalar/string properties are getter-only and `Bytes` returns a defensive copy so callers cannot mutate the stored instruction state.
+
+Current freeze cleanup: `ModuleInfo` now records internal process provenance (PID + StartTime) without expanding its public surface. Session-bound `ModuleManager.Unload` and `SymbolManager` reject module descriptors captured from another process identity before native dispatch.
 
 ## v0.4 — x64 architecture cleanup
 
