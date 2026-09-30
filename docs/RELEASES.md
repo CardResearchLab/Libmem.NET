@@ -137,4 +137,6 @@ Public NuGet publication will be treated as a separate release decision after pa
 | 0.2.0 | 2026-09-28 | Historical | Windows |
 | 0.1.0 | 2026-09-27 | Historical | Windows |
 
+Detailed release notes: [releases/v1.0.0.md](releases/v1.0.0.md).
+
 For change details, see [../CHANGELOG.md](../CHANGELOG.md). For API behavior, see [API.md](API.md). For installation and consumption options, see [CONSUMPTION.md](CONSUMPTION.md).
