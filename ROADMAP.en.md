@@ -60,6 +60,8 @@ Completed freeze cleanup: the early convenience `ProcessInfo.Read / Write / Read
 
 Completed freeze cleanup: audited XML IntelliSense and `docs/API.md` against the frozen managed surface, completed documentation for the recommended `ProcessSession` / Manager / ownership members, and explicitly retained `ProcessSession.Allocate` as an ownership convenience. This does not change the public API baseline or runtime behavior.
 
+Completed contract freeze: `ProcessInfo` is now a read-only process identity object. Consumers can no longer publicly construct arbitrary instances or mutate PID/start-time/name/path metadata; LibmemCli creates identities internally from native process data, and the NuGet consumer contract verifies the surface remains non-writable.
+
 ## v0.4 — x64 architecture cleanup
 
 Focus:
