@@ -41,7 +41,7 @@ ProcessInfo^ Libmem::FindProcess(String^ name) {
     if(String::IsNullOrWhiteSpace(name))
         throw gcnew ArgumentException("Process name must not be empty.", "name");
     lm_process_t p{};
-    auto n=utf8(name);
+    auto n=utf8(name,"name");
     return LM_FindProcess(n.c_str(),&p) ? process(p) : nullptr;
 }
 ProcessSession^ Libmem::Attach(UInt32 pid) {
