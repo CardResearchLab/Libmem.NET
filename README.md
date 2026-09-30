@@ -386,7 +386,7 @@ jobs:
 python .\eng\check-public-api.py --write
 ```
 
-然后同时审查 API diff、更新 `CHANGELOG.md`，并按变更性质处理版本号。当前仍处于 1.0 之前，因此这不是“永不再有 breaking change”的承诺，而是保证 breaking change 不会悄悄发生。
+然后同时审查 API diff、更新 `CHANGELOG.md`，并按变更性质处理版本号。从 v1.0 开始，public API 与 managed contract 默认保持向后兼容；任何有意的 breaking change 都必须显式审查、记录并按语义版本规则处理。
 
 ## 错误模型
 
