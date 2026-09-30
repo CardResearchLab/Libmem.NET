@@ -177,6 +177,12 @@ Result behavior:
 - definite `Load` failure -> `LibmemException("LM_LoadModuleEx", ...)`
 - `Unload` -> explicit `bool` result
 
+### ThreadInfo
+
+`ThreadInfo` is a library-created, read-only description of one native thread record. Consumers can inspect `Id` and `OwnerPid`, but cannot construct an empty descriptor or rewrite those values after LibmemCli resolves the thread.
+
+This matters because a resolved `ThreadInfo` may later be passed to `Libmem.GetThreadProcess(ThreadInfo)`. Freezing the descriptor prevents consumer-side mutation from silently changing the native thread record used by that lookup.
+
 ### ThreadManager
 
 Primary operations:
