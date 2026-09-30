@@ -1,14 +1,14 @@
-# LibmemCli — libmem 5.x C++/CLI 封装（Windows x64 / .NET 8）
+# Libmem.NET — libmem 5.x C++/CLI 封装（Windows x64 / .NET 8）
 
 [简体中文](README.md) | [English](README.en.md)
 
-[![CI Build](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem/actions/workflows/build.yml)
+[![CI Build](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 
-LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装。**v1.0 稳定主线与正式发布目标为 Windows x64 / .NET 8。** 现有 x86 代码与构建配置暂时保留，但 x86 已延后，不再作为近期开发目标或正式 Release 产物。
+Libmem.NET 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 .NET / C++/CLI 封装。当前托管程序集、命名空间与二进制名称继续使用 `LibmemCli`，以保持 v1.0 公共 API 与消费者兼容性。**v1.0 稳定主线与正式发布目标为 Windows x64 / .NET 8。** 现有 x86 代码与构建配置暂时保留，但 x86 已延后，不再作为近期开发目标或正式 Release 产物。
 
 开发路线见 [ROADMAP.md](ROADMAP.md)，消费者行为与返回/异常/生命周期语义见 [API 参考](docs/API.md)，ZIP / Submodule / NuGet 等消费方式见 [消费指南](docs/CONSUMPTION.md)。
 
@@ -54,8 +54,8 @@ flowchart LR
 请使用递归方式克隆仓库，以确保固定版本的 libmem 源码及其依赖同时被拉取：
 
 ```powershell
-git clone --recursive https://github.com/HearthstoneModding/Libmem.git
-cd Libmem
+git clone --recursive https://github.com/HearthstoneModding/Libmem.NET.git
+cd Libmem.NET
 .\build.ps1 -Configuration Release
 ```
 
@@ -256,21 +256,21 @@ Release / Runtime package 会把 `LibmemCli.xml` 与 `LibmemCli.dll` 一起发�
 可以在其他项目中将本仓库作为 Submodule 引入：
 
 ```powershell
-git submodule add https://github.com/HearthstoneModding/Libmem.git external/Libmem
+git submodule add https://github.com/HearthstoneModding/Libmem.NET.git external/Libmem
 git submodule update --init --recursive
 ```
 
 然后将：
 
 ```text
-external/Libmem/src/LibmemCli.vcxproj
+external/Libmem.NET/src/LibmemCli.vcxproj
 ```
 
 加入使用方解决方案，并在相同架构的 .NET 8 项目中通过 `ProjectReference` 引用它。
 
 建议使用完整的 Visual Studio MSBuild 构建整个解决方案，以确保 C++/CLI 工具链可用。
 
-项目路径和输出路径均基于 Libmem 仓库自身，而不是使用方解决方案，因此 Submodule 可以放在任意稳定目录中。
+项目路径和输出路径均基于 Libmem.NET 仓库自身，而不是使用方解决方案，因此 Submodule 可以放在任意稳定目录中。
 
 运行时需要将以下文件部署到使用方可执行文件同目录：
 
@@ -369,10 +369,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: LibmemCli-windows-x64
-          path: external/Libmem
+          path: external/Libmem.NET
 ```
 
-这样调用方无需复制 Libmem 的编译脚本，构建产物会直接出现在调用方的 Workflow Run 中。
+这样调用方无需复制 Libmem.NET 的编译脚本，构建产物会直接出现在调用方的 Workflow Run 中。
 
 > 当前仓库为私有仓库时，跨仓库复用需要在 GitHub Actions 的仓库/组织访问设置中允许调用方仓库访问该 reusable workflow；如果以后将仓库公开，则公开仓库可直接引用。
 
