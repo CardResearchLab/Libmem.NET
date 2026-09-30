@@ -52,11 +52,11 @@ TYPE public ref class ThreadInfo sealed
   property UInt32 Id;
   property UInt32 OwnerPid;
 TYPE public ref class ModuleInfo sealed
-  property UInt64 Base;
-  property UInt64 End;
-  property UInt64 Size;
-  property String^ Name;
-  property String^ Path;
+  property UInt64 Base { UInt64 get(); }
+  property UInt64 End { UInt64 get(); }
+  property UInt64 Size { UInt64 get(); }
+  property String^ Name { String^ get(); }
+  property String^ Path { String^ get(); }
 TYPE public ref class SymbolInfo sealed
   property UInt64 Address;
   property String^ Name;
