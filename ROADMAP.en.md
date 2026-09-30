@@ -74,7 +74,11 @@ Completed freeze cleanup: `InstructionInfo` is now a LibmemCli-created deeply re
 
 Completed freeze cleanup: `ModuleInfo` now records internal process provenance (PID + StartTime) without expanding its public surface. Session-bound `ModuleManager.Unload` / `SymbolManager` and the static unload overloads reject module descriptors captured from another process identity before native dispatch.
 
-Current freeze cleanup: freeze caller-supplied enum contracts. Undefined `Architecture` values and `MemoryProtection` flags containing unknown bits are rejected with `ArgumentOutOfRangeException` at the managed boundary instead of being forwarded to native libmem.
+Completed freeze cleanup: caller-supplied enum contracts are frozen. Undefined `Architecture` values and `MemoryProtection` flags containing unknown bits are rejected with `ArgumentOutOfRangeException` at the managed boundary instead of being forwarded to native libmem.
+
+Completed freeze cleanup: embedded NUL characters are rejected before UTF-8/native dispatch while preserving the real public parameter name rather than leaking the internal helper's `value` parameter.
+
+Current freeze cleanup: freeze empty scan-input semantics. Empty pattern/mask/signature inputs are managed argument errors; only well-formed non-empty scans that find no match return the native bad-address sentinel.
 
 ## v0.4 — x64 architecture cleanup
 
