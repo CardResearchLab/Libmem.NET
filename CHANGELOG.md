@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+_No unreleased changes._
+
+## 1.0.0 - 2026-09-30
+
 ### Added
 
 - Added `eng/package-nuget.ps1` so local and CI NuGet prototype packaging share the same version/provenance/layout verification path.
