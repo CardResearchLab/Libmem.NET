@@ -123,17 +123,25 @@ namespace LibmemCli {
         /// <summary>Gets the symbol name.</summary>
         property String^ Name { String^ get(); }
     };
-    /// <summary>Managed description of a virtual-memory segment.</summary>
+    /// <summary>Read-only managed description of a virtual-memory segment.</summary>
+    /// <remarks>Instances are created by LibmemCli from native segment metadata.</remarks>
     public ref class SegmentInfo sealed {
+    private:
+        UInt64 base_;
+        UInt64 end_;
+        UInt64 size_;
+        MemoryProtection protection_;
+    internal:
+        SegmentInfo(UInt64 baseAddress, UInt64 endAddress, UInt64 size, MemoryProtection protection);
     public:
         /// <summary>Gets the segment base address.</summary>
-        property UInt64 Base;
+        property UInt64 Base { UInt64 get(); }
         /// <summary>Gets the segment end address.</summary>
-        property UInt64 End;
+        property UInt64 End { UInt64 get(); }
         /// <summary>Gets the segment size in bytes.</summary>
-        property UInt64 Size;
+        property UInt64 Size { UInt64 get(); }
         /// <summary>Gets the segment memory protection flags.</summary>
-        property MemoryProtection Protection;
+        property MemoryProtection Protection { MemoryProtection get(); }
     };
     /// <summary>Managed representation of one assembled or disassembled instruction.</summary>
     public ref class InstructionInfo sealed {
