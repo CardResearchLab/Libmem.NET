@@ -19,10 +19,13 @@ List<SymbolInfo^>^ Libmem::EnumSymbols(ModuleInfo^ input,bool demangle) {
     } return r;
 }
 UInt64 Libmem::FindSymbolAddress(ModuleInfo^ input,String^ name,bool demangle) {
-    auto m=mod(input); auto s=utf8(name);
+    auto m=mod(input);
+    if(name==nullptr) throw gcnew ArgumentNullException("name");
+    auto s=utf8(name);
     return demangle ? LM_FindSymbolAddressDemangled(&m,s.c_str()) : LM_FindSymbolAddress(&m,s.c_str());
 }
 String^ Libmem::DemangleSymbol(String^ name) {
+    if(name==nullptr) throw gcnew ArgumentNullException("name");
     auto s=utf8(name); lm_char_t* output=LM_DemangleSymbol(s.c_str(),nullptr,0);
     if(!output) return nullptr;
     try { return str(output); } finally { LM_FreeDemangledSymbol(output); }

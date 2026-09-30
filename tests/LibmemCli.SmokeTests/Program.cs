@@ -128,6 +128,41 @@ var nullInjectionPath = ExpectThrows<ArgumentNullException>(
     "InjectorManager.InjectLibrary(null) should throw ArgumentNullException.");
 Check(nullInjectionPath.ParamName == "path", "InjectorManager.InjectLibrary(null) reported the wrong parameter name.");
 
+var emptyDataScan = ExpectThrows<ArgumentException>(
+    () => Libmem.DataScan([], 0, 1),
+    "DataScan(empty) should throw ArgumentException.");
+Check(emptyDataScan.ParamName == "data", "DataScan(empty) reported the wrong parameter name.");
+
+var emptyPatternScan = ExpectThrows<ArgumentException>(
+    () => Libmem.PatternScan([], "", 0, 1),
+    "PatternScan(empty) should throw ArgumentException.");
+Check(emptyPatternScan.ParamName == "pattern", "PatternScan(empty) reported the wrong parameter name.");
+
+var nullPatternMask = ExpectThrows<ArgumentNullException>(
+    () => Libmem.PatternScan([0x90], null!, 0, 1),
+    "PatternScan(null mask) should throw ArgumentNullException.");
+Check(nullPatternMask.ParamName == "mask", "PatternScan(null mask) reported the wrong parameter name.");
+
+var nullSignature = ExpectThrows<ArgumentNullException>(
+    () => Libmem.SigScan(null!, 0, 1),
+    "SigScan(null) should throw ArgumentNullException.");
+Check(nullSignature.ParamName == "signature", "SigScan(null) reported the wrong parameter name.");
+
+var nullSymbolName = ExpectThrows<ArgumentNullException>(
+    () => Libmem.FindSymbolAddress(session.Modules.Enumerate().First(), null!, false),
+    "FindSymbolAddress(null name) should throw ArgumentNullException.");
+Check(nullSymbolName.ParamName == "name", "FindSymbolAddress(null name) reported the wrong parameter name.");
+
+var nullDemangleName = ExpectThrows<ArgumentNullException>(
+    () => Libmem.DemangleSymbol(null!),
+    "DemangleSymbol(null) should throw ArgumentNullException.");
+Check(nullDemangleName.ParamName == "name", "DemangleSymbol(null) reported the wrong parameter name.");
+
+var nullAssemblyCode = ExpectThrows<ArgumentNullException>(
+    () => Libmem.Assemble(null!),
+    "Assemble(null) should throw ArgumentNullException.");
+Check(nullAssemblyCode.ParamName == "code", "Assemble(null) reported the wrong parameter name.");
+
 using (var openedSession = ProcessSession.Open(current)
        ?? throw new InvalidOperationException("ProcessSession.Open(ProcessInfo) failed for the current process."))
 {
