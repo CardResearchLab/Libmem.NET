@@ -98,10 +98,7 @@ namespace LibmemCli::Interop {
     }
 
     ThreadInfo^ thread(const lm_thread_t& value) {
-        auto result = gcnew ThreadInfo();
-        result->Id = value.tid;
-        result->OwnerPid = value.owner_pid;
-        return result;
+        return gcnew ThreadInfo(value.tid, value.owner_pid);
     }
 
     ModuleInfo^ module(const lm_module_t& value) {
