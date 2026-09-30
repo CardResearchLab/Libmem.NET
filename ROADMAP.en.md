@@ -36,9 +36,9 @@ ProcessSession
 
 Snapshots, caches, entities, game state, event state, IPC, and game-version adaptation belong to consumers.
 
-## Current phase: v0.9 — x64 API Freeze
+## Current phase: v1.0 — Stable x64
 
-The x64 API, resource lifetimes, error model, Hook/VMT layer, external-process tests, consumer documentation, and local NuGet consumption prototype are now established. Development is therefore moving from broad expansion to a **Windows x64 managed-contract freeze**.
+The Windows x64 managed-contract freeze is complete. The mainline now enters the **v1.0 Stable x64** release and compatibility-maintenance phase. Future changes should preserve the frozen public API and behavior by default; x86 remains deferred and NuGet publication remains a separate distribution decision.
 
 Current audit priorities:
 
@@ -84,7 +84,7 @@ Completed freeze cleanup: zero-size managed contracts are frozen. Read/Write/Set
 
 Completed freeze cleanup: sentinel / definite-native-failure layering is frozen. FindProcess/FindModule/FindSegment misses remain nullable, symbol/scan/DeepPointer misses retain the native bad-address sentinel, and the low-level static `Libmem.*` compatibility facade preserves native-style failure values while Manager/ownership APIs only promote failures already defined as definite managed failures.
 
-Current freeze cleanup: final API consistency audit. Reconcile the Public API baseline, XML IntelliSense, Manager/static layering, ownership/Dispose idempotency, and consumer documentation, and confirm no remaining contract issue would force a post-v1.0 breaking change.
+Completed freeze cleanup: the final API consistency audit is complete. The Public API baseline, XML IntelliSense, Manager/static layering, ownership/Dispose idempotency, and consumer documentation have been reconciled, with no remaining contract issue identified that requires a pre-v1.0 breaking change.
 
 ## v0.4 — x64 architecture cleanup
 
