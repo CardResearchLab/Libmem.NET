@@ -105,13 +105,12 @@ namespace LibmemCli::Interop {
     }
 
     ModuleInfo^ module(const lm_module_t& value) {
-        auto result = gcnew ModuleInfo();
-        result->Base = value.base;
-        result->End = value.end;
-        result->Size = value.size;
-        result->Path = str(value.path);
-        result->Name = str(value.name);
-        return result;
+        return gcnew ModuleInfo(
+            value.base,
+            value.end,
+            value.size,
+            str(value.name),
+            str(value.path));
     }
 
     SegmentInfo^ segment(const lm_segment_t& value) {
