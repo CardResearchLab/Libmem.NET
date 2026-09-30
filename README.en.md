@@ -355,7 +355,7 @@ Another repository can call the reusable workflow directly:
 ```yaml
 jobs:
   build-libmem:
-    uses: HearthstoneModding/Libmem/.github/workflows/reusable-build.yml@main
+    uses: HearthstoneModding/Libmem.NET/.github/workflows/reusable-build.yml@main
     with:
       ref: main
       configuration: Release
@@ -374,7 +374,7 @@ jobs:
 
 The caller does not need to duplicate Libmem's build scripts; the artifact is uploaded directly to the caller's workflow run.
 
-> While this repository is private, cross-repository reuse requires GitHub Actions access settings that allow the caller repository to use this reusable workflow. If the repository becomes public later, public repositories can reference it directly.
+> This repository is public, so other repositories can reference the reusable workflow directly.
 
 ## API stability
 
