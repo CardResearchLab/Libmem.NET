@@ -68,7 +68,9 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 已完成的收口项：`SymbolInfo` 冻结为由 LibmemCli 创建的只读符号结果对象。消费者只能读取 `Address / Name`，不能再构造或修改伪造的符号结果。
 
-当前收口项：`SegmentInfo` 冻结为由 LibmemCli 创建的只读内存段结果对象。消费者只能读取 `Base / End / Size / Protection`，不能再构造或修改伪造的 segment 元数据。
+已完成的收口项：`SegmentInfo` 冻结为由 LibmemCli 创建的只读内存段结果对象。消费者只能读取 `Base / End / Size / Protection`，不能再构造或修改伪造的 segment 元数据。
+
+当前收口项：`InstructionInfo` 冻结为由 LibmemCli 创建的深只读指令结果对象。标量/字符串属性均为 getter-only，`Bytes` 返回 defensive copy，调用方不能通过修改返回数组改变对象内部指令状态。
 
 ## v0.4 — x64 架构整理
 
