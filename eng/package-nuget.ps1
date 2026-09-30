@@ -54,7 +54,7 @@ if ($PackageVersion -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$') 
 
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 
-$project = Join-Path $repoRoot 'packaging\HearthstoneModding.LibmemCli.csproj'
+$project = Join-Path $repoRoot 'packaging\Libmem.NET.csproj'
 
 dotnet pack $project `
     -c $Configuration `
@@ -67,7 +67,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "dotnet pack failed with exit code $LASTEXITCODE."
 }
 
-$package = Join-Path $OutputDirectory "HearthstoneModding.LibmemCli.$PackageVersion.nupkg"
+$package = Join-Path $OutputDirectory "Libmem.NET.$PackageVersion.nupkg"
 if (-not (Test-Path $package -PathType Leaf)) {
     throw "Expected NuGet package was not produced: $package"
 }
@@ -85,5 +85,5 @@ if ($LASTEXITCODE -ne 0) {
 $versionOutput = Join-Path $OutputDirectory 'package-version.txt'
 Set-Content -Path $versionOutput -Value $PackageVersion -Encoding ascii
 
-Write-Host "NuGet prototype version: $PackageVersion"
-Write-Host "NuGet prototype package: $package"
+Write-Host "Libmem.NET NuGet version: $PackageVersion"
+Write-Host "Libmem.NET NuGet package: $package"
