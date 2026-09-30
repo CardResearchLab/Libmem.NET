@@ -8,7 +8,7 @@
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 
-LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装。**当前开发、CI 验收与正式发布以 Windows x64 / .NET 8 为主线。** 现有 x86 代码与构建配置暂时保留，但 x86 已延后，不再作为近期开发目标或正式 Release 产物。
+LibmemCli 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 C++/CLI 封装。**v1.0 稳定主线与正式发布目标为 Windows x64 / .NET 8。** 现有 x86 代码与构建配置暂时保留，但 x86 已延后，不再作为近期开发目标或正式 Release 产物。
 
 开发路线见 [ROADMAP.md](ROADMAP.md)，消费者行为与返回/异常/生命周期语义见 [API 参考](docs/API.md)，ZIP / Submodule / NuGet 等消费方式见 [消费指南](docs/CONSUMPTION.md)。
 
@@ -323,7 +323,7 @@ artifacts/package/LibmemCli-windows-x64.zip.sha256
 
 ## 版本与自动验证
 
-项目使用根目录的 `VERSION` 文件作为发布版本来源，当前版本为 **0.3.0**。构建后的 `LibmemCli.dll` 会写入对应的程序集版本信息。
+项目使用根目录的 `VERSION` 文件作为发布版本来源，当前版本为 **1.0.0**。构建后的 `LibmemCli.dll` 会写入对应的程序集版本信息。
 
 Runtime 包中的 `manifest.json` 会记录：
 
