@@ -95,8 +95,12 @@ namespace LibmemCli {
         UInt64 size_;
         String^ name_;
         String^ path_;
+        UInt32 ownerPid_;
+        UInt64 ownerStartTime_;
     internal:
-        ModuleInfo(UInt64 baseAddress, UInt64 endAddress, UInt64 size, String^ name, String^ path);
+        ModuleInfo(UInt64 baseAddress, UInt64 endAddress, UInt64 size, String^ name, String^ path, UInt32 ownerPid, UInt64 ownerStartTime);
+        bool BelongsTo(ProcessInfo^ process);
+        ModuleInfo^ Clone();
     public:
         /// <summary>Gets the module base address.</summary>
         property UInt64 Base { UInt64 get(); }
