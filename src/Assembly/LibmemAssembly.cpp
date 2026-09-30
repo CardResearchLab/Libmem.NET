@@ -10,8 +10,12 @@ using namespace LibmemCli;
 using namespace LibmemCli::Interop;
 
 LibmemCli::Architecture Libmem::GetArchitecture() { return static_cast<LibmemCli::Architecture>(LM_GetArchitecture()); }
-InstructionInfo^ Libmem::Assemble(String^ code) { auto s=utf8(code); lm_inst_t i{}; return LM_Assemble(s.c_str(),&i) ? instruction(i) : nullptr; }
+InstructionInfo^ Libmem::Assemble(String^ code) {
+    if(code==nullptr) throw gcnew ArgumentNullException("code");
+    auto s=utf8(code); lm_inst_t i{}; return LM_Assemble(s.c_str(),&i) ? instruction(i) : nullptr;
+}
 array<Byte>^ Libmem::Assemble(String^ code,LibmemCli::Architecture arch,UInt64 runtimeAddress) {
+    if(code==nullptr) throw gcnew ArgumentNullException("code");
     auto s=utf8(code); lm_byte_t* payload=nullptr;
     lm_size_t n=LM_AssembleEx(s.c_str(),static_cast<lm_arch_t>(arch),native_address(runtimeAddress,"runtimeAddress"),&payload);
     if(n==0 || !payload) return nullptr;
