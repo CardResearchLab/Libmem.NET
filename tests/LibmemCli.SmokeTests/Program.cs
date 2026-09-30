@@ -138,6 +138,12 @@ var emptyPatternScan = ExpectThrows<ArgumentException>(
     "PatternScan(empty) should throw ArgumentException.");
 Check(emptyPatternScan.ParamName == "pattern", "PatternScan(empty) reported the wrong parameter name.");
 
+var emptyRemotePatternScan = ExpectThrows<ArgumentException>(
+    () => Libmem.PatternScan(current, [], "", 0, 1),
+    "PatternScan(process, empty) should throw ArgumentException.");
+Check(emptyRemotePatternScan.ParamName == "pattern",
+    "PatternScan(process, empty) reported the wrong parameter name.");
+
 var nullPatternMask = ExpectThrows<ArgumentNullException>(
     () => Libmem.PatternScan([0x90], null!, 0, 1),
     "PatternScan(null mask) should throw ArgumentNullException.");
@@ -147,6 +153,27 @@ var nullSignature = ExpectThrows<ArgumentNullException>(
     () => Libmem.SigScan(null!, 0, 1),
     "SigScan(null) should throw ArgumentNullException.");
 Check(nullSignature.ParamName == "signature", "SigScan(null) reported the wrong parameter name.");
+
+var emptyMask = ExpectThrows<ArgumentException>(
+    () => Libmem.PatternScan([0x90], "", 0, 1),
+    "PatternScan(empty mask) should throw ArgumentException.");
+Check(emptyMask.ParamName == "mask", "PatternScan(empty mask) reported the wrong parameter name.");
+
+var emptyRemoteMask = ExpectThrows<ArgumentException>(
+    () => Libmem.PatternScan(current, [0x90], "", 0, 1),
+    "PatternScan(process, empty mask) should throw ArgumentException.");
+Check(emptyRemoteMask.ParamName == "mask",
+    "PatternScan(process, empty mask) reported the wrong parameter name.");
+
+var emptySignature = ExpectThrows<ArgumentException>(
+    () => Libmem.SigScan("", 0, 1),
+    "SigScan(empty) should throw ArgumentException.");
+Check(emptySignature.ParamName == "signature", "SigScan(empty) reported the wrong parameter name.");
+
+var blankSignature = ExpectThrows<ArgumentException>(
+    () => Libmem.SigScan("   ", 0, 1),
+    "SigScan(blank) should throw ArgumentException.");
+Check(blankSignature.ParamName == "signature", "SigScan(blank) reported the wrong parameter name.");
 
 var nullSymbolName = ExpectThrows<ArgumentNullException>(
     () => Libmem.FindSymbolAddress(session.Modules.Enumerate().First(), null!, false),
@@ -461,6 +488,15 @@ Check(scanner.PatternScan(ownedPayload, ownedMask, ownedAllocation.Address, owne
 var ownedSignature = string.Join(" ", ownedPayload.Select(b => b.ToString("X2")));
 Check(scanner.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
     "ScanManager.SigScan failed.");
+
+var noScanRange = scanner.SigScan(ownedSignature, ownedAllocation.Address, 0);
+Check(noScanRange == ulong.MaxValue,
+    "A valid non-empty signature with zero scan size should remain a normal miss sentinel.");
+
+var missingPayload = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
+var missingScan = scanner.DataScan(missingPayload, ownedAllocation.Address, ownedAllocation.Size);
+Check(missingScan == ulong.MaxValue,
+    "A valid non-empty scan with no match should remain the native bad-address sentinel.");
 
 Stage("deep-pointer");
 using (var pointerLayer0 = memory.Allocate(4096, MemoryProtection.ReadWrite)

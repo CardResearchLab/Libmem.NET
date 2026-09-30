@@ -74,7 +74,11 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 已完成的收口项：`ModuleInfo` 在保持 public surface 不变的前提下记录内部进程 provenance（PID + StartTime）；session-bound `ModuleManager.Unload` 与 `SymbolManager`、以及静态 Unload 重载会拒绝来自其他进程身份的模块描述，避免把外部进程的 module base 传入错误目标的 native 操作。
 
-当前收口项：冻结枚举输入契约。调用方传入未定义 `Architecture` 或包含未知位的 `MemoryProtection` 时，在 managed 边界直接抛出 `ArgumentOutOfRangeException`，不把非法枚举值传入 native libmem。
+已完成的收口项：冻结枚举输入契约。调用方传入未定义 `Architecture` 或包含未知位的 `MemoryProtection` 时，在 managed 边界直接抛出 `ArgumentOutOfRangeException`，不把非法枚举值传入 native libmem。
+
+已完成的收口项：字符串中的 embedded NUL 会在 UTF-8/native dispatch 前被拒绝，并保持真实 public 参数名，不再泄漏内部 helper 的 `value` 参数。
+
+当前收口项：冻结空扫描输入语义。空 pattern/mask/signature 属于 managed 参数错误；只有格式有效且非空的扫描请求未命中时，才返回 native bad-address sentinel。
 
 ## v0.4 — x64 架构整理
 

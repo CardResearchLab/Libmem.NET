@@ -17,6 +17,8 @@
 
 ### Changed
 
+- Normalized empty scan-input contracts: empty pattern masks and empty/whitespace signatures now fail with `ArgumentException` before native dispatch, while valid non-empty scan misses continue to return the native bad-address sentinel.
+
 - Preserved public parameter names when rejecting embedded NUL characters in process/module names, module paths, scan strings, symbol names, and assembly source; internal UTF-8 helper details no longer leak through `ArgumentException.ParamName`.
 
 - Added managed-boundary validation for caller-supplied `Architecture` and `MemoryProtection` values. Undefined architectures and protection flags containing unknown bits now fail with `ArgumentOutOfRangeException` before native dispatch.
