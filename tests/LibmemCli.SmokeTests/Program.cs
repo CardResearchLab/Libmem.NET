@@ -390,6 +390,18 @@ Check(Libmem.EnumSegments(current).Any(x => x.Base <= ownedAllocation.Address &&
     "EnumSegments(process) did not include the owned allocation.");
 
 Stage("memory-read-write-scan");
+var invalidManagerProtection = ExpectThrows<ArgumentOutOfRangeException>(
+    () => memory.Protect(ownedAllocation.Address, ownedAllocation.Size, (MemoryProtection)0x80),
+    "MemoryManager.Protect should reject unsupported protection flags.");
+Check(invalidManagerProtection.ParamName == "protection",
+    "MemoryManager.Protect reported the wrong parameter name for invalid protection.");
+
+var invalidStaticProtection = ExpectThrows<ArgumentOutOfRangeException>(
+    () => Libmem.AllocateMemory(4096, (MemoryProtection)0x80),
+    "AllocateMemory should reject unsupported protection flags.");
+Check(invalidStaticProtection.ParamName == "prot",
+    "AllocateMemory reported the wrong parameter name for invalid protection.");
+
 Check(memory.Set(ownedAllocation.Address, 0xA5, 16) == 16, "MemoryManager.Set failed.");
 Check(memory.Read(ownedAllocation.Address, 16).All(x => x == 0xA5),
     "MemoryManager.Set did not fill the requested bytes.");
@@ -506,6 +518,19 @@ try
     }
 
     Stage("assembly-disassembly");
+    var invalidArchitecture = (Architecture)uint.MaxValue;
+    var invalidAssembleArchitecture = ExpectThrows<ArgumentOutOfRangeException>(
+        () => Libmem.Assemble("nop", invalidArchitecture, 0x1000),
+        "Assemble should reject an undefined architecture.");
+    Check(invalidAssembleArchitecture.ParamName == "architecture",
+        "Assemble reported the wrong parameter name for invalid architecture.");
+
+    var invalidDisassembleArchitecture = ExpectThrows<ArgumentOutOfRangeException>(
+        () => Libmem.Disassemble([0x90], invalidArchitecture, 1, 0x1000),
+        "Disassemble should reject an undefined architecture.");
+    Check(invalidDisassembleArchitecture.ParamName == "architecture",
+        "Disassemble reported the wrong parameter name for invalid architecture.");
+
     var assembly = pidSession.Assembly;
     var singleInstruction = Libmem.Assemble("nop");
     Check(singleInstruction is not null && singleInstruction.Size > 0,
