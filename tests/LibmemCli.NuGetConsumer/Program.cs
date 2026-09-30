@@ -28,6 +28,19 @@ foreach (var propertyName in new[] { "Id", "OwnerPid" })
         throw new InvalidOperationException($"ThreadInfo.{propertyName} must be read-only.");
 }
 
+var symbolType = typeof(SymbolInfo);
+if (symbolType.GetConstructors().Length != 0)
+    throw new InvalidOperationException("SymbolInfo must not expose a public constructor.");
+
+foreach (var propertyName in new[] { "Address", "Name" })
+{
+    var property = symbolType.GetProperty(propertyName)
+        ?? throw new InvalidOperationException($"SymbolInfo.{propertyName} is missing.");
+
+    if (property.CanWrite)
+        throw new InvalidOperationException($"SymbolInfo.{propertyName} must be read-only.");
+}
+
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process could not be resolved through the NuGet package.");
 
