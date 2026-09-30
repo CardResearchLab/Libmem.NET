@@ -8,7 +8,7 @@
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 
-LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). **Current development, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
+LibmemCli is a reusable C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). **The v1.0 stable line, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
 
 See [ROADMAP.en.md](ROADMAP.en.md) for the current development plan, the [API reference](docs/API.md) for consumer-facing result/exception/lifetime semantics, and the [consumption guide](docs/CONSUMPTION.md) for ZIP, submodule, and NuGet options.
 
@@ -323,7 +323,7 @@ artifacts/package/LibmemCli-windows-x64.zip.sha256
 
 ## Versioning and automated validation
 
-The root `VERSION` file is the source of truth for release versioning. The current version is **0.3.0**, and the generated `LibmemCli.dll` carries matching assembly version metadata.
+The root `VERSION` file is the source of truth for release versioning. The current version is **1.0.0**, and the generated `LibmemCli.dll` carries matching assembly version metadata.
 
 Each runtime package contains a `manifest.json` recording:
 
@@ -386,7 +386,7 @@ Accidental removals, signature changes, public-member renames, or enum changes t
 python .\eng\check-public-api.py --write
 ```
 
-Then review the API diff, update `CHANGELOG.md`, and apply the appropriate version change. The project is still pre-1.0, so this is not a promise that breaking changes can never happen; it makes them explicit and reviewable instead of silent.
+Then review the API diff, update `CHANGELOG.md`, and apply the appropriate version change. Starting with v1.0, public API and managed-contract changes are expected to remain backward compatible by default; any intentional breaking change must be explicit, reviewed, documented, and versioned accordingly.
 
 ## Error model
 
