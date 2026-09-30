@@ -17,6 +17,8 @@
 
 ### Changed
 
+- Bound `ModuleInfo` results to their originating PID + start-time identity internally. Session-bound module unload/symbol operations and static module-unload overloads now reject cross-process `ModuleInfo` values before native dispatch, without expanding the public `ModuleInfo` surface or adding module-enumeration preflights.
+
 - Normalized public argument contracts for scan, symbol, and assembly inputs so null and clearly single-parameter invalid cases report the public parameter name instead of leaking internal helper names or omitting `ParamName`.
 
 - Froze `ProcessInfo` as library-created read-only identity metadata so PID/start-time and related process fields cannot be rewritten after capture; this intentionally removes the pre-v1.0 public setter/default-construction surface while preserving all process lookup, liveness, session, and static-operation entry points.
