@@ -59,7 +59,7 @@ Important fields:
 - `Name`
 - `Path`
 
-`ProcessInfo` is intentionally an identity/metadata object. Its only behavior method is `IsAlive()`, which checks the exact PID + start-time identity.
+`ProcessInfo` is intentionally a read-only identity/metadata object. Instances are created by LibmemCli from native process data; consumers cannot construct an arbitrary `ProcessInfo` or mutate its identity fields after creation. Its only behavior method is `IsAlive()`, which checks the exact PID + start-time identity.
 
 Memory and scan operations are not exposed on `ProcessInfo`. Use `ProcessSession.Memory` / `ProcessSession.Scanner` for session-bound operations, or the static `Libmem.*` compatibility facade for one-shot calls.
 
