@@ -371,7 +371,7 @@ for consumption_marker in [
     "Libmem.NET",
     "runtimes/win-x64/native",
     "PackageReference",
-    "## Acceptance criteria before NuGet publication",
+    "## NuGet release acceptance criteria",
 ]:
     assert consumption_marker in consumption_guide, (
         f"Consumption guide lost required section: {consumption_marker}"
