@@ -25,7 +25,7 @@ namespace LibmemCli::Interop {
 
     ProcessInfo^ process(const lm_process_t& value);
     ThreadInfo^ thread(const lm_thread_t& value);
-    ModuleInfo^ module(const lm_module_t& value);
+    ModuleInfo^ module(const lm_module_t& value, ProcessInfo^ owner);
     SegmentInfo^ segment(const lm_segment_t& value);
     InstructionInfo^ instruction(const lm_inst_t& value);
 
