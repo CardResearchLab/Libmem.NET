@@ -282,9 +282,9 @@ At runtime, deploy the following files beside the consuming executable:
 Do not mix outputs from different configurations or commits.
 
 
-## NuGet prototype
+## NuGet package
 
-The repository is validating a **Windows x64 / .NET 8 local NuGet prototype** with the provisional package ID `HearthstoneModding.LibmemCli`. The package is generated only in CI and exercised by an independent `PackageReference` consumer. It is **not published to nuget.org and is not currently an official Release asset**.
+The repository is validating a **Windows x64 / .NET 8 local NuGet package** with the package ID `Libmem.NET`. The package is generated only in CI and exercised by an independent `PackageReference` consumer. It is **not published to nuget.org and is not currently an official Release asset**.
 
 See [docs/CONSUMPTION.md](docs/CONSUMPTION.md) for the package layout and acceptance criteria. Until restore/build/run/publish behavior is fully accepted, the Release ZIP and Git submodule/reusable-workflow paths remain the stable consumption options.
 
@@ -304,7 +304,7 @@ The repository includes seven automation workflows:
 - \`.github/workflows/hook-vmt-tests.yml\`: runs real Hook / trampoline / VMT lifecycle tests on x64 independently from the base smoke suite.
 - \`.github/workflows/injector-tests.yml\`: independently validates DLL injection, module discovery, explicit Unload, and Dispose lifetime behavior on x64.
 - `.github/workflows/external-process-tests.yml`: launches the repository-owned `LibmemCli.TestTarget` child process and validates real cross-process attach, read/write, remote allocate/protect/free, signature scan, segment lookup, and process-exit observation.
-- `.github/workflows/nuget-consumer-tests.yml`: builds the local `HearthstoneModding.LibmemCli` NuGet prototype and validates pack → restore → run → publish through an independent `PackageReference` consumer; it is not published to nuget.org.
+- `.github/workflows/nuget-consumer-tests.yml`: builds the local `Libmem.NET` NuGet package and validates pack → restore → run → publish through an independent `PackageReference` consumer; it is not published to nuget.org.
 
 You can create the same runtime package locally:
 
