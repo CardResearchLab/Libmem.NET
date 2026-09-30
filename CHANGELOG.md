@@ -37,6 +37,10 @@
 - Added dedicated x64-first roadmap documents in `ROADMAP.md` and `ROADMAP.en.md`.
 - Continued the Blackbone-inspired process aggregation refactor: `ProcessSession` now exposes memory, modules, threads, scanning, symbols, assembly/disassembly, hooks, and injection as explicit subsystems.
 
+### Changed
+
+- Froze `ModuleInfo` as a LibmemCli-created read-only module descriptor. `Base / End / Size / Name / Path` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
+
 ### Removed
 
 - Removed the early convenience `ProcessInfo.Read`, `Write`, `ReadInt32`, `WriteInt32`, and `SigScan` forwarding methods before v1.0. `ProcessInfo` now remains focused on process identity/metadata plus `IsAlive()`; session-bound memory/scanning lives on Managers and static `Libmem.*` compatibility APIs remain available.
