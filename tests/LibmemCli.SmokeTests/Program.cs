@@ -138,6 +138,12 @@ var emptyPatternScan = ExpectThrows<ArgumentException>(
     "PatternScan(empty) should throw ArgumentException.");
 Check(emptyPatternScan.ParamName == "pattern", "PatternScan(empty) reported the wrong parameter name.");
 
+var emptyRemotePatternScan = ExpectThrows<ArgumentException>(
+    () => Libmem.PatternScan(current, [], "", 0, 1),
+    "PatternScan(process, empty) should throw ArgumentException.");
+Check(emptyRemotePatternScan.ParamName == "pattern",
+    "PatternScan(process, empty) reported the wrong parameter name.");
+
 var nullPatternMask = ExpectThrows<ArgumentNullException>(
     () => Libmem.PatternScan([0x90], null!, 0, 1),
     "PatternScan(null mask) should throw ArgumentNullException.");
