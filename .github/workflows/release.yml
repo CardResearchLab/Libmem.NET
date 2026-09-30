@@ -86,7 +86,7 @@ jobs:
             "dist/x64/LibmemCli-windows-x64.zip.sha256" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "LibmemCli $TAG_NAME" \
+            --title "Libmem.NET $TAG_NAME" \
             --notes-file dist/release-notes.md
 
           if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
