@@ -41,24 +41,41 @@ namespace LibmemCli {
         property String^ Operation { String^ get(); }
     };
 
-    /// <summary>Managed description of one native process identity.</summary>
-    /// <remarks>Process identity-sensitive APIs also use StartTime to reject PID reuse.</remarks>
+    /// <summary>Managed read-only description of one native process identity.</summary>
+    /// <remarks>Instances are created by LibmemCli from native process data. Process identity-sensitive APIs also use StartTime to reject PID reuse.</remarks>
     public ref class ProcessInfo sealed {
+    private:
+        UInt32 pid_;
+        UInt32 parentPid_;
+        LibmemCli::Architecture architecture_;
+        UInt64 bits_;
+        UInt64 startTime_;
+        String^ name_;
+        String^ path_;
+    internal:
+        ProcessInfo(
+            UInt32 pid,
+            UInt32 parentPid,
+            LibmemCli::Architecture architecture,
+            UInt64 bits,
+            UInt64 startTime,
+            String^ name,
+            String^ path);
     public:
         /// <summary>Gets the process identifier.</summary>
-        property UInt32 Pid;
+        property UInt32 Pid { UInt32 get(); }
         /// <summary>Gets the parent process identifier reported by libmem.</summary>
-        property UInt32 ParentPid;
+        property UInt32 ParentPid { UInt32 get(); }
         /// <summary>Gets the process architecture.</summary>
-        property LibmemCli::Architecture Architecture;
+        property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
         /// <summary>Gets the native process bitness.</summary>
-        property UInt64 Bits;
+        property UInt64 Bits { UInt64 get(); }
         /// <summary>Gets the process start-time identity value used to reject PID reuse.</summary>
-        property UInt64 StartTime;
+        property UInt64 StartTime { UInt64 get(); }
         /// <summary>Gets the process name.</summary>
-        property String^ Name;
+        property String^ Name { String^ get(); }
         /// <summary>Gets the process executable path when available.</summary>
-        property String^ Path;
+        property String^ Path { String^ get(); }
         /// <summary>Checks whether this exact process identity is still alive.</summary>
         bool IsAlive();
     };
