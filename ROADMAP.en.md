@@ -68,7 +68,9 @@ Completed freeze cleanup: `ThreadInfo` is now a LibmemCli-created read-only thre
 
 Completed freeze cleanup: `SymbolInfo` is now a LibmemCli-created read-only symbol result. Consumers can read `Address / Name` but cannot construct or mutate forged symbol results.
 
-Current freeze cleanup: `SegmentInfo` is being frozen as a LibmemCli-created read-only memory-segment result. Consumers can read `Base / End / Size / Protection` but cannot construct or mutate forged segment metadata.
+Completed freeze cleanup: `SegmentInfo` is now a LibmemCli-created read-only memory-segment result. Consumers can read `Base / End / Size / Protection` but cannot construct or mutate forged segment metadata.
+
+Current freeze cleanup: `InstructionInfo` is being frozen as a LibmemCli-created deeply read-only instruction result. Scalar/string properties are getter-only and `Bytes` returns a defensive copy so callers cannot mutate the stored instruction state.
 
 ## v0.4 — x64 architecture cleanup
 
