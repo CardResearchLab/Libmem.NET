@@ -17,6 +17,8 @@
 
 ### Changed
 
+- Completed the final managed-contract consistency pass for v0.9: clarified XML IntelliSense for symbol/deep-pointer sentinel results and ownership-handle idempotency, and added regression coverage that HookHandle.Remove remains idempotent after successful Dispose.
+
 - Frozen sentinel/definite-failure layering: process/module/segment lookups keep nullable miss results, symbol/scan/deep-pointer misses keep the native bad-address sentinel, and the low-level static compatibility facade preserves native-style failure values while Manager/ownership APIs promote definite failures where their contract already requires exceptions.
 
 - Frozen zero-size contracts without broad normalization: read/write/set remain no-ops, Windows protect/allocation preserve pinned libmem page-size semantics, owned `MemoryManager.Allocate(0)` remains invalid, and zero-length code/disassembly queries keep natural empty/zero results.
