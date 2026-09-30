@@ -72,7 +72,9 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 已完成的收口项：`InstructionInfo` 冻结为由 LibmemCli 创建的深只读指令结果对象。标量/字符串属性均为 getter-only，`Bytes` 返回 defensive copy，调用方不能通过修改返回数组改变对象内部指令状态。
 
-当前收口项：`ModuleInfo` 在保持 public surface 不变的前提下记录内部进程 provenance（PID + StartTime）；session-bound `ModuleManager.Unload` 与 `SymbolManager` 拒绝来自其他进程身份的模块描述，避免把外部进程的 module base 传入当前 session 的 native 操作。
+已完成的收口项：`ModuleInfo` 在保持 public surface 不变的前提下记录内部进程 provenance（PID + StartTime）；session-bound `ModuleManager.Unload` 与 `SymbolManager`、以及静态 Unload 重载会拒绝来自其他进程身份的模块描述，避免把外部进程的 module base 传入错误目标的 native 操作。
+
+当前收口项：冻结枚举输入契约。调用方传入未定义 `Architecture` 或包含未知位的 `MemoryProtection` 时，在 managed 边界直接抛出 `ArgumentOutOfRangeException`，不把非法枚举值传入 native libmem。
 
 ## v0.4 — x64 架构整理
 
