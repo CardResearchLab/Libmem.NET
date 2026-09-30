@@ -192,6 +192,12 @@ Primary operations:
 
 The wrapper intentionally exposes only thread capabilities available in the pinned libmem API. It does not invent managed Suspend / Resume / Context APIs.
 
+### SymbolInfo
+
+`SymbolInfo` is a library-created, read-only symbol result. Consumers can inspect `Address` and `Name`, but cannot construct an empty symbol descriptor or rewrite the resolved values after enumeration.
+
+`SymbolInfo` is a result model only; symbol lookup input remains the module plus symbol-name arguments exposed by `SymbolManager` / the static compatibility facade.
+
 ### SymbolManager
 
 Primary operations:

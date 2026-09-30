@@ -15,7 +15,7 @@ List<SymbolInfo^>^ Libmem::EnumSymbols(ModuleInfo^ input,bool demangle) {
         demangle ? "LM_EnumSymbolsDemangled" : "LM_EnumSymbols",
         demangle ? "LM_EnumSymbolsDemangled failed." : "LM_EnumSymbols failed.");
     auto r=gcnew List<SymbolInfo^>(); for(const auto& s : native) {
-        auto x=gcnew SymbolInfo(); x->Address=s.address; x->Name=str(s.name.c_str()); r->Add(x);
+        r->Add(gcnew SymbolInfo(s.address, str(s.name.c_str())));
     } return r;
 }
 UInt64 Libmem::FindSymbolAddress(ModuleInfo^ input,String^ name,bool demangle) {

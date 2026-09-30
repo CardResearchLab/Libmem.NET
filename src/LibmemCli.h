@@ -109,13 +109,19 @@ namespace LibmemCli {
         /// <summary>Gets the module path when available.</summary>
         property String^ Path { String^ get(); }
     };
-    /// <summary>Managed description of a native symbol and its resolved address.</summary>
+    /// <summary>Read-only managed description of a native symbol and its resolved address.</summary>
+    /// <remarks>Instances are created by LibmemCli from native symbol metadata.</remarks>
     public ref class SymbolInfo sealed {
+    private:
+        UInt64 address_;
+        String^ name_;
+    internal:
+        SymbolInfo(UInt64 address, String^ name);
     public:
         /// <summary>Gets the resolved symbol address.</summary>
-        property UInt64 Address;
+        property UInt64 Address { UInt64 get(); }
         /// <summary>Gets the symbol name.</summary>
-        property String^ Name;
+        property String^ Name { String^ get(); }
     };
     /// <summary>Managed description of a virtual-memory segment.</summary>
     public ref class SegmentInfo sealed {

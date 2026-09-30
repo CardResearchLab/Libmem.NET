@@ -64,7 +64,9 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 已完成的收口项：`ModuleInfo` 冻结为由 LibmemCli 创建的只读模块描述对象。消费者不再能够修改 `Base / End / Size / Name / Path` 后再把伪造或变异后的模块记录传回 Unload / Symbol API。
 
-当前收口项：`ThreadInfo` 冻结为由 LibmemCli 创建的只读线程描述对象。消费者不再能够修改 `Id / OwnerPid` 后把伪造或变异后的线程记录传回 `GetThreadProcess`。
+已完成的收口项：`ThreadInfo` 冻结为由 LibmemCli 创建的只读线程描述对象。消费者不再能够修改 `Id / OwnerPid` 后把伪造或变异后的线程记录传回 `GetThreadProcess`。
+
+当前收口项：`SymbolInfo` 冻结为由 LibmemCli 创建的只读符号结果对象。消费者只能读取 `Address / Name`，不能再构造或修改伪造的符号结果。
 
 ## v0.4 — x64 架构整理
 

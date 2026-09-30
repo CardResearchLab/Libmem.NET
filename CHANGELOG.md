@@ -39,6 +39,7 @@
 
 ### Changed
 
+- Froze `SymbolInfo` as a LibmemCli-created read-only symbol result. `Address / Name` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
 - Froze `ThreadInfo` as a LibmemCli-created read-only thread descriptor. `Id / OwnerPid` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
 - Froze `ModuleInfo` as a LibmemCli-created read-only module descriptor. `Base / End / Size / Name / Path` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
 
