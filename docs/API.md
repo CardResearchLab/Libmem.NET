@@ -105,6 +105,12 @@ Manager operations therefore keep their documented per-operation result/error se
 
 ## Manager APIs
 
+### SegmentInfo
+
+`SegmentInfo` is a library-created, read-only virtual-memory segment result. Consumers can inspect `Base`, `End`, `Size`, and `Protection`, but cannot construct an empty descriptor or rewrite the resolved segment metadata.
+
+The type remains a pure query result; memory mutation continues through `MemoryManager` / the static compatibility facade rather than by editing a segment object.
+
 ### MemoryManager
 
 Primary operations:
