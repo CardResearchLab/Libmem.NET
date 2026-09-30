@@ -17,6 +17,7 @@
 
 ### Changed
 
+- Froze `ProcessInfo` as a read-only process identity object: consumers can no longer construct arbitrary instances or mutate PID/start-time/metadata fields; LibmemCli now constructs identities internally and NuGet consumer tests lock the contract.
 - Completed the v0.9 managed-contract documentation audit: expanded XML IntelliSense coverage for the frozen `ProcessSession` / Manager / ownership surface and documented `ProcessSession.Allocate` as an intentional ownership convenience, with no public API or runtime behavior change.
 - Froze target-process exit semantics: process exit no longer implies session disposal, bound identity metadata remains readable, `IsAlive()`/`Refresh()` expose staleness, Manager accessors remain available, and hot-path Manager calls do not gain a universal exact-identity preflight.
 - Froze ownership-lifetime idempotency with runtime coverage for repeated session detach/dispose, repeated resource disposal, and remote-allocation cleanup after target-process exit.
