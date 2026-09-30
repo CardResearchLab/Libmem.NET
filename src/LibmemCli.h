@@ -315,6 +315,7 @@ namespace LibmemCli {
         ScanManager(ProcessSession^ session);
     public:
         /// <summary>Resolves a multi-level pointer in the target process.</summary>
+        /// <returns>The resolved address, or the libmem bad-address sentinel when resolution fails.</returns>
         UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
         /// <summary>Scans the target process for an exact byte sequence.</summary>
         /// <returns>The matching address, or the libmem bad-address sentinel when no match is found.</returns>
@@ -338,6 +339,7 @@ namespace LibmemCli {
         /// <summary>Enumerates symbols exported by the supplied module.</summary>
         List<SymbolInfo^>^ Enumerate(ModuleInfo^ module, bool demangle);
         /// <summary>Finds a symbol address in the supplied module.</summary>
+        /// <returns>The resolved address, or the libmem bad-address sentinel when the symbol is not found.</returns>
         UInt64 FindAddress(ModuleInfo^ module, String^ name, bool demangle);
         /// <summary>Demangles one native symbol name.</summary>
         String^ Demangle(String^ name);
@@ -422,6 +424,7 @@ namespace LibmemCli {
         property bool IsDisposed { bool get(); }
         /// <summary>Attempts to release the load reference owned by this handle.</summary>
         /// <remarks>After successful release or target-process exit, repeated calls are idempotent.</remarks>
+        /// <returns>true when the owned load reference is inactive; false when unloading fails while it remains active.</returns>
         bool Unload();
         ~InjectedModuleHandle();
         !InjectedModuleHandle();
@@ -479,6 +482,7 @@ namespace LibmemCli {
         property bool IsDisposed { bool get(); }
         /// <summary>Attempts to restore the original code and release the installed hook.</summary>
         /// <remarks>After successful removal, repeated calls are idempotent.</remarks>
+        /// <returns>true when the hook is no longer installed; false when removal fails while it remains active.</returns>
         bool Remove();
         ~HookHandle();
         !HookHandle();
@@ -543,6 +547,8 @@ namespace LibmemCli {
         static bool UnloadModule(ProcessInfo^ process, ModuleInfo^ module);
         // Symbol
         static List<SymbolInfo^>^ EnumSymbols(ModuleInfo^ module, bool demangle);
+        /// <summary>Finds a symbol address in a module.</summary>
+        /// <returns>The resolved address, or the libmem bad-address sentinel when the symbol is not found.</returns>
         static UInt64 FindSymbolAddress(ModuleInfo^ module, String^ name, bool demangle);
         static String^ DemangleSymbol(String^ name);
         // Segment
@@ -566,7 +572,11 @@ namespace LibmemCli {
         static UInt64 AllocateMemory(ProcessInfo^ process, UInt64 size, MemoryProtection prot);
         static bool FreeMemory(UInt64 address, UInt64 size);
         static bool FreeMemory(ProcessInfo^ process, UInt64 address, UInt64 size);
+        /// <summary>Resolves a multi-level pointer in the current process.</summary>
+        /// <returns>The resolved address, or the libmem bad-address sentinel when resolution fails.</returns>
         static UInt64 DeepPointer(UInt64 baseAddress, array<UInt64>^ offsets);
+        /// <summary>Resolves a multi-level pointer in the supplied process.</summary>
+        /// <returns>The resolved address, or the libmem bad-address sentinel when resolution fails.</returns>
         static UInt64 DeepPointer(ProcessInfo^ process, UInt64 baseAddress, array<UInt64>^ offsets);
         /// <summary>Scans current-process memory for an exact byte sequence.</summary>
         /// <returns>The matching address, or the libmem bad-address sentinel when no match is found.</returns>
