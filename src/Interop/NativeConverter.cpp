@@ -101,13 +101,16 @@ namespace LibmemCli::Interop {
         return gcnew ThreadInfo(value.tid, value.owner_pid);
     }
 
-    ModuleInfo^ module(const lm_module_t& value) {
+    ModuleInfo^ module(const lm_module_t& value, ProcessInfo^ owner) {
+        if(owner == nullptr) throw gcnew ArgumentNullException("owner");
         return gcnew ModuleInfo(
             value.base,
             value.end,
             value.size,
             str(value.name),
-            str(value.path));
+            str(value.path),
+            owner->Pid,
+            owner->StartTime);
     }
 
     SegmentInfo^ segment(const lm_segment_t& value) {
