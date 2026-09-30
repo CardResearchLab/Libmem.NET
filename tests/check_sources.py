@@ -100,7 +100,7 @@ for file in [
     "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj",
     "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj",
     "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj",
-    "packaging/HearthstoneModding.LibmemCli.csproj",
+    "packaging/Libmem.NET.csproj",
     "tests/LibmemCli.NuGetConsumer/LibmemCli.NuGetConsumer.csproj",
 ]:
     ET.parse(root / file)
@@ -286,8 +286,8 @@ assert "Libmem.Attach" not in sample_source
 assert "Hearthstone" not in sample_source
 print("PASS C# consumer sample contract")
 
-nuget_package_project = (root / "packaging/HearthstoneModding.LibmemCli.csproj").read_text(encoding="utf-8")
-nuget_targets = (root / "packaging/HearthstoneModding.LibmemCli.targets").read_text(encoding="utf-8")
+nuget_package_project = (root / "packaging/Libmem.NET.csproj").read_text(encoding="utf-8")
+nuget_targets = (root / "packaging/Libmem.NET.targets").read_text(encoding="utf-8")
 nuget_consumer_project = (root / "tests/LibmemCli.NuGetConsumer/LibmemCli.NuGetConsumer.csproj").read_text(encoding="utf-8")
 nuget_consumer_source = (root / "tests/LibmemCli.NuGetConsumer/Program.cs").read_text(encoding="utf-8")
 
@@ -324,12 +324,12 @@ nuget_verifier_path = root / "tests/verify_nuget_package.py"
 nuget_verifier = nuget_verifier_path.read_text(encoding="utf-8")
 compile(nuget_verifier, str(nuget_verifier_path), "exec")
 for package_marker in [
-    "<PackageId>HearthstoneModding.LibmemCli</PackageId>",
+    "<PackageId>Libmem.NET</PackageId>",
     r"lib\net8.0\LibmemCli.dll",
     r"lib\net8.0\LibmemCli.xml",
     r"runtimes\win-x64\native\libmem.dll",
     r"runtimes\win-x64\native\Ijwhost.dll",
-    r"buildTransitive\HearthstoneModding.LibmemCli.targets",
+    r"buildTransitive\Libmem.NET.targets",
     "<RepositoryType>git</RepositoryType>",
     "<RepositoryCommit",
 ]:
@@ -350,7 +350,7 @@ print("PASS local NuGet prototype contract")
 
 nuget_package_script = (root / "eng/package-nuget.ps1").read_text(encoding="utf-8")
 for package_script_marker in [
-    "HearthstoneModding.LibmemCli.csproj",
+    "Libmem.NET.csproj",
     "LibmemCli.xml",
     "RepositoryCommit",
     "git -C $repoRoot rev-parse HEAD",
@@ -368,7 +368,7 @@ for consumption_marker in [
     "## 1. Runtime ZIP",
     "## 2. Git Submodule",
     "## 3. Local NuGet prototype",
-    "HearthstoneModding.LibmemCli",
+    "Libmem.NET",
     "runtimes/win-x64/native",
     "PackageReference",
     "## Acceptance criteria before NuGet publication",
@@ -402,7 +402,7 @@ assert "<PlatformTarget>x64</PlatformTarget>" in test_target_project
 assert "<Platforms>x64</Platforms>" in external_process_project, "ExternalProcessTests must remain x64-only for the current roadmap."
 assert "<PlatformTarget>x64</PlatformTarget>" in external_process_project
 assert "<PlatformTarget>x64</PlatformTarget>" in nuget_consumer_project, "NuGetConsumer must remain x64-only."
-assert "HearthstoneModding.LibmemCli" in nuget_consumer_project
+assert "Libmem.NET" in nuget_consumer_project
 assert "lm_address_t native_address(UInt64 value" in source
 assert "lm_size_t native_size(UInt64 value" in source
 assert "bool bad_address(UInt64 value)" in source
@@ -440,7 +440,7 @@ for readme in [readme_zh, readme_en]:
 print("PASS external-process documentation contract")
 for readme in [readme_zh, readme_en]:
     assert ".github/workflows/nuget-consumer-tests.yml" in readme
-    assert "HearthstoneModding.LibmemCli" in readme
+    assert "Libmem.NET" in readme
 assert "七套自动化工作流" in readme_zh
 assert "seven automation workflows" in readme_en
 print("PASS NuGet prototype documentation contract")
