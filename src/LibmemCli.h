@@ -72,13 +72,19 @@ namespace LibmemCli {
         /// <summary>Checks whether this exact process identity is still alive.</summary>
         bool IsAlive();
     };
-    /// <summary>Managed description of a native thread.</summary>
+    /// <summary>Read-only managed description of a native thread.</summary>
+    /// <remarks>Instances are created by LibmemCli from native thread metadata.</remarks>
     public ref class ThreadInfo sealed {
+    private:
+        UInt32 id_;
+        UInt32 ownerPid_;
+    internal:
+        ThreadInfo(UInt32 id, UInt32 ownerPid);
     public:
         /// <summary>Gets the native thread identifier.</summary>
-        property UInt32 Id;
+        property UInt32 Id { UInt32 get(); }
         /// <summary>Gets the identifier of the process that owns the thread.</summary>
-        property UInt32 OwnerPid;
+        property UInt32 OwnerPid { UInt32 get(); }
     };
     /// <summary>Read-only managed description of a loaded native module.</summary>
     /// <remarks>Instances are created by LibmemCli from native module metadata.</remarks>

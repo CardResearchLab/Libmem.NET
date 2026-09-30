@@ -49,8 +49,8 @@ TYPE public ref class ProcessInfo sealed
   property String^ Path { String^ get(); }
   bool IsAlive();
 TYPE public ref class ThreadInfo sealed
-  property UInt32 Id;
-  property UInt32 OwnerPid;
+  property UInt32 Id { UInt32 get(); }
+  property UInt32 OwnerPid { UInt32 get(); }
 TYPE public ref class ModuleInfo sealed
   property UInt64 Base { UInt64 get(); }
   property UInt64 End { UInt64 get(); }

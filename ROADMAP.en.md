@@ -62,7 +62,9 @@ Completed freeze cleanup: audited XML IntelliSense and `docs/API.md` against the
 
 Completed contract freeze: `ProcessInfo` is now library-created read-only identity/metadata. Consumers can no longer rewrite `Pid / StartTime` or fabricate an empty identity through a public default constructor, so `IsAlive()`, `Open(ProcessInfo)`, and the PID + StartTime exact-identity model share the same immutable foundation.
 
-Current freeze cleanup: `ModuleInfo` is being frozen as a LibmemCli-created read-only module descriptor. Consumers can no longer rewrite `Base / End / Size / Name / Path` and then pass a forged or mutated native module record back into unload or symbol APIs.
+Completed freeze cleanup: `ModuleInfo` is now a LibmemCli-created read-only module descriptor. Consumers can no longer rewrite `Base / End / Size / Name / Path` and then pass a forged or mutated native module record back into unload or symbol APIs.
+
+Current freeze cleanup: `ThreadInfo` is being frozen as a LibmemCli-created read-only thread descriptor. Consumers can no longer rewrite `Id / OwnerPid` and then pass a forged or mutated native thread record back into `GetThreadProcess`.
 
 ## v0.4 — x64 architecture cleanup
 
