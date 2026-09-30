@@ -291,7 +291,7 @@ CI 会验证 pack、PackageReference restore/build/run/publish、native runtime 
 - pinned libmem public API coverage validation
 - Runtime package integrity validation
 
-专项 runtime workflow 按领域触发，避免无关改动重复占用 GitHub-hosted Windows runner；需要时仍可手动运行完整测试。
+专项 runtime workflow 与基础 Build 分离，并可按需手动运行完整测试。
 
 ## Public API 稳定性
 
