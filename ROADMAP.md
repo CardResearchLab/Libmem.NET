@@ -62,6 +62,8 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 已完成的收口项：`ProcessInfo` 冻结为由 LibmemCli 创建的只读身份/元数据对象。消费者不能再修改 `Pid / StartTime` 等字段，也不能通过 public 默认构造器伪造空身份；`IsAlive()`、`Open(ProcessInfo)` 与 PID + StartTime 精确身份模型因此共享同一不可变基础。
 
+当前收口项：`ModuleInfo` 冻结为由 LibmemCli 创建的只读模块描述对象。消费者不再能够修改 `Base / End / Size / Name / Path` 后再把伪造或变异后的模块记录传回 Unload / Symbol API。
+
 ## v0.4 — x64 架构整理
 
 重点：

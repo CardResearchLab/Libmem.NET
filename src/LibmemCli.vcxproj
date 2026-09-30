@@ -85,6 +85,7 @@
     <ClCompile Include="Memory\LibmemSegment.cpp" />
     <ClCompile Include="Symbols\LibmemSymbol.cpp" />
     <ClCompile Include="Modules\LibmemModule.cpp" />
+    <ClCompile Include="Modules\ModuleInfo.cpp" />
     <ClCompile Include="Threads\LibmemThread.cpp" />
     <ClCompile Include="Core\LibmemProcess.cpp" />
     <ClCompile Include="Core\ProcessInfo.cpp" />

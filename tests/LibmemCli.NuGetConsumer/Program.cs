@@ -2,6 +2,19 @@ using LibmemCli;
 
 Console.WriteLine("LibmemCli NuGet consumer test");
 
+var moduleType = typeof(ModuleInfo);
+if (moduleType.GetConstructors().Length != 0)
+    throw new InvalidOperationException("ModuleInfo must not expose a public constructor.");
+
+foreach (var propertyName in new[] { "Base", "End", "Size", "Name", "Path" })
+{
+    var property = moduleType.GetProperty(propertyName)
+        ?? throw new InvalidOperationException($"ModuleInfo.{propertyName} is missing.");
+
+    if (property.CanWrite)
+        throw new InvalidOperationException($"ModuleInfo.{propertyName} must be read-only.");
+}
+
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process could not be resolved through the NuGet package.");
 
