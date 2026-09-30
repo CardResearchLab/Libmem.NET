@@ -82,7 +82,9 @@ Completed freeze cleanup: empty scan-input semantics are frozen. Empty pattern/m
 
 Completed freeze cleanup: zero-size managed contracts are frozen. Read/Write/Set remain no-ops; Windows Protect/static Allocate preserve the pinned libmem page-size semantics; owned `MemoryManager.Allocate(0)` continues to reject zero; CodeLength(0) and empty byte-array disassembly keep their natural zero/empty results.
 
-Current freeze cleanup: freeze sentinel / definite-native-failure layering. FindProcess/FindModule/FindSegment misses remain nullable, symbol/scan/DeepPointer misses retain the native bad-address sentinel, and the low-level static `Libmem.*` compatibility facade preserves native-style failure values while Manager/ownership APIs only promote failures already defined as definite managed failures.
+Completed freeze cleanup: sentinel / definite-native-failure layering is frozen. FindProcess/FindModule/FindSegment misses remain nullable, symbol/scan/DeepPointer misses retain the native bad-address sentinel, and the low-level static `Libmem.*` compatibility facade preserves native-style failure values while Manager/ownership APIs only promote failures already defined as definite managed failures.
+
+Current freeze cleanup: final API consistency audit. Reconcile the Public API baseline, XML IntelliSense, Manager/static layering, ownership/Dispose idempotency, and consumer documentation, and confirm no remaining contract issue would force a post-v1.0 breaking change.
 
 ## v0.4 — x64 architecture cleanup
 

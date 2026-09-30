@@ -82,7 +82,9 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 已完成的收口项：冻结 zero-size managed contract。不会机械地把所有 `size=0` 统一成异常：Read/Write/Set 保持 no-op；Windows Protect/静态 Allocate 保留 pinned libmem 的 page-size 语义；owned `MemoryManager.Allocate(0)` 继续拒绝 0；CodeLength(0) / 空 byte[] 反汇编保持自然 zero/empty 结果。
 
-当前收口项：冻结 sentinel / definite native failure 分层。FindProcess/FindModule/FindSegment miss 保持 null，symbol/scan/DeepPointer miss 保持 native bad-address sentinel；低层静态 `Libmem.*` 兼容层尽量保留 native-style failure values，而 Manager/ownership API 仅对已定义为“确定失败”的操作提升为 `LibmemException`。
+已完成的收口项：冻结 sentinel / definite native failure 分层。FindProcess/FindModule/FindSegment miss 保持 null，symbol/scan/DeepPointer miss 保持 native bad-address sentinel；低层静态 `Libmem.*` 兼容层尽量保留 native-style failure values，而 Manager/ownership API 仅对已定义为“确定失败”的操作提升为 `LibmemException`。
+
+当前收口项：最终 API consistency audit。核对 Public API baseline、XML IntelliSense、Manager/static 分层、ownership/Dispose 幂等语义与文档，确认没有遗留会迫使 v1.0 后 breaking change 的契约问题。
 
 ## v0.4 — x64 架构整理
 
