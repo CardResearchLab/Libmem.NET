@@ -5,6 +5,7 @@
     <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
     <PackageId>Libmem.NET</PackageId>
     <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.0-local</PackageVersion>
+    <Title>Libmem.NET</Title>
     <Authors>HearthstoneModding</Authors>
     <Description>Libmem.NET: Windows x64 / .NET 8 C++/CLI wrapper around the pinned rdbo/libmem C ABI.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -19,12 +20,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\artifacts\managed\x64\$(Configuration)\LibmemCli.dll"
+    <None Include="..\artifacts\managed\x64\$(Configuration)\Libmem.NET.dll"
           Pack="true"
-          PackagePath="lib\net8.0\LibmemCli.dll" />
-    <None Include="..\artifacts\managed\x64\$(Configuration)\LibmemCli.xml"
+          PackagePath="lib\net8.0\Libmem.NET.dll" />
+    <None Include="..\artifacts\managed\x64\$(Configuration)\Libmem.NET.xml"
           Pack="true"
-          PackagePath="lib\net8.0\LibmemCli.xml" />
+          PackagePath="lib\net8.0\Libmem.NET.xml" />
     <None Include="..\artifacts\native\x64\$(Configuration)\bin\libmem.dll"
           Pack="true"
           PackagePath="runtimes\win-x64\native\libmem.dll" />
