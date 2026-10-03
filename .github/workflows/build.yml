@@ -41,7 +41,11 @@ jobs:
         shell: pwsh
         run: python .\tests\check_sources.py
 
-      - name: Build Libmem.NET
+      - name: Build Libmem.NET (Debug)
+        shell: pwsh
+        run: .\build.ps1 -Configuration Debug -Platform x64
+
+      - name: Build Libmem.NET (Release)
         shell: pwsh
         run: .\build.ps1 -Configuration Release -Platform x64
 

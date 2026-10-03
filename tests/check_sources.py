@@ -514,6 +514,7 @@ assert "sha256 = " in manifest_script
 assert '$archiveChecksum = "$archive.sha256"' in package_script
 assert "Get-FileHash -Path $archive -Algorithm SHA256" in package_script
 assert "verify-package.py" in build_workflow
+assert '.\\build.ps1 -Configuration Debug -Platform x64' in build_workflow
 assert "verify-package.py" in reusable_workflow
 assert "include-nuget:" in reusable_workflow
 assert "Package official NuGet release" in reusable_workflow
@@ -523,7 +524,7 @@ assert "--expected-repository-commit" in release_workflow
 assert "id-token: write" in release_workflow
 assert "NuGet/login@v1" in release_workflow
 assert "secrets.NUGET_USER" in release_workflow
-assert "Libmem.NET.${EXPECTED_VERSION}.nupkg" in release_workflow
+assert "Libmem.NET.${{ steps.release-version.outputs.version }}.nupkg" in release_workflow
 assert "dotnet nuget push" in release_workflow
 assert "https://api.nuget.org/v3/index.json" in release_workflow
 assert "Libmem.NET-windows-x64.zip.sha256" in release_workflow
@@ -533,7 +534,7 @@ release_notes_script = release_notes_script_path.read_text(encoding="utf-8")
 compile(release_notes_script, str(release_notes_script_path), "exec")
 assert "render-release-notes.py" in release_workflow
 assert "--notes-file dist/release-notes.md" in release_workflow
-assert '--title "Libmem.NET $TAG_NAME"' in release_workflow
+assert '--title "Libmem.NET ${{ steps.release-version.outputs.tag }}"' in release_workflow
 assert "--generate-notes" not in release_workflow
 subprocess.run(
     [sys.executable, str(root / "tests/test_release_notes.py")],
