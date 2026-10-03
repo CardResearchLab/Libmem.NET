@@ -1,11 +1,11 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 #include <vcclr.h>
 
 using namespace System;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+using namespace Libmem::Net;
+using namespace Libmem::Net::Interop;
 
 namespace {
     array<Byte>^ read_common(const lm_process_t* processInfo, UInt64 address, int count) {
