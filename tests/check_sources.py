@@ -46,6 +46,17 @@ source = "\n".join(path.read_text(encoding="utf-8") for path in source_files)
 assert source_files, "No C++ source files were found under src/"
 print("PASS source aggregation:", ", ".join(str(path.relative_to(root)) for path in source_files))
 
+# The public facade class shares its name with the top-level Libmem namespace.
+# In C++/CLI implementation files, unqualified Libmem::... is therefore ambiguous.
+for source_path in source_files:
+    if source_path.as_posix().endswith("src/Interop/NativeConverter.cpp"):
+        continue
+    source_text = source_path.read_text(encoding="utf-8")
+    assert re.search(r"(?<![:A-Za-z0-9_])Libmem::", source_text) is None, (
+        f"Unqualified Libmem facade reference is ambiguous in {source_path.relative_to(root)}"
+    )
+print("PASS globally-qualified Libmem facade references")
+
 native_converter_header = (root / "src/Interop/NativeConverter.h").read_text(encoding="utf-8")
 native_converter_source = (root / "src/Interop/NativeConverter.cpp").read_text(encoding="utf-8")
 libmem_facade_source = (root / "src/Libmem.NET.cpp").read_text(encoding="utf-8")

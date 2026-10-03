@@ -11,8 +11,8 @@ ProcessInfo^ ThreadManager::Target() {
     return session_->Target;
 }
 List<ThreadInfo^>^ ThreadManager::Enumerate() {
-    return Libmem::EnumThreads(Target());
+    return ::Libmem::Net::Libmem::EnumThreads(Target());
 }
 ThreadInfo^ ThreadManager::Main::get() {
-    return Libmem::GetThread(Target());
+    return ::Libmem::Net::Libmem::GetThread(Target());
 }

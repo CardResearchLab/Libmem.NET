@@ -27,13 +27,13 @@ bool InjectedModuleHandle::Unload() {
         active_=false;
         return true;
     }
-    if(!Libmem::IsProcessAlive(target_)) {
+    if(!::Libmem::Net::Libmem::IsProcessAlive(target_)) {
         // The process address space is gone, so this loader reference cannot remain active.
         active_=false;
         target_=nullptr;
         return true;
     }
-    bool ok=Libmem::UnloadModule(target_,module_);
+    bool ok=::Libmem::Net::Libmem::UnloadModule(target_,module_);
     if(ok) active_=false;
     return ok;
 }
@@ -64,8 +64,8 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
     if(String::IsNullOrWhiteSpace(path)) throw gcnew ArgumentException("Library path must not be empty.", "path");
 
     auto target=Target();
-    if(!Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
-    if(target->Bits!=Libmem::GetBits())
+    if(!::Libmem::Net::Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
+    if(target->Bits!=::Libmem::Net::Libmem::GetBits())
         throw gcnew NotSupportedException("Cross-bitness library injection is not supported by the current runtime.");
 
     String^ fullPath;
@@ -88,7 +88,7 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
         throw gcnew LibmemException("LM_LoadModuleEx", "Library injection failed.");
 
     ModuleInfo^ loaded=nullptr;
-    for each(ModuleInfo^ candidate in Libmem::EnumModules(target)) {
+    for each(ModuleInfo^ candidate in ::Libmem::Net::Libmem::EnumModules(target)) {
         if(candidate==nullptr || String::IsNullOrWhiteSpace(candidate->Path)) continue;
 
         String^ candidatePath;
