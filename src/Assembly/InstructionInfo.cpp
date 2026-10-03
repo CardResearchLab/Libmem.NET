@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 
 using namespace System;
-using namespace LibmemCli;
+using namespace Libmem::Net;
 
 InstructionInfo::InstructionInfo(
     UInt64 address,
