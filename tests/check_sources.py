@@ -42,7 +42,7 @@ hook_source = (root / "src/Hooks/HookManager.cpp").read_text(encoding="utf-8")
 vmt_source = (root / "src/Hooks/VmtManager.cpp").read_text(encoding="utf-8")
 assert "HookManager::HookManager" in hook_source
 assert "HookHandle::HookHandle" in hook_source
-assert "HookHandle^ Libmem::HookCode" in hook_source
+assert "HookHandle^ ::Libmem::Net::Libmem::HookCode" in hook_source
 assert "VmtManager::VmtManager" in vmt_source
 assert "HookManager::HookManager" not in libmem_facade_source
 assert "HookHandle::HookHandle" not in libmem_facade_source
@@ -61,15 +61,15 @@ domain_sources = {
 }
 assert "LibmemException::LibmemException" in (root / "src/Core/LibmemException.cpp").read_text(encoding="utf-8")
 assert "ProcessInfo::IsAlive" in (root / "src/Core/ProcessInfo.cpp").read_text(encoding="utf-8")
-assert "Libmem::EnumProcesses" in domain_sources["process"]
-assert "Libmem::EnumThreads" in domain_sources["thread"]
-assert "Libmem::EnumModules" in domain_sources["module"]
-assert "Libmem::EnumSymbols" in domain_sources["symbol"]
-assert "Libmem::EnumSegments" in domain_sources["segment"]
-assert "Libmem::ReadMemory" in domain_sources["memory"]
-assert "Libmem::DataScan" in domain_sources["scan"]
-assert "Libmem::GetArchitecture" in domain_sources["assembly"]
-assert "Libmem::" not in libmem_facade_source
+assert "::Libmem::Net::Libmem::EnumProcesses" in domain_sources["process"]
+assert "::Libmem::Net::Libmem::EnumThreads" in domain_sources["thread"]
+assert "::Libmem::Net::Libmem::EnumModules" in domain_sources["module"]
+assert "::Libmem::Net::Libmem::EnumSymbols" in domain_sources["symbol"]
+assert "::Libmem::Net::Libmem::EnumSegments" in domain_sources["segment"]
+assert "::Libmem::Net::Libmem::ReadMemory" in domain_sources["memory"]
+assert "::Libmem::Net::Libmem::DataScan" in domain_sources["scan"]
+assert "::Libmem::Net::Libmem::GetArchitecture" in domain_sources["assembly"]
+assert "::Libmem::Net::Libmem::" not in libmem_facade_source
 assert "ProcessInfo::" not in libmem_facade_source
 assert "LibmemException::" not in libmem_facade_source
 print("PASS static facade domain split contract")
