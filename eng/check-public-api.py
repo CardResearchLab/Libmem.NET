@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check LibmemCli's declared public C++/CLI API against a committed baseline."""
+"""Check Libmem.NET's declared public C++/CLI API against a committed baseline."""
 
 from __future__ import annotations
 
@@ -84,11 +84,11 @@ def public_api_lines(header_text: str) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--header", type=Path, default=Path("src/LibmemCli.h"))
+    parser.add_argument("--header", type=Path, default=Path("src/Libmem.NET.h"))
     parser.add_argument(
         "--baseline",
         type=Path,
-        default=Path("api/LibmemCli.PublicApi.txt"),
+        default=Path("api/Libmem.NET.PublicApi.txt"),
     )
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args()
@@ -96,8 +96,8 @@ def main() -> int:
     current = public_api_lines(args.header.read_text(encoding="utf-8"))
     rendered = "\n".join(
         [
-            "# LibmemCli public API baseline",
-            "# Generated from src/LibmemCli.h, including the managed namespace. Intentional public API changes must update this file and CHANGELOG.md.",
+            "# Libmem.NET public API baseline",
+            "# Generated from src/Libmem.NET.h, including the managed namespace. Intentional public API changes must update this file and CHANGELOG.md.",
             *current,
             "",
         ]
