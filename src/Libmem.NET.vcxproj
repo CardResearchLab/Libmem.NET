@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32"><Configuration>Debug</Configuration><Platform>Win32</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32"><Configuration>Release</Configuration><Platform>Win32</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>ManagedCProj</Keyword>
+    <ProjectGuid>{07B83CFD-9F57-4C67-A1D3-87209CF121AA}</ProjectGuid>
+    <RootNamespace>Libmem.Net</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <TargetFramework>net8.0</TargetFramework>
+    <LibmemRepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\'))</LibmemRepositoryRoot>
+    <LibmemPlatformLabel Condition="'$(Platform)' == 'Win32'">x86</LibmemPlatformLabel>
+    <LibmemPlatformLabel Condition="'$(Platform)' != 'Win32'">$(Platform)</LibmemPlatformLabel>
+    <LibmemNativeRoot Condition="'$(LibmemNativeRoot)' == ''">$(LibmemRepositoryRoot)artifacts\native\$(LibmemPlatformLabel)\$(Configuration)</LibmemNativeRoot>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType><UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset><CLRSupport>NetCore</CLRSupport><CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType><UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset><CLRSupport>NetCore</CLRSupport><CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType><UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset><CLRSupport>NetCore</CLRSupport><CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType><UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset><CLRSupport>NetCore</CLRSupport><CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <TargetName>Libmem.NET</TargetName><TargetExt>.dll</TargetExt>
+    <OutDir>$(LibmemRepositoryRoot)artifacts\managed\$(LibmemPlatformLabel)\$(Configuration)\</OutDir>
+    <IntDir>$(LibmemRepositoryRoot).build\obj\Libmem.NET\$(LibmemPlatformLabel)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel><SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpp17</LanguageStandard><PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <DisableSpecificWarnings>4679;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalIncludeDirectories>$(LibmemNativeRoot)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(LibmemNativeRoot)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libmem.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <Xdcmake>
+      <OutputFile>$(OutDir)$(TargetName).xml</OutputFile>
+    </Xdcmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Libmem.NET.h" />
+    <ClInclude Include="Interop\NativeConverter.h" />
+    <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="Libmem.NET.cpp" />
+    <ClCompile Include="Assembly\LibmemAssembly.cpp" />
+    <ClCompile Include="Assembly\InstructionInfo.cpp" />
+    <ClCompile Include="Scanning\LibmemScan.cpp" />
+    <ClCompile Include="Memory\LibmemMemory.cpp" />
+    <ClCompile Include="Memory\LibmemSegment.cpp" />
+    <ClCompile Include="Memory\SegmentInfo.cpp" />
+    <ClCompile Include="Symbols\LibmemSymbol.cpp" />
+    <ClCompile Include="Symbols\SymbolInfo.cpp" />
+    <ClCompile Include="Modules\LibmemModule.cpp" />
+    <ClCompile Include="Modules\ModuleInfo.cpp" />
+    <ClCompile Include="Threads\LibmemThread.cpp" />
+    <ClCompile Include="Threads\ThreadInfo.cpp" />
+    <ClCompile Include="Core\LibmemProcess.cpp" />
+    <ClCompile Include="Core\ProcessInfo.cpp" />
+    <ClCompile Include="Core\LibmemException.cpp" />
+    <ClCompile Include="Core\ProcessSession.cpp" />
+    <ClCompile Include="Memory\MemoryManager.cpp" />
+    <ClCompile Include="Memory\RemoteAllocation.cpp" />
+    <ClCompile Include="Modules\ModuleManager.cpp" />
+    <ClCompile Include="Threads\ThreadManager.cpp" />
+    <ClCompile Include="Scanning\ScanManager.cpp" />
+    <ClCompile Include="Symbols\SymbolManager.cpp" />
+    <ClCompile Include="Assembly\AssemblyManager.cpp" />
+    <ClCompile Include="Injection\InjectorManager.cpp" />
+    <ClCompile Include="Hooks\HookManager.cpp" />
+    <ClCompile Include="Hooks\VmtManager.cpp" />
+    <ClCompile Include="Interop\NativeConverter.cpp" />
+  </ItemGroup>
+  <Target Name="BuildLibmemNative" BeforeTargets="PrepareForBuild" Condition="'$(SkipLibmemNativeBuild)' != 'true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(LibmemRepositoryRoot)eng\build-native.ps1&quot; -Configuration &quot;$(Configuration)&quot; -Platform &quot;$(LibmemPlatformLabel)&quot;" />
+  </Target>
+  <Target Name="CopyLibmemNative" AfterTargets="Build">
+    <Error Text="libmem.dll was not produced at $(LibmemNativeRoot)\bin\libmem.dll." Condition="!Exists('$(LibmemNativeRoot)\bin\libmem.dll')" />
+    <Copy SourceFiles="$(LibmemNativeRoot)\bin\libmem.dll" DestinationFolder="$(OutDir)" />
+  </Target>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
