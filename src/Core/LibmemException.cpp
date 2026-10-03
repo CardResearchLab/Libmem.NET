@@ -1,7 +1,7 @@
 #include "../Libmem.NET.h"
 
 using namespace System;
-using namespace Libmem::Net;
+using namespace ::Libmem::Net::Libmem::Net;
 
 LibmemException::LibmemException(String^ operation,String^ message)
     : InvalidOperationException(message),operation_(operation) {
