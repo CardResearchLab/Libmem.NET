@@ -1,4 +1,4 @@
-using Libmem.NET;
+using Libmem.Net;
 
 try
 {
