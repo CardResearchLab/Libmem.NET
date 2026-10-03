@@ -48,7 +48,7 @@ jobs:
         shell: pwsh
         run: python .\tests\check_sources.py
 
-      - name: Build Libmem.NET
+      - name: Build LibmemCli
         shell: pwsh
         run: .\build.ps1 -Configuration Release -Platform x64
 
@@ -87,7 +87,7 @@ jobs:
             -p:LibmemCliTestPackageVersion=$version `
             -o $output
 
-          foreach ($required in @("Libmem.NET.dll", "libmem.dll", "Ijwhost.dll")) {
+          foreach ($required in @("LibmemCli.dll", "libmem.dll", "Ijwhost.dll")) {
             $path = Join-Path $output $required
             if (-not (Test-Path $path -PathType Leaf)) {
               throw "Published NuGet consumer is missing $required"
