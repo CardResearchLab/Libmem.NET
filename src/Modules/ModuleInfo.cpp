@@ -1,7 +1,7 @@
 #include "../Libmem.NET.h"
 
 using namespace System;
-using namespace ::Libmem::Net::Libmem::Net;
+using namespace Libmem::Net;
 
 ModuleInfo::ModuleInfo(
     UInt64 baseAddress,
