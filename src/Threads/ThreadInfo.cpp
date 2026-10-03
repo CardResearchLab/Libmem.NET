@@ -1,7 +1,7 @@
 #include "../Libmem.NET.h"
 
 using namespace System;
-using namespace ::Libmem::Net::Libmem::Net;
+using namespace Libmem::Net;
 
 ThreadInfo::ThreadInfo(UInt32 id, UInt32 ownerPid)
     : id_(id),
