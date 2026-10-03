@@ -2,7 +2,7 @@
 #include "../Interop/NativeConverter.h"
 
 using namespace System;
-using namespace ::Libmem::Net::Libmem::Net;
+using namespace ::Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
 RemoteAllocation::RemoteAllocation(ProcessInfo^ input,UInt64 address,UInt64 size)

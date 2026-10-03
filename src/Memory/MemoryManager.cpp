@@ -2,7 +2,7 @@
 #include "../Interop/NativeConverter.h"
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace ::Libmem::Net::Libmem::Net;
+using namespace ::Libmem::Net;
 
 namespace {
     bool IsBadAddress(UInt64 value) {
