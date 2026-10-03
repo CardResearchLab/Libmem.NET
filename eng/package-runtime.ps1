@@ -11,14 +11,14 @@ $root = Split-Path -Parent $PSScriptRoot
 $managed = Join-Path $root "artifacts\managed\$Platform\$Configuration"
 $native = Join-Path $root "artifacts\native\$Platform\$Configuration\bin"
 $packageRoot = Join-Path $root 'artifacts\package'
-$packageName = "Libmem.NET-windows-$Platform"
+$packageName = "LibmemCli-windows-$Platform"
 $destination = Join-Path $packageRoot $packageName
 $archive = Join-Path $packageRoot "$packageName.zip"
 $archiveChecksum = "$archive.sha256"
 
 $requiredFiles = @(
-    (Join-Path $managed 'Libmem.NET.dll'),
-    (Join-Path $managed 'Libmem.NET.xml'),
+    (Join-Path $managed 'LibmemCli.dll'),
+    (Join-Path $managed 'LibmemCli.xml'),
     (Join-Path $managed 'Ijwhost.dll'),
     (Join-Path $native 'libmem.dll'),
     (Join-Path $root 'VERSION'),
@@ -41,7 +41,7 @@ foreach ($file in $requiredFiles) {
     Copy-Item $file $destination -Force
 }
 
-$pdb = Join-Path $managed 'Libmem.NET.pdb'
+$pdb = Join-Path $managed 'LibmemCli.pdb'
 if (Test-Path $pdb) {
     Copy-Item $pdb $destination -Force
 }
