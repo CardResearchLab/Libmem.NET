@@ -1,6 +1,6 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 
-using namespace LibmemCli;
+using namespace Libmem::Net;
 
 SegmentInfo::SegmentInfo(
     UInt64 baseAddress,
