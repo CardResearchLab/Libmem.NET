@@ -55,9 +55,9 @@ namespace Libmem::Net::Interop {
         return static_cast<lm_size_t>(value);
     }
 
-    Libmem::Net::Architecture native_architecture(Libmem::Net::Architecture value, String^ parameterName) {
+    ::Libmem::Net::Architecture native_architecture(::Libmem::Net::Architecture value, String^ parameterName) {
         auto raw = static_cast<unsigned int>(value);
-        if(raw > static_cast<unsigned int>(Libmem::Net::Architecture::SystemZ))
+        if(raw > static_cast<unsigned int>(::Libmem::Net::Architecture::SystemZ))
             throw gcnew ArgumentOutOfRangeException(parameterName, "Unsupported architecture value.");
         return value;
     }
@@ -110,7 +110,7 @@ namespace Libmem::Net::Interop {
         return gcnew ProcessInfo(
             value.pid,
             value.ppid,
-            static_cast<Libmem::Net::Architecture>(value.arch),
+            static_cast<::Libmem::Net::Architecture>(value.arch),
             value.bits,
             value.start_time,
             str(value.name),
