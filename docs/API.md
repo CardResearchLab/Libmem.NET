@@ -10,7 +10,7 @@ This document focuses on **consumer-facing behavior**. Build instructions, proje
 New code should prefer `ProcessSession.Open(...)`.
 
 ```csharp
-using Libmem.NET;
+using Libmem.Net;
 
 using var session = ProcessSession.Open(Environment.ProcessId)
     ?? throw new InvalidOperationException("Target process was not found.");
