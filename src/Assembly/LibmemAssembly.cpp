@@ -6,15 +6,15 @@
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace System::Runtime::InteropServices;
-using namespace ::Libmem::Net::Libmem::Net;
+using namespace Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
-::Libmem::Net::Architecture ::Libmem::Net::Libmem::GetArchitecture() { return static_cast<::Libmem::Net::Architecture>(LM_GetArchitecture()); }
-InstructionInfo^ ::Libmem::Net::Libmem::Assemble(String^ code) {
+::Libmem::Net::Architecture Libmem::GetArchitecture() { return static_cast<::Libmem::Net::Architecture>(LM_GetArchitecture()); }
+InstructionInfo^ Libmem::Assemble(String^ code) {
     if(code==nullptr) throw gcnew ArgumentNullException("code");
     auto s=utf8(code,"code"); lm_inst_t i{}; return LM_Assemble(s.c_str(),&i) ? instruction(i) : nullptr;
 }
-array<Byte>^ ::Libmem::Net::Libmem::Assemble(String^ code,::Libmem::Net::Architecture arch,UInt64 runtimeAddress) {
+array<Byte>^ Libmem::Assemble(String^ code,::Libmem::Net::Architecture arch,UInt64 runtimeAddress) {
     if(code==nullptr) throw gcnew ArgumentNullException("code");
     native_architecture(arch,"architecture");
     auto s=utf8(code,"code"); lm_byte_t* payload=nullptr;
@@ -25,8 +25,8 @@ array<Byte>^ ::Libmem::Net::Libmem::Assemble(String^ code,::Libmem::Net::Archite
         auto bytes=gcnew array<Byte>(static_cast<int>(n)); Marshal::Copy(IntPtr(payload),bytes,0,bytes->Length); return bytes;
     } finally { LM_FreePayload(payload); }
 }
-InstructionInfo^ ::Libmem::Net::Libmem::Disassemble(UInt64 address) { lm_inst_t i{}; return LM_Disassemble(native_address(address,"address"),&i) ? instruction(i) : nullptr; }
-List<InstructionInfo^>^ ::Libmem::Net::Libmem::Disassemble(UInt64 address,::Libmem::Net::Architecture arch,UInt64 maxBytes,UInt64 count,UInt64 runtimeAddress) {
+InstructionInfo^ Libmem::Disassemble(UInt64 address) { lm_inst_t i{}; return LM_Disassemble(native_address(address,"address"),&i) ? instruction(i) : nullptr; }
+List<InstructionInfo^>^ Libmem::Disassemble(UInt64 address,::Libmem::Net::Architecture arch,UInt64 maxBytes,UInt64 count,UInt64 runtimeAddress) {
     native_architecture(arch,"architecture");
     if(!maxBytes && !count) throw gcnew ArgumentException("Specify maxBytes or instructionCount.");
     lm_inst_t* instructions=nullptr;
@@ -37,7 +37,7 @@ List<InstructionInfo^>^ ::Libmem::Net::Libmem::Disassemble(UInt64 address,::Libm
         for(lm_size_t j=0;j<n;++j) result->Add(instruction(instructions[j])); return result;
     } finally { LM_FreeInstructions(instructions); }
 }
-List<InstructionInfo^>^ ::Libmem::Net::Libmem::Disassemble(array<Byte>^ code,::Libmem::Net::Architecture arch,UInt64 count,UInt64 runtimeAddress) {
+List<InstructionInfo^>^ Libmem::Disassemble(array<Byte>^ code,::Libmem::Net::Architecture arch,UInt64 count,UInt64 runtimeAddress) {
     if(code==nullptr) throw gcnew ArgumentNullException("code");
     native_architecture(arch,"architecture");
     if(code->Length==0) return gcnew List<InstructionInfo^>();
@@ -53,5 +53,5 @@ List<InstructionInfo^>^ ::Libmem::Net::Libmem::Disassemble(array<Byte>^ code,::L
         return result;
     } finally { LM_FreeInstructions(instructions); }
 }
-UInt64 ::Libmem::Net::Libmem::CodeLength(UInt64 a,UInt64 size) { return LM_CodeLength(native_address(a,"address"),native_size(size,"size")); }
-UInt64 ::Libmem::Net::Libmem::CodeLength(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_CodeLengthEx(&p,native_address(a,"address"),native_size(size,"size")); }
+UInt64 Libmem::CodeLength(UInt64 a,UInt64 size) { return LM_CodeLength(native_address(a,"address"),native_size(size,"size")); }
+UInt64 Libmem::CodeLength(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_CodeLengthEx(&p,native_address(a,"address"),native_size(size,"size")); }
