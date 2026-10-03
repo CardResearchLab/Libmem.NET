@@ -2,7 +2,7 @@
 #include "../Interop/NativeConverter.h"
 
 using namespace System;
-using namespace Libmem::Net;
+using namespace ::Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
 HookManager::HookManager(ProcessSession^ session) : session_(session) {

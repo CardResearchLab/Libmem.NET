@@ -1,6 +1,6 @@
 #include "../Libmem.NET.h"
 using namespace System;
-using namespace Libmem::Net;
+using namespace ::Libmem::Net;
 
 namespace {
     ProcessInfo^ CloneProcessInfo(ProcessInfo^ input) {

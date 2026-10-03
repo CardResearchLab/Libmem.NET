@@ -6,7 +6,7 @@
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace System::Runtime::InteropServices;
-using namespace Libmem::Net;
+using namespace ::Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
 ::Libmem::Net::Architecture Libmem::GetArchitecture() { return static_cast<::Libmem::Net::Architecture>(LM_GetArchitecture()); }

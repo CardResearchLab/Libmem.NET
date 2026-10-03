@@ -1,7 +1,7 @@
 #include "../Libmem.NET.h"
 
 using namespace System;
-using namespace Libmem::Net;
+using namespace ::Libmem::Net;
 
 SymbolInfo::SymbolInfo(UInt64 address, String^ name)
     : address_(address),

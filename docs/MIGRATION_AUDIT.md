@@ -22,6 +22,7 @@ Audit the pre-v1.0 identity migration from the legacy `LibmemCli` naming to the 
 | C++/CLI project | `src/Libmem.NET.vcxproj` |
 | Public API baseline | `api/Libmem.NET.PublicApi.txt` |
 | Runtime artifact | `Libmem.NET-windows-x64` |
+| Symbols artifact | `Libmem.NET-symbols-windows-x64` |
 | Release target | Windows x64 / .NET 8 |
 
 The native upstream runtime remains `libmem.dll`. The public static facade type `Libmem` also remains intentional.
@@ -43,11 +44,13 @@ There is no standalone `RELEASES.md` in the repository tree. GitHub Release note
 
 ## Completed in this branch
 
-Updated: `README.md`, `README.en.md`, `ROADMAP.md`, `ROADMAP.en.md`, `CHANGELOG.md`, `docs/API.md`, `docs/CONSUMPTION.md`, `api/README.md`, `samples/Example.cs`, and `samples/Example.csproj`.
+Updated in this documentation branch: `README.md`, `README.en.md`, `ROADMAP.md`, `ROADMAP.en.md`, `CHANGELOG.md`, `docs/API.md`, `docs/CONSUMPTION.md`, `api/README.md`, and `samples/Example.cs`.
+
+`samples/Example.csproj` is owned by the Project / Assembly migration line (#82), not by this documentation branch.
 
 Changes include namespace, managed DLL/XML, solution/project, public API baseline, runtime artifact and reusable-workflow references; C# samples now use `using Libmem.Net;`. Product-specific process/injector examples were replaced with application-neutral examples.
 
-A second scan of those ten modified files found zero occurrences of `Libmem.CLI`, `LibmemCli`, `LibmemCli.dll`, `LibmemCli.vcxproj`, `LibmemCli.sln`, `HearthstoneModding/Libmem/`, `StandaloneGameMod`, or `Hearthstone.exe`.
+A second scan of those nine documentation/sample files found zero occurrences of `Libmem.CLI`, `LibmemCli`, `LibmemCli.dll`, `LibmemCli.vcxproj`, `LibmemCli.sln`, `HearthstoneModding/Libmem/`, `StandaloneGameMod`, or `Hearthstone.exe`.
 
 This audit file intentionally contains legacy identifiers so the migration mapping remains reviewable.
 

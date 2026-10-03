@@ -4,7 +4,7 @@
 #include <vcclr.h>
 
 using namespace System;
-using namespace Libmem::Net;
+using namespace ::Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
 UInt64 Libmem::DataScan(array<Byte>^ data,UInt64 a,UInt64 size) {

@@ -1,7 +1,7 @@
 #include "../Libmem.NET.h"
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace Libmem::Net;
+using namespace ::Libmem::Net;
 
 SymbolManager::SymbolManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");

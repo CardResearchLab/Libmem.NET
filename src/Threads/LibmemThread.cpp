@@ -5,7 +5,7 @@
 
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace Libmem::Net;
+using namespace ::Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
 List<ThreadInfo^>^ Libmem::EnumThreads() {
