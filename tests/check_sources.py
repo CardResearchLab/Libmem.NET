@@ -521,7 +521,7 @@ assert "setup-dotnet-x86.ps1" not in hook_workflow
 assert "Injector x64" in injector_workflow
 assert "setup-dotnet-x86.ps1" not in injector_workflow
 assert "External Process x64" in external_process_workflow
-assert "LibmemCli.TestTarget" in external_process_workflow
+assert "Libmem.NET.TestTarget" in external_process_workflow
 assert "Libmem.NET.ExternalProcessTests" in external_process_workflow
 assert "setup-dotnet-x86.ps1" not in external_process_workflow
 assert "NuGet Consumer x64" in nuget_consumer_workflow
