@@ -10,7 +10,8 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>ManagedCProj</Keyword>
     <ProjectGuid>{07B83CFD-9F57-4C67-A1D3-87209CF121AA}</ProjectGuid>
-    <RootNamespace>LibmemCli</RootNamespace>
+    <RootNamespace>Libmem.Net</RootNamespace>
+    <AssemblyName>Libmem.NET</AssemblyName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <TargetFramework>net8.0</TargetFramework>
     <LibmemRepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\'))</LibmemRepositoryRoot>
@@ -52,9 +53,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <TargetName>LibmemCli</TargetName><TargetExt>.dll</TargetExt>
+    <TargetName>$(AssemblyName)</TargetName><TargetExt>.dll</TargetExt>
     <OutDir>$(LibmemRepositoryRoot)artifacts\managed\$(LibmemPlatformLabel)\$(Configuration)\</OutDir>
-    <IntDir>$(LibmemRepositoryRoot).build\obj\LibmemCli\$(LibmemPlatformLabel)\$(Configuration)\</IntDir>
+    <IntDir>$(LibmemRepositoryRoot).build\obj\Libmem.NET\$(LibmemPlatformLabel)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -68,6 +69,7 @@
     <Link>
       <AdditionalLibraryDirectories>$(LibmemNativeRoot)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libmem.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
       <SubSystem>Windows</SubSystem>
     </Link>
     <Xdcmake>
@@ -75,10 +77,10 @@
     </Xdcmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="LibmemCli.h" />
+    <ClInclude Include="Libmem.NET.h" />
     <ClInclude Include="Interop\NativeConverter.h" />
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="LibmemCli.cpp" />
+    <ClCompile Include="Libmem.NET.cpp" />
     <ClCompile Include="Assembly\LibmemAssembly.cpp" />
     <ClCompile Include="Assembly\InstructionInfo.cpp" />
     <ClCompile Include="Scanning\LibmemScan.cpp" />
