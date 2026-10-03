@@ -114,7 +114,7 @@ foreach (var module in session.Modules.Enumerate())
 `ProcessSession` 是可选的通用进程上下文封装。它通过 **PID + 进程启动时间** 锁定一个具体进程身份，并为同一目标的内存、模块、Hook 与注入操作提供明确的 Attach / Detach 生命周期；它不承担应用状态管理：
 
 ```csharp
-using var target = ProcessSession.Open("Hearthstone.exe");
+using var target = ProcessSession.Open("ExampleApp.exe");
 
 if (target is null)
     return;
@@ -257,7 +257,7 @@ Release / Runtime package 会把 `Libmem.NET.xml` 与 `Libmem.NET.dll` 一起发
 可以在其他项目中将本仓库作为 Submodule 引入：
 
 ```powershell
-git submodule add https://github.com/HearthstoneModding/Libmem.NET.git external/Libmem
+git submodule add https://github.com/HearthstoneModding/Libmem.NET.git external/Libmem.NET
 git submodule update --init --recursive
 ```
 

@@ -465,7 +465,7 @@ Keep `Libmem.NET.xml` beside `Libmem.NET.dll` so Visual Studio / C# editors can 
 
 Stable distribution currently remains the Windows x64 Runtime ZIP and source/reusable-workflow integration.
 
-The repository also contains an **unpublished local NuGet prototype** with the provisional package ID `HearthstoneModding.Libmem.NET`. It is validated through an independent PackageReference consumer before any public package publication is considered.
+The repository also contains an **unpublished local NuGet prototype** with the package ID `Libmem.NET`. It is validated through an independent PackageReference consumer before any public package publication is considered.
 
 See [CONSUMPTION.md](CONSUMPTION.md) for the package layout, x64 constraints, and NuGet acceptance criteria.
 

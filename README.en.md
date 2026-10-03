@@ -114,7 +114,7 @@ At runtime, keep `Libmem.NET.dll`, `Ijwhost.dll`, and `libmem.dll` beside the ap
 `ProcessSession` is an optional general-purpose process context. It binds to one concrete process identity using **PID + process start time** and gives memory, module, hook, and injection calls for the same target an explicit Attach / Detach lifetime; it does not own application state:
 
 ```csharp
-using var target = ProcessSession.Open("Hearthstone.exe");
+using var target = ProcessSession.Open("ExampleApp.exe");
 
 if (target is null)
     return;
@@ -257,7 +257,7 @@ Release/runtime packages ship `Libmem.NET.xml` beside `Libmem.NET.dll`. The C++/
 Add this repository to another project as a submodule:
 
 ```powershell
-git submodule add https://github.com/HearthstoneModding/Libmem.NET.git external/Libmem
+git submodule add https://github.com/HearthstoneModding/Libmem.NET.git external/Libmem.NET
 git submodule update --init --recursive
 ```
 
@@ -345,9 +345,9 @@ CI validates more than compilation:
 
 Hook and VMT use a separate test project executed by the unified Build gate; `Hook VMT Runtime Tests` remains available for manual diagnosis. Explicit `VmtManager.Dispose()` also uses deterministic restoration: if any tracked VMT entry cannot be restored, the manager remains undisposed and throws `LibmemException` instead of discarding the remaining hook bookkeeping. It allocates isolated executable memory in the current process and verifies hook redirection, trampoline execution, Remove, and VMT Hook / Unhook / Reset / Dispose without depending on Hearthstone or any external process.
 
-Injector behavior is also validated separately by `Injector Runtime Tests`. The test copies `libmem.dll` under a unique fixture name and performs real injection, module discovery, Unload, and Dispose against the current test process without depending on Hearthstone.
+Injector tests also run in the unified Build gate; `Injector Runtime Tests` retains a manual diagnostic entry point. The test copies `libmem.dll` under a unique fixture name and performs real injection, module discovery, Unload, and Dispose against the current test process without depending on Hearthstone.
 
-Cross-process behavior is validated by the dedicated `External Process Runtime Tests` workflow. It launches the repository-owned `Libmem.NET.TestTarget` in a separate PID/address space and verifies `ProcessSession.Open(pid)`, process-identity checks, remote read/write, remote allocate/protect/free, scanning, segment lookup, and target-process exit observation.
+Cross-process behavior is validated by the unified Build gate; `External Process Runtime Tests` retains a manual diagnostic entry point. It launches the repository-owned `Libmem.NET.TestTarget` in a separate PID/address space and verifies `ProcessSession.Open(pid)`, process-identity checks, remote read/write, remote allocate/protect/free, scanning, segment lookup, and target-process exit observation.
 
 ### Reuse the build from another repository
 
