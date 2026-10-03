@@ -17,7 +17,7 @@ with tempfile.TemporaryDirectory() as temp:
     temp_dir = Path(temp)
     changelog = temp_dir / "CHANGELOG.md"
     manifest = temp_dir / "manifest.json"
-    checksum = temp_dir / "LibmemCli-windows-x64.zip.sha256"
+    checksum = temp_dir / "Libmem.NET-windows-x64.zip.sha256"
     output = temp_dir / "release-notes.md"
 
     changelog.write_text(
@@ -50,14 +50,14 @@ Previous release.
             {
                 "schemaVersion": 2,
                 "packageVersion": "9.8.7",
-                "repository": "HearthstoneModding/Libmem",
+                "repository": "HearthstoneModding/Libmem.NET",
                 "repositoryCommit": "a" * 40,
                 "libmemCommit": "b" * 40,
                 "targetFramework": "net8.0",
                 "platform": "win-x64",
                 "configuration": "Release",
                 "files": [
-                    {"name": "LibmemCli.dll", "size": 1, "sha256": "0" * 64},
+                    {"name": "Libmem.NET.dll", "size": 1, "sha256": "0" * 64},
                     {"name": "libmem.dll", "size": 1, "sha256": "1" * 64},
                 ],
             }
@@ -65,7 +65,7 @@ Previous release.
         encoding="utf-8",
     )
     checksum.write_text(
-        f"{'c' * 64}  LibmemCli-windows-x64.zip\n",
+        f"{'c' * 64}  Libmem.NET-windows-x64.zip\n",
         encoding="utf-8",
     )
 
@@ -82,7 +82,7 @@ Previous release.
             "--checksum",
             str(checksum),
             "--repository",
-            "HearthstoneModding/Libmem",
+            "HearthstoneModding/Libmem.NET",
             "--tag",
             "v9.8.7",
             "--output",
@@ -94,7 +94,7 @@ Previous release.
 
     notes = output.read_text(encoding="utf-8")
     required = [
-        "LibmemCli **v9.8.7**",
+        "Libmem.NET **v9.8.7**",
         "## Release highlights",
         "A focused test release.",
         "### Added",
@@ -102,9 +102,11 @@ Previous release.
         "## Platform and compatibility",
         "Windows x64",
         "## Downloads",
-        "LibmemCli-windows-x64.zip",
+        "Libmem.NET-windows-x64.zip",
+        "Libmem.NET-symbols-windows-x64.zip",
+        "Libmem.NET.9.8.7.nupkg",
         "## Package contents",
-        "`LibmemCli.dll`",
+        "`Libmem.NET.dll`",
         "## Integrity and provenance",
         "c" * 64,
         "## Documentation",

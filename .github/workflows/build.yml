@@ -41,13 +41,13 @@ jobs:
         shell: pwsh
         run: python .\tests\check_sources.py
 
-      - name: Build LibmemCli
+      - name: Build Libmem.NET
         shell: pwsh
         run: .\build.ps1 -Configuration Release -Platform x64
 
       - name: Run runtime smoke tests
         shell: pwsh
-        run: dotnet run --project .\tests\LibmemCli.SmokeTests\LibmemCli.SmokeTests.csproj -c Release -p:Platform=x64
+        run: dotnet run --project .\tests\Libmem.NET.SmokeTests\Libmem.NET.SmokeTests.csproj -c Release -p:Platform=x64
 
       - name: Package runtime
         shell: pwsh
@@ -57,15 +57,41 @@ jobs:
         shell: pwsh
         run: |
           $commit = (git rev-parse HEAD).Trim()
-          python .\eng\verify-package.py --package-dir .\artifacts\package\LibmemCli-windows-x64 --archive .\artifacts\package\LibmemCli-windows-x64.zip --checksum .\artifacts\package\LibmemCli-windows-x64.zip.sha256 --expected-repository-commit $commit --expected-platform win-x64 --expected-configuration Release
+          python .\eng\verify-package.py --package-dir .\artifacts\package\Libmem.NET-windows-x64 --archive .\artifacts\package\Libmem.NET-windows-x64.zip --checksum .\artifacts\package\Libmem.NET-windows-x64.zip.sha256 --expected-repository-commit $commit --expected-platform win-x64 --expected-configuration Release
+
+      - name: Package Windows symbols
+        shell: pwsh
+        run: .\eng\package-symbols.ps1 -Configuration Release
+
+      - name: Verify Windows symbols
+        shell: pwsh
+        run: |
+          $archive = ".\artifacts\symbols\Libmem.NET-symbols-windows-x64.zip"
+          $checksum = ".\artifacts\symbols\Libmem.NET-symbols-windows-x64.zip.sha256"
+          $pdb = ".\artifacts\symbols\Libmem.NET-symbols-windows-x64\Libmem.NET.pdb"
+          if (-not (Test-Path $pdb -PathType Leaf)) { throw "Symbol package is missing Libmem.NET.pdb" }
+          $expected = ((Get-Content $checksum -Raw).Trim().Split()[0]).ToLowerInvariant()
+          $actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($expected -ne $actual) { throw "Symbol archive SHA-256 mismatch." }
 
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LibmemCli-windows-x64
+          name: Libmem.NET-windows-x64
           path: |
-            artifacts/package/LibmemCli-windows-x64/
-            artifacts/package/LibmemCli-windows-x64.zip
-            artifacts/package/LibmemCli-windows-x64.zip.sha256
+            artifacts/package/Libmem.NET-windows-x64/
+            artifacts/package/Libmem.NET-windows-x64.zip
+            artifacts/package/Libmem.NET-windows-x64.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload symbol artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Libmem.NET-symbols-windows-x64
+          path: |
+            artifacts/symbols/Libmem.NET-symbols-windows-x64/
+            artifacts/symbols/Libmem.NET-symbols-windows-x64.zip
+            artifacts/symbols/Libmem.NET-symbols-windows-x64.zip.sha256
           if-no-files-found: error
           retention-days: 14

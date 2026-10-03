@@ -5,11 +5,11 @@
     <PlatformTarget>x64</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <LibmemCliTestPackageVersion Condition="'$(LibmemCliTestPackageVersion)' == ''">0.0.0-local</LibmemCliTestPackageVersion>
+    <LibmemNetTestPackageVersion Condition="'$(LibmemNetTestPackageVersion)' == ''">0.0.0-local</LibmemNetTestPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Libmem.NET"
-                      Version="$(LibmemCliTestPackageVersion)" />
+                      Version="$(LibmemNetTestPackageVersion)" />
   </ItemGroup>
 </Project>

@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'src/**'
-      - 'tests/LibmemCli.InjectorTests/**'
+      - 'tests/Libmem.NET.InjectorTests/**'
       - 'tests/check_sources.py'
       - 'eng/**'
       - 'build.ps1'
@@ -46,10 +46,10 @@ jobs:
         shell: pwsh
         run: python .\tests\check_sources.py
 
-      - name: Build LibmemCli
+      - name: Build Libmem.NET
         shell: pwsh
         run: .\build.ps1 -Configuration Release -Platform x64
 
       - name: Run Injector runtime tests
         shell: pwsh
-        run: dotnet run --project .\tests\LibmemCli.InjectorTests\LibmemCli.InjectorTests.csproj -c Release -p:Platform=x64
+        run: dotnet run --project .\tests\Libmem.NET.InjectorTests\Libmem.NET.InjectorTests.csproj -c Release -p:Platform=x64

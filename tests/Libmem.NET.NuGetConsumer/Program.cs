@@ -1,6 +1,6 @@
-using LibmemCli;
+using Libmem.Net;
 
-Console.WriteLine("LibmemCli NuGet consumer test");
+Console.WriteLine("Libmem.NET NuGet consumer test");
 
 var moduleType = typeof(ModuleInfo);
 if (moduleType.GetConstructors().Length != 0)
