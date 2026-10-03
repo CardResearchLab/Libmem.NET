@@ -6,6 +6,40 @@ import sys
 import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[1]
+
+# Freeze the pre-v1.0 identity cleanup across the entire tracked repository.
+# docs/MIGRATION_AUDIT.md intentionally retains historical mappings for review.
+legacy_identity_tokens = [
+    "Libmem" + ".CLI",
+    "Libmem" + "Cli",
+    "Standalone" + "GameMod",
+    "Hearthstone" + ".exe",
+    "HearthstoneModding/Libmem" + "/",
+]
+legacy_identity_hits = []
+tracked_paths = subprocess.check_output(
+    ["git", "ls-files", "-z"],
+    cwd=root,
+).decode("utf-8").split("\0")
+for tracked_path in tracked_paths:
+    if not tracked_path or tracked_path == "docs/MIGRATION_AUDIT.md":
+        continue
+    candidate = root / tracked_path
+    if not candidate.is_file():
+        continue
+    try:
+        candidate_text = candidate.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        continue
+    for legacy_token in legacy_identity_tokens:
+        if legacy_token in candidate_text:
+            legacy_identity_hits.append((tracked_path, legacy_token))
+assert not legacy_identity_hits, (
+    "Tracked repository still contains active legacy/application-specific identity references: "
+    + ", ".join(f"{path}: {token}" for path, token in legacy_identity_hits)
+)
+print("PASS repository-wide legacy identity audit")
+
 header = (root / "src/Libmem.NET.h").read_text(encoding="utf-8")
 source_files = sorted((root / "src").rglob("*.cpp"))
 source = "\n".join(path.read_text(encoding="utf-8") for path in source_files)
