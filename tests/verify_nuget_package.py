@@ -34,8 +34,8 @@ def main() -> int:
         names = set(archive.namelist())
 
         required = {
-            "lib/net8.0/Libmem.NET.dll",
-            "lib/net8.0/Libmem.NET.xml",
+            "lib/net8.0/LibmemCli.dll",
+            "lib/net8.0/LibmemCli.xml",
             "runtimes/win-x64/native/libmem.dll",
             "runtimes/win-x64/native/Ijwhost.dll",
             "buildTransitive/Libmem.NET.targets",
@@ -50,7 +50,7 @@ def main() -> int:
         forbidden_fragments = [
             "win-x86",
             "/x86/",
-            "Libmem.NET.pdb",
+            "LibmemCli.pdb",
         ]
         for name in names:
             for fragment in forbidden_fragments:
