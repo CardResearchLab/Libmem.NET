@@ -3,12 +3,13 @@
 [简体中文](README.md) | [English](README.en.md)
 
 [![CI Build](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml)
+[![NuGet](https://img.shields.io/nuget/v/Libmem.NET.svg)](https://www.nuget.org/packages/Libmem.NET/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 
-Libmem.NET is a reusable .NET / C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). The managed assembly, namespace, and binary names remain `LibmemCli` to preserve the frozen v1.0 public API and consumer compatibility. **The v1.0 stable line, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
+Libmem.NET is a reusable .NET / C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). The managed assembly and binary name are unified as `Libmem.NET`, and the managed namespace is `Libmem.Net`. **The v1.0 stable line, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
 
 See [ROADMAP.en.md](ROADMAP.en.md) for the current development plan, the [API reference](docs/API.md) for consumer-facing result/exception/lifetime semantics, and the [consumption guide](docs/CONSUMPTION.md) for ZIP, submodule, and NuGet options.
 
@@ -24,7 +25,7 @@ The native libmem library is included as a pinned Git submodule and is built aut
 
 ```mermaid
 flowchart LR
-    App["C# / .NET 8 x64 project"] --> Cli["LibmemCli.dll<br/>C++/CLI managed wrapper"]
+    App["C# / .NET 8 x64 project"] --> Cli["Libmem.NET.dll<br/>C++/CLI managed wrapper"]
     Cli --> Native["libmem.dll<br/>rdbo/libmem"]
     Native --> Win["Windows native process / memory APIs"]
 
@@ -35,7 +36,7 @@ flowchart LR
     Native --> Package
 ```
 
-The runtime call chain is **C#/.NET → LibmemCli.dll → libmem.dll → Windows Native API**. During builds, the pinned libmem submodule produces the native DLL first, followed by the C++/CLI managed wrapper.
+The runtime call chain is **C#/.NET → Libmem.NET.dll → libmem.dll → Windows Native API**. During builds, the pinned libmem submodule produces the native DLL first, followed by the C++/CLI managed wrapper.
 
 ## Requirements
 
@@ -68,25 +69,25 @@ cd Libmem.NET
 
 `bootstrap.ps1` remains available as a compatibility alias.
 
-You can also open `LibmemCli.sln` directly and build `Debug|x64` or `Release|x64`. Visual Studio/MSBuild will perform the same native prerequisite build automatically. The repository still contains x86 configurations, but they are not part of the primary development path, default CI, or official releases.
+You can also open `Libmem.NET.sln` directly and build `Debug|x64` or `Release|x64`. Visual Studio/MSBuild will perform the same native prerequisite build automatically. The repository still contains x86 configurations, but they are not part of the primary development path, default CI, or official releases.
 
 Generated files are kept outside the source directories:
 
 ```text
 artifacts/native/x64/Release/bin/libmem.dll
 artifacts/native/x64/Release/lib/libmem.lib
-artifacts/managed/x64/Release/LibmemCli.dll
-artifacts/managed/x64/Release/LibmemCli.xml
+artifacts/managed/x64/Release/Libmem.NET.dll
+artifacts/managed/x64/Release/Libmem.NET.xml
 artifacts/managed/x64/Release/Ijwhost.dll
 ```
 
 
 ## C# quick example
 
-After referencing `LibmemCli.dll`, managed code can access process and module information directly:
+After referencing `Libmem.NET.dll`, managed code can access process and module information directly:
 
 ```csharp
-using LibmemCli;
+using Libmem.Net;
 
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process not found");
@@ -106,7 +107,7 @@ foreach (var module in session.Modules.Enumerate())
 
 See [`samples/Example.cs`](samples/Example.cs) for the complete runnable consumer example. It uses the recommended `ProcessSession` / Manager APIs and only operates on isolated memory owned by the sample process.
 
-At runtime, keep `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll` beside the application executable. Keep `LibmemCli.xml` beside the managed assembly as well when IntelliSense API documentation is desired in Visual Studio / C# editors.
+At runtime, keep `Libmem.NET.dll`, `Ijwhost.dll`, and `libmem.dll` beside the application executable. Keep `Libmem.NET.xml` beside the managed assembly as well when IntelliSense API documentation is desired in Visual Studio / C# editors.
 
 ## ProcessSession
 
@@ -128,7 +129,7 @@ var latest = target.Refresh();
 
 `ProcessSession` does not own a native Windows process handle. It acts as the aggregation root for `MemoryManager`, `ModuleManager`, `ThreadManager`, `ScanManager`, `SymbolManager`, `AssemblyManager`, `HookManager`, and `InjectorManager`; those subsystems only add target binding and necessary resource-lifetime constraints around libmem calls.
 
-New code should prefer `ProcessSession.Open(...)`. Existing `Libmem.Attach(...)` and static `Libmem.*` APIs remain available for compatibility. Applications that need snapshots, caches, event state, or game-state models should build those models in the caller rather than in LibmemCli.
+New code should prefer `ProcessSession.Open(...)`. Existing `Libmem.Attach(...)` and static `Libmem.*` APIs remain available for compatibility. Applications that need snapshots, caches, event state, or game-state models should build those models in the caller rather than in Libmem.NET.
 
 ### ModuleManager
 
@@ -249,7 +250,7 @@ Calling `Free()` explicitly lets callers inspect the release result. Leaving the
 
 ## XML API documentation
 
-Release/runtime packages ship `LibmemCli.xml` beside `LibmemCli.dll`. The C++/CLI build enables MSVC `/doc` for public XML comments and XDCMake merges the generated XDC data into an XML file with the same base name as the assembly. When consumers keep both files together, Visual Studio can surface IntelliSense documentation for `ProcessSession`, subsystem managers, owned resource handles, Hook/VMT APIs, and the static compatibility facade.
+Release/runtime packages ship `Libmem.NET.xml` beside `Libmem.NET.dll`. The C++/CLI build enables MSVC `/doc` for public XML comments and XDCMake merges the generated XDC data into an XML file with the same base name as the assembly. When consumers keep both files together, Visual Studio can surface IntelliSense documentation for `ProcessSession`, subsystem managers, owned resource handles, Hook/VMT APIs, and the static compatibility facade.
 
 ## Consume as a Git submodule
 
@@ -263,7 +264,7 @@ git submodule update --init --recursive
 Then add:
 
 ```text
-external/Libmem.NET/src/LibmemCli.vcxproj
+external/Libmem.NET/src/Libmem.NET.vcxproj
 ```
 
 to the consuming solution and reference it from a matching-architecture .NET 8 project with a `ProjectReference`.
@@ -274,8 +275,8 @@ Project and output paths are based on this repository rather than the consuming 
 
 At runtime, deploy the following files beside the consuming executable:
 
-- `LibmemCli.dll`
-- `LibmemCli.xml` (IntelliSense XML documentation)
+- `Libmem.NET.dll`
+- `Libmem.NET.xml` (IntelliSense XML documentation)
 - `Ijwhost.dll`
 - `libmem.dll`
 
@@ -285,6 +286,14 @@ Do not mix outputs from different configurations or commits.
 ## NuGet package
 
 The repository has validated the **Windows x64 / .NET 8** `Libmem.NET` NuGet package with an independent `PackageReference` consumer. The official Release workflow now supports nuget.org Trusted Publishing (OIDC); before the first public publish, configure the nuget.org Trusted Publishing policy and the GitHub Actions `NUGET_USER` secret.
+
+Stable package reference:
+
+```xml
+<PackageReference Include="Libmem.NET" Version="x.y.z" />
+```
+
+C++/CLI produces Windows PDBs, which NuGet.org's `.snupkg` symbol server does not accept. Releases therefore publish `Libmem.NET-symbols-windows-x64.zip` as the Windows x64 debugging-symbol package.
 
 See [docs/CONSUMPTION.md](docs/CONSUMPTION.md) for the package layout and acceptance criteria. Until restore/build/run/publish behavior is fully accepted, the Release ZIP and Git submodule/reusable-workflow paths remain the stable consumption options.
 
@@ -298,13 +307,14 @@ A matching version section must exist in `CHANGELOG.md` before publication; the 
 
 The repository includes seven automation workflows:
 
-- \`.github/workflows/build.yml\`: builds and validates Release x64 on pushes to `main`, pull requests, or manual runs, then uploads the `LibmemCli-windows-x64` artifact.
+- \`.github/workflows/build.yml\`: builds and validates Release x64 on pushes to `main`, pull requests, or manual runs, then uploads the `Libmem.NET-windows-x64` artifact.
 - \`.github/workflows/reusable-build.yml\`: exposes the build through \`workflow_call\` so other GitHub repositories can reuse it.
 - \`.github/workflows/release.yml\`: builds, verifies, and publishes only the x64 package for `v*` tags or `release/v*` release branches. x86 release assets are not currently produced.
 - \`.github/workflows/hook-vmt-tests.yml\`: runs real Hook / trampoline / VMT lifecycle tests on x64 independently from the base smoke suite.
 - \`.github/workflows/injector-tests.yml\`: independently validates DLL injection, module discovery, explicit Unload, and Dispose lifetime behavior on x64.
-- `.github/workflows/external-process-tests.yml`: launches the repository-owned `LibmemCli.TestTarget` child process and validates real cross-process attach, read/write, remote allocate/protect/free, signature scan, segment lookup, and process-exit observation.
+- `.github/workflows/external-process-tests.yml`: launches the repository-owned `Libmem.NET.TestTarget` child process and validates real cross-process attach, read/write, remote allocate/protect/free, signature scan, segment lookup, and process-exit observation.
 - `.github/workflows/nuget-consumer-tests.yml`: builds the local `Libmem.NET` NuGet package and validates pack → restore → run → publish through an independent `PackageReference` consumer; nuget.org publication is reserved for the Release workflow and uses OIDC.
+- Build/Release also emits the `Libmem.NET-symbols-windows-x64` artifact containing `Libmem.NET.pdb` and its checksum instead of publishing an incompatible `.snupkg`.
 
 You can create the same runtime package locally:
 
@@ -316,18 +326,21 @@ You can create the same runtime package locally:
 Output:
 
 ```text
-artifacts/package/LibmemCli-windows-x64/
-artifacts/package/LibmemCli-windows-x64.zip
-artifacts/package/LibmemCli-windows-x64.zip.sha256
+artifacts/package/Libmem.NET-windows-x64/
+artifacts/package/Libmem.NET-windows-x64.zip
+artifacts/package/Libmem.NET-windows-x64.zip.sha256
+artifacts/symbols/Libmem.NET-symbols-windows-x64/
+artifacts/symbols/Libmem.NET-symbols-windows-x64.zip
+artifacts/symbols/Libmem.NET-symbols-windows-x64.zip.sha256
 ```
 
 ## Versioning and automated validation
 
-The root `VERSION` file is the source of truth for release versioning. The current version is **1.0.0**, and the generated `LibmemCli.dll` carries matching assembly version metadata.
+The root `VERSION` file is the source of truth for release versioning. The current version is **1.0.0**, and the generated `Libmem.NET.dll` carries matching assembly version metadata.
 
 Each runtime package contains a `manifest.json` recording:
 
-- the LibmemCli package version;
+- the Libmem.NET package version;
 - the repository Git commit;
 - the pinned upstream libmem commit;
 - target framework (`net8.0`);
@@ -340,13 +353,13 @@ Packaging also runs the shared `eng/verify-package.py` verifier. It checks every
 CI validates more than compilation:
 
 1. **API Contract Check** parses the pinned submodule's `include/libmem/libmem.h` and extracts every public `LM_API`. Except for compatibility waivers that are explicitly documented in source with their rationale, CI fails if upstream exposes a public API that the C++/CLI wrapper does not cover.
-2. **Runtime Smoke Tests** load `LibmemCli.dll + libmem.dll` and cover process/command-line APIs, threads, modules/exported symbols, memory segments, allocation/read/write/set/protection, DeepPointer, Data/Pattern/Signature scanning, assembly/disassembly, and CodeLength. Controlled memory tests only touch isolated allocations in the test process itself.
+2. **Runtime Smoke Tests** load `Libmem.NET.dll + libmem.dll` and cover process/command-line APIs, threads, modules/exported symbols, memory segments, allocation/read/write/set/protection, DeepPointer, Data/Pattern/Signature scanning, assembly/disassembly, and CodeLength. Controlled memory tests only touch isolated allocations in the test process itself.
 
 Hook and VMT operations are intentionally kept out of the baseline smoke gate and validated by the separate `Hook VMT Runtime Tests` workflow. Explicit `VmtManager.Dispose()` also uses deterministic restoration: if any tracked VMT entry cannot be restored, the manager remains undisposed and throws `LibmemException` instead of discarding the remaining hook bookkeeping. It allocates isolated executable memory in the current process and verifies hook redirection, trampoline execution, Remove, and VMT Hook / Unhook / Reset / Dispose without depending on Hearthstone or any external process.
 
 Injector behavior is also validated separately by `Injector Runtime Tests`. The test copies `libmem.dll` under a unique fixture name and performs real injection, module discovery, Unload, and Dispose against the current test process without depending on Hearthstone.
 
-Cross-process behavior is validated by the dedicated `External Process Runtime Tests` workflow. It launches the repository-owned `LibmemCli.TestTarget` in a separate PID/address space and verifies `ProcessSession.Open(pid)`, process-identity checks, remote read/write, remote allocate/protect/free, scanning, segment lookup, and target-process exit observation.
+Cross-process behavior is validated by the dedicated `External Process Runtime Tests` workflow. It launches the repository-owned `Libmem.NET.TestTarget` in a separate PID/address space and verifies `ProcessSession.Open(pid)`, process-identity checks, remote read/write, remote allocate/protect/free, scanning, segment lookup, and target-process exit observation.
 
 ### Reuse the build from another repository
 
@@ -355,12 +368,12 @@ Another repository can call the reusable workflow directly:
 ```yaml
 jobs:
   build-libmem:
-    uses: HearthstoneModding/Libmem/.github/workflows/reusable-build.yml@main
+    uses: HearthstoneModding/Libmem.NET/.github/workflows/reusable-build.yml@main
     with:
       ref: main
       configuration: Release
       platform: x64
-      artifact-name: LibmemCli-windows-x64
+      artifact-name: Libmem.NET-windows-x64
 
   use-libmem:
     needs: build-libmem
@@ -368,7 +381,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: LibmemCli-windows-x64
+          name: Libmem.NET-windows-x64
           path: external/Libmem.NET
 ```
 
@@ -378,7 +391,7 @@ The caller does not need to duplicate Libmem's build scripts; the artifact is up
 
 ## API stability
 
-The repository commits a shared public API baseline at `api/LibmemCli.PublicApi.txt`. Every `tests/check_sources.py` run extracts the actual public types, properties, methods, and enum members from `src/LibmemCli.h` and compares them with that baseline.
+The repository commits a shared public API baseline at `api/Libmem.NET.PublicApi.txt`. Every `tests/check_sources.py` run extracts the actual public types, properties, methods, and enum members from `src/Libmem.NET.h` and compares them with that baseline.
 
 Accidental removals, signature changes, public-member renames, or enum changes therefore fail CI. An intentional public API change must explicitly run:
 
@@ -390,7 +403,7 @@ Then review the API diff, update `CHANGELOG.md`, and apply the appropriate versi
 
 ## Error model
 
-When LibmemCli can determine that a **native libmem operation definitely failed**, it throws `LibmemException`. The type derives from `InvalidOperationException` and preserves the corresponding native operation name through the `Operation` property, for example `LM_EnumProcesses`, `LM_ProtMemoryEx`, or `LM_FreeMemoryEx`.
+When Libmem.NET can determine that a **native libmem operation definitely failed**, it throws `LibmemException`. The type derives from `InvalidOperationException` and preserves the corresponding native operation name through the `Operation` property, for example `LM_EnumProcesses`, `LM_ProtMemoryEx`, or `LM_FreeMemoryEx`.
 
 `Find*` operations, scan misses, and APIs where upstream libmem uses `null` / `LM_ADDRESS_BAD` as the normal “not found” result keep their existing return semantics. The wrapper does not turn ordinary misses into exceptions merely for uniformity.
 
@@ -476,7 +489,7 @@ The native VMT API is wrapped by the disposable `VmtManager`. In the pinned libm
 
 3. `ProcessInfo` and `ModuleInfo` are snapshots, not operating-system handles. A process can exit and module/address information can become stale. `IsProcessAlive` checks the original identity using `pid` plus startup time.
 
-4. `GetCommandLine` currently supports the **current process only**. The pinned Windows upstream `LM_GetCommandLine` has undefined behavior at this revision, so LibmemCli does not invoke it; current-process arguments come from `System.Environment.GetCommandLineArgs()`, while other processes preserve the upstream unsupported behavior and return `null`. Enumeration callbacks are synchronous.
+4. `GetCommandLine` currently supports the **current process only**. The pinned Windows upstream `LM_GetCommandLine` has undefined behavior at this revision, so Libmem.NET does not invoke it; current-process arguments come from `System.Environment.GetCommandLineArgs()`, while other processes preserve the upstream unsupported behavior and return `null`. Enumeration callbacks are synchronous.
 
 5. `Disassemble(codeAddress, arch, ...)` expects `codeAddress` to point to readable machine code in the **calling process**, not a remote-process address. For remote code, call `ReadMemory` first and pass the resulting byte array to the safe pinned-buffer `Disassemble(byte[], ...)` overload.
 

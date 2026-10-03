@@ -3,12 +3,13 @@
 [简体中文](README.md) | [English](README.en.md)
 
 [![CI Build](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml)
+[![NuGet](https://img.shields.io/nuget/v/Libmem.NET.svg)](https://www.nuget.org/packages/Libmem.NET/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 
-Libmem.NET 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 .NET / C++/CLI 封装。当前托管程序集、命名空间与二进制名称继续使用 `LibmemCli`，以保持 v1.0 公共 API 与消费者兼容性。**v1.0 稳定主线与正式发布目标为 Windows x64 / .NET 8。** 现有 x86 代码与构建配置暂时保留，但 x86 已延后，不再作为近期开发目标或正式 Release 产物。
+Libmem.NET 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 .NET / C++/CLI 封装。托管程序集与二进制名称统一为 `Libmem.NET`，托管命名空间统一为 `Libmem.Net`。**v1.0 稳定主线与正式发布目标为 Windows x64 / .NET 8。** 现有 x86 代码与构建配置暂时保留，但 x86 已延后，不再作为近期开发目标或正式 Release 产物。
 
 开发路线见 [ROADMAP.md](ROADMAP.md)，消费者行为与返回/异常/生命周期语义见 [API 参考](docs/API.md)，ZIP / Submodule / NuGet 等消费方式见 [消费指南](docs/CONSUMPTION.md)。
 
@@ -24,7 +25,7 @@ Libmem.NET 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复�
 
 ```mermaid
 flowchart LR
-    App["C# / .NET 8 x64 项目"] --> Cli["LibmemCli.dll<br/>C++/CLI 托管封装"]
+    App["C# / .NET 8 x64 项目"] --> Cli["Libmem.NET.dll<br/>C++/CLI 托管封装"]
     Cli --> Native["libmem.dll<br/>rdbo/libmem"]
     Native --> Win["Windows 原生进程 / 内存 API"]
 
@@ -35,7 +36,7 @@ flowchart LR
     Native --> Package
 ```
 
-运行时调用链为 **C#/.NET → LibmemCli.dll → libmem.dll → Windows Native API**。构建时则由仓库固定的 libmem Submodule 生成原生 DLL，再构建 C++/CLI 托管封装。
+运行时调用链为 **C#/.NET → Libmem.NET.dll → libmem.dll → Windows Native API**。构建时则由仓库固定的 libmem Submodule 生成原生 DLL，再构建 C++/CLI 托管封装。
 
 ## 环境要求
 
@@ -68,25 +69,25 @@ cd Libmem.NET
 
 `bootstrap.ps1` 仍保留为兼容入口。
 
-也可以直接打开 `LibmemCli.sln`，使用 `Debug|x64` 或 `Release|x64` 构建。Visual Studio/MSBuild 会自动执行相同的原生依赖构建流程。仓库仍保留 x86 配置，但当前不把它作为主线开发、默认 CI 或正式发布目标。
+也可以直接打开 `Libmem.NET.sln`，使用 `Debug|x64` 或 `Release|x64` 构建。Visual Studio/MSBuild 会自动执行相同的原生依赖构建流程。仓库仍保留 x86 配置，但当前不把它作为主线开发、默认 CI 或正式发布目标。
 
 生成文件不会写入源码目录，默认输出到：
 
 ```text
 artifacts/native/x64/Release/bin/libmem.dll
 artifacts/native/x64/Release/lib/libmem.lib
-artifacts/managed/x64/Release/LibmemCli.dll
-artifacts/managed/x64/Release/LibmemCli.xml
+artifacts/managed/x64/Release/Libmem.NET.dll
+artifacts/managed/x64/Release/Libmem.NET.xml
 artifacts/managed/x64/Release/Ijwhost.dll
 ```
 
 
 ## C# 快速示例
 
-引用 `LibmemCli.dll` 后，可以直接通过托管 API 获取当前进程与模块信息：
+引用 `Libmem.NET.dll` 后，可以直接通过托管 API 获取当前进程与模块信息：
 
 ```csharp
-using LibmemCli;
+using Libmem.Net;
 
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process not found");
@@ -106,7 +107,7 @@ foreach (var module in session.Modules.Enumerate())
 
 完整的可运行消费者示例见 [`samples/Example.cs`](samples/Example.cs)，示例使用推荐的 `ProcessSession` / Manager API，并只操作示例进程自己的隔离内存。
 
-运行时请确保 `LibmemCli.dll`、`Ijwhost.dll` 和 `libmem.dll` 位于应用程序可执行文件旁。建议同时保留同目录的 `LibmemCli.xml`，Visual Studio / C# 编辑器可据此显示 LibmemCli 的 IntelliSense API 说明。
+运行时请确保 `Libmem.NET.dll`、`Ijwhost.dll` 和 `libmem.dll` 位于应用程序可执行文件旁。建议同时保留同目录的 `Libmem.NET.xml`，Visual Studio / C# 编辑器可据此显示 Libmem.NET 的 IntelliSense API 说明。
 
 ## ProcessSession
 
@@ -128,7 +129,7 @@ var latest = target.Refresh();
 
 当前 `ProcessSession` 不持有 Windows 原生进程句柄；它作为聚合入口，向下组合 `MemoryManager`、`ModuleManager`、`ThreadManager`、`ScanManager`、`SymbolManager`、`AssemblyManager`、`HookManager` 和 `InjectorManager`。这些子系统只是在 libmem 调用之上增加目标绑定与必要的资源生命周期约束。
 
-新代码推荐使用 `ProcessSession.Open(...)`；现有 `Libmem.Attach(...)` 和 `Libmem.*` 静态 API 继续保留兼容。应用如果需要 Snapshot、缓存、事件状态或游戏状态模型，应在调用方自己构建，而不是放进 LibmemCli。
+新代码推荐使用 `ProcessSession.Open(...)`；现有 `Libmem.Attach(...)` 和 `Libmem.*` 静态 API 继续保留兼容。应用如果需要 Snapshot、缓存、事件状态或游戏状态模型，应在调用方自己构建，而不是放进 Libmem.NET。
 
 ### ModuleManager
 
@@ -249,7 +250,7 @@ Console.WriteLine($"0x{memory.Address:X} / {memory.Size} bytes");
 
 ## XML API 文档
 
-Release / Runtime package 会把 `LibmemCli.xml` 与 `LibmemCli.dll` 一起发布。C++/CLI 编译使用 MSVC `/doc` 处理公开 API 上的 XML 注释，再由 XDCMake 合并成与程序集同名的 XML 文件。消费者将两者放在同一目录后，Visual Studio 可以为 `ProcessSession`、各 Manager、资源句柄、Hook/VMT 和静态兼容 API 提供 IntelliSense 说明。
+Release / Runtime package 会把 `Libmem.NET.xml` 与 `Libmem.NET.dll` 一起发布。C++/CLI 编译使用 MSVC `/doc` 处理公开 API 上的 XML 注释，再由 XDCMake 合并成与程序集同名的 XML 文件。消费者将两者放在同一目录后，Visual Studio 可以为 `ProcessSession`、各 Manager、资源句柄、Hook/VMT 和静态兼容 API 提供 IntelliSense 说明。
 
 ## 作为 Git Submodule 引用
 
@@ -263,7 +264,7 @@ git submodule update --init --recursive
 然后将：
 
 ```text
-external/Libmem.NET/src/LibmemCli.vcxproj
+external/Libmem.NET/src/Libmem.NET.vcxproj
 ```
 
 加入使用方解决方案，并在相同架构的 .NET 8 项目中通过 `ProjectReference` 引用它。
@@ -274,8 +275,8 @@ external/Libmem.NET/src/LibmemCli.vcxproj
 
 运行时需要将以下文件部署到使用方可执行文件同目录：
 
-- `LibmemCli.dll`
-- `LibmemCli.xml`（IntelliSense XML 文档）
+- `Libmem.NET.dll`
+- `Libmem.NET.xml`（IntelliSense XML 文档）
 - `Ijwhost.dll`
 - `libmem.dll`
 
@@ -285,6 +286,14 @@ external/Libmem.NET/src/LibmemCli.vcxproj
 ## NuGet 包
 
 仓库已经完成 **Windows x64 / .NET 8** 的 `Libmem.NET` NuGet 包消费验证。正式 Release 流程已接入 nuget.org Trusted Publishing（OIDC）；首次公开发布前只需在 nuget.org 建立 Trusted Publishing policy，并在 GitHub Actions 配置 `NUGET_USER`。
+
+正式包引用：
+
+```xml
+<PackageReference Include="Libmem.NET" Version="x.y.z" />
+```
+
+C++/CLI 生成的是 Windows PDB，NuGet.org 的 `.snupkg` 符号服务器不接受该格式，因此 Release 额外发布 `Libmem.NET-symbols-windows-x64.zip` 作为 Windows x64 调试符号包。
 
 原型打包和验收细节见 [docs/CONSUMPTION.md](docs/CONSUMPTION.md)。在 NuGet 通过 restore / build / run / publish 全链路验证之前，正式消费仍优先使用 Release ZIP 或 Git Submodule / reusable workflow。
 
@@ -298,13 +307,14 @@ external/Libmem.NET/src/LibmemCli.vcxproj
 
 仓库内置七套自动化工作流：
 
-- \`.github/workflows/build.yml\`：向 `main` 推送、创建 PR 或手动运行时只构建并验证 Release x64，上传 `LibmemCli-windows-x64` Artifact。
+- \`.github/workflows/build.yml\`：向 `main` 推送、创建 PR 或手动运行时只构建并验证 Release x64，上传 `Libmem.NET-windows-x64` Artifact。
 - \`.github/workflows/reusable-build.yml\`：可被其他 GitHub 仓库通过 \`workflow_call\` 直接复用。
 - \`.github/workflows/release.yml\`：推送 `v*` 标签或 `release/v*` 发布分支时只构建、校验并发布 x64 包。x86 暂不生成正式 Release 资产。
 - \`.github/workflows/hook-vmt-tests.yml\`：在 x64 上独立运行真实 Hook / trampoline / VMT 生命周期测试，与基础 Smoke Test 分离。
 - \`.github/workflows/injector-tests.yml\`：在 x64 上独立验证 DLL 注入、模块发现、显式 Unload 与 Dispose 生命周期。
-- `.github/workflows/external-process-tests.yml`：启动仓库自带的 `LibmemCli.TestTarget` 子进程，验证真实跨进程 Attach、Read/Write、远程 Allocate/Protect/Free、Signature Scan、Segment 与进程退出检测。
+- `.github/workflows/external-process-tests.yml`：启动仓库自带的 `Libmem.NET.TestTarget` 子进程，验证真实跨进程 Attach、Read/Write、远程 Allocate/Protect/Free、Signature Scan、Segment 与进程退出检测。
 - `.github/workflows/nuget-consumer-tests.yml`：构建本地 `Libmem.NET` NuGet 包，通过独立 `PackageReference` 消费者执行 pack → restore → run → publish 验证；正式 nuget.org 发布仅由 Release workflow 通过 OIDC 执行。
+- Release/Build 同时生成 `Libmem.NET-symbols-windows-x64` Artifact，保存 `Libmem.NET.pdb` 及其校验文件，不把 Windows PDB 伪装成 `.snupkg`。
 
 本地也可以生成与 CI 相同的 Runtime 包：
 
@@ -316,18 +326,21 @@ external/Libmem.NET/src/LibmemCli.vcxproj
 输出：
 
 ```text
-artifacts/package/LibmemCli-windows-x64/
-artifacts/package/LibmemCli-windows-x64.zip
-artifacts/package/LibmemCli-windows-x64.zip.sha256
+artifacts/package/Libmem.NET-windows-x64/
+artifacts/package/Libmem.NET-windows-x64.zip
+artifacts/package/Libmem.NET-windows-x64.zip.sha256
+artifacts/symbols/Libmem.NET-symbols-windows-x64/
+artifacts/symbols/Libmem.NET-symbols-windows-x64.zip
+artifacts/symbols/Libmem.NET-symbols-windows-x64.zip.sha256
 ```
 
 ## 版本与自动验证
 
-项目使用根目录的 `VERSION` 文件作为发布版本来源，当前版本为 **1.0.0**。构建后的 `LibmemCli.dll` 会写入对应的程序集版本信息。
+项目使用根目录的 `VERSION` 文件作为发布版本来源，当前版本为 **1.0.0**。构建后的 `Libmem.NET.dll` 会写入对应的程序集版本信息。
 
 Runtime 包中的 `manifest.json` 会记录：
 
-- LibmemCli 包版本；
+- Libmem.NET 包版本；
 - 当前仓库 Git commit；
 - 固定的上游 libmem commit；
 - 目标框架（`net8.0`）；
@@ -340,13 +353,13 @@ Runtime 包中的 `manifest.json` 会记录：
 CI 不只检查“能否编译”，还会执行两层自动验证：
 
 1. **API Contract Check**：直接解析固定 Submodule 中的 `include/libmem/libmem.h`，提取所有公开 `LM_API`；除源码中明确记录并解释原因的兼容性豁免外，如果上游新增公开 API 但 C++/CLI wrapper 尚未覆盖，构建会失败。
-2. **Runtime Smoke Tests**：实际加载 `LibmemCli.dll + libmem.dll`，覆盖进程/命令行、线程、模块/导出符号、内存段、内存申请/读写/填充/保护、DeepPointer、Data/Pattern/Signature Scan、汇编/反汇编与 CodeLength。所有可控的内存测试都只操作测试进程自己的隔离分配。
+2. **Runtime Smoke Tests**：实际加载 `Libmem.NET.dll + libmem.dll`，覆盖进程/命令行、线程、模块/导出符号、内存段、内存申请/读写/填充/保护、DeepPointer、Data/Pattern/Signature Scan、汇编/反汇编与 CodeLength。所有可控的内存测试都只操作测试进程自己的隔离分配。
 
 Hook / VMT 不作为基础 Smoke Test 的硬性门禁，而是在独立的 `Hook VMT Runtime Tests` 工作流中验证。 `VmtManager` 的显式 `Dispose()` 同样采用确定性恢复：若任一已跟踪 VMT 项无法恢复，对象保持未释放状态并抛出 `LibmemException`，不会丢掉剩余 hook bookkeeping。该测试会在当前进程分配隔离的可执行内存，验证 Hook 重定向、trampoline、Remove，以及 VMT Hook / Unhook / Reset / Dispose，不依赖炉石或其他外部进程。
 
 Injector 同样使用独立的 `Injector Runtime Tests`：测试会复制一份唯一文件名的 `libmem.dll` 作为隔离 fixture，在当前测试进程中实际执行注入、模块枚举、Unload 和 Dispose，避免依赖炉石进程。
 
-跨进程行为由独立的 `External Process Runtime Tests` 验证。该工作流启动仓库自带的 `LibmemCli.TestTarget`，在独立 PID/地址空间上验证 `ProcessSession.Open(pid)`、目标身份校验、远程读写、远程分配/保护/释放、扫描、Segment 查询和进程退出检测。
+跨进程行为由独立的 `External Process Runtime Tests` 验证。该工作流启动仓库自带的 `Libmem.NET.TestTarget`，在独立 PID/地址空间上验证 `ProcessSession.Open(pid)`、目标身份校验、远程读写、远程分配/保护/释放、扫描、Segment 查询和进程退出检测。
 
 ### 在其他项目中复用构建工作流
 
@@ -355,12 +368,12 @@ Injector 同样使用独立的 `Injector Runtime Tests`：测试会复制一份�
 ```yaml
 jobs:
   build-libmem:
-    uses: HearthstoneModding/Libmem/.github/workflows/reusable-build.yml@main
+    uses: HearthstoneModding/Libmem.NET/.github/workflows/reusable-build.yml@main
     with:
       ref: main
       configuration: Release
       platform: x64
-      artifact-name: LibmemCli-windows-x64
+      artifact-name: Libmem.NET-windows-x64
 
   use-libmem:
     needs: build-libmem
@@ -368,7 +381,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: LibmemCli-windows-x64
+          name: Libmem.NET-windows-x64
           path: external/Libmem.NET
 ```
 
@@ -378,7 +391,7 @@ jobs:
 
 ## API 稳定性
 
-仓库提交了一份公共 API 基线：`api/LibmemCli.PublicApi.txt`。每次 `tests/check_sources.py` 运行时，都会从 `src/LibmemCli.h` 提取实际公开类型、属性、方法和枚举，并与这份基线比较。
+仓库提交了一份公共 API 基线：`api/Libmem.NET.PublicApi.txt`。每次 `tests/check_sources.py` 运行时，都会从 `src/Libmem.NET.h` 提取实际公开类型、属性、方法和枚举，并与这份基线比较。
 
 这意味着误删方法、修改参数/返回类型、重命名公开成员或改变公开枚举成员都会直接让 CI 失败。确实需要调整公共 API 时，必须显式运行：
 
@@ -390,7 +403,7 @@ python .\eng\check-public-api.py --write
 
 ## 错误模型
 
-对于能够明确判断为 **native libmem 操作失败** 的情况，LibmemCli 统一抛出 `LibmemException`。它继承自 `InvalidOperationException`，并通过 `Operation` 属性保留对应的原生操作名，例如 `LM_EnumProcesses`、`LM_ProtMemoryEx`、`LM_FreeMemoryEx`。
+对于能够明确判断为 **native libmem 操作失败** 的情况，Libmem.NET 统一抛出 `LibmemException`。它继承自 `InvalidOperationException`，并通过 `Operation` 属性保留对应的原生操作名，例如 `LM_EnumProcesses`、`LM_ProtMemoryEx`、`LM_FreeMemoryEx`。
 
 `Find*`、Scan 未命中、以及上游本身用 `null` / `LM_ADDRESS_BAD` 表示正常“未找到”的接口仍保持原有返回语义，不会为了统一异常而把正常未命中改成错误。
 
@@ -476,7 +489,7 @@ python .\eng\check-public-api.py --write
 
 3. `ProcessInfo` 和 `ModuleInfo` 是状态快照，而不是操作系统句柄。目标进程可能已经退出，模块与地址也可能失效。`IsProcessAlive` 会根据原始身份（`pid` + 启动时间）进行检查。
 
-4. `GetCommandLine` 当前只支持**当前进程**。由于固定的 Windows 上游 `LM_GetCommandLine` 在该版本存在未定义行为，LibmemCli 不直接调用它，而是对当前进程使用 `System.Environment.GetCommandLineArgs()`；对其他进程保持上游“暂不支持”的语义并返回 `null`。枚举回调为同步执行。
+4. `GetCommandLine` 当前只支持**当前进程**。由于固定的 Windows 上游 `LM_GetCommandLine` 在该版本存在未定义行为，Libmem.NET 不直接调用它，而是对当前进程使用 `System.Environment.GetCommandLineArgs()`；对其他进程保持上游“暂不支持”的语义并返回 `null`。枚举回调为同步执行。
 
 5. `Disassemble(codeAddress, arch, ...)` 要求 `codeAddress` 指向**当前调用进程**中可读的机器码，而不是远程进程地址。需要反汇编远程代码时，应先调用 `ReadMemory`，再将返回的字节数组传给安全的固定缓冲区重载 `Disassemble(byte[], ...)`。
 

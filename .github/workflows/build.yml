@@ -59,6 +59,21 @@ jobs:
           $commit = (git rev-parse HEAD).Trim()
           python .\eng\verify-package.py --package-dir .\artifacts\package\Libmem.NET-windows-x64 --archive .\artifacts\package\Libmem.NET-windows-x64.zip --checksum .\artifacts\package\Libmem.NET-windows-x64.zip.sha256 --expected-repository-commit $commit --expected-platform win-x64 --expected-configuration Release
 
+      - name: Package Windows symbols
+        shell: pwsh
+        run: .\eng\package-symbols.ps1 -Configuration Release
+
+      - name: Verify Windows symbols
+        shell: pwsh
+        run: |
+          $archive = ".\artifacts\symbols\Libmem.NET-symbols-windows-x64.zip"
+          $checksum = ".\artifacts\symbols\Libmem.NET-symbols-windows-x64.zip.sha256"
+          $pdb = ".\artifacts\symbols\Libmem.NET-symbols-windows-x64\Libmem.NET.pdb"
+          if (-not (Test-Path $pdb -PathType Leaf)) { throw "Symbol package is missing Libmem.NET.pdb" }
+          $expected = ((Get-Content $checksum -Raw).Trim().Split()[0]).ToLowerInvariant()
+          $actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($expected -ne $actual) { throw "Symbol archive SHA-256 mismatch." }
+
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
         with:
@@ -67,5 +82,16 @@ jobs:
             artifacts/package/Libmem.NET-windows-x64/
             artifacts/package/Libmem.NET-windows-x64.zip
             artifacts/package/Libmem.NET-windows-x64.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload symbol artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Libmem.NET-symbols-windows-x64
+          path: |
+            artifacts/symbols/Libmem.NET-symbols-windows-x64/
+            artifacts/symbols/Libmem.NET-symbols-windows-x64.zip
+            artifacts/symbols/Libmem.NET-symbols-windows-x64.zip.sha256
           if-no-files-found: error
           retention-days: 14

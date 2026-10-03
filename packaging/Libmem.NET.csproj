@@ -5,6 +5,7 @@
     <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
     <PackageId>Libmem.NET</PackageId>
     <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.0-local</PackageVersion>
+    <Title>Libmem.NET</Title>
     <Authors>HearthstoneModding</Authors>
     <Description>Libmem.NET: Windows x64 / .NET 8 C++/CLI wrapper around the pinned rdbo/libmem C ABI.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

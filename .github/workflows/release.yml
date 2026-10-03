@@ -19,6 +19,8 @@ jobs:
       configuration: Release
       platform: x64
       artifact-name: Libmem.NET-windows-x64
+      symbols-artifact-name: Libmem.NET-symbols-windows-x64
+      nuget-artifact-name: Libmem.NET-nuget
       include-nuget: true
 
   release:
@@ -40,13 +42,26 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Download x64 build artifact
+      - name: Download x64 runtime artifact
         uses: actions/download-artifact@v4
         with:
           name: Libmem.NET-windows-x64
-          path: dist/x64
+          path: dist/runtime
 
-      - name: Validate release package
+      - name: Download x64 symbol artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Libmem.NET-symbols-windows-x64
+          path: dist/symbols
+
+      - name: Download NuGet artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Libmem.NET-nuget
+          path: dist/nuget
+
+      - name: Resolve release version
+        id: release-version
         shell: bash
         run: |
           if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
@@ -56,20 +71,34 @@ jobs:
           fi
 
           EXPECTED_VERSION="${TAG_NAME#v}"
-          python eng/verify-package.py --package-dir dist/x64/Libmem.NET-windows-x64 --archive dist/x64/Libmem.NET-windows-x64.zip --checksum dist/x64/Libmem.NET-windows-x64.zip.sha256 --expected-version "$EXPECTED_VERSION" --expected-repository-commit "$GITHUB_SHA" --expected-platform win-x64 --expected-configuration Release
+          echo "tag=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$EXPECTED_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Validate runtime package
+        shell: bash
+        run: |
+          python eng/verify-package.py \
+            --package-dir dist/runtime/Libmem.NET-windows-x64 \
+            --archive dist/runtime/Libmem.NET-windows-x64.zip \
+            --checksum dist/runtime/Libmem.NET-windows-x64.zip.sha256 \
+            --expected-version "${{ steps.release-version.outputs.version }}" \
+            --expected-repository-commit "$GITHUB_SHA" \
+            --expected-platform win-x64 \
+            --expected-configuration Release
+
+      - name: Validate Windows symbol package
+        shell: bash
+        run: |
+          test -f dist/symbols/Libmem.NET-symbols-windows-x64/Libmem.NET.pdb
+          (
+            cd dist/symbols
+            sha256sum -c Libmem.NET-symbols-windows-x64.zip.sha256
+          )
 
       - name: Validate NuGet package
         shell: bash
         run: |
-          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
-            TAG_NAME="${GITHUB_REF_NAME#release/}"
-          else
-            TAG_NAME="$GITHUB_REF_NAME"
-          fi
-
-          EXPECTED_VERSION="${TAG_NAME#v}"
-          PACKAGE="dist/x64/Libmem.NET.${EXPECTED_VERSION}.nupkg"
-
+          PACKAGE="dist/nuget/Libmem.NET.${{ steps.release-version.outputs.version }}.nupkg"
           test -f "$PACKAGE" || {
             echo "Expected NuGet package is missing: $PACKAGE"
             exit 1
@@ -84,32 +113,21 @@ jobs:
       - name: Publish Libmem.NET to nuget.org
         shell: bash
         run: |
-          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
-            TAG_NAME="${GITHUB_REF_NAME#release/}"
-          else
-            TAG_NAME="$GITHUB_REF_NAME"
-          fi
-
-          EXPECTED_VERSION="${TAG_NAME#v}"
-          dotnet nuget push "dist/x64/Libmem.NET.${EXPECTED_VERSION}.nupkg"             --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}"             --source https://api.nuget.org/v3/index.json             --skip-duplicate
+          dotnet nuget push "dist/nuget/Libmem.NET.${{ steps.release-version.outputs.version }}.nupkg" \
+            --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
 
       - name: Render formal release notes
         shell: bash
         run: |
-          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
-            TAG_NAME="${GITHUB_REF_NAME#release/}"
-          else
-            TAG_NAME="$GITHUB_REF_NAME"
-          fi
-
-          EXPECTED_VERSION="${TAG_NAME#v}"
           python eng/render-release-notes.py \
-            --version "$EXPECTED_VERSION" \
+            --version "${{ steps.release-version.outputs.version }}" \
             --changelog CHANGELOG.md \
-            --manifest dist/x64/Libmem.NET-windows-x64/manifest.json \
-            --checksum dist/x64/Libmem.NET-windows-x64.zip.sha256 \
+            --manifest dist/runtime/Libmem.NET-windows-x64/manifest.json \
+            --checksum dist/runtime/Libmem.NET-windows-x64.zip.sha256 \
             --repository "$GITHUB_REPOSITORY" \
-            --tag "$TAG_NAME" \
+            --tag "${{ steps.release-version.outputs.tag }}" \
             --output dist/release-notes.md
 
       - name: Publish GitHub Release
@@ -117,18 +135,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
-            TAG_NAME="${GITHUB_REF_NAME#release/}"
-          else
-            TAG_NAME="$GITHUB_REF_NAME"
-          fi
-
-          gh release create "$TAG_NAME" \
-            "dist/x64/Libmem.NET-windows-x64.zip" \
-            "dist/x64/Libmem.NET-windows-x64.zip.sha256" \
+          gh release create "${{ steps.release-version.outputs.tag }}" \
+            "dist/runtime/Libmem.NET-windows-x64.zip" \
+            "dist/runtime/Libmem.NET-windows-x64.zip.sha256" \
+            "dist/symbols/Libmem.NET-symbols-windows-x64.zip" \
+            "dist/symbols/Libmem.NET-symbols-windows-x64.zip.sha256" \
+            "dist/nuget/Libmem.NET.${{ steps.release-version.outputs.version }}.nupkg" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "Libmem.NET $TAG_NAME" \
+            --title "Libmem.NET ${{ steps.release-version.outputs.tag }}" \
             --notes-file dist/release-notes.md
 
           if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
