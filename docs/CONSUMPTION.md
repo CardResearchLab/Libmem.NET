@@ -2,7 +2,7 @@
 
 > Current official target: Windows x64 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validated NuGet package path. The managed assembly and namespace remain `LibmemCli` for v1.0 compatibility.
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validated NuGet package path. The managed assembly remains `Libmem.NET`, while the managed namespace is `Libmem.Net`, for v1.0 compatibility.
 
 ## 1. Runtime ZIP — official release consumption
 
@@ -11,8 +11,8 @@ Use the GitHub Release asset when the consuming project only needs built binarie
 Official release assets:
 
 ```text
-LibmemCli-windows-x64.zip
-LibmemCli-windows-x64.zip.sha256
+Libmem.NET-windows-x64.zip
+Libmem.NET-windows-x64.zip.sha256
 ```
 
 The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, and licensing notices.
@@ -20,13 +20,13 @@ The runtime directory contains the managed C++/CLI assembly, XML IntelliSense do
 Minimum runtime files:
 
 ```text
-LibmemCli.dll
-LibmemCli.xml
+Libmem.NET.dll
+Libmem.NET.xml
 Ijwhost.dll
 libmem.dll
 ```
 
-The consumer should reference `LibmemCli.dll` and keep the runtime files together with the executable.
+The consumer should reference `Libmem.NET.dll` and keep the runtime files together with the executable.
 
 This remains the **primary stable distribution model** until a package-manager path passes the same runtime acceptance level.
 
@@ -60,8 +60,8 @@ The package ID is now fixed as `Libmem.NET` before first public publication. Dev
 
 ```text
 lib/net8.0/
-├─ LibmemCli.dll
-└─ LibmemCli.xml
+├─ Libmem.NET.dll
+└─ Libmem.NET.xml
 
 runtimes/win-x64/native/
 ├─ libmem.dll
@@ -71,7 +71,7 @@ buildTransitive/
 └─ Libmem.NET.targets
 ```
 
-The mixed-mode `LibmemCli.dll` is currently exposed from `lib/net8.0` so PackageReference can provide the compile-time reference directly.
+The mixed-mode `Libmem.NET.dll` is currently exposed from `lib/net8.0` so PackageReference can provide the compile-time reference directly.
 
 The native runtime assets are stored under the portable RID `win-x64`.
 
@@ -83,7 +83,7 @@ A transitive MSBuild target:
 
 ### Build the prototype locally
 
-After building LibmemCli x64:
+After building Libmem.NET x64:
 
 ```powershell
 .\build.ps1 -Configuration Release -Platform x64
@@ -97,7 +97,7 @@ The script reads `VERSION`, resolves the current Git commit, validates the requi
 The CI prototype performs the complete flow:
 
 ```text
-Build LibmemCli
+Build Libmem.NET
     ↓
 dotnet pack
     ↓
@@ -116,7 +116,7 @@ ProcessSession.Open
 Allocate / Write / Read / Dispose
 ```
 
-The consumer test references **only the local NuGet package**. It does not use a project reference to LibmemCli.
+The consumer test references **only the local NuGet package**. It does not use a project reference to Libmem.NET.
 
 This proves more than package creation: it verifies that the restored package is loadable and executable on Windows x64, that publish output receives the required native runtime files, and that unsupported non-x64 consumption fails early.
 
@@ -137,9 +137,9 @@ The package therefore uses the portable `win-x64` RID for native assets and fail
 
 ## NuGet platform constraints
 
-LibmemCli is not a normal AnyCPU managed library:
+Libmem.NET is not a normal AnyCPU managed library:
 
-- `LibmemCli.dll` is a Windows x64 C++/CLI mixed-mode assembly;
+- `Libmem.NET.dll` is a Windows x64 C++/CLI mixed-mode assembly;
 - it depends on native `libmem.dll`;
 - it requires `Ijwhost.dll`;
 - architecture selection matters at compile and runtime;
@@ -156,9 +156,9 @@ A public NuGet release requires all of the following:
 1. local package layout verification passes;
 2. an independent x64 PackageReference consumer restores successfully;
 3. the consumer builds without a project reference;
-4. `LibmemCli.dll`, `libmem.dll`, and `Ijwhost.dll` reach the consumer output correctly;
-5. `LibmemCli.xml` is available for IDE documentation;
-6. the consumer runs real LibmemCli API calls successfully;
+4. `Libmem.NET.dll`, `libmem.dll`, and `Ijwhost.dll` reach the consumer output correctly;
+5. `Libmem.NET.xml` is available for IDE documentation;
+6. the consumer runs real Libmem.NET API calls successfully;
 7. publish output also contains the native runtime dependencies;
 8. non-x64 consumers fail early with a clear diagnostic;
 9. package version/provenance matches the repository release;
