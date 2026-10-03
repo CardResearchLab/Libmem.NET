@@ -1,7 +1,7 @@
 #include "../Libmem.NET.h"
 
 using namespace System;
-using namespace ::Libmem::Net::Libmem::Net;
+using namespace Libmem::Net;
 
 ProcessInfo::ProcessInfo(
     UInt32 pid,
@@ -27,4 +27,4 @@ UInt64 ProcessInfo::StartTime::get() { return startTime_; }
 String^ ProcessInfo::Name::get() { return name_; }
 String^ ProcessInfo::Path::get() { return path_; }
 
-bool ProcessInfo::IsAlive() { return ::Libmem::Net::Libmem::IsProcessAlive(this); }
+bool ProcessInfo::IsAlive() { return Libmem::IsProcessAlive(this); }
