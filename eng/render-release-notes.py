@@ -84,7 +84,7 @@ def render_notes(
     if not isinstance(files, list) or not files:
         fail("Manifest files must be a non-empty list.")
 
-    package_name = "Libmem.NET-windows-x64.zip"
+    package_name = "LibmemCli-windows-x64.zip"
     checksum_name = package_name + ".sha256"
 
     packaged_files = sorted(
@@ -95,7 +95,7 @@ def render_notes(
     packaged_files.append("manifest.json")
 
     lines = [
-        f"Libmem.NET **v{version}** is the official Windows x64 / .NET 8 release "
+        f"LibmemCli **v{version}** is the official Windows x64 / .NET 8 release "
         "of the reusable C++/CLI wrapper around the pinned rdbo/libmem native library.",
         "",
         "## Release highlights",
@@ -136,7 +136,7 @@ def render_notes(
             f"- [CHANGELOG](https://github.com/{repository}/blob/{tag}/CHANGELOG.md)",
             f"- [Roadmap](https://github.com/{repository}/blob/{tag}/ROADMAP.md)",
             "",
-            "> Libmem.NET remains a general-purpose libmem wrapper. Application snapshots, caches, game state, IPC, and other product-specific models belong in consuming projects.",
+            "> LibmemCli remains a general-purpose libmem wrapper. Application snapshots, caches, game state, IPC, and other product-specific models belong in consuming projects.",
         ]
     )
     return "\n".join(lines).rstrip() + "\n"
@@ -174,7 +174,7 @@ def main() -> int:
         )
 
     archive_sha256 = read_checksum(
-        args.checksum, "Libmem.NET-windows-x64.zip"
+        args.checksum, "LibmemCli-windows-x64.zip"
     )
     notes = render_notes(
         version=version,
