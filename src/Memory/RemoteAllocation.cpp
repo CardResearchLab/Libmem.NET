@@ -2,8 +2,8 @@
 #include "../Interop/NativeConverter.h"
 
 using namespace System;
-using namespace Libmem::Net;
-using namespace Libmem::Net::Interop;
+using namespace ::Libmem::Net::Libmem::Net;
+using namespace ::Libmem::Net::Interop;
 
 RemoteAllocation::RemoteAllocation(ProcessInfo^ input,UInt64 address,UInt64 size)
     : target_(nullptr),address_(address),size_(size),disposed_(false) {
@@ -21,13 +21,13 @@ bool RemoteAllocation::Free() {
         disposed_=true;
         return true;
     }
-    if(!Libmem::IsProcessAlive(target_)) {
+    if(!::Libmem::Net::Libmem::IsProcessAlive(target_)) {
         // The OS already reclaimed this address space when the process exited.
         disposed_=true;
         target_=nullptr;
         return true;
     }
-    bool ok=Libmem::FreeMemory(target_,address_,size_);
+    bool ok=::Libmem::Net::Libmem::FreeMemory(target_,address_,size_);
     if(ok) {
         disposed_=true;
         target_=nullptr;
