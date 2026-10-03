@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
+using namespace Libmem::Net;
 
 AssemblyManager::AssemblyManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");
@@ -10,7 +10,7 @@ ProcessInfo^ AssemblyManager::Target() {
     if(session_==nullptr) throw gcnew ObjectDisposedException("AssemblyManager");
     return session_->Target;
 }
-LibmemCli::Architecture AssemblyManager::Architecture::get() {
+Libmem::Net::Architecture AssemblyManager::Architecture::get() {
     return Target()->Architecture;
 }
 array<Byte>^ AssemblyManager::Assemble(String^ code,UInt64 runtimeAddress) {
