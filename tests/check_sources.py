@@ -74,7 +74,7 @@ assert "ProcessInfo::" not in libmem_facade_source
 assert "LibmemException::" not in libmem_facade_source
 print("PASS static facade domain split contract")
 
-project_source_text = (root / "src/LibmemCli.vcxproj").read_text(encoding="utf-8")
+project_source_text = (root / "src/Libmem.NET.vcxproj").read_text(encoding="utf-8")
 for project_source in [
     r"Core\LibmemException.cpp",
     r"Core\ProcessInfo.cpp",
@@ -88,12 +88,12 @@ for project_source in [
     r"Assembly\LibmemAssembly.cpp",
 ]:
     assert f'Include="{project_source}"' in project_source_text, (
-        f"Split translation unit is not compiled by LibmemCli.vcxproj: {project_source}"
+        f"Split translation unit is not compiled by Libmem.NET.vcxproj: {project_source}"
     )
 print("PASS split translation units included in vcxproj")
 
 for file in [
-    "src/LibmemCli.vcxproj",
+    "src/Libmem.NET.vcxproj",
     "samples/Example.csproj",
     "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj",
     "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj",
@@ -259,8 +259,8 @@ assert "LM_VmtFree" not in vmt_finalizer
 assert "LM_VmtReset" not in vmt_finalizer
 print("PASS VmtManager lifecycle contract")
 
-solution = (root / "LibmemCli.sln").read_text(encoding="utf-8")
-vcxproj = (root / "src/LibmemCli.vcxproj").read_text(encoding="utf-8")
+solution = (root / "Libmem.NET.sln").read_text(encoding="utf-8")
+vcxproj = (root / "src/Libmem.NET.vcxproj").read_text(encoding="utf-8")
 build_script = (root / "build.ps1").read_text(encoding="utf-8")
 native_build_script = (root / "eng/build-native.ps1").read_text(encoding="utf-8")
 smoke_project = (root / "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj").read_text(encoding="utf-8")
@@ -454,7 +454,7 @@ package_script = (root / "eng/package-runtime.ps1").read_text(encoding="utf-8")
 assert "<GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>" in vcxproj
 assert "<Xdcmake>" in vcxproj
 assert "<OutputFile>$(OutDir)$(TargetName).xml</OutputFile>" in vcxproj
-assert "(Join-Path $managed 'LibmemCli.xml')" in package_script
+assert "(Join-Path $managed 'Libmem.NET.xml')" in package_script
 assert "/// <summary>" in header
 assert "ProcessSession" in header and "LibmemException" in header
 print("PASS XML documentation build/package contract")
@@ -492,8 +492,8 @@ assert "secrets.NUGET_USER" in release_workflow
 assert "Libmem.NET.${EXPECTED_VERSION}.nupkg" in release_workflow
 assert "dotnet nuget push" in release_workflow
 assert "https://api.nuget.org/v3/index.json" in release_workflow
-assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
-assert "LibmemCli-windows-x86.zip.sha256" not in release_workflow
+assert "Libmem.NET-windows-x64.zip.sha256" in release_workflow
+assert "Libmem.NET-windows-x86.zip.sha256" not in release_workflow
 release_notes_script_path = root / "eng/render-release-notes.py"
 release_notes_script = release_notes_script_path.read_text(encoding="utf-8")
 compile(release_notes_script, str(release_notes_script_path), "exec")
@@ -530,7 +530,7 @@ assert "package-version.txt" in nuget_consumer_workflow
 assert "LibmemCli.NuGetConsumer" in nuget_consumer_workflow
 assert "Publish NuGet consumer" in nuget_consumer_workflow
 assert "Reject non-x64 NuGet consumer" in nuget_consumer_workflow
-assert "LibmemCli.dll" in nuget_consumer_workflow
+assert "Libmem.NET.dll" in nuget_consumer_workflow
 assert "Ijwhost.dll" in nuget_consumer_workflow
 assert "nuget.org" not in nuget_consumer_workflow
 assert "setup-dotnet-x86.ps1" not in nuget_consumer_workflow

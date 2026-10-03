@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="LibmemCli">
-      <HintPath>..\..\artifacts\managed\x64\$(Configuration)\LibmemCli.dll</HintPath>
+    <Reference Include="Libmem.NET">
+      <HintPath>..\..\artifacts\managed\x64\$(Configuration)\Libmem.NET.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

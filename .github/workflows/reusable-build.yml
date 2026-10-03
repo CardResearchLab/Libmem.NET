@@ -21,7 +21,7 @@ on:
       artifact-name:
         description: Uploaded artifact name
         required: false
-        default: LibmemCli-windows-x64
+        default: Libmem.NET-windows-x64
         type: string
       include-nuget:
         description: Also create the official Libmem.NET NuGet package (x64 only)
@@ -34,7 +34,7 @@ permissions:
 
 jobs:
   build:
-    name: Build LibmemCli
+    name: Build Libmem.NET
     runs-on: windows-2022
 
     steps:
@@ -80,7 +80,7 @@ jobs:
         shell: pwsh
         run: |
           $commit = (git rev-parse HEAD).Trim()
-          python .\eng\verify-package.py --package-dir .\artifacts\package\LibmemCli-windows-${{ inputs.platform }} --archive .\artifacts\package\LibmemCli-windows-${{ inputs.platform }}.zip --checksum .\artifacts\package\LibmemCli-windows-${{ inputs.platform }}.zip.sha256 --expected-repository-commit $commit --expected-platform win-${{ inputs.platform }} --expected-configuration "${{ inputs.configuration }}"
+          python .\eng\verify-package.py --package-dir .\artifacts\package\Libmem.NET-windows-${{ inputs.platform }} --archive .\artifacts\package\Libmem.NET-windows-${{ inputs.platform }}.zip --checksum .\artifacts\package\Libmem.NET-windows-${{ inputs.platform }}.zip.sha256 --expected-repository-commit $commit --expected-platform win-${{ inputs.platform }} --expected-configuration "${{ inputs.configuration }}"
 
       - name: Package official NuGet release
         if: inputs.include-nuget && inputs.platform == 'x64'
@@ -94,9 +94,9 @@ jobs:
         with:
           name: ${{ inputs.artifact-name }}
           path: |
-            artifacts/package/LibmemCli-windows-${{ inputs.platform }}/
-            artifacts/package/LibmemCli-windows-${{ inputs.platform }}.zip
-            artifacts/package/LibmemCli-windows-${{ inputs.platform }}.zip.sha256
+            artifacts/package/Libmem.NET-windows-${{ inputs.platform }}/
+            artifacts/package/Libmem.NET-windows-${{ inputs.platform }}.zip
+            artifacts/package/Libmem.NET-windows-${{ inputs.platform }}.zip.sha256
             ${{ inputs.include-nuget && inputs.platform == 'x64' && 'artifacts/nuget/*.nupkg' || '' }}
           if-no-files-found: error
           retention-days: 14
