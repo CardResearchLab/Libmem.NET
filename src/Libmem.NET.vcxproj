@@ -77,10 +77,10 @@
     </Xdcmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="LibmemCli.h" />
+    <ClInclude Include="Libmem.NET.h" />
     <ClInclude Include="Interop\NativeConverter.h" />
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="LibmemCli.cpp" />
+    <ClCompile Include="Libmem.NET.cpp" />
     <ClCompile Include="Assembly\LibmemAssembly.cpp" />
     <ClCompile Include="Assembly\InstructionInfo.cpp" />
     <ClCompile Include="Scanning\LibmemScan.cpp" />
