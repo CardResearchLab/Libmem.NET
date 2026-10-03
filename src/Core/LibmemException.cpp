@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 
 using namespace System;
-using namespace LibmemCli;
+namespace Libmem::NET {
 
 LibmemException::LibmemException(String^ operation,String^ message)
     : InvalidOperationException(message),operation_(operation) {
@@ -14,3 +14,5 @@ LibmemException::LibmemException(String^ operation,String^ message,Exception^ in
         throw gcnew ArgumentException("Operation must not be empty.", "operation");
 }
 String^ LibmemException::Operation::get() { return operation_; }
+
+} // namespace Libmem::NET

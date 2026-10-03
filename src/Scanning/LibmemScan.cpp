@@ -1,11 +1,11 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 #include <vcclr.h>
 
 using namespace System;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+namespace Libmem::NET {
+using namespace ::Libmem::NET::Interop;
 
 UInt64 Libmem::DataScan(array<Byte>^ data,UInt64 a,UInt64 size) {
     if(data==nullptr) throw gcnew ArgumentNullException("data"); if(!data->Length) throw gcnew ArgumentException("Pattern is empty.", "data");
@@ -45,3 +45,5 @@ UInt64 Libmem::SigScan(ProcessInfo^ input,String^ signature,UInt64 a,UInt64 size
     if(String::IsNullOrWhiteSpace(signature)) throw gcnew ArgumentException("Signature must not be empty.", "signature");
     auto s=utf8(signature,"signature"); return LM_SigScanEx(&p,s.c_str(),native_address(a,"address"),native_size(size,"size"));
 }
+
+} // namespace Libmem::NET

@@ -9,7 +9,7 @@ using namespace System;
 using namespace System::Text;
 using namespace System::Runtime::InteropServices;
 
-namespace LibmemCli::Interop {
+namespace Libmem::NET::Interop {
     std::string utf8(String^ value, String^ parameterName) {
         if(value == nullptr) throw gcnew ArgumentNullException(parameterName);
         if(value->IndexOf('\0') >= 0)
@@ -55,9 +55,9 @@ namespace LibmemCli::Interop {
         return static_cast<lm_size_t>(value);
     }
 
-    LibmemCli::Architecture native_architecture(LibmemCli::Architecture value, String^ parameterName) {
+    ::Libmem::NET::Architecture native_architecture(::Libmem::NET::Architecture value, String^ parameterName) {
         auto raw = static_cast<unsigned int>(value);
-        if(raw > static_cast<unsigned int>(LibmemCli::Architecture::SystemZ))
+        if(raw > static_cast<unsigned int>(::Libmem::NET::Architecture::SystemZ))
             throw gcnew ArgumentOutOfRangeException(parameterName, "Unsupported architecture value.");
         return value;
     }
@@ -110,7 +110,7 @@ namespace LibmemCli::Interop {
         return gcnew ProcessInfo(
             value.pid,
             value.ppid,
-            static_cast<LibmemCli::Architecture>(value.arch),
+            static_cast<::Libmem::NET::Architecture>(value.arch),
             value.bits,
             value.start_time,
             str(value.name),

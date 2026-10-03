@@ -1,4 +1,4 @@
-# LibmemCli API Reference
+# Libmem.NET API Reference
 
 > Target: Windows x64 / .NET 8  
 > Scope: general-purpose managed wrapper over the pinned rdbo/libmem C ABI.
@@ -10,7 +10,8 @@ This document focuses on **consumer-facing behavior**. Build instructions, proje
 New code should prefer `ProcessSession.Open(...)`.
 
 ```csharp
-using LibmemCli;
+using Libmem.NET;
+using NativeApi = global::Libmem.NET.Libmem;
 
 using var session = ProcessSession.Open(Environment.ProcessId)
     ?? throw new InvalidOperationException("Target process was not found.");
@@ -18,7 +19,7 @@ using var session = ProcessSession.Open(Environment.ProcessId)
 Console.WriteLine($"{session.Name} PID={session.Pid}");
 ```
 
-`Libmem.Attach(...)` and the static `Libmem.*` methods remain available as compatibility APIs, but session-bound Managers are the preferred surface when target binding, ownership, or lifecycle semantics matter.
+`NativeApi.Attach(...)` and the static `NativeApi.*` methods remain available as compatibility APIs, but session-bound Managers are the preferred surface when target binding, ownership, or lifecycle semantics matter.
 
 ## ProcessSession model
 
@@ -59,11 +60,11 @@ Important fields:
 - `Name`
 - `Path`
 
-`ProcessInfo` is intentionally a **read-only identity/metadata object** created by LibmemCli. Consumers cannot rewrite its PID, start time, architecture, name, path, or other identity fields after creation. Its only behavior method is `IsAlive()`, which checks the exact PID + start-time identity.
+`ProcessInfo` is intentionally a **read-only identity/metadata object** created by Libmem.NET. Consumers cannot rewrite its PID, start time, architecture, name, path, or other identity fields after creation. Its only behavior method is `IsAlive()`, which checks the exact PID + start-time identity.
 
 This immutability is part of the frozen identity contract: an object returned by `GetProcess`, `FindProcess`, `EnumProcesses`, `Refresh`, or `ProcessSession.Info` continues to describe the same captured process identity for its lifetime. Consumers resolve a new `ProcessInfo` instead of mutating an existing one.
 
-Memory and scan operations are not exposed on `ProcessInfo`. Use `ProcessSession.Memory` / `ProcessSession.Scanner` for session-bound operations, or the static `Libmem.*` compatibility facade for one-shot calls.
+Memory and scan operations are not exposed on `ProcessInfo`. Use `ProcessSession.Memory` / `ProcessSession.Scanner` for session-bound operations, or the static `NativeApi.*` compatibility facade for one-shot calls.
 
 ### ProcessSession.Refresh
 
@@ -99,7 +100,7 @@ Target exit does **not** implicitly detach or dispose a `ProcessSession`. The se
 - `Refresh()` returns `null`;
 - Manager properties remain accessible.
 
-LibmemCli intentionally does not add an exact-identity liveness preflight to every Manager operation. For external processes, exact PID + start-time validation requires process enumeration; doing that before every read/write/scan would add material overhead and still could not eliminate the race between a preflight and the native operation.
+Libmem.NET intentionally does not add an exact-identity liveness preflight to every Manager operation. For external processes, exact PID + start-time validation requires process enumeration; doing that before every read/write/scan would add material overhead and still could not eliminate the race between a preflight and the native operation.
 
 Manager operations therefore keep their documented per-operation result/error semantics after target exit unless the method has an explicit managed liveness precondition. In the current frozen contract, `MemoryManager.Allocate` and `InjectorManager.InjectLibrary` explicitly reject a dead target with `InvalidOperationException`. Independently owned handles keep their separate target-exit cleanup semantics.
 
@@ -142,7 +143,7 @@ Zero is not treated uniformly across all memory APIs because the pinned Windows 
 - `Write(address, Array.Empty<byte>())` / static `WriteMemory(..., empty)` -> `0` bytes written.
 - `Set(address, value, 0)` / static `SetMemory(..., 0)` -> `0` bytes set.
 - `Protect(address, 0, protection)` preserves the pinned Windows libmem behavior where zero means one system page.
-- Static `Libmem.AllocateMemory(0, protection)` preserves the pinned Windows libmem behavior where zero requests one system page.
+- Static `NativeApi.AllocateMemory(0, protection)` preserves the pinned Windows libmem behavior where zero requests one system page.
 - `MemoryManager.Allocate(0, protection)` throws `ArgumentOutOfRangeException("size")` because the owned `RemoteAllocation` contract requires a non-zero managed size.
 - On the pinned Windows implementation, `FreeMemory(..., size)` releases the whole region with `MEM_RELEASE`; the supplied size is not a release length.
 
@@ -178,11 +179,11 @@ On x64, the bad-address sentinel corresponds to `UInt64.MaxValue`.
 
 ### ModuleInfo
 
-`ModuleInfo` is a library-created, read-only description of one native module mapping. Consumers can read `Base`, `End`, `Size`, `Name`, and `Path`, but cannot construct an empty descriptor or rewrite those values after LibmemCli resolves the module.
+`ModuleInfo` is a library-created, read-only description of one native module mapping. Consumers can read `Base`, `End`, `Size`, `Name`, and `Path`, but cannot construct an empty descriptor or rewrite those values after Libmem.NET resolves the module.
 
 This matters because a resolved `ModuleInfo` may later be passed back to module unload and symbol APIs. Freezing the descriptor prevents consumer-side mutation from silently changing the native module record used by those operations.
 
-LibmemCli also tracks the originating process identity internally. Session-bound `ModuleManager.Unload` and `SymbolManager` operations, plus the static `UnloadModule` overloads, reject a `ModuleInfo` captured from a different PID + start-time identity with `ArgumentException("module")`. This validation is an in-memory identity comparison and does not enumerate modules or add a target-liveness preflight. The internal provenance is intentionally not exposed as additional public `ModuleInfo` metadata.
+Libmem.NET also tracks the originating process identity internally. Session-bound `ModuleManager.Unload` and `SymbolManager` operations, plus the static `UnloadModule` overloads, reject a `ModuleInfo` captured from a different PID + start-time identity with `ArgumentException("module")`. This validation is an in-memory identity comparison and does not enumerate modules or add a target-liveness preflight. The internal provenance is intentionally not exposed as additional public `ModuleInfo` metadata.
 
 ### ModuleManager
 
@@ -201,9 +202,9 @@ Result behavior:
 
 ### ThreadInfo
 
-`ThreadInfo` is a library-created, read-only description of one native thread record. Consumers can inspect `Id` and `OwnerPid`, but cannot construct an empty descriptor or rewrite those values after LibmemCli resolves the thread.
+`ThreadInfo` is a library-created, read-only description of one native thread record. Consumers can inspect `Id` and `OwnerPid`, but cannot construct an empty descriptor or rewrite those values after Libmem.NET resolves the thread.
 
-This matters because a resolved `ThreadInfo` may later be passed to `Libmem.GetThreadProcess(ThreadInfo)`. Freezing the descriptor prevents consumer-side mutation from silently changing the native thread record used by that lookup.
+This matters because a resolved `ThreadInfo` may later be passed to `NativeApi.GetThreadProcess(ThreadInfo)`. Freezing the descriptor prevents consumer-side mutation from silently changing the native thread record used by that lookup.
 
 ### ThreadManager
 
@@ -232,7 +233,7 @@ Primary operations:
 
 ### InstructionInfo
 
-`InstructionInfo` is a LibmemCli-created, deeply read-only assembly/disassembly result. `Address`, `Size`, `Mnemonic`, and `OperandString` are getter-only.
+`InstructionInfo` is a Libmem.NET-created, deeply read-only assembly/disassembly result. `Address`, `Size`, `Mnemonic`, and `OperandString` are getter-only.
 
 `Bytes` is also getter-only and returns a defensive copy. Mutating the returned `byte[]` therefore does not modify the instruction state retained by the `InstructionInfo` instance.
 
@@ -261,7 +262,7 @@ Definite failures:
 
 ## Owned resources
 
-LibmemCli distinguishes a native operation result from a resource that has an explicit managed ownership lifetime.
+Libmem.NET distinguishes a native operation result from a resource that has an explicit managed ownership lifetime.
 
 ### RemoteAllocation
 
@@ -293,7 +294,7 @@ Explicit disposal performs deterministic cleanup. The finalizer does **not** mut
 Created by:
 
 - `HookManager.Install`
-- static `Libmem.HookCode`
+- static `NativeApi.HookCode`
 
 Relevant state:
 
@@ -346,7 +347,7 @@ Explicit disposal restores tracked entries deterministically. After successful c
 
 ### LibmemException
 
-Used only when LibmemCli can determine that a native libmem operation **definitely failed**.
+Used only when Libmem.NET can determine that a native libmem operation **definitely failed**.
 
 The `Operation` property carries the native operation name.
 
@@ -367,7 +368,7 @@ catch (LibmemException ex)
 
 ### Standard .NET exceptions
 
-LibmemCli uses standard .NET exception types for managed contract violations.
+Libmem.NET uses standard .NET exception types for managed contract violations.
 
 Examples:
 
@@ -416,13 +417,13 @@ Prefer `ProcessSession` when code performs multiple operations against one targe
 
 ## Upstream compatibility workarounds
 
-LibmemCli pins a specific upstream libmem revision and documents wrapper-level workarounds where the pinned Windows implementation is unsafe or inconsistent.
+Libmem.NET pins a specific upstream libmem revision and documents wrapper-level workarounds where the pinned Windows implementation is unsafe or inconsistent.
 
 ### LM_GetCommandLine
 
 The pinned Windows implementation has an unsafe current-process-only path.
 
-LibmemCli therefore:
+Libmem.NET therefore:
 
 - serves current-process arguments from `System.Environment`
 - returns `null` for unsupported external-process command-line queries
@@ -432,7 +433,7 @@ LibmemCli therefore:
 
 The pinned Windows implementation populates external `LM_GetProcessEx(...).start_time` using `GetCurrentProcess()` instead of the opened target-process handle.
 
-LibmemCli still calls `LM_GetProcessEx` for native metadata/API coverage, then reconciles the external target's start time through `LM_EnumProcesses`.
+Libmem.NET still calls `LM_GetProcessEx` for native metadata/API coverage, then reconciles the external target's start time through `LM_EnumProcesses`.
 
 This preserves the wrapper's PID + start-time identity model rather than weakening process identity checks.
 
@@ -452,19 +453,19 @@ Existing x86 source/build compatibility paths remain in the repository, but x86 
 Runtime packages include:
 
 ```text
-LibmemCli.dll
-LibmemCli.xml
+Libmem.NET.dll
+Libmem.NET.xml
 Ijwhost.dll
 libmem.dll
 ```
 
-Keep `LibmemCli.xml` beside `LibmemCli.dll` so Visual Studio / C# editors can load generated IntelliSense documentation.
+Keep `Libmem.NET.xml` beside `Libmem.NET.dll` so Visual Studio / C# editors can load generated IntelliSense documentation.
 
 ## Distribution and consumption
 
 Stable distribution currently remains the Windows x64 Runtime ZIP and source/reusable-workflow integration.
 
-The repository also contains an **unpublished local NuGet prototype** with the provisional package ID `HearthstoneModding.LibmemCli`. It is validated through an independent PackageReference consumer before any public package publication is considered.
+The repository also contains an **unpublished local NuGet prototype** with the provisional package ID `HearthstoneModding.Libmem.NET`. It is validated through an independent PackageReference consumer before any public package publication is considered.
 
 See [CONSUMPTION.md](CONSUMPTION.md) for the package layout, x64 constraints, and NuGet acceptance criteria.
 
@@ -473,9 +474,9 @@ See [CONSUMPTION.md](CONSUMPTION.md) for the package layout, x64 constraints, an
 The repository maintains:
 
 ```text
-api/LibmemCli.PublicApi.txt
+api/Libmem.NET.PublicApi.txt
 ```
 
-CI compares the public declarations in `src/LibmemCli.h` with that baseline.
+CI compares the public declarations in `src/Libmem.NET.h` with that baseline.
 
 Intentional public API changes must update the baseline and changelog explicitly. Accidental signature drift fails validation.

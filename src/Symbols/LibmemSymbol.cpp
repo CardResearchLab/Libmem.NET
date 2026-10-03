@@ -1,12 +1,12 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 #include <vector>
 
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+namespace Libmem::NET {
+using namespace ::Libmem::NET::Interop;
 
 List<SymbolInfo^>^ Libmem::EnumSymbols(ModuleInfo^ input,bool demangle) {
     auto m=mod(input); std::vector<NativeSymbol> native;
@@ -30,3 +30,5 @@ String^ Libmem::DemangleSymbol(String^ name) {
     if(!output) return nullptr;
     try { return str(output); } finally { LM_FreeDemangledSymbol(output); }
 }
+
+} // namespace Libmem::NET

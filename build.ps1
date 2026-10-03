@@ -30,9 +30,9 @@ if (-not $msbuild) {
     throw 'MSBuild was not found. Install Visual Studio with C++/CLI support.'
 }
 
-& $msbuild (Join-Path $root 'LibmemCli.sln') /m /restore "/p:Configuration=$Configuration" "/p:Platform=$Platform"
+& $msbuild (Join-Path $root 'Libmem.NET.sln') /m /restore "/p:Configuration=$Configuration" "/p:Platform=$Platform"
 if ($LASTEXITCODE -ne 0) {
-    throw 'LibmemCli build failed.'
+    throw 'Libmem.NET build failed.'
 }
 
-Write-Host "LibmemCli output: $(Join-Path $root "artifacts\managed\$Platform\$Configuration")"
+Write-Host "Libmem.NET output: $(Join-Path $root "artifacts\managed\$Platform\$Configuration")"

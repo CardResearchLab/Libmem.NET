@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
-using LibmemCli;
+using Libmem.NET;
+using NativeApi = global::Libmem.NET.Libmem;
 
 static void Check(bool condition, string message)
 {
@@ -25,20 +26,20 @@ static TException ExpectThrows<TException>(Action action, string message)
 
 static string ResolveTargetDll()
 {
-    var configured = Environment.GetEnvironmentVariable("LIBMEMCLI_TEST_TARGET_DLL");
+    var configured = Environment.GetEnvironmentVariable("LIBMEM_NET_TEST_TARGET_DLL");
     if (!string.IsNullOrWhiteSpace(configured))
         return Path.GetFullPath(configured);
 
     var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
     var candidates = new[]
     {
-        Path.Combine(repoRoot, "LibmemCli.TestTarget", "bin", "x64", "Release", "net8.0", "LibmemCli.TestTarget.dll"),
-        Path.Combine(repoRoot, "LibmemCli.TestTarget", "bin", "Release", "net8.0", "LibmemCli.TestTarget.dll"),
+        Path.Combine(repoRoot, "Libmem.NET.TestTarget", "bin", "x64", "Release", "net8.0", "Libmem.NET.TestTarget.dll"),
+        Path.Combine(repoRoot, "Libmem.NET.TestTarget", "bin", "Release", "net8.0", "Libmem.NET.TestTarget.dll"),
     };
 
     return candidates.FirstOrDefault(File.Exists)
         ?? throw new FileNotFoundException(
-            "LibmemCli.TestTarget.dll was not found. Build tests/LibmemCli.TestTarget first or set LIBMEMCLI_TEST_TARGET_DLL.");
+            "Libmem.NET.TestTarget.dll was not found. Build tests/Libmem.NET.TestTarget first or set LIBMEM_NET_TEST_TARGET_DLL.");
 }
 
 static (uint Pid, ulong Address, ulong Size) ParseReady(string line)
@@ -58,7 +59,7 @@ static (uint Pid, ulong Address, ulong Size) ParseReady(string line)
     return (pid, address, size);
 }
 
-Console.WriteLine("LibmemCli external-process runtime tests");
+Console.WriteLine("Libmem.NET external-process runtime tests");
 
 var targetDll = ResolveTargetDll();
 var startInfo = new ProcessStartInfo
@@ -73,7 +74,7 @@ var startInfo = new ProcessStartInfo
 startInfo.ArgumentList.Add(targetDll);
 
 using var child = Process.Start(startInfo)
-    ?? throw new InvalidOperationException("Could not start LibmemCli.TestTarget.");
+    ?? throw new InvalidOperationException("Could not start Libmem.NET.TestTarget.");
 
 try
 {
@@ -85,8 +86,8 @@ try
     Check(ready.Pid == (uint)child.Id, "Handshake PID does not match the launched child process.");
     Check(ready.Address != 0 && ready.Size >= 64, "TestTarget returned an invalid allocation.");
 
-    var process = Libmem.GetProcess(ready.Pid);
-    Check(process is not null, "Libmem.GetProcess could not resolve the TestTarget process.");
+    var process = NativeApi.GetProcess(ready.Pid);
+    Check(process is not null, "NativeApi.GetProcess could not resolve the TestTarget process.");
 
     var processInfoType = typeof(ProcessInfo);
     Check(processInfoType.GetConstructor(Type.EmptyTypes) is null,
@@ -108,10 +109,10 @@ try
             $"ProcessInfo.{propertyName} must remain public read-only metadata.");
     }
 
-    var enumeratedProcess = Libmem.EnumProcesses().FirstOrDefault(candidate => candidate.Pid == ready.Pid);
-    Check(enumeratedProcess is not null, "Libmem.EnumProcesses did not include the TestTarget process.");
+    var enumeratedProcess = NativeApi.EnumProcesses().FirstOrDefault(candidate => candidate.Pid == ready.Pid);
+    Check(enumeratedProcess is not null, "NativeApi.EnumProcesses did not include the TestTarget process.");
     Check(process!.StartTime == enumeratedProcess!.StartTime,
-        "Libmem.GetProcess returned a target start time inconsistent with EnumProcesses.");
+        "NativeApi.GetProcess returned a target start time inconsistent with EnumProcesses.");
 
     using var pidSession = ProcessSession.Open(ready.Pid)
         ?? throw new InvalidOperationException("ProcessSession.Open(pid) failed for TestTarget.");
@@ -125,7 +126,7 @@ try
     Check(session.Pid == ready.Pid, "ProcessSession attached to the wrong PID.");
     Check(session.IsAlive(), "TestTarget should be alive after attach.");
 
-    var foreignModule = Libmem.EnumModules().FirstOrDefault(module => module is not null)
+    var foreignModule = NativeApi.EnumModules().FirstOrDefault(module => module is not null)
         ?? throw new InvalidOperationException("Current process exposed no module for provenance validation.");
 
     var foreignUnload = ExpectThrows<ArgumentException>(
@@ -135,7 +136,7 @@ try
         "ModuleManager.Unload reported the wrong parameter name for a foreign ModuleInfo.");
 
     var staticForeignUnload = ExpectThrows<ArgumentException>(
-        () => Libmem.UnloadModule(process!, foreignModule),
+        () => NativeApi.UnloadModule(process!, foreignModule),
         "UnloadModule(process, module) should reject a ModuleInfo from another process.");
     Check(staticForeignUnload.ParamName == "module",
         "UnloadModule(process, foreign module) reported the wrong parameter name.");
@@ -143,7 +144,7 @@ try
     var childModule = session.Modules.Enumerate().FirstOrDefault(module => module is not null)
         ?? throw new InvalidOperationException("TestTarget exposed no module for provenance validation.");
     var currentProcessUnload = ExpectThrows<ArgumentException>(
-        () => Libmem.UnloadModule(childModule),
+        () => NativeApi.UnloadModule(childModule),
         "UnloadModule(module) should reject a module captured from another process.");
     Check(currentProcessUnload.ParamName == "module",
         "UnloadModule(foreign module) reported the wrong parameter name.");
@@ -179,7 +180,7 @@ try
     Check(session.Scanner.SigScan(signature, ready.Address, ready.Size) == ready.Address,
         "Remote signature scan did not resolve the TestTarget allocation.");
 
-    var segment = Libmem.FindSegment(process!, ready.Address);
+    var segment = NativeApi.FindSegment(process!, ready.Address);
     Check(segment is not null
           && segment.Base <= ready.Address
           && ready.Address < segment.End,

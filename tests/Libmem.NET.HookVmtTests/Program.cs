@@ -1,4 +1,5 @@
-using LibmemCli;
+using Libmem.NET;
+using NativeApi = global::Libmem.NET.Libmem;
 
 static void Check(bool condition, string message)
 {
@@ -42,7 +43,7 @@ static unsafe int CallNoArgs(ulong address)
     return fn();
 }
 
-Console.WriteLine("LibmemCli Hook/VMT runtime tests");
+Console.WriteLine("Libmem.NET Hook/VMT runtime tests");
 var invalidAddress = IntPtr.Size == sizeof(ulong) ? ulong.MaxValue : uint.MaxValue;
 
 try
@@ -55,7 +56,7 @@ catch (ArgumentOutOfRangeException ex)
     Check(ex.ParamName == "vtableAddress", "VmtManager(0) reported the wrong parameter name.");
 }
 
-using var session = Libmem.Attach((uint)Environment.ProcessId)
+using var session = NativeApi.Attach((uint)Environment.ProcessId)
     ?? throw new InvalidOperationException("Could not attach to the current process.");
 
 var memory = session.Memory;

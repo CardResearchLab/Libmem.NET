@@ -1,6 +1,6 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 
-using namespace LibmemCli;
+namespace Libmem::NET {
 
 SegmentInfo::SegmentInfo(
     UInt64 baseAddress,
@@ -16,3 +16,5 @@ UInt64 SegmentInfo::Base::get() { return base_; }
 UInt64 SegmentInfo::End::get() { return end_; }
 UInt64 SegmentInfo::Size::get() { return size_; }
 MemoryProtection SegmentInfo::Protection::get() { return protection_; }
+
+} // namespace Libmem::NET

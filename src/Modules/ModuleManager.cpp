@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
+namespace Libmem::NET {
 
 ModuleManager::ModuleManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");
@@ -29,3 +29,5 @@ bool ModuleManager::Unload(ModuleInfo^ moduleInfo) {
         throw gcnew ArgumentException("ModuleInfo belongs to a different process identity.", "module");
     return Libmem::UnloadModule(target,moduleInfo);
 }
+
+} // namespace Libmem::NET

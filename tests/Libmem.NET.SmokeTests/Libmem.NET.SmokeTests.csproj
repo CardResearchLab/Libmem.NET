@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <AssemblyName>Libmem.NET.SmokeTests</AssemblyName>
+    <RootNamespace>Libmem.NET.SmokeTests</RootNamespace>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <Platforms>x64;x86</Platforms><PlatformTarget>$(Platform)</PlatformTarget>
@@ -8,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="LibmemCli">
-      <HintPath>..\..\artifacts\managed\$(Platform)\$(Configuration)\LibmemCli.dll</HintPath>
+    <Reference Include="Libmem.NET">
+      <HintPath>..\..\artifacts\managed\$(Platform)\$(Configuration)\Libmem.NET.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

@@ -1,9 +1,9 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 using namespace System;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+namespace Libmem::NET {
+using namespace ::Libmem::NET::Interop;
 
 RemoteAllocation::RemoteAllocation(ProcessInfo^ input,UInt64 address,UInt64 size)
     : target_(nullptr),address_(address),size_(size),disposed_(false) {
@@ -46,3 +46,5 @@ RemoteAllocation::!RemoteAllocation() {
     target_=nullptr;
     disposed_=true;
 }
+
+} // namespace Libmem::NET

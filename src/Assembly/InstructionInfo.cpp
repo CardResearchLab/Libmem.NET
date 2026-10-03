@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 
 using namespace System;
-using namespace LibmemCli;
+namespace Libmem::NET {
 
 InstructionInfo::InstructionInfo(
     UInt64 address,
@@ -22,3 +22,5 @@ array<Byte>^ InstructionInfo::Bytes::get() {
 }
 String^ InstructionInfo::Mnemonic::get() { return mnemonic_; }
 String^ InstructionInfo::OperandString::get() { return operandString_; }
+
+} // namespace Libmem::NET

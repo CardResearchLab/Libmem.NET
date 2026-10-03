@@ -1,6 +1,18 @@
-using LibmemCli;
+using Libmem.NET;
+using NativeApi = global::Libmem.NET.Libmem;
 
-Console.WriteLine("LibmemCli NuGet consumer test");
+Console.WriteLine("Libmem.NET NuGet consumer test");
+
+var wrapperAssembly = typeof(ProcessSession).Assembly;
+if (wrapperAssembly.GetName().Name != "Libmem.NET")
+    throw new InvalidOperationException("The wrapper assembly identity must be Libmem.NET.");
+foreach (var apiType in new[] { typeof(NativeApi), typeof(ProcessSession), typeof(ProcessInfo),
+    typeof(MemoryManager), typeof(HookManager), typeof(VmtManager), typeof(InjectorManager) })
+{
+    if (apiType.Namespace != "Libmem.NET" || apiType.Assembly != wrapperAssembly)
+        throw new InvalidOperationException($"Unexpected public API identity: {apiType.FullName}");
+}
+
 
 var moduleType = typeof(ModuleInfo);
 if (moduleType.GetConstructors().Length != 0)
@@ -67,7 +79,7 @@ foreach (var propertyName in new[] { "Address", "Size", "Bytes", "Mnemonic", "Op
         throw new InvalidOperationException($"InstructionInfo.{propertyName} must be read-only.");
 }
 
-var assembledInstruction = Libmem.Assemble("nop")
+var assembledInstruction = NativeApi.Assemble("nop")
     ?? throw new InvalidOperationException("Could not assemble an instruction for immutability validation.");
 
 var originalBytes = assembledInstruction.Bytes;
@@ -80,7 +92,7 @@ originalBytes[0] ^= 0xFF;
 if (assembledInstruction.Bytes[0] != expectedFirstByte)
     throw new InvalidOperationException("InstructionInfo.Bytes must return a defensive copy.");
 
-var process = Libmem.CurrentProcess()
+var process = NativeApi.CurrentProcess()
     ?? throw new InvalidOperationException("Current process could not be resolved through the NuGet package.");
 
 using var session = ProcessSession.Open(process)

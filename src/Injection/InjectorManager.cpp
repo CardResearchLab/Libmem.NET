@@ -1,9 +1,9 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 using namespace System;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+namespace Libmem::NET {
+using namespace ::Libmem::NET::Interop;
 
 InjectedModuleHandle::InjectedModuleHandle(ProcessInfo^ target,ModuleInfo^ moduleInfo,String^ requestedPath)
     : target_(nullptr),module_(nullptr),requestedPath_(requestedPath),active_(true),disposed_(false) {
@@ -111,3 +111,5 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
 
     return gcnew InjectedModuleHandle(target,loaded,fullPath);
 }
+
+} // namespace Libmem::NET

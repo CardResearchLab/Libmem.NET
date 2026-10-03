@@ -1,4 +1,5 @@
-using LibmemCli;
+using Libmem.NET;
+using NativeApi = global::Libmem.NET.Libmem;
 
 try
 {
@@ -12,7 +13,7 @@ catch (LibmemException ex)
 
 static void RunSample()
 {
-    var self = Libmem.CurrentProcess()
+    var self = NativeApi.CurrentProcess()
         ?? throw new InvalidOperationException("Current process could not be resolved.");
 
     using var session = ProcessSession.Open(self)

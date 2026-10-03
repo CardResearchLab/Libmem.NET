@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
+namespace Libmem::NET {
 
 ScanManager::ScanManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");
@@ -22,3 +22,5 @@ UInt64 ScanManager::PatternScan(array<Byte>^ pattern,String^ mask,UInt64 address
 UInt64 ScanManager::SigScan(String^ signature,UInt64 address,UInt64 scanSize) {
     return Libmem::SigScan(Target(),signature,address,scanSize);
 }
+
+} // namespace Libmem::NET

@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
+namespace Libmem::NET {
 
 ThreadManager::ThreadManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");
@@ -16,3 +16,5 @@ List<ThreadInfo^>^ ThreadManager::Enumerate() {
 ThreadInfo^ ThreadManager::Main::get() {
     return Libmem::GetThread(Target());
 }
+
+} // namespace Libmem::NET

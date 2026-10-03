@@ -1,6 +1,6 @@
-# LibmemCli public API baseline
-# Generated from src/LibmemCli.h, including the managed namespace. Intentional public API changes must update this file and CHANGELOG.md.
-NAMESPACE LibmemCli
+# Libmem.NET public API baseline
+# Generated from src/Libmem.NET.h, including the managed namespace. Intentional public API changes must update this file and CHANGELOG.md.
+NAMESPACE Libmem.NET
 TYPE public enum class Architecture : unsigned int
   Generic = LM_ARCH_GENERIC
   ArmV7 = LM_ARCH_ARMV7
@@ -42,7 +42,7 @@ TYPE public ref class LibmemException : InvalidOperationException
 TYPE public ref class ProcessInfo sealed
   property UInt32 Pid { UInt32 get(); }
   property UInt32 ParentPid { UInt32 get(); }
-  property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+  property ::Libmem::NET::Architecture Architecture { ::Libmem::NET::Architecture get(); }
   property UInt64 Bits { UInt64 get(); }
   property UInt64 StartTime { UInt64 get(); }
   property String^ Name { String^ get(); }
@@ -85,7 +85,7 @@ TYPE public ref class ProcessSession sealed : IDisposable
   property ProcessInfo^ Info { ProcessInfo^ get(); }
   property UInt32 Pid { UInt32 get(); }
   property String^ Name { String^ get(); }
-  property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+  property ::Libmem::NET::Architecture Architecture { ::Libmem::NET::Architecture get(); }
   property UInt64 Bits { UInt64 get(); }
   property MemoryManager^ Memory { MemoryManager^ get(); }
   property ModuleManager^ Modules { ModuleManager^ get(); }
@@ -120,7 +120,7 @@ TYPE public ref class SymbolManager sealed
   UInt64 FindAddress(ModuleInfo^ module, String^ name, bool demangle);
   String^ Demangle(String^ name);
 TYPE public ref class AssemblyManager sealed
-  property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+  property ::Libmem::NET::Architecture Architecture { ::Libmem::NET::Architecture get(); }
   array<Byte>^ Assemble(String^ code, UInt64 runtimeAddress);
   List<InstructionInfo^>^ Disassemble(array<Byte>^ code, UInt64 instructionCount, UInt64 runtimeAddress);
   List<InstructionInfo^>^ Disassemble(UInt64 address, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
@@ -216,12 +216,12 @@ TYPE public ref class Libmem abstract sealed
   static UInt64 PatternScan(ProcessInfo^ process, array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
   static UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
   static UInt64 SigScan(ProcessInfo^ process, String^ signature, UInt64 address, UInt64 scanSize);
-  static LibmemCli::Architecture GetArchitecture();
+  static ::Libmem::NET::Architecture GetArchitecture();
   static InstructionInfo^ Assemble(String^ code);
-  static array<Byte>^ Assemble(String^ code, LibmemCli::Architecture architecture, UInt64 runtimeAddress);
+  static array<Byte>^ Assemble(String^ code, ::Libmem::NET::Architecture architecture, UInt64 runtimeAddress);
   static InstructionInfo^ Disassemble(UInt64 codeAddress);
-  static List<InstructionInfo^>^ Disassemble(UInt64 codeAddress, LibmemCli::Architecture architecture, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
-  static List<InstructionInfo^>^ Disassemble(array<Byte>^ code, LibmemCli::Architecture architecture, UInt64 instructionCount, UInt64 runtimeAddress);
+  static List<InstructionInfo^>^ Disassemble(UInt64 codeAddress, ::Libmem::NET::Architecture architecture, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
+  static List<InstructionInfo^>^ Disassemble(array<Byte>^ code, ::Libmem::NET::Architecture architecture, UInt64 instructionCount, UInt64 runtimeAddress);
   static UInt64 CodeLength(UInt64 codeAddress, UInt64 minimumLength);
   static UInt64 CodeLength(ProcessInfo^ process, UInt64 codeAddress, UInt64 minimumLength);
   static HookHandle^ HookCode(UInt64 source, UInt64 destination);

@@ -1,10 +1,12 @@
-# LibmemCli Development Roadmap
+# Libmem.NET Development Roadmap
+
+Current naming migration: assembly and namespace are unified as `Libmem.NET`, requiring consumers to recompile. This is an explicit identity change to the previous freeze decision; behavior contracts are preserved. Stable publication of the new identity requires migration acceptance. See the [migration guide](docs/MIGRATION.md).
 
 > Current strategy: **x64 first; x86 deferred.**
 
 ## Platform policy
 
-Official LibmemCli development, default CI, runtime acceptance, and GitHub Releases currently target **Windows x64 / .NET 8**.
+Official Libmem.NET development, default CI, runtime acceptance, and GitHub Releases currently target **Windows x64 / .NET 8**.
 
 x86 status:
 
@@ -18,7 +20,7 @@ x86 status:
 
 ## Architecture principle
 
-LibmemCli remains an independent, general-purpose .NET/C++/CLI wrapper around libmem. It must not depend on StandaloneGameMod, Hearthstone, Unity, Mono, or game-state models.
+Libmem.NET remains an independent, general-purpose .NET/C++/CLI wrapper around libmem. It must not depend on StandaloneGameMod, Hearthstone, Unity, Mono, or game-state models.
 
 Preferred model:
 
@@ -52,25 +54,25 @@ Current audit priorities:
 
 This phase still excludes Snapshot, GameState, Entity, IPC, Hearthstone-specific behavior, and game-version logic.
 
-Completed freeze cleanup: the temporary v0.x `MemoryManager` forwarding aliases for `DeepPointer / DataScan / PatternScan / SigScan` have been removed. Session-bound scanning is frozen on `ProcessSession.Scanner`, while the static `Libmem.*` compatibility facade remains.
+Completed freeze cleanup: the temporary v0.x `MemoryManager` forwarding aliases for `DeepPointer / DataScan / PatternScan / SigScan` have been removed. Session-bound scanning is frozen on `ProcessSession.Scanner`, while the static `NativeApi.*` compatibility facade remains.
 
 Completed contract freeze: target-process exit does not implicitly dispose `ProcessSession`; the bound identity remains readable, `IsAlive()` returns false, `Refresh()` returns null, and Manager properties remain accessible. A universal Manager liveness preflight is intentionally avoided so exact external-process identity checks do not pollute read/write/scan hot paths.
 
-Completed freeze cleanup: the early convenience `ProcessInfo.Read / Write / ReadInt32 / WriteInt32 / SigScan` methods have been removed. `ProcessInfo` now keeps only identity-related behavior through `IsAlive()`; memory and scanning belong to the `ProcessSession` Managers, while the static `Libmem.*` compatibility facade remains.
+Completed freeze cleanup: the early convenience `ProcessInfo.Read / Write / ReadInt32 / WriteInt32 / SigScan` methods have been removed. `ProcessInfo` now keeps only identity-related behavior through `IsAlive()`; memory and scanning belong to the `ProcessSession` Managers, while the static `NativeApi.*` compatibility facade remains.
 
 Completed freeze cleanup: audited XML IntelliSense and `docs/API.md` against the frozen managed surface, completed documentation for the recommended `ProcessSession` / Manager / ownership members, and explicitly retained `ProcessSession.Allocate` as an ownership convenience. This does not change the public API baseline or runtime behavior.
 
 Completed contract freeze: `ProcessInfo` is now library-created read-only identity/metadata. Consumers can no longer rewrite `Pid / StartTime` or fabricate an empty identity through a public default constructor, so `IsAlive()`, `Open(ProcessInfo)`, and the PID + StartTime exact-identity model share the same immutable foundation.
 
-Completed freeze cleanup: `ModuleInfo` is now a LibmemCli-created read-only module descriptor. Consumers can no longer rewrite `Base / End / Size / Name / Path` and then pass a forged or mutated native module record back into unload or symbol APIs.
+Completed freeze cleanup: `ModuleInfo` is now a Libmem.NET-created read-only module descriptor. Consumers can no longer rewrite `Base / End / Size / Name / Path` and then pass a forged or mutated native module record back into unload or symbol APIs.
 
-Completed freeze cleanup: `ThreadInfo` is now a LibmemCli-created read-only thread descriptor. Consumers can no longer rewrite `Id / OwnerPid` and then pass a forged or mutated native thread record back into `GetThreadProcess`.
+Completed freeze cleanup: `ThreadInfo` is now a Libmem.NET-created read-only thread descriptor. Consumers can no longer rewrite `Id / OwnerPid` and then pass a forged or mutated native thread record back into `GetThreadProcess`.
 
-Completed freeze cleanup: `SymbolInfo` is now a LibmemCli-created read-only symbol result. Consumers can read `Address / Name` but cannot construct or mutate forged symbol results.
+Completed freeze cleanup: `SymbolInfo` is now a Libmem.NET-created read-only symbol result. Consumers can read `Address / Name` but cannot construct or mutate forged symbol results.
 
-Completed freeze cleanup: `SegmentInfo` is now a LibmemCli-created read-only memory-segment result. Consumers can read `Base / End / Size / Protection` but cannot construct or mutate forged segment metadata.
+Completed freeze cleanup: `SegmentInfo` is now a Libmem.NET-created read-only memory-segment result. Consumers can read `Base / End / Size / Protection` but cannot construct or mutate forged segment metadata.
 
-Completed freeze cleanup: `InstructionInfo` is now a LibmemCli-created deeply read-only instruction result. Scalar/string properties are getter-only and `Bytes` returns a defensive copy so callers cannot mutate the stored instruction state.
+Completed freeze cleanup: `InstructionInfo` is now a Libmem.NET-created deeply read-only instruction result. Scalar/string properties are getter-only and `Bytes` returns a defensive copy so callers cannot mutate the stored instruction state.
 
 Completed freeze cleanup: `ModuleInfo` now records internal process provenance (PID + StartTime) without expanding its public surface. Session-bound `ModuleManager.Unload` / `SymbolManager` and the static unload overloads reject module descriptors captured from another process identity before native dispatch.
 
@@ -82,7 +84,7 @@ Completed freeze cleanup: empty scan-input semantics are frozen. Empty pattern/m
 
 Completed freeze cleanup: zero-size managed contracts are frozen. Read/Write/Set remain no-ops; Windows Protect/static Allocate preserve the pinned libmem page-size semantics; owned `MemoryManager.Allocate(0)` continues to reject zero; CodeLength(0) and empty byte-array disassembly keep their natural zero/empty results.
 
-Completed freeze cleanup: sentinel / definite-native-failure layering is frozen. FindProcess/FindModule/FindSegment misses remain nullable, symbol/scan/DeepPointer misses retain the native bad-address sentinel, and the low-level static `Libmem.*` compatibility facade preserves native-style failure values while Manager/ownership APIs only promote failures already defined as definite managed failures.
+Completed freeze cleanup: sentinel / definite-native-failure layering is frozen. FindProcess/FindModule/FindSegment misses remain nullable, symbol/scan/DeepPointer misses retain the native bad-address sentinel, and the low-level static `NativeApi.*` compatibility facade preserves native-style failure values while Manager/ownership APIs only promote failures already defined as definite managed failures.
 
 Completed freeze cleanup: the final API consistency audit is complete. The Public API baseline, XML IntelliSense, Manager/static layering, ownership/Dispose idempotency, and consumer documentation have been reconciled, with no remaining contract issue identified that requires a pre-v1.0 breaking change.
 
@@ -93,7 +95,7 @@ Focus:
 - complete the ProcessSession aggregation model;
 - complete Core / Memory / Modules / Threads / Scanning / Symbols / Assembly source separation;
 - establish the Interop / NativeConverter boundary;
-- preserve existing static `Libmem.*` compatibility;
+- preserve existing static `NativeApi.*` compatibility;
 - keep application/game state outside the wrapper.
 
 Acceptance:
@@ -133,7 +135,7 @@ Focus:
 - Injector Tests;
 - independent TestTarget (x64 external-process target established);
 - C# consumer sample (updated to the recommended `ProcessSession` / Manager / IDisposable / `LibmemException` usage);
-- XML documentation (the `LibmemCli.xml` build/package pipeline is established; public API comments continue to expand);
+- XML documentation (the `Libmem.NET.xml` build/package pipeline is established; public API comments continue to expand);
 - README / API documentation (consumer behavior reference established in `docs/API.md`).
 
 All default acceptance runs target x64.
@@ -151,8 +153,8 @@ Focus:
 Official releases publish only:
 
 ```text
-LibmemCli-windows-x64.zip
-LibmemCli-windows-x64.zip.sha256
+Libmem.NET-windows-x64.zip
+Libmem.NET-windows-x64.zip.sha256
 ```
 
 ## v0.9 — x64 API Freeze
@@ -172,7 +174,7 @@ Breaking public API changes must be explicitly documented from this phase onward
 
 v1.0 means:
 
-> LibmemCli is a stable, general-purpose Windows x64 C++/CLI wrapper around libmem for consumption by other .NET projects.
+> Libmem.NET is a stable, general-purpose Windows x64 C++/CLI wrapper around libmem for consumption by other .NET projects.
 
 v1.0 does not require x86 completion.
 

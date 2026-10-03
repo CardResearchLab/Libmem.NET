@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 
 using namespace System;
-using namespace LibmemCli;
+namespace Libmem::NET {
 
 ThreadInfo::ThreadInfo(UInt32 id, UInt32 ownerPid)
     : id_(id),
@@ -9,3 +9,5 @@ ThreadInfo::ThreadInfo(UInt32 id, UInt32 ownerPid)
 
 UInt32 ThreadInfo::Id::get() { return id_; }
 UInt32 ThreadInfo::OwnerPid::get() { return ownerPid_; }
+
+} // namespace Libmem::NET

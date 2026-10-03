@@ -1,18 +1,6 @@
 name: External Process Runtime Tests
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-      - 'tests/LibmemCli.TestTarget/**'
-      - 'tests/LibmemCli.ExternalProcessTests/**'
-      - 'tests/check_sources.py'
-      - 'eng/**'
-      - 'build.ps1'
-      - '.gitmodules'
-      - '.github/workflows/external-process-tests.yml'
   workflow_dispatch:
 
 permissions:
@@ -47,16 +35,16 @@ jobs:
         shell: pwsh
         run: python .\tests\check_sources.py
 
-      - name: Build LibmemCli
+      - name: Build Libmem.NET
         shell: pwsh
         run: .\build.ps1 -Configuration Release -Platform x64
 
       - name: Build external-process TestTarget
         shell: pwsh
-        run: dotnet build .\tests\LibmemCli.TestTarget\LibmemCli.TestTarget.csproj -c Release -p:Platform=x64
+        run: dotnet build .\tests\Libmem.NET.TestTarget\Libmem.NET.TestTarget.csproj -c Release -p:Platform=x64
 
       - name: Run external-process runtime tests
         shell: pwsh
         env:
-          LIBMEMCLI_TEST_TARGET_DLL: ${{ github.workspace }}\tests\LibmemCli.TestTarget\bin\x64\Release\net8.0\LibmemCli.TestTarget.dll
-        run: dotnet run --project .\tests\LibmemCli.ExternalProcessTests\LibmemCli.ExternalProcessTests.csproj -c Release -p:Platform=x64
+          LIBMEM_NET_TEST_TARGET_DLL: ${{ github.workspace }}\tests\Libmem.NET.TestTarget\bin\x64\Release\net8.0\Libmem.NET.TestTarget.dll
+        run: dotnet run --project .\tests\Libmem.NET.ExternalProcessTests\Libmem.NET.ExternalProcessTests.csproj -c Release -p:Platform=x64

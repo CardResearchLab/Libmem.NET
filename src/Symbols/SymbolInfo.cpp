@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 
 using namespace System;
-using namespace LibmemCli;
+namespace Libmem::NET {
 
 SymbolInfo::SymbolInfo(UInt64 address, String^ name)
     : address_(address),
@@ -9,3 +9,5 @@ SymbolInfo::SymbolInfo(UInt64 address, String^ name)
 
 UInt64 SymbolInfo::Address::get() { return address_; }
 String^ SymbolInfo::Name::get() { return name_; }
+
+} // namespace Libmem::NET
