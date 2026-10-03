@@ -17,7 +17,7 @@ with tempfile.TemporaryDirectory() as temp:
     temp_dir = Path(temp)
     changelog = temp_dir / "CHANGELOG.md"
     manifest = temp_dir / "manifest.json"
-    checksum = temp_dir / "Libmem.NET-windows-x64.zip.sha256"
+    checksum = temp_dir / "LibmemCli-windows-x64.zip.sha256"
     output = temp_dir / "release-notes.md"
 
     changelog.write_text(
@@ -57,7 +57,7 @@ Previous release.
                 "platform": "win-x64",
                 "configuration": "Release",
                 "files": [
-                    {"name": "Libmem.NET.dll", "size": 1, "sha256": "0" * 64},
+                    {"name": "LibmemCli.dll", "size": 1, "sha256": "0" * 64},
                     {"name": "libmem.dll", "size": 1, "sha256": "1" * 64},
                 ],
             }
@@ -65,7 +65,7 @@ Previous release.
         encoding="utf-8",
     )
     checksum.write_text(
-        f"{'c' * 64}  Libmem.NET-windows-x64.zip\n",
+        f"{'c' * 64}  LibmemCli-windows-x64.zip\n",
         encoding="utf-8",
     )
 
@@ -94,7 +94,7 @@ Previous release.
 
     notes = output.read_text(encoding="utf-8")
     required = [
-        "Libmem.NET **v9.8.7**",
+        "LibmemCli **v9.8.7**",
         "## Release highlights",
         "A focused test release.",
         "### Added",
@@ -102,9 +102,9 @@ Previous release.
         "## Platform and compatibility",
         "Windows x64",
         "## Downloads",
-        "Libmem.NET-windows-x64.zip",
+        "LibmemCli-windows-x64.zip",
         "## Package contents",
-        "`Libmem.NET.dll`",
+        "`LibmemCli.dll`",
         "## Integrity and provenance",
         "c" * 64,
         "## Documentation",
