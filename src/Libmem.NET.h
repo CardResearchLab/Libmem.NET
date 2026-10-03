@@ -47,20 +47,20 @@ namespace Libmem::Net {
     private:
         UInt32 pid_;
         UInt32 parentPid_;
-        Libmem::Net::Architecture architecture_;
+        Architecture architecture_;
         UInt64 bits_;
         UInt64 startTime_;
         String^ name_;
         String^ path_;
     internal:
-        ProcessInfo(UInt32 pid, UInt32 parentPid, Libmem::Net::Architecture architecture, UInt64 bits, UInt64 startTime, String^ name, String^ path);
+        ProcessInfo(UInt32 pid, UInt32 parentPid, Architecture architecture, UInt64 bits, UInt64 startTime, String^ name, String^ path);
     public:
         /// <summary>Gets the process identifier.</summary>
         property UInt32 Pid { UInt32 get(); }
         /// <summary>Gets the parent process identifier reported by libmem.</summary>
         property UInt32 ParentPid { UInt32 get(); }
         /// <summary>Gets the process architecture.</summary>
-        property Libmem::Net::Architecture Architecture { Libmem::Net::Architecture get(); }
+        property Architecture Architecture { Architecture get(); }
         /// <summary>Gets the native process bitness.</summary>
         property UInt64 Bits { UInt64 get(); }
         /// <summary>Gets the process start-time identity value used to reject PID reuse.</summary>
@@ -242,7 +242,7 @@ namespace Libmem::Net {
         /// <summary>Gets the bound process name.</summary>
         property String^ Name { String^ get(); }
         /// <summary>Gets the bound process architecture.</summary>
-        property Libmem::Net::Architecture Architecture { Libmem::Net::Architecture get(); }
+        property Architecture Architecture { Architecture get(); }
         /// <summary>Gets the bound process bitness.</summary>
         property UInt64 Bits { UInt64 get(); }
         /// <summary>Gets session-bound memory operations.</summary>
@@ -355,7 +355,7 @@ namespace Libmem::Net {
         AssemblyManager(ProcessSession^ session);
     public:
         /// <summary>Gets the target architecture used by this manager.</summary>
-        property Libmem::Net::Architecture Architecture { Libmem::Net::Architecture get(); }
+        property Architecture Architecture { Architecture get(); }
         /// <summary>Assembles source text for the target architecture.</summary>
         /// <exception cref="LibmemException">Thrown when LM_AssembleEx reports failure.</exception>
         array<Byte>^ Assemble(String^ code, UInt64 runtimeAddress);
@@ -587,12 +587,12 @@ namespace Libmem::Net {
         static UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
         static UInt64 SigScan(ProcessInfo^ process, String^ signature, UInt64 address, UInt64 scanSize);
         // Assembler and disassembler
-        static Libmem::Net::Architecture GetArchitecture();
+        static Architecture GetArchitecture();
         static InstructionInfo^ Assemble(String^ code);
-        static array<Byte>^ Assemble(String^ code, Libmem::Net::Architecture architecture, UInt64 runtimeAddress);
+        static array<Byte>^ Assemble(String^ code, Architecture architecture, UInt64 runtimeAddress);
         static InstructionInfo^ Disassemble(UInt64 codeAddress);
-        static List<InstructionInfo^>^ Disassemble(UInt64 codeAddress, Libmem::Net::Architecture architecture, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
-        static List<InstructionInfo^>^ Disassemble(array<Byte>^ code, Libmem::Net::Architecture architecture, UInt64 instructionCount, UInt64 runtimeAddress);
+        static List<InstructionInfo^>^ Disassemble(UInt64 codeAddress, Architecture architecture, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
+        static List<InstructionInfo^>^ Disassemble(array<Byte>^ code, Architecture architecture, UInt64 instructionCount, UInt64 runtimeAddress);
         static UInt64 CodeLength(UInt64 codeAddress, UInt64 minimumLength);
         static UInt64 CodeLength(ProcessInfo^ process, UInt64 codeAddress, UInt64 minimumLength);
         /// <summary>Installs a native code hook in the current process.</summary>
