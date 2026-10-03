@@ -47,7 +47,9 @@ assert source_files, "No C++ source files were found under src/"
 print("PASS source aggregation:", ", ".join(str(path.relative_to(root)) for path in source_files))
 
 # The public facade class shares its name with the top-level Libmem namespace.
-# In C++/CLI implementation files, unqualified Libmem::... is therefore ambiguous.
+# Truly unqualified Libmem::... is ambiguous. For member definitions/calls that need
+# explicit qualification, use the LibmemNet namespace alias instead of spelling the
+# full ::Libmem::Net::Libmem path, which MSVC/C++/CLI can misparse.
 for source_path in source_files:
     if source_path.as_posix().endswith("src/Interop/NativeConverter.cpp"):
         continue
@@ -106,18 +108,30 @@ domain_sources = {
 }
 assert "LibmemException::LibmemException" in (root / "src/Core/LibmemException.cpp").read_text(encoding="utf-8")
 assert "ProcessInfo::IsAlive" in (root / "src/Core/ProcessInfo.cpp").read_text(encoding="utf-8")
-assert "::Libmem::Net::Libmem::EnumProcesses" in domain_sources["process"]
+assert "LibmemNet::Libmem::EnumProcesses" in domain_sources["process"]
 assert "::Libmem::Net::Libmem::EnumThreads" in domain_sources["thread"]
 assert "::Libmem::Net::Libmem::EnumModules" in domain_sources["module"]
-assert "::Libmem::Net::Libmem::EnumSymbols" in domain_sources["symbol"]
+assert "LibmemNet::Libmem::EnumSymbols" in domain_sources["symbol"]
 assert "::Libmem::Net::Libmem::EnumSegments" in domain_sources["segment"]
-assert "::Libmem::Net::Libmem::ReadMemory" in domain_sources["memory"]
-assert "::Libmem::Net::Libmem::DataScan" in domain_sources["scan"]
-assert "::Libmem::Net::Libmem::GetArchitecture" in domain_sources["assembly"]
+assert "LibmemNet::Libmem::ReadMemory" in domain_sources["memory"]
+assert "LibmemNet::Libmem::DataScan" in domain_sources["scan"]
+assert "LibmemNet::Libmem::GetArchitecture" in domain_sources["assembly"]
 assert "Libmem::" not in libmem_facade_source
 assert "ProcessInfo::" not in libmem_facade_source
 assert "LibmemException::" not in libmem_facade_source
 print("PASS static facade domain split contract")
+for alias_source in [
+    domain_sources["process"],
+    domain_sources["symbol"],
+    domain_sources["memory"],
+    domain_sources["scan"],
+    domain_sources["assembly"],
+    injector_source,
+]:
+    assert "namespace LibmemNet = ::Libmem::Net;" in alias_source
+    assert "::Libmem::Net::Libmem::" not in alias_source
+assert "LibmemNet::Libmem::EnumModules" in injector_source
+print("PASS MSVC facade namespace-alias disambiguation contract")
 
 project_source_text = (root / "src/Libmem.NET.vcxproj").read_text(encoding="utf-8")
 for project_source in [

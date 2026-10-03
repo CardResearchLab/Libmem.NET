@@ -7,15 +7,16 @@
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace ::Libmem::Net;
+namespace LibmemNet = ::Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
-List<ProcessInfo^>^ ::Libmem::Net::Libmem::EnumProcesses() {
+List<ProcessInfo^>^ LibmemNet::Libmem::EnumProcesses() {
     std::vector<lm_process_t> native;
     if(!LM_EnumProcesses(cb_process,&native)) throw gcnew LibmemException("LM_EnumProcesses", "LM_EnumProcesses failed.");
     auto r=gcnew List<ProcessInfo^>(); for(const auto& p : native) r->Add(process(p)); return r;
 }
-ProcessInfo^ ::Libmem::Net::Libmem::CurrentProcess() { lm_process_t p{}; return LM_GetProcess(&p) ? process(p) : nullptr; }
-ProcessInfo^ ::Libmem::Net::Libmem::GetProcess(UInt32 pid) {
+ProcessInfo^ LibmemNet::Libmem::CurrentProcess() { lm_process_t p{}; return LM_GetProcess(&p) ? process(p) : nullptr; }
+ProcessInfo^ LibmemNet::Libmem::GetProcess(UInt32 pid) {
     lm_process_t p{};
     if(!LM_GetProcessEx(pid,&p)) return nullptr;
 
@@ -36,7 +37,7 @@ ProcessInfo^ ::Libmem::Net::Libmem::GetProcess(UInt32 pid) {
     p.start_time=match->start_time;
     return process(p);
 }
-ProcessInfo^ ::Libmem::Net::Libmem::FindProcess(String^ name) {
+ProcessInfo^ LibmemNet::Libmem::FindProcess(String^ name) {
     if(name==nullptr) throw gcnew ArgumentNullException("name");
     if(String::IsNullOrWhiteSpace(name))
         throw gcnew ArgumentException("Process name must not be empty.", "name");
@@ -44,21 +45,21 @@ ProcessInfo^ ::Libmem::Net::Libmem::FindProcess(String^ name) {
     auto n=utf8(name,"name");
     return LM_FindProcess(n.c_str(),&p) ? process(p) : nullptr;
 }
-ProcessSession^ ::Libmem::Net::Libmem::Attach(UInt32 pid) {
+ProcessSession^ LibmemNet::Libmem::Attach(UInt32 pid) {
     auto current=GetProcess(pid);
     return current==nullptr ? nullptr : gcnew ProcessSession(current);
 }
-ProcessSession^ ::Libmem::Net::Libmem::Attach(String^ name) {
+ProcessSession^ LibmemNet::Libmem::Attach(String^ name) {
     auto current=FindProcess(name);
     return current==nullptr ? nullptr : gcnew ProcessSession(current);
 }
-ProcessSession^ ::Libmem::Net::Libmem::Attach(ProcessInfo^ input) {
+ProcessSession^ LibmemNet::Libmem::Attach(ProcessInfo^ input) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
     auto current=GetProcess(input->Pid);
     if(current==nullptr || current->StartTime!=input->StartTime) return nullptr;
     return gcnew ProcessSession(current);
 }
-bool ::Libmem::Net::Libmem::IsProcessAlive(ProcessInfo^ input) {
+bool LibmemNet::Libmem::IsProcessAlive(ProcessInfo^ input) {
     auto expected=proc(input);
     lm_process_t self{};
     if(LM_GetProcess(&self) && self.pid==expected.pid)
@@ -69,7 +70,7 @@ bool ::Libmem::Net::Libmem::IsProcessAlive(ProcessInfo^ input) {
         return current.pid==expected.pid && current.start_time==expected.start_time;
     });
 }
-array<String^>^ ::Libmem::Net::Libmem::GetCommandLine(ProcessInfo^ input) {
+array<String^>^ LibmemNet::Libmem::GetCommandLine(ProcessInfo^ input) {
     if(input==nullptr) throw gcnew ArgumentNullException("process");
 
     // The pinned Windows libmem implementation only supports the current process.
@@ -86,5 +87,5 @@ array<String^>^ ::Libmem::Net::Libmem::GetCommandLine(ProcessInfo^ input) {
 
     return Environment::GetCommandLineArgs();
 }
-UInt64 ::Libmem::Net::Libmem::GetBits() { return LM_GetBits(); }
-UInt64 ::Libmem::Net::Libmem::GetSystemBits() { return LM_GetSystemBits(); }
+UInt64 LibmemNet::Libmem::GetBits() { return LM_GetBits(); }
+UInt64 LibmemNet::Libmem::GetSystemBits() { return LM_GetSystemBits(); }

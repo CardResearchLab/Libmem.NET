@@ -3,6 +3,7 @@
 
 using namespace System;
 using namespace ::Libmem::Net;
+namespace LibmemNet = ::Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
 InjectedModuleHandle::InjectedModuleHandle(ProcessInfo^ target,ModuleInfo^ moduleInfo,String^ requestedPath)
@@ -27,13 +28,13 @@ bool InjectedModuleHandle::Unload() {
         active_=false;
         return true;
     }
-    if(!::Libmem::Net::Libmem::IsProcessAlive(target_)) {
+    if(!LibmemNet::Libmem::IsProcessAlive(target_)) {
         // The process address space is gone, so this loader reference cannot remain active.
         active_=false;
         target_=nullptr;
         return true;
     }
-    bool ok=::Libmem::Net::Libmem::UnloadModule(target_,module_);
+    bool ok=LibmemNet::Libmem::UnloadModule(target_,module_);
     if(ok) active_=false;
     return ok;
 }
@@ -64,8 +65,8 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
     if(String::IsNullOrWhiteSpace(path)) throw gcnew ArgumentException("Library path must not be empty.", "path");
 
     auto target=Target();
-    if(!::Libmem::Net::Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
-    if(target->Bits!=::Libmem::Net::Libmem::GetBits())
+    if(!LibmemNet::Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
+    if(target->Bits!=LibmemNet::Libmem::GetBits())
         throw gcnew NotSupportedException("Cross-bitness library injection is not supported by the current runtime.");
 
     String^ fullPath;
@@ -88,7 +89,7 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
         throw gcnew LibmemException("LM_LoadModuleEx", "Library injection failed.");
 
     ModuleInfo^ loaded=nullptr;
-    for each(ModuleInfo^ candidate in ::Libmem::Net::Libmem::EnumModules(target)) {
+    for each(ModuleInfo^ candidate in LibmemNet::Libmem::EnumModules(target)) {
         if(candidate==nullptr || String::IsNullOrWhiteSpace(candidate->Path)) continue;
 
         String^ candidatePath;

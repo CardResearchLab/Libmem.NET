@@ -5,6 +5,7 @@
 
 using namespace System;
 using namespace ::Libmem::Net;
+namespace LibmemNet = ::Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
 namespace {
@@ -45,31 +46,31 @@ namespace {
     }
 }
 
-array<Byte>^ ::Libmem::Net::Libmem::ReadMemory(UInt64 a,int size) { return read_common(nullptr,a,size); }
-array<Byte>^ ::Libmem::Net::Libmem::ReadMemory(ProcessInfo^ input,UInt64 a,int size) { auto p=proc(input); return read_common(&p,a,size); }
-int ::Libmem::Net::Libmem::WriteMemory(UInt64 a,array<Byte>^ data) { return write_common(nullptr,a,data); }
-int ::Libmem::Net::Libmem::WriteMemory(ProcessInfo^ input,UInt64 a,array<Byte>^ data) { auto p=proc(input); return write_common(&p,a,data); }
-UInt64 ::Libmem::Net::Libmem::SetMemory(UInt64 a,Byte value,UInt64 size) { return LM_SetMemory(native_address(a,"address"),value,native_size(size,"size")); }
-UInt64 ::Libmem::Net::Libmem::SetMemory(ProcessInfo^ input,UInt64 a,Byte value,UInt64 size) { auto p=proc(input); return LM_SetMemoryEx(&p,native_address(a,"address"),value,native_size(size,"size")); }
-MemoryProtection ::Libmem::Net::Libmem::ProtectMemory(UInt64 a,UInt64 size,MemoryProtection prot) {
+array<Byte>^ LibmemNet::Libmem::ReadMemory(UInt64 a,int size) { return read_common(nullptr,a,size); }
+array<Byte>^ LibmemNet::Libmem::ReadMemory(ProcessInfo^ input,UInt64 a,int size) { auto p=proc(input); return read_common(&p,a,size); }
+int LibmemNet::Libmem::WriteMemory(UInt64 a,array<Byte>^ data) { return write_common(nullptr,a,data); }
+int LibmemNet::Libmem::WriteMemory(ProcessInfo^ input,UInt64 a,array<Byte>^ data) { auto p=proc(input); return write_common(&p,a,data); }
+UInt64 LibmemNet::Libmem::SetMemory(UInt64 a,Byte value,UInt64 size) { return LM_SetMemory(native_address(a,"address"),value,native_size(size,"size")); }
+UInt64 LibmemNet::Libmem::SetMemory(ProcessInfo^ input,UInt64 a,Byte value,UInt64 size) { auto p=proc(input); return LM_SetMemoryEx(&p,native_address(a,"address"),value,native_size(size,"size")); }
+MemoryProtection LibmemNet::Libmem::ProtectMemory(UInt64 a,UInt64 size,MemoryProtection prot) {
     native_protection(prot,"prot");
     lm_prot_t old{};
     if(!LM_ProtMemory(native_address(a,"address"),native_size(size,"size"),static_cast<lm_prot_t>(prot),&old)) throw gcnew LibmemException("LM_ProtMemory", "LM_ProtMemory failed.");
     return static_cast<MemoryProtection>(old);
 }
-MemoryProtection ::Libmem::Net::Libmem::ProtectMemory(ProcessInfo^ input,UInt64 a,UInt64 size,MemoryProtection prot) {
+MemoryProtection LibmemNet::Libmem::ProtectMemory(ProcessInfo^ input,UInt64 a,UInt64 size,MemoryProtection prot) {
     native_protection(prot,"prot");
     auto p=proc(input); lm_prot_t old{};
     if(!LM_ProtMemoryEx(&p,native_address(a,"address"),native_size(size,"size"),static_cast<lm_prot_t>(prot),&old)) throw gcnew LibmemException("LM_ProtMemoryEx", "LM_ProtMemoryEx failed.");
     return static_cast<MemoryProtection>(old);
 }
-UInt64 ::Libmem::Net::Libmem::AllocateMemory(UInt64 size,MemoryProtection prot) { native_protection(prot,"prot"); return LM_AllocMemory(native_size(size,"size"),static_cast<lm_prot_t>(prot)); }
-UInt64 ::Libmem::Net::Libmem::AllocateMemory(ProcessInfo^ input,UInt64 size,MemoryProtection prot) { native_protection(prot,"prot"); auto p=proc(input); return LM_AllocMemoryEx(&p,native_size(size,"size"),static_cast<lm_prot_t>(prot)); }
-bool ::Libmem::Net::Libmem::FreeMemory(UInt64 a,UInt64 size) { return LM_FreeMemory(native_address(a,"address"),native_size(size,"size"))!=LM_FALSE; }
-bool ::Libmem::Net::Libmem::FreeMemory(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_FreeMemoryEx(&p,native_address(a,"address"),native_size(size,"size"))!=LM_FALSE; }
-UInt64 ::Libmem::Net::Libmem::DeepPointer(UInt64 a,array<UInt64>^ data) {
+UInt64 LibmemNet::Libmem::AllocateMemory(UInt64 size,MemoryProtection prot) { native_protection(prot,"prot"); return LM_AllocMemory(native_size(size,"size"),static_cast<lm_prot_t>(prot)); }
+UInt64 LibmemNet::Libmem::AllocateMemory(ProcessInfo^ input,UInt64 size,MemoryProtection prot) { native_protection(prot,"prot"); auto p=proc(input); return LM_AllocMemoryEx(&p,native_size(size,"size"),static_cast<lm_prot_t>(prot)); }
+bool LibmemNet::Libmem::FreeMemory(UInt64 a,UInt64 size) { return LM_FreeMemory(native_address(a,"address"),native_size(size,"size"))!=LM_FALSE; }
+bool LibmemNet::Libmem::FreeMemory(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_FreeMemoryEx(&p,native_address(a,"address"),native_size(size,"size"))!=LM_FALSE; }
+UInt64 LibmemNet::Libmem::DeepPointer(UInt64 a,array<UInt64>^ data) {
     auto off=offsets(data); return LM_DeepPointer(native_address(a,"address"),off.empty()?nullptr:off.data(),off.size());
 }
-UInt64 ::Libmem::Net::Libmem::DeepPointer(ProcessInfo^ input,UInt64 a,array<UInt64>^ data) {
+UInt64 LibmemNet::Libmem::DeepPointer(ProcessInfo^ input,UInt64 a,array<UInt64>^ data) {
     auto p=proc(input); auto off=offsets(data); return LM_DeepPointerEx(&p,native_address(a,"address"),off.empty()?nullptr:off.data(),off.size());
 }
