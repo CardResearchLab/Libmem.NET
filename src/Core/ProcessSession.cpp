@@ -1,6 +1,6 @@
 #include "../Libmem.NET.h"
 using namespace System;
-using namespace Libmem::Net;
+using namespace ::Libmem::Net::Libmem::Net;
 
 namespace {
     ProcessInfo^ CloneProcessInfo(ProcessInfo^ input) {
@@ -31,9 +31,9 @@ ProcessSession::ProcessSession(ProcessInfo^ input) : identity_(nullptr), memory_
     hooks_=gcnew HookManager(this);
     injector_=gcnew InjectorManager(this);
 }
-ProcessSession^ ProcessSession::Open(UInt32 pid) { return Libmem::Attach(pid); }
-ProcessSession^ ProcessSession::Open(String^ name) { return Libmem::Attach(name); }
-ProcessSession^ ProcessSession::Open(ProcessInfo^ input) { return Libmem::Attach(input); }
+ProcessSession^ ProcessSession::Open(UInt32 pid) { return ::Libmem::Net::Libmem::Attach(pid); }
+ProcessSession^ ProcessSession::Open(String^ name) { return ::Libmem::Net::Libmem::Attach(name); }
+ProcessSession^ ProcessSession::Open(ProcessInfo^ input) { return ::Libmem::Net::Libmem::Attach(input); }
 ProcessInfo^ ProcessSession::Target::get() {
     ThrowIfDisposed();
     return identity_;
@@ -50,7 +50,7 @@ String^ ProcessSession::Name::get() {
     ThrowIfDisposed();
     return identity_->Name;
 }
-Libmem::Net::Architecture ProcessSession::Architecture::get() {
+::Libmem::Net::Architecture ProcessSession::Architecture::get() {
     ThrowIfDisposed();
     return identity_->Architecture;
 }
@@ -93,11 +93,11 @@ InjectorManager^ ProcessSession::Injector::get() {
 bool ProcessSession::IsDisposed::get() { return disposed_; }
 bool ProcessSession::IsAlive() {
     ThrowIfDisposed();
-    return Libmem::IsProcessAlive(identity_);
+    return ::Libmem::Net::Libmem::IsProcessAlive(identity_);
 }
 ProcessInfo^ ProcessSession::Refresh() {
     ThrowIfDisposed();
-    auto current=Libmem::GetProcess(identity_->Pid);
+    auto current=::Libmem::Net::Libmem::GetProcess(identity_->Pid);
     if(current==nullptr || current->StartTime!=identity_->StartTime) return nullptr;
     identity_=CloneProcessInfo(current);
     return CloneProcessInfo(identity_);
