@@ -8,7 +8,7 @@
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 
-Libmem.NET 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 .NET / C++/CLI 封装。本次 v1.0 前迁移将托管程序集、命名空间、项目与二进制名称统一为 `Libmem.NET`。此次工作只统一项目标识，不顺便改变公共 API 的职责或行为。**v1.0 稳定主线与正式发布目标为 Windows x64 / .NET 8。** 现有 x86 代码与构建配置暂时保留，但 x86 已延后，不再作为近期开发目标或正式 Release 产物。
+Libmem.NET 是对 [rdbo/libmem](https://github.com/rdbo/libmem) C ABI 的可复用 .NET / C++/CLI 封装。本次 v1.0 前迁移将托管程序集、项目与二进制名称统一为 `Libmem.NET`，托管命名空间统一为 `Libmem.Net`。此次工作只统一项目标识，不顺便改变公共 API 的职责或行为。**v1.0 稳定主线与正式发布目标为 Windows x64 / .NET 8。** 现有 x86 代码与构建配置暂时保留，但 x86 已延后，不再作为近期开发目标或正式 Release 产物。
 
 开发路线见 [ROADMAP.md](ROADMAP.md)，消费者行为与返回/异常/生命周期语义见 [API 参考](docs/API.md)，ZIP / Submodule / NuGet 等消费方式见 [消费指南](docs/CONSUMPTION.md)。
 
@@ -86,7 +86,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 引用 `Libmem.NET.dll` 后，可以直接通过托管 API 获取当前进程与模块信息：
 
 ```csharp
-using Libmem.NET;
+using Libmem.Net;
 
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process not found");
