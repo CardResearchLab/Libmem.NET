@@ -1,11 +1,11 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 #include <vcclr.h>
 
 using namespace System;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+using namespace Libmem::Net;
+using namespace ::Libmem::Net::Interop;
 
 UInt64 Libmem::DataScan(array<Byte>^ data,UInt64 a,UInt64 size) {
     if(data==nullptr) throw gcnew ArgumentNullException("data"); if(!data->Length) throw gcnew ArgumentException("Pattern is empty.", "data");
