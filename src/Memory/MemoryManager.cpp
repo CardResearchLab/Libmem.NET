@@ -1,8 +1,8 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
+using namespace Libmem::Net;
 
 namespace {
     bool IsBadAddress(UInt64 value) {
@@ -37,12 +37,12 @@ UInt64 MemoryManager::Set(UInt64 address,Byte value,UInt64 size) {
     return Libmem::SetMemory(Target(),address,value,size);
 }
 MemoryProtection MemoryManager::Protect(UInt64 address,UInt64 size,MemoryProtection protection) {
-    LibmemCli::Interop::native_protection(protection,"protection");
+    ::Libmem::Net::Interop::native_protection(protection,"protection");
     return Libmem::ProtectMemory(Target(),address,size,protection);
 }
 RemoteAllocation^ MemoryManager::Allocate(UInt64 size,MemoryProtection protection) {
     if(size==0) throw gcnew ArgumentOutOfRangeException("size");
-    LibmemCli::Interop::native_protection(protection,"protection");
+    ::Libmem::Net::Interop::native_protection(protection,"protection");
     auto target=Target();
     if(!Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
     auto address=Libmem::AllocateMemory(target,size,protection);
