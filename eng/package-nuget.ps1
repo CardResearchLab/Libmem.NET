@@ -26,8 +26,8 @@ if ($baseVersion -notmatch '^\d+\.\d+\.\d+$') {
 }
 
 $requiredArtifacts = @(
-    (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\LibmemCli.dll"),
-    (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\LibmemCli.xml"),
+    (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\Libmem.NET.dll"),
+    (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\Libmem.NET.xml"),
     (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\Ijwhost.dll"),
     (Join-Path $repoRoot "artifacts\native\x64\$Configuration\bin\libmem.dll")
 )
