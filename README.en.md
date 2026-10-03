@@ -8,7 +8,7 @@
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 
-Libmem.NET is a reusable .NET / C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). The managed assembly, namespace, and binary names remain `Libmem.NET` to preserve the frozen v1.0 public API and consumer compatibility. **The v1.0 stable line, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
+Libmem.NET is a reusable .NET / C++/CLI wrapper around the C ABI of [rdbo/libmem](https://github.com/rdbo/libmem). The managed assembly and binary names are `Libmem.NET`, while the managed namespace is `Libmem.Net`, preserving the frozen v1.0 public API and consumer compatibility. **The v1.0 stable line, CI acceptance, and official releases target Windows x64 / .NET 8.** Existing x86 code and build configurations are retained for now, but x86 is deferred and is not a near-term development or release target.
 
 See [ROADMAP.en.md](ROADMAP.en.md) for the current development plan, the [API reference](docs/API.md) for consumer-facing result/exception/lifetime semantics, and the [consumption guide](docs/CONSUMPTION.md) for ZIP, submodule, and NuGet options.
 
@@ -86,7 +86,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 After referencing `Libmem.NET.dll`, managed code can access process and module information directly:
 
 ```csharp
-using Libmem.NET;
+using Libmem.Net;
 
 var process = Libmem.CurrentProcess()
     ?? throw new InvalidOperationException("Current process not found");
