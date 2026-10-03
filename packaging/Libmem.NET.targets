@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup>
-    <_LibmemNetNativeRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\runtimes\win-x64\native'))</_LibmemNetNativeRoot>
+    <_LibmemCliNativeRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\runtimes\win-x64\native'))</_LibmemCliNativeRoot>
   </PropertyGroup>
 
-  <Target Name="LibmemNetValidateX64" BeforeTargets="ResolveReferences">
+  <Target Name="LibmemCliValidateX64" BeforeTargets="ResolveReferences">
     <Error Condition="'$(OS)' != 'Windows_NT'"
            Text="Libmem.NET currently supports only Windows x64." />
     <Error Condition="'$(PlatformTarget)' != 'x64' and '$(Platform)' != 'x64'"
@@ -11,12 +11,12 @@
   </Target>
 
   <ItemGroup>
-    <ContentWithTargetPath Include="$(_LibmemNetNativeRoot)\libmem.dll">
+    <ContentWithTargetPath Include="$(_LibmemCliNativeRoot)\libmem.dll">
       <TargetPath>libmem.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </ContentWithTargetPath>
-    <ContentWithTargetPath Include="$(_LibmemNetNativeRoot)\Ijwhost.dll">
+    <ContentWithTargetPath Include="$(_LibmemCliNativeRoot)\Ijwhost.dll">
       <TargetPath>Ijwhost.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
