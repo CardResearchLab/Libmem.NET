@@ -2,8 +2,8 @@
 #include "../Interop/NativeConverter.h"
 
 using namespace System;
-using namespace Libmem::Net;
-using namespace Libmem::Net::Interop;
+using namespace ::Libmem::Net::Libmem::Net;
+using namespace ::Libmem::Net::Interop;
 
 HookManager::HookManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");
@@ -13,7 +13,7 @@ ProcessInfo^ HookManager::Target() {
     return session_->Target;
 }
 HookHandle^ HookManager::Install(UInt64 source,UInt64 destination) {
-    auto handle=Libmem::HookCode(Target(),source,destination);
+    auto handle=::Libmem::Net::Libmem::HookCode(Target(),source,destination);
     if(handle==nullptr)
         throw gcnew LibmemException("LM_HookCodeEx", "Failed to install hook in the target process.");
     return handle;
@@ -35,7 +35,7 @@ bool HookHandle::Remove() {
 
     bool ok;
     if(target_!=nullptr) {
-        if(!Libmem::IsProcessAlive(target_)) {
+        if(!::Libmem::Net::Libmem::IsProcessAlive(target_)) {
             // The target address space no longer exists, so the hook cannot remain installed.
             installed_=false;
             return true;
@@ -65,12 +65,12 @@ HookHandle::!HookHandle() {
     disposed_=true;
 }
 
-HookHandle^ Libmem::HookCode(UInt64 from,UInt64 to) {
+HookHandle^ ::Libmem::Net::Libmem::HookCode(UInt64 from,UInt64 to) {
     lm_address_t trampoline=LM_ADDRESS_BAD;
     auto n=LM_HookCode(native_address(from,"source"),native_address(to,"destination"),&trampoline);
     return n ? gcnew HookHandle(nullptr,from,to,trampoline,n) : nullptr;
 }
-HookHandle^ Libmem::HookCode(ProcessInfo^ input,UInt64 from,UInt64 to) {
+HookHandle^ ::Libmem::Net::Libmem::HookCode(ProcessInfo^ input,UInt64 from,UInt64 to) {
     auto p=proc(input); lm_address_t trampoline=LM_ADDRESS_BAD;
     auto n=LM_HookCodeEx(&p,native_address(from,"source"),native_address(to,"destination"),&trampoline);
     return n ? gcnew HookHandle(input,from,to,trampoline,n) : nullptr;
