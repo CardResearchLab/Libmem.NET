@@ -2,7 +2,7 @@
 
 > Current official target: Windows x64 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validated NuGet package path. The managed assembly and namespace remain `Libmem.NET` for v1.0 compatibility.
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validated NuGet package path. The managed assembly remains `Libmem.NET`, while the managed namespace is `Libmem.Net`, for v1.0 compatibility.
 
 ## 1. Runtime ZIP — official release consumption
 
