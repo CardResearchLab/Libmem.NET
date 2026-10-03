@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Libmem.NET">
-      <HintPath>..\..\artifacts\managed\$(Platform)\$(Configuration)\Libmem.NET.dll</HintPath>
+    <Reference Include="LibmemCli">
+      <HintPath>..\..\artifacts\managed\$(Platform)\$(Configuration)\LibmemCli.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>
