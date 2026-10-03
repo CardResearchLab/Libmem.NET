@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-_No unreleased changes._
+### Changed
+
+- Updated consumer-facing documentation, XML documentation references, samples, artifact names, project/solution references, and public-API baseline references to the unified `Libmem.NET` identity planned before v1.0.
+- Removed product-specific StandaloneGameMod / Hearthstone process examples from public documentation and replaced them with application-neutral wording.
+- Added a migration audit that records legacy identifiers still owned by the parallel source, test, CI, packaging, and release migration work.
 
 ## 1.0.0 - 2026-09-30
 
