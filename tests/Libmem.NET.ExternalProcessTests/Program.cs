@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
-using LibmemCli;
+using Libmem.Net;
 
 static void Check(bool condition, string message)
 {
@@ -25,20 +25,20 @@ static TException ExpectThrows<TException>(Action action, string message)
 
 static string ResolveTargetDll()
 {
-    var configured = Environment.GetEnvironmentVariable("LIBMEMCLI_TEST_TARGET_DLL");
+    var configured = Environment.GetEnvironmentVariable("LIBMEM_NET_TEST_TARGET_DLL");
     if (!string.IsNullOrWhiteSpace(configured))
         return Path.GetFullPath(configured);
 
     var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
     var candidates = new[]
     {
-        Path.Combine(repoRoot, "LibmemCli.TestTarget", "bin", "x64", "Release", "net8.0", "LibmemCli.TestTarget.dll"),
-        Path.Combine(repoRoot, "LibmemCli.TestTarget", "bin", "Release", "net8.0", "LibmemCli.TestTarget.dll"),
+        Path.Combine(repoRoot, "Libmem.NET.TestTarget", "bin", "x64", "Release", "net8.0", "Libmem.NET.TestTarget.dll"),
+        Path.Combine(repoRoot, "Libmem.NET.TestTarget", "bin", "Release", "net8.0", "Libmem.NET.TestTarget.dll"),
     };
 
     return candidates.FirstOrDefault(File.Exists)
         ?? throw new FileNotFoundException(
-            "LibmemCli.TestTarget.dll was not found. Build tests/LibmemCli.TestTarget first or set LIBMEMCLI_TEST_TARGET_DLL.");
+            "Libmem.NET.TestTarget.dll was not found. Build tests/Libmem.NET.TestTarget first or set LIBMEM_NET_TEST_TARGET_DLL.");
 }
 
 static (uint Pid, ulong Address, ulong Size) ParseReady(string line)
@@ -58,7 +58,7 @@ static (uint Pid, ulong Address, ulong Size) ParseReady(string line)
     return (pid, address, size);
 }
 
-Console.WriteLine("LibmemCli external-process runtime tests");
+Console.WriteLine("Libmem.NET external-process runtime tests");
 
 var targetDll = ResolveTargetDll();
 var startInfo = new ProcessStartInfo
@@ -73,7 +73,7 @@ var startInfo = new ProcessStartInfo
 startInfo.ArgumentList.Add(targetDll);
 
 using var child = Process.Start(startInfo)
-    ?? throw new InvalidOperationException("Could not start LibmemCli.TestTarget.");
+    ?? throw new InvalidOperationException("Could not start Libmem.NET.TestTarget.");
 
 try
 {

@@ -1,4 +1,4 @@
-using LibmemCli;
+using Libmem.Net;
 
 static void Check(bool condition, string message)
 {
@@ -33,7 +33,7 @@ static void Stage(string name)
     Console.WriteLine($"SMOKE STAGE: {name}");
 }
 
-Console.WriteLine("LibmemCli runtime smoke tests");
+Console.WriteLine("Libmem.NET runtime smoke tests");
 Stage("exceptions");
 
 var expectedBits = (ulong)(IntPtr.Size * 8);

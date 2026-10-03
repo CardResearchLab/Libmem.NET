@@ -2,23 +2,24 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <Platforms>x64;x86</Platforms><PlatformTarget>$(Platform)</PlatformTarget>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="LibmemCli">
-      <HintPath>..\..\artifacts\managed\$(Platform)\$(Configuration)\LibmemCli.dll</HintPath>
+    <Reference Include="Libmem.NET">
+      <HintPath>..\..\artifacts\managed\x64\$(Configuration)\Libmem.NET.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\artifacts\managed\$(Platform)\$(Configuration)\Ijwhost.dll"
+    <None Include="..\..\artifacts\managed\x64\$(Configuration)\Ijwhost.dll"
           Link="Ijwhost.dll"
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\artifacts\managed\$(Platform)\$(Configuration)\libmem.dll"
+    <None Include="..\..\artifacts\managed\x64\$(Configuration)\libmem.dll"
           Link="libmem.dll"
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

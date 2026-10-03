@@ -1,4 +1,4 @@
-using LibmemCli;
+using Libmem.Net;
 
 static void Check(bool condition, string message)
 {
@@ -8,13 +8,13 @@ static void Check(bool condition, string message)
 
 static string CreateFixtureCopy(string directory, string source, string suffix)
 {
-    var fileName = $"LibmemCli.InjectorFixture.{suffix}.{Guid.NewGuid():N}.dll";
+    var fileName = $"Libmem.NET.InjectorFixture.{suffix}.{Guid.NewGuid():N}.dll";
     var destination = Path.Combine(directory, fileName);
     File.Copy(source, destination, overwrite: false);
     return destination;
 }
 
-Console.WriteLine("LibmemCli Injector runtime tests");
+Console.WriteLine("Libmem.NET Injector runtime tests");
 
 using var session = Libmem.Attach((uint)Environment.ProcessId)
     ?? throw new InvalidOperationException("Could not attach to the current process.");
@@ -25,7 +25,7 @@ Check(injector is not null, "ProcessSession.Injector returned null.");
 var sourceLibrary = Path.Combine(AppContext.BaseDirectory, "libmem.dll");
 Check(File.Exists(sourceLibrary), "libmem.dll was not copied next to the test executable.");
 
-var fixtureDirectory = Path.Combine(Path.GetTempPath(), "LibmemCli.InjectorTests", Guid.NewGuid().ToString("N"));
+var fixtureDirectory = Path.Combine(Path.GetTempPath(), "Libmem.NET.InjectorTests", Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(fixtureDirectory);
 
 string? manualFixture = null;

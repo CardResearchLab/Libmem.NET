@@ -1,4 +1,4 @@
-using LibmemCli;
+using Libmem.Net;
 
 static void Check(bool condition, string message)
 {
@@ -42,7 +42,7 @@ static unsafe int CallNoArgs(ulong address)
     return fn();
 }
 
-Console.WriteLine("LibmemCli Hook/VMT runtime tests");
+Console.WriteLine("Libmem.NET Hook/VMT runtime tests");
 var invalidAddress = IntPtr.Size == sizeof(ulong) ? ulong.MaxValue : uint.MaxValue;
 
 try

@@ -3,14 +3,13 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <Platforms>x64;x86</Platforms><PlatformTarget>$(Platform)</PlatformTarget>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="LibmemCli">
-      <HintPath>..\..\artifacts\managed\$(Platform)\$(Configuration)\LibmemCli.dll</HintPath>
+    <Reference Include="Libmem.NET">
+      <HintPath>..\..\artifacts\managed\$(Platform)\$(Configuration)\Libmem.NET.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>
