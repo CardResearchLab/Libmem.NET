@@ -4,7 +4,7 @@
 #include <vcclr.h>
 
 using namespace System;
-using namespace ::Libmem::Net::Libmem::Net;
+using namespace ::Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
 namespace {
