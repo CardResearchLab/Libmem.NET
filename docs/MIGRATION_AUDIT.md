@@ -15,7 +15,7 @@ Audit the pre-v1.0 identity migration from the legacy `LibmemCli` naming to the 
 | --- | --- |
 | Repository | `HearthstoneModding/Libmem.NET` |
 | NuGet package ID | `Libmem.NET` |
-| Managed namespace | `Libmem.NET` |
+| Managed namespace | `Libmem.Net` |
 | Managed assembly | `Libmem.NET.dll` |
 | IntelliSense XML | `Libmem.NET.xml` |
 | Solution | `Libmem.NET.sln` |
@@ -45,7 +45,7 @@ There is no standalone `RELEASES.md` in the repository tree. GitHub Release note
 
 Updated: `README.md`, `README.en.md`, `ROADMAP.md`, `ROADMAP.en.md`, `CHANGELOG.md`, `docs/API.md`, `docs/CONSUMPTION.md`, `api/README.md`, `samples/Example.cs`, and `samples/Example.csproj`.
 
-Changes include namespace, managed DLL/XML, solution/project, public API baseline, runtime artifact and reusable-workflow references; C# samples now use `using Libmem.NET;`. Product-specific process/injector examples were replaced with application-neutral examples.
+Changes include namespace, managed DLL/XML, solution/project, public API baseline, runtime artifact and reusable-workflow references; C# samples now use `using Libmem.Net;`. Product-specific process/injector examples were replaced with application-neutral examples.
 
 A second scan of those ten modified files found zero occurrences of `Libmem.CLI`, `LibmemCli`, `LibmemCli.dll`, `LibmemCli.vcxproj`, `LibmemCli.sln`, `HearthstoneModding/Libmem/`, `StandaloneGameMod`, or `Hearthstone.exe`.
 
@@ -106,7 +106,7 @@ Also verify positive identity references with:
 git grep -n -I "Libmem.NET"
 ~~~
 
-Review that active references consistently point to `Libmem.NET.sln`, `src/Libmem.NET.vcxproj`, `Libmem.NET.dll`, `Libmem.NET.xml`, `using Libmem.NET;`, `api/Libmem.NET.PublicApi.txt`, `Libmem.NET-windows-x64`, and NuGet package ID `Libmem.NET`.
+Review that active references consistently point to `Libmem.NET.sln`, `src/Libmem.NET.vcxproj`, `Libmem.NET.dll`, `Libmem.NET.xml`, `using Libmem.Net;`, `api/Libmem.NET.PublicApi.txt`, `Libmem.NET-windows-x64`, and NuGet package ID `Libmem.NET`.
 
 ## Merge note
 
