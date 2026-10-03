@@ -6,7 +6,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[1]
-header = (root / "src/LibmemCli.h").read_text(encoding="utf-8")
+header = (root / "src/Libmem.NET.h").read_text(encoding="utf-8")
 source_files = sorted((root / "src").rglob("*.cpp"))
 source = "\n".join(path.read_text(encoding="utf-8") for path in source_files)
 assert source_files, "No C++ source files were found under src/"
@@ -14,8 +14,8 @@ print("PASS source aggregation:", ", ".join(str(path.relative_to(root)) for path
 
 native_converter_header = (root / "src/Interop/NativeConverter.h").read_text(encoding="utf-8")
 native_converter_source = (root / "src/Interop/NativeConverter.cpp").read_text(encoding="utf-8")
-libmem_facade_source = (root / "src/LibmemCli.cpp").read_text(encoding="utf-8")
-assert "namespace LibmemCli::Interop" in native_converter_header
+libmem_facade_source = (root / "src/Libmem.NET.cpp").read_text(encoding="utf-8")
+assert "namespace Libmem::Net::Interop" in native_converter_header
 assert "lm_process_t proc(ProcessInfo^ input)" in native_converter_header
 assert "ProcessInfo^ process(const lm_process_t& value)" in native_converter_header
 assert "lm_address_t native_address(UInt64 value" in native_converter_header
@@ -74,7 +74,7 @@ assert "ProcessInfo::" not in libmem_facade_source
 assert "LibmemException::" not in libmem_facade_source
 print("PASS static facade domain split contract")
 
-project_source_text = (root / "src/LibmemCli.vcxproj").read_text(encoding="utf-8")
+project_source_text = (root / "src/Libmem.NET.vcxproj").read_text(encoding="utf-8")
 for project_source in [
     r"Core\LibmemException.cpp",
     r"Core\ProcessInfo.cpp",
@@ -88,20 +88,20 @@ for project_source in [
     r"Assembly\LibmemAssembly.cpp",
 ]:
     assert f'Include="{project_source}"' in project_source_text, (
-        f"Split translation unit is not compiled by LibmemCli.vcxproj: {project_source}"
+        f"Split translation unit is not compiled by Libmem.NET.vcxproj: {project_source}"
     )
 print("PASS split translation units included in vcxproj")
 
 for file in [
-    "src/LibmemCli.vcxproj",
+    "src/Libmem.NET.vcxproj",
     "samples/Example.csproj",
-    "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj",
-    "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj",
-    "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj",
-    "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj",
-    "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj",
+    "tests/Libmem.NET.SmokeTests/Libmem.NET.SmokeTests.csproj",
+    "tests/Libmem.NET.HookVmtTests/Libmem.NET.HookVmtTests.csproj",
+    "tests/Libmem.NET.InjectorTests/Libmem.NET.InjectorTests.csproj",
+    "tests/Libmem.NET.TestTarget/Libmem.NET.TestTarget.csproj",
+    "tests/Libmem.NET.ExternalProcessTests/Libmem.NET.ExternalProcessTests.csproj",
     "packaging/Libmem.NET.csproj",
-    "tests/LibmemCli.NuGetConsumer/LibmemCli.NuGetConsumer.csproj",
+    "tests/Libmem.NET.NuGetConsumer/Libmem.NET.NuGetConsumer.csproj",
 ]:
     ET.parse(root / file)
     print("PASS XML", file)
@@ -259,13 +259,13 @@ assert "LM_VmtFree" not in vmt_finalizer
 assert "LM_VmtReset" not in vmt_finalizer
 print("PASS VmtManager lifecycle contract")
 
-solution = (root / "LibmemCli.sln").read_text(encoding="utf-8")
-vcxproj = (root / "src/LibmemCli.vcxproj").read_text(encoding="utf-8")
+solution = (root / "Libmem.NET.sln").read_text(encoding="utf-8")
+vcxproj = (root / "src/Libmem.NET.vcxproj").read_text(encoding="utf-8")
 build_script = (root / "build.ps1").read_text(encoding="utf-8")
 native_build_script = (root / "eng/build-native.ps1").read_text(encoding="utf-8")
-smoke_project = (root / "tests/LibmemCli.SmokeTests/LibmemCli.SmokeTests.csproj").read_text(encoding="utf-8")
-hook_project = (root / "tests/LibmemCli.HookVmtTests/LibmemCli.HookVmtTests.csproj").read_text(encoding="utf-8")
-injector_project = (root / "tests/LibmemCli.InjectorTests/LibmemCli.InjectorTests.csproj").read_text(encoding="utf-8")
+smoke_project = (root / "tests/Libmem.NET.SmokeTests/Libmem.NET.SmokeTests.csproj").read_text(encoding="utf-8")
+hook_project = (root / "tests/Libmem.NET.HookVmtTests/Libmem.NET.HookVmtTests.csproj").read_text(encoding="utf-8")
+injector_project = (root / "tests/Libmem.NET.InjectorTests/Libmem.NET.InjectorTests.csproj").read_text(encoding="utf-8")
 sample_project = (root / "samples/Example.csproj").read_text(encoding="utf-8")
 sample_source = (root / "samples/Example.cs").read_text(encoding="utf-8")
 for required_sample_api in [
@@ -288,8 +288,8 @@ print("PASS C# consumer sample contract")
 
 nuget_package_project = (root / "packaging/Libmem.NET.csproj").read_text(encoding="utf-8")
 nuget_targets = (root / "packaging/Libmem.NET.targets").read_text(encoding="utf-8")
-nuget_consumer_project = (root / "tests/LibmemCli.NuGetConsumer/LibmemCli.NuGetConsumer.csproj").read_text(encoding="utf-8")
-nuget_consumer_source = (root / "tests/LibmemCli.NuGetConsumer/Program.cs").read_text(encoding="utf-8")
+nuget_consumer_project = (root / "tests/Libmem.NET.NuGetConsumer/Libmem.NET.NuGetConsumer.csproj").read_text(encoding="utf-8")
+nuget_consumer_source = (root / "tests/Libmem.NET.NuGetConsumer/Program.cs").read_text(encoding="utf-8")
 
 api_reference = (root / "docs/API.md").read_text(encoding="utf-8")
 for api_reference_marker in [
@@ -325,8 +325,8 @@ nuget_verifier = nuget_verifier_path.read_text(encoding="utf-8")
 compile(nuget_verifier, str(nuget_verifier_path), "exec")
 for package_marker in [
     "<PackageId>Libmem.NET</PackageId>",
-    r"lib\net8.0\LibmemCli.dll",
-    r"lib\net8.0\LibmemCli.xml",
+    r"lib\net8.0\Libmem.NET.dll",
+    r"lib\net8.0\Libmem.NET.xml",
     r"runtimes\win-x64\native\libmem.dll",
     r"runtimes\win-x64\native\Ijwhost.dll",
     r"buildTransitive\Libmem.NET.targets",
@@ -351,7 +351,7 @@ print("PASS local NuGet package contract")
 nuget_package_script = (root / "eng/package-nuget.ps1").read_text(encoding="utf-8")
 for package_script_marker in [
     "Libmem.NET.csproj",
-    "LibmemCli.xml",
+    "Libmem.NET.xml",
     "RepositoryCommit",
     "git -C $repoRoot rev-parse HEAD",
     "-dev.$shortCommit",
@@ -379,8 +379,8 @@ for consumption_marker in [
 assert "Trusted Publishing" in consumption_guide
 assert "NUGET_USER" in consumption_guide
 print("PASS consumption guide contract")
-test_target_project = (root / "tests/LibmemCli.TestTarget/LibmemCli.TestTarget.csproj").read_text(encoding="utf-8")
-external_process_project = (root / "tests/LibmemCli.ExternalProcessTests/LibmemCli.ExternalProcessTests.csproj").read_text(encoding="utf-8")
+test_target_project = (root / "tests/Libmem.NET.TestTarget/Libmem.NET.TestTarget.csproj").read_text(encoding="utf-8")
+external_process_project = (root / "tests/Libmem.NET.ExternalProcessTests/Libmem.NET.ExternalProcessTests.csproj").read_text(encoding="utf-8")
 
 assert "Debug|x86 = Debug|x86" in solution
 assert "Release|x86 = Release|x86" in solution
@@ -410,8 +410,8 @@ assert "Address does not fit the current process architecture." in source
 assert "Size or index does not fit the current process architecture." in source
 print("PASS x86/x64 architecture contract")
 
-test_target_source = (root / "tests/LibmemCli.TestTarget/Program.cs").read_text(encoding="utf-8")
-external_process_test_source = (root / "tests/LibmemCli.ExternalProcessTests/Program.cs").read_text(encoding="utf-8")
+test_target_source = (root / "tests/Libmem.NET.TestTarget/Program.cs").read_text(encoding="utf-8")
+external_process_test_source = (root / "tests/Libmem.NET.ExternalProcessTests/Program.cs").read_text(encoding="utf-8")
 assert "Marshal.AllocHGlobal" in test_target_source
 assert "READY pid=" in test_target_source
 for required_call in [
@@ -454,7 +454,7 @@ package_script = (root / "eng/package-runtime.ps1").read_text(encoding="utf-8")
 assert "<GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>" in vcxproj
 assert "<Xdcmake>" in vcxproj
 assert "<OutputFile>$(OutDir)$(TargetName).xml</OutputFile>" in vcxproj
-assert "(Join-Path $managed 'LibmemCli.xml')" in package_script
+assert "(Join-Path $managed 'Libmem.NET.xml')" in package_script
 assert "/// <summary>" in header
 assert "ProcessSession" in header and "LibmemException" in header
 print("PASS XML documentation build/package contract")
@@ -492,8 +492,8 @@ assert "secrets.NUGET_USER" in release_workflow
 assert "Libmem.NET.${EXPECTED_VERSION}.nupkg" in release_workflow
 assert "dotnet nuget push" in release_workflow
 assert "https://api.nuget.org/v3/index.json" in release_workflow
-assert "LibmemCli-windows-x64.zip.sha256" in release_workflow
-assert "LibmemCli-windows-x86.zip.sha256" not in release_workflow
+assert "Libmem.NET-windows-x64.zip.sha256" in release_workflow
+assert "Libmem.NET-windows-x86.zip.sha256" not in release_workflow
 release_notes_script_path = root / "eng/render-release-notes.py"
 release_notes_script = release_notes_script_path.read_text(encoding="utf-8")
 compile(release_notes_script, str(release_notes_script_path), "exec")
@@ -522,15 +522,15 @@ assert "Injector x64" in injector_workflow
 assert "setup-dotnet-x86.ps1" not in injector_workflow
 assert "External Process x64" in external_process_workflow
 assert "LibmemCli.TestTarget" in external_process_workflow
-assert "LibmemCli.ExternalProcessTests" in external_process_workflow
+assert "Libmem.NET.ExternalProcessTests" in external_process_workflow
 assert "setup-dotnet-x86.ps1" not in external_process_workflow
 assert "NuGet Consumer x64" in nuget_consumer_workflow
 assert "package-nuget.ps1" in nuget_consumer_workflow
 assert "package-version.txt" in nuget_consumer_workflow
-assert "LibmemCli.NuGetConsumer" in nuget_consumer_workflow
+assert "Libmem.NET.NuGetConsumer" in nuget_consumer_workflow
 assert "Publish NuGet consumer" in nuget_consumer_workflow
 assert "Reject non-x64 NuGet consumer" in nuget_consumer_workflow
-assert "LibmemCli.dll" in nuget_consumer_workflow
+assert "Libmem.NET.dll" in nuget_consumer_workflow
 assert "Ijwhost.dll" in nuget_consumer_workflow
 assert "nuget.org" not in nuget_consumer_workflow
 assert "setup-dotnet-x86.ps1" not in nuget_consumer_workflow
@@ -548,9 +548,9 @@ subprocess.run(
         sys.executable,
         str(root / "eng/check-public-api.py"),
         "--header",
-        str(root / "src/LibmemCli.h"),
+        str(root / "src/Libmem.NET.h"),
         "--baseline",
-        str(root / "api/LibmemCli.PublicApi.txt"),
+        str(root / "api/Libmem.NET.PublicApi.txt"),
     ],
     cwd=root,
     check=True,
