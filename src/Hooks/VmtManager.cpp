@@ -2,7 +2,7 @@
 #include "../Interop/NativeConverter.h"
 
 using namespace System;
-using namespace ::Libmem::Net::Libmem::Net;
+using namespace Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
 VmtManager::VmtManager(UInt64 address) : native_(nullptr), disposed_(false) {
