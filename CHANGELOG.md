@@ -9,10 +9,10 @@ _No unreleased changes._
 ### Added
 
 - Added `eng/package-nuget.ps1` so local and CI NuGet prototype packaging share the same version/provenance/layout verification path.
-- Added an unpublished `HearthstoneModding.LibmemCli` x64 NuGet prototype, package-layout verification, and an independent `PackageReference` consumer test covering restore/build/run with native runtime dependencies.
+- Added an unpublished `Libmem.NET` x64 NuGet prototype, package-layout verification, and an independent `PackageReference` consumer test covering restore/build/run with native runtime dependencies.
 - Added `docs/API.md` as a consumer-facing behavior reference for the session model, Managers, ownership types, result semantics, exceptions, static compatibility APIs, x64 policy, and pinned-upstream workarounds.
-- Added generated `LibmemCli.xml` IntelliSense documentation to x64 builds and runtime packages; MSVC `/doc` output is merged by XDCMake and shipped beside `LibmemCli.dll`.
-- Added an x64 external-process `LibmemCli.TestTarget` plus runtime tests for remote attach, read/write, remote allocation/protection/free, signature scan, segment lookup, and process-exit observation.
+- Added generated `Libmem.NET.xml` IntelliSense documentation to x64 builds and runtime packages; MSVC `/doc` output is merged by XDCMake and shipped beside `Libmem.NET.dll`.
+- Added an x64 external-process `Libmem.NET.TestTarget` plus runtime tests for remote attach, read/write, remote allocation/protection/free, signature scan, segment lookup, and process-exit observation.
 - Added `ProcessSession.Open(...)` as the preferred object-oriented factory while preserving `Libmem.Attach(...)` for compatibility.
 - Added session-bound `ThreadManager` through `ProcessSession.Threads`, including thread enumeration and main-thread lookup.
 - Added session-bound `ScanManager` through `ProcessSession.Scanner` for DeepPointer, data, pattern, and signature scanning.
@@ -41,12 +41,12 @@ _No unreleased changes._
 - Completed the v0.9 managed-contract documentation audit: expanded XML IntelliSense coverage for the frozen `ProcessSession` / Manager / ownership surface and documented `ProcessSession.Allocate` as an intentional ownership convenience, with no public API or runtime behavior change.
 - Froze target-process exit semantics: process exit no longer implies session disposal, bound identity metadata remains readable, `IsAlive()`/`Refresh()` expose staleness, Manager accessors remain available, and hot-path Manager calls do not gain a universal exact-identity preflight.
 - Froze ownership-lifetime idempotency with runtime coverage for repeated session detach/dispose, repeated resource disposal, and remote-allocation cleanup after target-process exit.
-- Extended the committed public API baseline to freeze the managed `LibmemCli` namespace in addition to public types and members, and updated the roadmap to the active v0.9 x64 API Freeze phase.
+- Extended the committed public API baseline to freeze the managed `Libmem.NET` namespace in addition to public types and members, and updated the roadmap to the active v0.9 x64 API Freeze phase.
 - Started the v0.9 API-freeze contract hardening by normalizing null/blank process/module/library arguments to standard .NET argument exceptions and treating a zero VMT address as `ArgumentOutOfRangeException` before native dispatch.
 - Modernized the C# consumer sample around the recommended `ProcessSession` and Manager APIs, including owned memory, scanning, protection restore, deterministic disposal, and `LibmemException` handling.
 - Replaced GitHub auto-generated PR-feed release bodies with formal user-facing Release Notes generated from the versioned changelog and verified package metadata.
 - Tightened the session-bound manager error contract: definite allocation, module-load, assembly, and code-length failures now surface as `LibmemException`, while static compatibility APIs retain their existing sentinel/nullable semantics.
-- Split the remaining static `Libmem.*`, `ProcessInfo`, and `LibmemException` implementations into subsystem translation units, leaving `LibmemCli.cpp` as a thin compatibility translation unit.
+- Split the remaining static `Libmem.*`, `ProcessInfo`, and `LibmemException` implementations into subsystem translation units, leaving `Libmem.NET.cpp` as a thin compatibility translation unit.
 - Extracted Hook/HookHandle and VMT implementations into dedicated `Hooks` source files while preserving the existing managed API and lifecycle semantics.
 - Extracted `RemoteAllocation` and injection ownership implementations from the static facade into dedicated Memory/Injection source files without changing the public API.
 - Extracted native/managed conversion, address/size validation, enumeration callbacks, and model translation into an internal `Interop/NativeConverter` boundary.
@@ -59,11 +59,11 @@ _No unreleased changes._
 
 ### Changed
 
-- Froze `InstructionInfo` as a LibmemCli-created deeply read-only instruction result. All public properties are getter-only, and `Bytes` returns a defensive copy so callers cannot mutate the stored instruction bytes.
-- Froze `SegmentInfo` as a LibmemCli-created read-only memory-segment result. `Base / End / Size / Protection` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
-- Froze `SymbolInfo` as a LibmemCli-created read-only symbol result. `Address / Name` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
-- Froze `ThreadInfo` as a LibmemCli-created read-only thread descriptor. `Id / OwnerPid` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
-- Froze `ModuleInfo` as a LibmemCli-created read-only module descriptor. `Base / End / Size / Name / Path` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
+- Froze `InstructionInfo` as a Libmem.NET-created deeply read-only instruction result. All public properties are getter-only, and `Bytes` returns a defensive copy so callers cannot mutate the stored instruction bytes.
+- Froze `SegmentInfo` as a Libmem.NET-created read-only memory-segment result. `Base / End / Size / Protection` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
+- Froze `SymbolInfo` as a Libmem.NET-created read-only symbol result. `Address / Name` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
+- Froze `ThreadInfo` as a Libmem.NET-created read-only thread descriptor. `Id / OwnerPid` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
+- Froze `ModuleInfo` as a Libmem.NET-created read-only module descriptor. `Base / End / Size / Name / Path` are getter-only and the implicit public construction/mutation surface is removed before v1.0.
 
 ### Removed
 
@@ -72,7 +72,7 @@ _No unreleased changes._
 
 ## 0.3.0 - 2026-09-29
 
-LibmemCli 0.3.0 completes the wrapper's Windows x86/x64 stabilization and release pipeline while keeping the library independent from application-specific state models.
+Libmem.NET 0.3.0 completes the wrapper's Windows x86/x64 stabilization and release pipeline while keeping the library independent from application-specific state models.
 
 ### Added
 
@@ -88,7 +88,7 @@ LibmemCli 0.3.0 completes the wrapper's Windows x86/x64 stabilization and releas
 - Hardened `RemoteAllocation`, `InjectedModuleHandle`, `HookHandle`, and `VmtManager` deterministic cleanup so failed native restoration/release is surfaced without silently discarding ownership state.
 - Added pointer-width-safe address/size/index conversion so x86 rejects values above `UInt32.MaxValue` instead of truncating them.
 - Expanded smoke coverage for processes, command lines, threads, modules, exported symbols, memory segments, allocation/read/write/set/protection, DeepPointer, scans, assembly/disassembly, and CodeLength.
-- Release automation now produces and verifies both `LibmemCli-windows-x64` and `LibmemCli-windows-x86` packages.
+- Release automation now produces and verifies both `Libmem.NET-windows-x64` and `Libmem.NET-windows-x86` packages.
 
 ### Fixed
 
@@ -98,7 +98,7 @@ LibmemCli 0.3.0 completes the wrapper's Windows x86/x64 stabilization and releas
 
 ## 0.2.0
 
-LibmemCli 0.2.0 turns the wrapper into a session-oriented injection and memory toolkit for .NET 8 / Windows x64.
+Libmem.NET 0.2.0 turns the wrapper into a session-oriented injection and memory toolkit for .NET 8 / Windows x64.
 
 ### Added
 
@@ -113,12 +113,12 @@ LibmemCli 0.2.0 turns the wrapper into a session-oriented injection and memory t
 
 ### Integration
 
-- The API is ready for direct consumption by StandaloneGameMod-style launchers through `ProcessSession`, module snapshots, and explicit ownership models.
+- The API is ready for direct consumption by general-purpose .NET consumers and launchers through `ProcessSession`, module snapshots, and explicit ownership models.
 - Legacy static `Libmem.*` APIs remain available for compatibility.
 
 ### Packaging
 
-- Windows x64 / .NET 8 runtime package remains self-contained around `LibmemCli.dll`, `Ijwhost.dll`, and `libmem.dll`.
+- Windows x64 / .NET 8 runtime package remains self-contained around `Libmem.NET.dll`, `Ijwhost.dll`, and `libmem.dll`.
 - Release automation now verifies the release tag/branch version matches the packaged `VERSION` before publishing.
 
 ## 0.1.0
