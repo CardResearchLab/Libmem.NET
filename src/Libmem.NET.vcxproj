@@ -10,7 +10,7 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>ManagedCProj</Keyword>
     <ProjectGuid>{07B83CFD-9F57-4C67-A1D3-87209CF121AA}</ProjectGuid>
-    <RootNamespace>Libmem.NET</RootNamespace>
+    <RootNamespace>Libmem.Net</RootNamespace>
     <AssemblyName>Libmem.NET</AssemblyName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <TargetFramework>net8.0</TargetFramework>
