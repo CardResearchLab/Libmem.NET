@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a LibmemCli runtime package, archive, checksum, and provenance."""
+"""Validate a Libmem.NET runtime package, archive, checksum, and provenance."""
 
 from __future__ import annotations
 
