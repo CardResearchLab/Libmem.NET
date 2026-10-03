@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
+using namespace Libmem::Net;
 
 ModuleManager::ModuleManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");

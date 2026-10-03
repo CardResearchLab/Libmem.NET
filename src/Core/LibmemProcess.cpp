@@ -1,4 +1,4 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 #include <algorithm>
@@ -6,8 +6,8 @@
 
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+using namespace Libmem::Net;
+using namespace ::Libmem::Net::Interop;
 
 List<ProcessInfo^>^ Libmem::EnumProcesses() {
     std::vector<lm_process_t> native;

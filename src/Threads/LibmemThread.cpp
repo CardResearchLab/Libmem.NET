@@ -1,12 +1,12 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 #include <vector>
 
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+using namespace Libmem::Net;
+using namespace ::Libmem::Net::Interop;
 
 List<ThreadInfo^>^ Libmem::EnumThreads() {
     std::vector<lm_thread_t> native;
