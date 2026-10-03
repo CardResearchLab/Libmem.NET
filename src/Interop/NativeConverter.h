@@ -19,7 +19,7 @@ namespace Libmem::Net::Interop {
 
     lm_address_t native_address(UInt64 value, String^ parameterName);
     lm_size_t native_size(UInt64 value, String^ parameterName);
-    Libmem::Net::Architecture native_architecture(Libmem::Net::Architecture value, String^ parameterName);
+    ::Libmem::Net::Architecture native_architecture(::Libmem::Net::Architecture value, String^ parameterName);
     MemoryProtection native_protection(MemoryProtection value, String^ parameterName);
     bool bad_address(UInt64 value);
 
