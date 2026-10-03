@@ -1,9 +1,9 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 using namespace System;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+using namespace Libmem::Net;
+using namespace Libmem::Net::Interop;
 
 VmtManager::VmtManager(UInt64 address) : native_(nullptr), disposed_(false) {
     if(address==0)
