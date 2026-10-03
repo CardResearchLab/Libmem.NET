@@ -5,22 +5,22 @@
 
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace ::Libmem::Net::Libmem::Net;
+using namespace Libmem::Net;
 using namespace ::Libmem::Net::Interop;
 
-List<ModuleInfo^>^ ::Libmem::Net::Libmem::EnumModules() {
+List<ModuleInfo^>^ Libmem::EnumModules() {
     auto owner=CurrentProcess();
     if(owner==nullptr) throw gcnew LibmemException("LM_GetProcess", "Could not resolve the current process for module provenance.");
     std::vector<lm_module_t> native;
     if(!LM_EnumModules(cb_module,&native)) throw gcnew LibmemException("LM_EnumModules", "LM_EnumModules failed.");
     auto r=gcnew List<ModuleInfo^>(); for(const auto& m : native) r->Add(module(m,owner)); return r;
 }
-List<ModuleInfo^>^ ::Libmem::Net::Libmem::EnumModules(ProcessInfo^ input) {
+List<ModuleInfo^>^ Libmem::EnumModules(ProcessInfo^ input) {
     auto p=proc(input); std::vector<lm_module_t> native;
     if(!LM_EnumModulesEx(&p,cb_module,&native)) throw gcnew LibmemException("LM_EnumModulesEx", "LM_EnumModulesEx failed.");
     auto r=gcnew List<ModuleInfo^>(); for(const auto& m : native) r->Add(module(m,input)); return r;
 }
-ModuleInfo^ ::Libmem::Net::Libmem::FindModule(String^ name) {
+ModuleInfo^ Libmem::FindModule(String^ name) {
     if(name==nullptr) throw gcnew ArgumentNullException("name");
     if(String::IsNullOrWhiteSpace(name))
         throw gcnew ArgumentException("Module name must not be empty.", "name");
@@ -31,7 +31,7 @@ ModuleInfo^ ::Libmem::Net::Libmem::FindModule(String^ name) {
     if(owner==nullptr) throw gcnew LibmemException("LM_GetProcess", "Could not resolve the current process for module provenance.");
     return module(m,owner);
 }
-ModuleInfo^ ::Libmem::Net::Libmem::FindModule(ProcessInfo^ input,String^ name) {
+ModuleInfo^ Libmem::FindModule(ProcessInfo^ input,String^ name) {
     if(name==nullptr) throw gcnew ArgumentNullException("name");
     if(String::IsNullOrWhiteSpace(name))
         throw gcnew ArgumentException("Module name must not be empty.", "name");
@@ -40,7 +40,7 @@ ModuleInfo^ ::Libmem::Net::Libmem::FindModule(ProcessInfo^ input,String^ name) {
     auto n=utf8(name,"name");
     return LM_FindModuleEx(&p,n.c_str(),&m) ? module(m,input) : nullptr;
 }
-ModuleInfo^ ::Libmem::Net::Libmem::LoadModule(String^ path) {
+ModuleInfo^ Libmem::LoadModule(String^ path) {
     if(path==nullptr) throw gcnew ArgumentNullException("path");
     if(String::IsNullOrWhiteSpace(path))
         throw gcnew ArgumentException("Module path must not be empty.", "path");
@@ -51,7 +51,7 @@ ModuleInfo^ ::Libmem::Net::Libmem::LoadModule(String^ path) {
     if(owner==nullptr) throw gcnew LibmemException("LM_GetProcess", "Could not resolve the current process for module provenance.");
     return module(m,owner);
 }
-ModuleInfo^ ::Libmem::Net::Libmem::LoadModule(ProcessInfo^ input,String^ path) {
+ModuleInfo^ Libmem::LoadModule(ProcessInfo^ input,String^ path) {
     if(path==nullptr) throw gcnew ArgumentNullException("path");
     if(String::IsNullOrWhiteSpace(path))
         throw gcnew ArgumentException("Module path must not be empty.", "path");
@@ -60,7 +60,7 @@ ModuleInfo^ ::Libmem::Net::Libmem::LoadModule(ProcessInfo^ input,String^ path) {
     auto s=utf8(path,"path");
     return LM_LoadModuleEx(&p,s.c_str(),&m) ? module(m,input) : nullptr;
 }
-bool ::Libmem::Net::Libmem::UnloadModule(ModuleInfo^ input) {
+bool Libmem::UnloadModule(ModuleInfo^ input) {
     if(input==nullptr) throw gcnew ArgumentNullException("module");
     auto owner=CurrentProcess();
     if(owner==nullptr) throw gcnew LibmemException("LM_GetProcess", "Could not resolve the current process for module provenance.");
@@ -69,7 +69,7 @@ bool ::Libmem::Net::Libmem::UnloadModule(ModuleInfo^ input) {
     auto m=mod(input);
     return LM_UnloadModule(&m)!=LM_FALSE;
 }
-bool ::Libmem::Net::Libmem::UnloadModule(ProcessInfo^ input,ModuleInfo^ m) {
+bool Libmem::UnloadModule(ProcessInfo^ input,ModuleInfo^ m) {
     auto p=proc(input);
     if(m==nullptr) throw gcnew ArgumentNullException("module");
     if(!m->BelongsTo(input))
