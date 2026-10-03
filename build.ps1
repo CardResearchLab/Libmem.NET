@@ -35,4 +35,4 @@ if ($LASTEXITCODE -ne 0) {
     throw 'Libmem.NET build failed.'
 }
 
-Write-Host "LibmemCli output: $(Join-Path $root "artifacts\managed\$Platform\$Configuration")"
+Write-Host "Libmem.NET output: $(Join-Path $root "artifacts\managed\$Platform\$Configuration")"
