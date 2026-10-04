@@ -88,6 +88,7 @@ jobs:
         run: |
           $version = (Get-Content .\VERSION -Raw).Trim()
           .\eng\package-nuget.ps1 -Configuration "${{ inputs.configuration }}" -PackageVersion $version
+          Copy-Item .\artifacts\nuget\*.nupkg .\artifacts\package\ -Force
 
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
@@ -97,6 +98,6 @@ jobs:
             artifacts/package/Libmem.NET-windows-${{ inputs.platform }}/
             artifacts/package/Libmem.NET-windows-${{ inputs.platform }}.zip
             artifacts/package/Libmem.NET-windows-${{ inputs.platform }}.zip.sha256
-            ${{ inputs.include-nuget && inputs.platform == 'x64' && 'artifacts/nuget/*.nupkg' || '' }}
+            ${{ inputs.include-nuget && inputs.platform == 'x64' && 'artifacts/package/*.nupkg' || '' }}
           if-no-files-found: error
           retention-days: 14

@@ -555,6 +555,10 @@ for name in ["NuGet login (OIDC)", "Publish Libmem.NET to nuget.org"]:
 assert 'test "$GITHUB_REF_TYPE" = "tag"' in release_steps["Validate release ref"]
 assert 'gh release view "$TAG_NAME"' in release_steps["Validate release ref"]
 assert '--prerelease --latest=false' in release_steps["Publish GitHub Release"]
+assert 'artifacts/package/*.nupkg' in build_workflow
+assert 'artifacts/package/*.nupkg' in reusable_workflow
+assert 'artifacts/nuget/*.nupkg' not in reusable_workflow, "Mixed upload roots break release download paths."
+assert 'gh release download' in release_steps["Download published NuGet asset for later push"]
 for name in ["Validate release package", "Validate NuGet package", "Render formal release notes"]:
     assert not re.search(r"^        if:", release_steps[name], re.MULTILINE), (
         f"Release branches must still perform {name}."

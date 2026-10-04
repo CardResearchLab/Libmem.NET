@@ -83,6 +83,16 @@ jobs:
           EXPECTED_VERSION="${TAG_NAME#v}"
           python eng/verify-package.py --package-dir dist/x64/Libmem.NET-windows-x64 --archive dist/x64/Libmem.NET-windows-x64.zip --checksum dist/x64/Libmem.NET-windows-x64.zip.sha256 --expected-version "$EXPECTED_VERSION" --expected-repository-commit "$GITHUB_SHA" --expected-platform win-x64 --expected-configuration Release
 
+      - name: Download published NuGet asset for later push
+        if: github.event_name == 'workflow_dispatch' && inputs.publish-nuget == true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          EXPECTED_VERSION="${GITHUB_REF_NAME#v}"
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --pattern "Libmem.NET.${EXPECTED_VERSION}.nupkg" --dir dist/x64 --clobber
+
       - name: Validate NuGet package
         shell: bash
         run: |

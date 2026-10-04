@@ -150,7 +150,9 @@ jobs:
 
       - name: Package runtime
         shell: pwsh
-        run: .\eng\package-runtime.ps1 -Configuration Release -Platform x64
+        run: |
+          .\eng\package-runtime.ps1 -Configuration Release -Platform x64
+          Copy-Item .\artifacts\nuget\*.nupkg .\artifacts\package\ -Force
 
       - name: Verify runtime package
         shell: pwsh
@@ -166,6 +168,6 @@ jobs:
             artifacts/package/Libmem.NET-windows-x64/
             artifacts/package/Libmem.NET-windows-x64.zip
             artifacts/package/Libmem.NET-windows-x64.zip.sha256
-            artifacts/nuget/*.nupkg
+            artifacts/package/*.nupkg
           if-no-files-found: error
           retention-days: 14
