@@ -12,9 +12,9 @@ The planned tag is `v2.0.0-preview.1`. Runtime ZIP and exact-version NuGet downl
 
 **LibmemCli v1.0.0** is the first stable Windows x64 release.
 
-- Release: https://github.com/HearthstoneModding/Libmem.NET/releases/tag/v1.0.0
-- Runtime package: https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip
-- SHA-256 file: https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256
+- Release: https://github.com/QuietForge/Libmem.NET/releases/tag/v1.0.0
+- Runtime package: https://github.com/QuietForge/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip
+- SHA-256 file: https://github.com/QuietForge/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256
 - Release commit: `e6181b9f74b5d5877e3d1c253d3bbfef61141445`
 - Pinned libmem commit: `a07c9942bf1358dabcc83eb0cd072736c749d7f8`
 - Runtime ZIP SHA-256: `647f93c73bbd9fc77e2eb84dc2d5530953b12212c75c09d97b19388e4b331b99`

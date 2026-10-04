@@ -8,7 +8,7 @@ Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validat
 
 For current Libmem.NET, build from source or use a successful Build artifact. No new formal release was created by the identity migration.
 
-Historical [v1.0.0](https://github.com/HearthstoneModding/Libmem.NET/releases/tag/v1.0.0) provides [LibmemCli-windows-x64.zip](https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip) and its [SHA-256 file](https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256). Those assets contain `LibmemCli.dll`, not `Libmem.NET.dll`, and require the old namespace. Do not rename old binaries to use the new examples.
+Historical [v1.0.0](https://github.com/QuietForge/Libmem.NET/releases/tag/v1.0.0) provides [LibmemCli-windows-x64.zip](https://github.com/QuietForge/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip) and its [SHA-256 file](https://github.com/QuietForge/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256). Those assets contain `LibmemCli.dll`, not `Libmem.NET.dll`, and require the old namespace. Do not rename old binaries to use the new examples.
 
 Current build artifact names:
 

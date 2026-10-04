@@ -2,8 +2,8 @@
 
 [简体中文](README.md) | [English](README.en.md)
 
-[![CI Build](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/HearthstoneModding/Libmem.NET)](https://github.com/HearthstoneModding/Libmem.NET/releases/latest)
+[![CI Build](https://github.com/QuietForge/Libmem.NET/actions/workflows/build.yml/badge.svg)](https://github.com/QuietForge/Libmem.NET/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/QuietForge/Libmem.NET)](https://github.com/QuietForge/Libmem.NET/releases/latest)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
@@ -23,13 +23,13 @@
 
 ## 下载
 
-当前 Libmem.NET 可从源码构建，或下载 [Build 工作流](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml) 的成功运行产物。
+当前 Libmem.NET 可从源码构建，或下载 [Build 工作流](https://github.com/QuietForge/Libmem.NET/actions/workflows/build.yml) 的成功运行产物。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
-- [LibmemCli v1.0.0](https://github.com/HearthstoneModding/Libmem.NET/releases/tag/v1.0.0)
-- [LibmemCli-windows-x64.zip](https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip)
-- [LibmemCli-windows-x64.zip.sha256](https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256)
+- [LibmemCli v1.0.0](https://github.com/QuietForge/Libmem.NET/releases/tag/v1.0.0)
+- [LibmemCli-windows-x64.zip](https://github.com/QuietForge/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip)
+- [LibmemCli-windows-x64.zip.sha256](https://github.com/QuietForge/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256)
 
 历史 ZIP SHA-256：`647f93c73bbd9fc77e2eb84dc2d5530953b12212c75c09d97b19388e4b331b99`。
 
@@ -206,7 +206,7 @@ v1.0 明确区分“正常未找到”和“操作失败”。
 递归克隆：
 
 ```powershell
-git clone --recursive https://github.com/HearthstoneModding/Libmem.NET.git
+git clone --recursive https://github.com/QuietForge/Libmem.NET.git
 cd Libmem.NET
 .\build.ps1 -Configuration Release -Platform x64
 ```
@@ -248,7 +248,7 @@ artifacts/package/Libmem.NET-windows-x64.zip.sha256
 需要源码级可复现构建时：
 
 ```powershell
-git submodule add https://github.com/HearthstoneModding/Libmem.NET.git external/Libmem.NET
+git submodule add https://github.com/QuietForge/Libmem.NET.git external/Libmem.NET
 git submodule update --init --recursive
 ```
 
@@ -263,7 +263,7 @@ external/Libmem.NET/src/Libmem.NET.vcxproj
 ```yaml
 jobs:
   build-libmem:
-    uses: HearthstoneModding/Libmem.NET/.github/workflows/reusable-build.yml@main
+    uses: QuietForge/Libmem.NET/.github/workflows/reusable-build.yml@main
     with:
       ref: main
       configuration: Release

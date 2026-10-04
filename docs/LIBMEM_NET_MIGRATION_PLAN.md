@@ -4,7 +4,7 @@
 
 ## 1. 已核对的基线与此前失败
 
-- 仓库：`HearthstoneModding/Libmem.NET`，目标分支 `main`。
+- 仓库：`QuietForge/Libmem.NET`，目标分支 `main`。
 - 本次读取到的主线 SHA：`6850e023487c1b87abae9a2285b858c353dcefb5`，来自 PR #74。
 - 主线已采用 `Libmem.NET` 仓库名、产品名和 NuGet PackageId；Solution、源码 namespace、托管程序集及部分发布产物仍采用 `LibmemCli`。
 - 此前全面迁移 PR #76–#86 均已关闭、未合并。本次从主线重新实施，不叠加那些迁移分支。

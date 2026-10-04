@@ -28,7 +28,7 @@ Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. 
 
 - [ ] Select a version that accounts for the breaking `LibmemCli` → `Libmem.NET` identity migration; update `VERSION`, assembly metadata and CHANGELOG together.
 - [ ] Confirm green Release x64 Build results on the exact release candidate.
-- [ ] Verify NuGet account-side setup: Trusted Publishing policy for `HearthstoneModding/Libmem.NET` + `release.yml`, and GitHub Actions `NUGET_USER` secret. Their live readiness is not established by source review.
+- [ ] Verify NuGet account-side setup: Trusted Publishing policy for `QuietForge/Libmem.NET` + `release.yml`, and GitHub Actions `NUGET_USER` secret. Their live readiness is not established by source review.
 - [ ] Create `release/v<version>` from that candidate and verify the complete dry run. It must build and validate ZIP/NuGet and render notes, with all three external publication steps skipped.
 - [ ] Review exact-version artifacts and generated notes; confirm ZIP and NuGet share the same source commit.
 - [ ] After explicit publication authorization, create the matching `v<version>` tag on that candidate. Creating it triggers GitHub downloads; a preview tag must be marked as a prerelease. It does not push to nuget.org.
