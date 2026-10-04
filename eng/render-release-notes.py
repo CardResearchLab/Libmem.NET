@@ -18,8 +18,12 @@ def normalize_version(value: str) -> str:
     version = value.strip()
     if version.startswith("v"):
         version = version[1:]
-    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
-        fail(f"Version must use MAJOR.MINOR.PATCH format: {value!r}")
+    if not re.fullmatch(
+        r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
+        r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+        r"(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?", version
+    ):
+        fail(f"Version must use MAJOR.MINOR.PATCH[-PRERELEASE] format: {value!r}")
     return version
 
 
@@ -94,8 +98,9 @@ def render_notes(
     )
     packaged_files.append("manifest.json")
 
+    release_kind = "preview release" if "-" in version else "official release"
     lines = [
-        f"Libmem.NET **v{version}** is the official Windows x64 / .NET 8 release "
+        f"Libmem.NET **v{version}** is a Windows x64 / .NET 8 {release_kind} "
         "of the reusable C++/CLI wrapper around the pinned rdbo/libmem native library.",
         "",
         "## Release highlights",
@@ -113,6 +118,7 @@ def render_notes(
         "",
         f"- **{package_name}** — runtime package for Windows x64",
         f"- **{checksum_name}** — SHA-256 checksum for the runtime archive",
+        f"- **Libmem.NET.{version}.nupkg** — exact-version package for a local NuGet feed; nuget.org publication is a separate step",
         "",
         "## Package contents",
         "",
@@ -134,6 +140,7 @@ def render_notes(
             f"- [README](https://github.com/{repository}/blob/{tag}/README.md)",
             f"- [English README](https://github.com/{repository}/blob/{tag}/README.en.md)",
             f"- [CHANGELOG](https://github.com/{repository}/blob/{tag}/CHANGELOG.md)",
+            f"- [Migration guide](https://github.com/{repository}/blob/{tag}/docs/MIGRATION.md)",
             f"- [Roadmap](https://github.com/{repository}/blob/{tag}/ROADMAP.md)",
             "",
             "> Libmem.NET remains a general-purpose libmem wrapper. Application snapshots, caches, game state, IPC, and other product-specific models belong in consuming projects.",

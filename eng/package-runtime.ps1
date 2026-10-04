@@ -23,7 +23,9 @@ $requiredFiles = @(
     (Join-Path $native 'libmem.dll'),
     (Join-Path $root 'VERSION'),
     (Join-Path $root 'LICENSE'),
-    (Join-Path $root 'THIRD_PARTY_NOTICES.md')
+    (Join-Path $root 'THIRD_PARTY_NOTICES.md'),
+    (Join-Path $root 'CHANGELOG.md'),
+    (Join-Path $root 'docs\MIGRATION.md')
 )
 
 foreach ($file in $requiredFiles) {

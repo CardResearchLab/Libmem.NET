@@ -1,6 +1,12 @@
 name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      publish-nuget:
+        description: Publish an existing tagged GitHub release to nuget.org (select its v* tag)
+        type: boolean
+        default: false
   push:
     tags:
       - 'v*'
@@ -35,6 +41,25 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Validate release ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLISH_NUGET: ${{ inputs.publish-nuget == true }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "branch" && "$GITHUB_REF_NAME" == release/v* ]]; then
+            TAG_NAME="${GITHUB_REF_NAME#release/}"
+          elif [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" == v* ]]; then
+            TAG_NAME="$GITHUB_REF_NAME"
+          else
+            echo "Select a v* tag or release/v* branch; ordinary branches cannot publish."
+            exit 1
+          fi
+          if [[ "$PUBLISH_NUGET" == "true" ]]; then
+            test "$GITHUB_REF_TYPE" = "tag" || { echo "NuGet publication requires an existing tag."; exit 1; }
+            gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null
+          fi
+
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
@@ -58,6 +83,16 @@ jobs:
           EXPECTED_VERSION="${TAG_NAME#v}"
           python eng/verify-package.py --package-dir dist/x64/Libmem.NET-windows-x64 --archive dist/x64/Libmem.NET-windows-x64.zip --checksum dist/x64/Libmem.NET-windows-x64.zip.sha256 --expected-version "$EXPECTED_VERSION" --expected-repository-commit "$GITHUB_SHA" --expected-platform win-x64 --expected-configuration Release
 
+      - name: Download published NuGet asset for later push
+        if: github.event_name == 'workflow_dispatch' && inputs.publish-nuget == true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          EXPECTED_VERSION="${GITHUB_REF_NAME#v}"
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --pattern "Libmem.NET.${EXPECTED_VERSION}.nupkg" --dir dist/x64 --clobber
+
       - name: Validate NuGet package
         shell: bash
         run: |
@@ -74,24 +109,7 @@ jobs:
             echo "Expected NuGet package is missing: $PACKAGE"
             exit 1
           }
-
-      - name: NuGet login (OIDC)
-        uses: NuGet/login@v1
-        id: nuget-login
-        with:
-          user: ${{ secrets.NUGET_USER }}
-
-      - name: Publish Libmem.NET to nuget.org
-        shell: bash
-        run: |
-          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
-            TAG_NAME="${GITHUB_REF_NAME#release/}"
-          else
-            TAG_NAME="$GITHUB_REF_NAME"
-          fi
-
-          EXPECTED_VERSION="${TAG_NAME#v}"
-          dotnet nuget push "dist/x64/Libmem.NET.${EXPECTED_VERSION}.nupkg"             --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}"             --source https://api.nuget.org/v3/index.json             --skip-duplicate
+          python tests/verify_nuget_package.py --package "$PACKAGE" --expected-version "$EXPECTED_VERSION" --expected-commit "$GITHUB_SHA"
 
       - name: Render formal release notes
         shell: bash
@@ -113,6 +131,7 @@ jobs:
             --output dist/release-notes.md
 
       - name: Publish GitHub Release
+        if: github.ref_type == 'tag' && inputs.publish-nuget != true
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -123,15 +142,44 @@ jobs:
             TAG_NAME="$GITHUB_REF_NAME"
           fi
 
+          RELEASE_FLAGS=()
+          if [[ "${TAG_NAME#v}" == *-* ]]; then
+            RELEASE_FLAGS+=(--prerelease --latest=false)
+          fi
+
           gh release create "$TAG_NAME" \
             "dist/x64/Libmem.NET-windows-x64.zip" \
             "dist/x64/Libmem.NET-windows-x64.zip.sha256" \
+            "dist/x64/Libmem.NET.${TAG_NAME#v}.nupkg" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "Libmem.NET $TAG_NAME" \
-            --notes-file dist/release-notes.md
+            --notes-file dist/release-notes.md \
+            "${RELEASE_FLAGS[@]}"
 
-          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
-            gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$GITHUB_REF_NAME" || \
-              echo "Warning: release succeeded but the temporary branch could not be deleted."
-          fi
+      - name: Release dry run complete
+        if: github.ref_type == 'branch'
+        shell: bash
+        run: |
+          echo "Release branch validation completed successfully."
+          echo "No GitHub Release or nuget.org package was published."
+          echo "Create a matching v* tag for GitHub downloads; publish NuGet separately by manual opt-in."
+
+      - name: NuGet login (OIDC)
+        if: github.event_name == 'workflow_dispatch' && inputs.publish-nuget == true
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Publish Libmem.NET to nuget.org
+        if: github.event_name == 'workflow_dispatch' && inputs.publish-nuget == true
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
+        run: |
+          EXPECTED_VERSION="${GITHUB_REF_NAME#v}"
+          dotnet nuget push "dist/x64/Libmem.NET.${EXPECTED_VERSION}.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate

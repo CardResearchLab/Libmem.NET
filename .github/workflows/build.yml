@@ -8,6 +8,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      debug:
+        description: Also build and smoke-test Debug x64
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -42,6 +48,7 @@ jobs:
         run: python .\tests\check_sources.py
 
       - name: Build Libmem.NET Debug x64
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
         shell: pwsh
         run: .\build.ps1 -Configuration Debug -Platform x64
 
@@ -54,6 +61,7 @@ jobs:
         run: dotnet run --project .\tests\Libmem.NET.SmokeTests\Libmem.NET.SmokeTests.csproj -c Release -p:Platform=x64
 
       - name: Run Debug runtime smoke tests
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
         shell: pwsh
         run: dotnet run --project .\tests\Libmem.NET.SmokeTests\Libmem.NET.SmokeTests.csproj -c Debug -p:Platform=x64
 
@@ -81,7 +89,9 @@ jobs:
 
       - name: Pack and verify local NuGet prototype
         shell: pwsh
-        run: .\eng\package-nuget.ps1 -Configuration Release
+        run: |
+          $version = (Get-Content .\VERSION -Raw).Trim()
+          .\eng\package-nuget.ps1 -Configuration Release -PackageVersion $version
 
       - name: Restore NuGet consumer from local feed
         shell: pwsh
@@ -140,7 +150,9 @@ jobs:
 
       - name: Package runtime
         shell: pwsh
-        run: .\eng\package-runtime.ps1 -Configuration Release -Platform x64
+        run: |
+          .\eng\package-runtime.ps1 -Configuration Release -Platform x64
+          Copy-Item .\artifacts\nuget\*.nupkg .\artifacts\package\ -Force
 
       - name: Verify runtime package
         shell: pwsh
@@ -156,5 +168,6 @@ jobs:
             artifacts/package/Libmem.NET-windows-x64/
             artifacts/package/Libmem.NET-windows-x64.zip
             artifacts/package/Libmem.NET-windows-x64.zip.sha256
+            artifacts/package/*.nupkg
           if-no-files-found: error
           retention-days: 14
