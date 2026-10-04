@@ -13,7 +13,7 @@ New code should prefer `ProcessSession.Open(...)`.
 using Libmem.NET;
 using NativeApi = global::Libmem.NET.Libmem;
 
-using var session = ProcessSession.Open(Environment.ProcessId)
+using var session = ProcessSession.Open((uint)Environment.ProcessId)
     ?? throw new InvalidOperationException("Target process was not found.");
 
 Console.WriteLine($"{session.Name} PID={session.Pid}");
@@ -463,11 +463,11 @@ Keep `Libmem.NET.xml` beside `Libmem.NET.dll` so Visual Studio / C# editors can 
 
 ## Distribution and consumption
 
-Stable distribution currently remains the Windows x64 Runtime ZIP and source/reusable-workflow integration.
+The current Libmem.NET build targets Windows x64 / .NET 8 through runtime ZIP, source/reusable-workflow integration, and a validated `Libmem.NET` NuGet package path. Historical v1.0.0 binaries retain the `LibmemCli` identity; see [MIGRATION.md](MIGRATION.md).
 
-The repository also contains an **unpublished local NuGet prototype** with the package ID `Libmem.NET`. It is validated through an independent PackageReference consumer before any public package publication is considered.
+An independent PackageReference consumer validates the NuGet package. Public nuget.org publication is wired through Trusted Publishing (OIDC) in the tag-only release path; account-side configuration remains a release prerequisite. `release/v*` branches validate packages and notes without publishing.
 
-See [CONSUMPTION.md](CONSUMPTION.md) for the package layout, x64 constraints, and NuGet acceptance criteria.
+See [CONSUMPTION.md](CONSUMPTION.md) for package layout, x64 constraints, release gating, and Trusted Publishing setup.
 
 ## Public API stability
 

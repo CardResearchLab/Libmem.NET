@@ -8,6 +8,12 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      debug:
+        description: Also build and smoke-test Debug x64
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -42,6 +48,7 @@ jobs:
         run: python .\tests\check_sources.py
 
       - name: Build Libmem.NET Debug x64
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
         shell: pwsh
         run: .\build.ps1 -Configuration Debug -Platform x64
 
@@ -54,6 +61,7 @@ jobs:
         run: dotnet run --project .\tests\Libmem.NET.SmokeTests\Libmem.NET.SmokeTests.csproj -c Release -p:Platform=x64
 
       - name: Run Debug runtime smoke tests
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug }}
         shell: pwsh
         run: dotnet run --project .\tests\Libmem.NET.SmokeTests\Libmem.NET.SmokeTests.csproj -c Debug -p:Platform=x64
 

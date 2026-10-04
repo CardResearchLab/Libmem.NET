@@ -518,6 +518,67 @@ assert "Platform x86" not in build_workflow
 assert "setup-dotnet-x86.ps1" not in build_workflow
 assert build_workflow.count(".\\build.ps1 -Configuration Release -Platform x64") == 1
 assert build_workflow.count(".\\build.ps1 -Configuration Debug -Platform x64") == 1
+
+def workflow_steps(workflow):
+    """Extract named step blocks at the workflow's step indentation."""
+    matches = list(re.finditer(r"^      - name: (.+)$", workflow, re.MULTILINE))
+    return {
+        match.group(1): workflow[match.end():matches[i + 1].start() if i + 1 < len(matches) else len(workflow)]
+        for i, match in enumerate(matches)
+    }
+
+assert re.search(
+    r"workflow_dispatch:\s+inputs:\s+debug:\s+description: [^\n]+\s+"
+    r"type: boolean\s+required: false\s+default: false", build_workflow
+), "Debug must be an opt-in boolean input, disabled by default."
+build_steps = workflow_steps(build_workflow)
+debug_steps = {"Build Libmem.NET Debug x64", "Run Debug runtime smoke tests"}
+for name, block in build_steps.items():
+    conditions = re.findall(r"^        if: (.+)$", block, re.MULTILINE)
+    if name in debug_steps:
+        assert conditions == ["${{ github.event_name == 'workflow_dispatch' && inputs.debug }}"], (
+            f"{name} must only run with manual Debug opt-in."
+        )
+    else:
+        assert not conditions, f"Default Release validation must remain unconditional: {name}"
+assert debug_steps <= build_steps.keys()
+print("PASS Release default and manual Debug policy")
+
+release_steps = workflow_steps(release_workflow)
+for name in ["NuGet login (OIDC)", "Publish Libmem.NET to nuget.org", "Publish GitHub Release"]:
+    assert re.findall(r"^        if: (.+)$", release_steps[name], re.MULTILINE) == [
+        "github.ref_type == 'tag'"
+    ], f"External publication must be tag-only: {name}"
+for name in ["Validate release package", "Validate NuGet package", "Render formal release notes"]:
+    assert not re.search(r"^        if:", release_steps[name], re.MULTILINE), (
+        f"Release branches must still perform {name}."
+    )
+assert "if: github.ref_type == 'branch'" in release_steps["Release dry run complete"]
+assert "No GitHub Release or nuget.org package was published." in release_steps["Release dry run complete"]
+assert "gh api -X DELETE" not in release_workflow
+assert release_workflow.count("gh release create") == 1
+assert release_workflow.count("dotnet nuget push") == 1
+assert release_workflow.count("NuGet/login@v1") == 1
+print("PASS tag-only publication and branch dry-run policy")
+
+release_doc = (root / "docs/RELEASES.md").read_text(encoding="utf-8")
+release_checklist = (root / "docs/RELEASE_CHECKLIST.md").read_text(encoding="utf-8")
+for readme in [readme_zh, readme_en]:
+    assert "docs/MIGRATION.md" in readme
+    assert "docs/RELEASES.md" in readme
+    assert "docs/RELEASE_CHECKLIST.md" in readme
+    assert "LibmemCli-windows-x64.zip" in readme, "Historical assets must retain their real names."
+    assert "ProcessSession.Open((uint)Environment.ProcessId)" in readme
+for marker in ["Public API freeze", "Independent NuGet consumer", "NuGet account-side setup", "NUGET_USER"]:
+    assert marker in release_checklist
+assert "Historical v1.0.0" in release_doc
+assert "LibmemCli-windows-x64.zip" in release_doc
+for file in ["v1.0.0.md", "v1.0.0-github.md"]:
+    historical_notes = (root / "docs/releases" / file).read_text(encoding="utf-8")
+    assert "Historical release before the Libmem.NET identity migration" in historical_notes
+    assert "LibmemCli.dll" in historical_notes
+print("PASS release documentation and historical identity contract")
+
 for suite in ["SmokeTests", "ExternalProcessTests", "HookVmtTests", "InjectorTests", "NuGetConsumer"]:
     assert f"Libmem.NET.{suite}" in build_workflow, f"Unified PR gate lost {suite}"
 for step in ["Run C# example", "Publish NuGet consumer", "Reject non-x64 NuGet consumer", "Verify runtime package"]:

@@ -2,13 +2,15 @@
 
 > Current official target: Windows x64 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validated NuGet package path. The managed assembly and namespace remain `Libmem.NET` for v1.0 compatibility.
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validated NuGet package path. Current main uses the `Libmem.NET` managed assembly and namespace. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
-Use the GitHub Release asset when the consuming project only needs built binaries.
+For current Libmem.NET, build from source or use a successful Build artifact. No new formal release was created by the identity migration.
 
-Official release assets:
+Historical [v1.0.0](https://github.com/HearthstoneModding/Libmem.NET/releases/tag/v1.0.0) provides [LibmemCli-windows-x64.zip](https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip) and its [SHA-256 file](https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256). Those assets contain `LibmemCli.dll`, not `Libmem.NET.dll`, and require the old namespace. Do not rename old binaries to use the new examples.
+
+Current build artifact names:
 
 ```text
 Libmem.NET-windows-x64.zip
@@ -26,9 +28,17 @@ Ijwhost.dll
 libmem.dll
 ```
 
-The consumer should reference `Libmem.NET.dll` and keep the runtime files together with the executable.
+The consumer should reference `Libmem.NET.dll` and keep the runtime files together with the executable. Do not mix files from different releases or build commits.
 
-This remains the **primary stable distribution model** until a package-manager path passes the same runtime acceptance level.
+For a .NET 8 x64 application:
+
+1. build or extract the matching current runtime artifact;
+2. reference `Libmem.NET.dll`;
+3. copy `Libmem.NET.dll`, `libmem.dll`, and `Ijwhost.dll` into application output;
+4. keep `Libmem.NET.xml` beside the assembly for IntelliSense documentation;
+5. target x64 explicitly rather than AnyCPU.
+
+ZIP and source integration remain available independently of public NuGet setup.
 
 ## 2. Git Submodule — source/build integration
 
@@ -45,7 +55,7 @@ It is more operationally complex than consuming a prebuilt package.
 
 ## 3. NuGet package
 
-The repository contains a validated PackageReference package. Public publication is wired into the release workflow, but the first nuget.org publish still requires the one-time Trusted Publishing account setup described below:
+The repository contains a validated PackageReference package. Public publication is wired into the release workflow, and a public nuget.org publish requires verification of the Trusted Publishing account setup described below:
 
 ```text
 Package ID: Libmem.NET
@@ -54,22 +64,15 @@ Publication: release workflow via nuget.org Trusted Publishing (OIDC)
 Target: Windows x64 / .NET 8
 ```
 
-The package ID is now fixed as `Libmem.NET` before first public publication. Development packages also use a commit-qualified prerelease version such as `0.3.0-dev.<commit>` rather than reusing the already released `0.3.0` version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
+The package ID is now fixed as `Libmem.NET` before first public publication. Development packages also use a commit-qualified prerelease version derived from `VERSION`, such as `1.0.0-dev.<commit>`, rather than reusing a stable package version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
 
 ### Package layout
 
-```text
-lib/net8.0/
-├─ Libmem.NET.dll
-└─ Libmem.NET.xml
-
-runtimes/win-x64/native/
-├─ libmem.dll
-└─ Ijwhost.dll
-
-buildTransitive/
-└─ Libmem.NET.targets
-```
+| Package path | Files |
+| --- | --- |
+| `lib/net8.0/` | `Libmem.NET.dll`, `Libmem.NET.xml` |
+| `runtimes/win-x64/native/` | `libmem.dll`, `Ijwhost.dll` |
+| `buildTransitive/` | `Libmem.NET.targets` |
 
 The mixed-mode `Libmem.NET.dll` is currently exposed from `lib/net8.0` so PackageReference can provide the compile-time reference directly.
 
@@ -96,25 +99,12 @@ The script reads `VERSION`, resolves the current Git commit, validates the requi
 
 The CI prototype performs the complete flow:
 
-```text
-Build Libmem.NET
-    ↓
-dotnet pack
-    ↓
-verify .nupkg layout
-    ↓
-restore an independent PackageReference consumer
-    ↓
-build/run the consumer
-    ↓
-publish the consumer and verify runtime files
-    ↓
-reject a non-x64 consumer
-    ↓
-ProcessSession.Open
-    ↓
-Allocate / Write / Read / Dispose
-```
+1. Build Release x64 and pack the NuGet package.
+2. Verify `.nupkg` layout and commit provenance.
+3. Restore an independent PackageReference consumer from the local feed.
+4. Build/run the consumer, including `ProcessSession.Open` and Allocate / Write / Read / Dispose.
+5. Publish and verify the runtime dependencies.
+6. Reject a non-x64 consumer.
 
 The consumer test references **only the local NuGet package**. It does not use a project reference to Libmem.NET.
 
@@ -178,8 +168,12 @@ One-time setup:
    - Environment: leave empty unless the workflow is later moved behind a GitHub Environment.
 3. In GitHub Actions secrets, add `NUGET_USER` containing the nuget.org profile username (not the email address).
 
-On a `v*` tag or `release/v*` release branch, the release workflow builds once, creates the runtime ZIP and exact-version `Libmem.NET.<version>.nupkg`, validates both, exchanges GitHub OIDC for a short-lived NuGet credential, publishes the NuGet package, and then creates the GitHub Release.
+Both `v*` tags and `release/v*` branches build the runtime ZIP and exact-version `Libmem.NET.<version>.nupkg`, validate both, and render release notes. Only tags exchange GitHub OIDC for a short-lived NuGet credential, push the package, and create the GitHub Release. Release branches are dry runs and remain available after validation.
+
+Repository configuration does not prove that the external account policy or secret is ready; verify them before creating a publication tag.
 
 ## Current recommendation
 
-For stable consumption, use either the GitHub Release x64 runtime ZIP, the `Libmem.NET` NuGet package once its first public version is visible on nuget.org, or the repository/submodule/reusable workflow for source-level integration.
+For the current identity, use source/submodule/reusable-workflow integration or a verified Build runtime artifact. Use a public `Libmem.NET` package only after the intended version is visible on nuget.org. Historical v1.0.0 remains available under its original names.
+
+See [RELEASES.md](RELEASES.md) for release history, support boundaries and versioning, and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the next publication.

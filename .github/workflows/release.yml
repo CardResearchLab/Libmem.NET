@@ -76,12 +76,14 @@ jobs:
           }
 
       - name: NuGet login (OIDC)
+        if: github.ref_type == 'tag'
         uses: NuGet/login@v1
         id: nuget-login
         with:
           user: ${{ secrets.NUGET_USER }}
 
       - name: Publish Libmem.NET to nuget.org
+        if: github.ref_type == 'tag'
         shell: bash
         run: |
           if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
@@ -113,15 +115,12 @@ jobs:
             --output dist/release-notes.md
 
       - name: Publish GitHub Release
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
-            TAG_NAME="${GITHUB_REF_NAME#release/}"
-          else
-            TAG_NAME="$GITHUB_REF_NAME"
-          fi
+          TAG_NAME="$GITHUB_REF_NAME"
 
           gh release create "$TAG_NAME" \
             "dist/x64/Libmem.NET-windows-x64.zip" \
@@ -131,7 +130,10 @@ jobs:
             --title "Libmem.NET $TAG_NAME" \
             --notes-file dist/release-notes.md
 
-          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
-            gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$GITHUB_REF_NAME" || \
-              echo "Warning: release succeeded but the temporary branch could not be deleted."
-          fi
+      - name: Release dry run complete
+        if: github.ref_type == 'branch'
+        shell: bash
+        run: |
+          echo "Release branch validation completed successfully."
+          echo "No GitHub Release or nuget.org package was published."
+          echo "Create a matching v* tag to perform the real publication."

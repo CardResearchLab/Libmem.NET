@@ -12,6 +12,12 @@
 
 No release tag or NuGet publication is created by this migration.
 
+### CI and documentation follow-up
+
+- Default automatic Build validation to Release x64; retain every Release runtime, example, consumer and package check. Manual `workflow_dispatch` can additionally enable Debug x64 build and smoke tests through `debug`.
+- Restrict NuGet OIDC login/push and GitHub Release creation to tags. `release/v*` branches validate artifacts and render notes without publishing or deleting branches.
+- Consolidate the unfinished documentation from #70 and release readiness work from #75: concise bilingual README, release/versioning guide, historical v1.0.0 notes and a checklist for the next release. Keep historical LibmemCli assets distinct from the current Libmem.NET identity.
+
 ## 1.0.0 - 2026-09-30
 
 ### Added
