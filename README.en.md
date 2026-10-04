@@ -10,6 +10,8 @@
 
 **Libmem.NET** is a Windows C++/CLI wrapper around [rdbo/libmem](https://github.com/rdbo/libmem), exposing process, thread, module, memory, scanning, symbol, assembly/disassembly, Hook, VMT, and DLL injection capabilities to C# / .NET.
 
+Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). The organization's display name is **QuietForge**; the current repository path remains `HearthstoneModding/Libmem.NET`.
+
 Current source uses the **Libmem.NET** identity; the prepared version is **2.0.0-preview.1**, pending public release validation. Historical stable **v1.0.0** uses `LibmemCli`. Consumers must update references and recompile; see the [migration guide](docs/MIGRATION.md).
 
 Official support target:

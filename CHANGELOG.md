@@ -21,6 +21,7 @@ No changes yet.
 - Enabled prerelease version validation for runtime manifests, NuGet packaging and formal Release Notes; GitHub Release publication marks preview tags as prereleases.
 - Included the changelog and migration guide in runtime ZIP and NuGet packages. Build artifacts include an exact-version `Libmem.NET.2.0.0-preview.1.nupkg` for local-feed acceptance.
 - Separated GitHub downloads from nuget.org publication. NuGet Trusted Publishing is explicitly invoked after the GitHub release and account setup are ready.
+- Updated assembly company metadata to the organization's display name `QuietForge` and NuGet author attribution to `xiaohei7972`. Repository URLs and publishing authentication retain the actual GitHub organization login `HearthstoneModding`.
 
 This section prepares the preview; it does not claim that a release tag, downloadable release or nuget.org package has already been published. The existing v1.0.0 tag and assets remain unchanged.
 

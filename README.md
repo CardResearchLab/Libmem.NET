@@ -10,6 +10,8 @@
 
 **Libmem.NET** 是 [rdbo/libmem](https://github.com/rdbo/libmem) 的 Windows C++/CLI 封装，为 C# / .NET 提供进程、线程、模块、内存、扫描、符号、汇编/反汇编、Hook、VMT 与 DLL 注入能力。
 
+作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。所属组织显示名称为 **QuietForge**，当前仓库路径仍为 `HearthstoneModding/Libmem.NET`。
+
 当前源码已完成 **Libmem.NET** 命名迁移，本次准备版本为 **2.0.0-preview.1**，公开发布待验证完成。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；迁移需要修改引用并重新编译，见 [迁移指南](docs/MIGRATION.md)。
 
 正式支持范围：

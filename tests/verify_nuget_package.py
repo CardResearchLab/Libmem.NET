@@ -90,7 +90,7 @@ def main() -> int:
                 f"got {None if version is None else version.text!r}"
             )
 
-        if authors is None or authors.text != "HearthstoneModding":
+        if authors is None or authors.text != "xiaohei7972":
             raise AssertionError("Unexpected NuGet authors metadata.")
 
         if description is None or "Windows x64" not in (description.text or ""):

@@ -177,6 +177,8 @@ One-time setup:
    - Environment: leave empty unless the workflow is later moved behind a GitHub Environment.
 3. In GitHub Actions secrets, add `NUGET_USER` containing the nuget.org profile username (not the email address).
 
+The organization's display name is QuietForge, while its current GitHub login and repository URL still use `HearthstoneModding`. Trusted Publishing's Repository owner must match that GitHub login, not the display name or the author's personal login. NuGet `Authors` credits `xiaohei7972`; the Package Owner and `NUGET_USER` refer to the publishing NuGet account, currently `xiaohei`.
+
 Both `v*` tags and `release/v*` branches build the runtime ZIP and exact-version `Libmem.NET.<version>.nupkg`, validate both, and render release notes. Tags create GitHub downloads; versions with prerelease suffixes use the prerelease flag and do not replace the latest stable release. Release branches remain dry runs. Automatic pushes do not log in to nuget.org or publish there.
 
 After the GitHub release and account setup are ready, manually run **Release** with the existing `v2.0.0-preview.1` tag selected and **publish-nuget** enabled. This validates the exact tagged source/package and uses OIDC to push the preview to nuget.org, without recreating the GitHub Release. Ordinary branches and unpublished tags are rejected for this step. Public availability remains pending until it succeeds.
