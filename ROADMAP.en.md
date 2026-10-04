@@ -38,9 +38,9 @@ ProcessSession
 
 Snapshots, caches, entities, game state, event state, IPC, and game-version adaptation belong to consumers.
 
-## Current phase: v1.0 — Stable x64
+## Current phase: v2.0.0-preview.1 — Naming migration acceptance
 
-The Windows x64 managed-contract freeze is complete. The mainline now enters the **v1.0 Stable x64** release and compatibility-maintenance phase. Future changes should preserve the frozen public API and behavior by default; x86 remains deferred and NuGet publication remains a separate distribution decision.
+The former `LibmemCli v1.0.0` is released. The mainline now uses **2.0.0-preview.1** to accept the breaking namespace/assembly migration to `Libmem.NET`, preserving member behavior and native ABI. Version metadata, migration documentation and downloadable packages are prepared before the separate nuget.org publication step. x86 remains deferred.
 
 Current audit priorities:
 

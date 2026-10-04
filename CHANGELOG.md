@@ -2,20 +2,32 @@
 
 ## Unreleased
 
+No changes yet.
+
+## 2.0.0-preview.1 - 2026-10-05
+
 ### Breaking identity migration
 
 - Unified the managed namespace, assembly, solution/project names, test projects and runtime assets as `Libmem.NET`; the NuGet PackageId remains `Libmem.NET`.
 - Existing `LibmemCli` consumers must update references, namespaces, paths and reflection strings, then recompile. See `docs/MIGRATION.md`.
 - Preserved public member signatures, native ABI mapping, ownership, exception behavior and the pinned native dependency. Static facade calls use an explicit type alias to avoid the new root namespace collision.
 - Corrected runtime manifest provenance to `HearthstoneModding/Libmem.NET`.
-- Consolidated automatic PR validation into Build, including Debug/Release x64, all runtime suites and local NuGet restore/run/publish. Specialized workflows retain manual entry points.
+- Consolidated automatic PR validation into Build, including Release x64 by default, optional manual Debug, all runtime suites and local NuGet restore/run/publish. Specialized workflows retain manual entry points.
 
-No release tag or NuGet publication is created by this migration.
+### Release preparation
+
+- Bumped the major version because the already released `LibmemCli` v1.0.0 namespace and assembly identity are not binary compatible with `Libmem.NET`. Consumers must rebuild; renaming a DLL is insufficient.
+- Set `VERSION` and informational version to `2.0.0-preview.1`; numeric assembly/file versions are `2.0.0.0`.
+- Enabled prerelease version validation for runtime manifests, NuGet packaging and formal Release Notes; GitHub Release publication marks preview tags as prereleases.
+- Included the changelog and migration guide in runtime ZIP and NuGet packages. Build artifacts include an exact-version `Libmem.NET.2.0.0-preview.1.nupkg` for local-feed acceptance.
+- Separated GitHub downloads from nuget.org publication. NuGet Trusted Publishing is explicitly invoked after the GitHub release and account setup are ready.
+
+This section prepares the preview; it does not claim that a release tag, downloadable release or nuget.org package has already been published. The existing v1.0.0 tag and assets remain unchanged.
 
 ### CI and documentation follow-up
 
 - Default automatic Build validation to Release x64; retain every Release runtime, example, consumer and package check. Manual `workflow_dispatch` can additionally enable Debug x64 build and smoke tests through `debug`.
-- Restrict NuGet OIDC login/push and GitHub Release creation to tags. `release/v*` branches validate artifacts and render notes without publishing or deleting branches.
+- Restrict GitHub Release creation to tags and NuGet OIDC login/push to an explicit manual run on an existing published tag. `release/v*` branches validate artifacts and render notes without publishing or deleting branches.
 - Consolidate the unfinished documentation from #70 and release readiness work from #75: concise bilingual README, release/versioning guide, historical v1.0.0 notes and a checklist for the next release. Keep historical LibmemCli assets distinct from the current Libmem.NET identity.
 
 ## 1.0.0 - 2026-09-30

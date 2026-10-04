@@ -21,8 +21,9 @@ elseif (-not [System.IO.Path]::IsPathRooted($OutputDirectory)) {
 
 $versionPath = Join-Path $repoRoot 'VERSION'
 $baseVersion = (Get-Content $versionPath -Raw).Trim()
-if ($baseVersion -notmatch '^\d+\.\d+\.\d+$') {
-    throw "VERSION must use MAJOR.MINOR.PATCH format: '$baseVersion'"
+$versionPattern = '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?$'
+if ($baseVersion -notmatch $versionPattern) {
+    throw "VERSION must use MAJOR.MINOR.PATCH[-PRERELEASE] format: '$baseVersion'"
 }
 
 $requiredArtifacts = @(
@@ -45,10 +46,14 @@ if ($LASTEXITCODE -ne 0 -or $repositoryCommit -notmatch '^[0-9a-f]{40}$') {
 
 if ([string]::IsNullOrWhiteSpace($PackageVersion)) {
     $shortCommit = $repositoryCommit.Substring(0, 12)
-    $PackageVersion = "$baseVersion-dev.$shortCommit"
+    $PackageVersion = if ($baseVersion.Contains('-')) {
+        "$baseVersion.dev.$shortCommit"
+    } else {
+        "$baseVersion-dev.$shortCommit"
+    }
 }
 
-if ($PackageVersion -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$') {
+if ($PackageVersion -notmatch $versionPattern) {
     throw "PackageVersion is not a supported semantic version: '$PackageVersion'"
 }
 

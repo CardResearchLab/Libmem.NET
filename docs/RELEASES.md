@@ -4,9 +4,9 @@ This document describes the official release channel, current stable release, su
 
 ## Current source and historical release
 
-Current main has migrated to `Libmem.NET`. This is a breaking identity change requiring updated references and recompilation; see [MIGRATION.md](MIGRATION.md). No new tag or public package is created by the migration. `VERSION` is still `1.0.0` as source metadata, not a declaration that the migrated DLL is the historical v1.0.0 asset.
+Current main has migrated to `Libmem.NET`. This is a breaking identity change requiring updated references and recompilation; see [MIGRATION.md](MIGRATION.md). No new tag or public package is created by the migration. The prepared `VERSION` is `2.0.0-preview.1`; numeric assembly/file versions are `2.0.0.0`. The new major version reflects this breaking change, not a replacement for historical v1.0.0.
 
-Select the next release version explicitly before publication; do not replace the existing v1.0.0 tag or assets.
+The planned tag is `v2.0.0-preview.1`. Runtime ZIP and exact-version NuGet downloads are prepared first; nuget.org publication is a later explicit step. Do not replace the existing v1.0.0 tag or assets.
 
 ### Historical v1.0.0
 
@@ -65,6 +65,8 @@ libmem.dll
 VERSION
 LICENSE
 THIRD_PARTY_NOTICES.md
+CHANGELOG.md
+MIGRATION.md
 manifest.json
 ```
 
@@ -137,7 +139,7 @@ Public publication requires the account-side Trusted Publishing policy and `NUGE
 ## Release workflow safety
 
 - `release/v<version>` branches build exact-version Release x64 ZIP and NuGet packages, validate them, and render formal notes from CHANGELOG. They do not log in to NuGet, push a package, create a GitHub Release, or delete the branch.
-- Only `v<version>` tags enable those publication steps. The tag, `VERSION`, assembly metadata, CHANGELOG and verified package version must agree.
+- Only `v<version>` tags enable GitHub downloads, including the exact-version `.nupkg`. Preview tags are marked as prereleases. OIDC login/push require a later manual Release run on the published tag with `publish-nuget` enabled. The tag, `VERSION`, assembly metadata, CHANGELOG and verified package version must agree.
 - A successful dry run is evidence of package and note readiness, not permission to publish. Select the version, verify all Release tests on the exact candidate, and follow [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) before creating a tag.
 - Keep existing tags and historical assets immutable. The breaking identity migration requires an explicit major-version decision.
 - Ordinary PR/push Build runs validate all Release x64 suites. Debug build and smoke tests are additional manual checks enabled with `workflow_dispatch` input `debug`.

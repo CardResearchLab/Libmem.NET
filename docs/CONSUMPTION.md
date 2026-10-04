@@ -2,7 +2,7 @@
 
 > Current official target: Windows x64 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validated NuGet package path. Current main uses the `Libmem.NET` managed assembly and namespace. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validated NuGet package path. The prepared `2.0.0-preview.1` uses the `Libmem.NET` managed assembly and namespace. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
@@ -15,9 +15,10 @@ Current build artifact names:
 ```text
 Libmem.NET-windows-x64.zip
 Libmem.NET-windows-x64.zip.sha256
+Libmem.NET.2.0.0-preview.1.nupkg
 ```
 
-The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, and licensing notices.
+The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. The `.nupkg` is a separate local-feed asset before nuget.org publication.
 
 Minimum runtime files:
 
@@ -64,7 +65,7 @@ Publication: release workflow via nuget.org Trusted Publishing (OIDC)
 Target: Windows x64 / .NET 8
 ```
 
-The package ID is now fixed as `Libmem.NET` before first public publication. Development packages also use a commit-qualified prerelease version derived from `VERSION`, such as `1.0.0-dev.<commit>`, rather than reusing a stable package version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
+The package ID is now fixed as `Libmem.NET` before first public publication. Development packages also use a commit-qualified prerelease version derived from `VERSION`, such as `2.0.0-preview.1.dev.<commit>`, rather than reusing a stable package version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
 
 ### Package layout
 
@@ -92,6 +93,14 @@ After building Libmem.NET x64:
 .\build.ps1 -Configuration Release -Platform x64
 .\eng\package-nuget.ps1 -Configuration Release
 ```
+
+For the exact prepared preview instead of a commit-qualified development package:
+
+```powershell
+.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.0.0-preview.1
+```
+
+The automatic Build gate packages the exact `VERSION` and validates restore/run/publish against it. Default local development packages use `2.0.0-preview.1.dev.<commit>`; stable base versions use `<version>-dev.<commit>`.
 
 The script reads `VERSION`, resolves the current Git commit, validates the required x64 binaries, creates the local package, and immediately runs the package layout/provenance verifier.
 
@@ -168,7 +177,9 @@ One-time setup:
    - Environment: leave empty unless the workflow is later moved behind a GitHub Environment.
 3. In GitHub Actions secrets, add `NUGET_USER` containing the nuget.org profile username (not the email address).
 
-Both `v*` tags and `release/v*` branches build the runtime ZIP and exact-version `Libmem.NET.<version>.nupkg`, validate both, and render release notes. Only tags exchange GitHub OIDC for a short-lived NuGet credential, push the package, and create the GitHub Release. Release branches are dry runs and remain available after validation.
+Both `v*` tags and `release/v*` branches build the runtime ZIP and exact-version `Libmem.NET.<version>.nupkg`, validate both, and render release notes. Tags create GitHub downloads; versions with prerelease suffixes use the prerelease flag and do not replace the latest stable release. Release branches remain dry runs. Automatic pushes do not log in to nuget.org or publish there.
+
+After the GitHub release and account setup are ready, manually run **Release** with the existing `v2.0.0-preview.1` tag selected and **publish-nuget** enabled. This validates the exact tagged source/package and uses OIDC to push the preview to nuget.org, without recreating the GitHub Release. Ordinary branches and unpublished tags are rejected for this step. Public availability remains pending until it succeeds.
 
 Repository configuration does not prove that the external account policy or secret is ready; verify them before creating a publication tag.
 

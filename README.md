@@ -10,7 +10,7 @@
 
 **Libmem.NET** 是 [rdbo/libmem](https://github.com/rdbo/libmem) 的 Windows C++/CLI 封装，为 C# / .NET 提供进程、线程、模块、内存、扫描、符号、汇编/反汇编、Hook、VMT 与 DLL 注入能力。
 
-当前 `main` 已完成 **Libmem.NET** 命名迁移，尚未为该身份创建新的正式版本。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；迁移需要修改引用并重新编译，见 [迁移指南](docs/MIGRATION.md)。
+当前源码已完成 **Libmem.NET** 命名迁移，本次准备版本为 **2.0.0-preview.1**，公开发布待验证完成。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；迁移需要修改引用并重新编译，见 [迁移指南](docs/MIGRATION.md)。
 
 正式支持范围：
 
@@ -224,6 +224,8 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
+当前准备版本为 **2.0.0-preview.1**。命名空间与程序集身份变化破坏旧名 v1.0.0 的兼容性，消费者必须重新编译。`VERSION`、NuGet 和 informational version 为 `2.0.0-preview.1`，程序集数字版本与文件版本为 `2.0.0.0`。Build 下载产物包含 Runtime ZIP、SHA-256 和 `Libmem.NET.2.0.0-preview.1.nupkg`，包内附带变更记录与迁移说明。版本准备不代表已公开发布；GitHub 预发布下载与后续手动 NuGet 发布分开处理。
+
 生成正式风格 Runtime ZIP：
 
 ```powershell
@@ -275,7 +277,7 @@ jobs:
 
 包 ID 为 `Libmem.NET`，目标是 Windows x64 / .NET 8。CI 验证 pack、独立 PackageReference restore/build/run/publish、native runtime 文件复制以及非 x64 consumer 拒绝。
 
-本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。正式发布路径只在 `v*` tag 上执行 NuGet OIDC 登录、push 和 GitHub Release 创建，`release/v*` 分支只验证产物并生成发布说明。
+本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
 当前命名迁移没有创建新 tag 或发布新包。正式发布前须核实 nuget.org Trusted Publishing 策略及 GitHub `NUGET_USER` secret。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 

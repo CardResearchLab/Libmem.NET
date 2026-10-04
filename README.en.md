@@ -10,7 +10,7 @@
 
 **Libmem.NET** is a Windows C++/CLI wrapper around [rdbo/libmem](https://github.com/rdbo/libmem), exposing process, thread, module, memory, scanning, symbol, assembly/disassembly, Hook, VMT, and DLL injection capabilities to C# / .NET.
 
-Current `main` uses the **Libmem.NET** identity; no new formal version has been created for this migration. Historical stable **v1.0.0** uses `LibmemCli`. Consumers must update references and recompile; see the [migration guide](docs/MIGRATION.md).
+Current source uses the **Libmem.NET** identity; the prepared version is **2.0.0-preview.1**, pending public release validation. Historical stable **v1.0.0** uses `LibmemCli`. Consumers must update references and recompile; see the [migration guide](docs/MIGRATION.md).
 
 Official support target:
 
@@ -224,6 +224,8 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
+The prepared version is **2.0.0-preview.1**. Namespace and assembly identity changes break the former v1.0.0 identity and require consumer recompilation. `VERSION`, NuGet and informational version use `2.0.0-preview.1`; numeric assembly/file versions use `2.0.0.0`. Build downloads include the runtime ZIP, SHA-256 and `Libmem.NET.2.0.0-preview.1.nupkg`, with changelog and migration documentation inside the packages. Preparation does not imply public availability; GitHub preview downloads and the later manual NuGet push are separate steps.
+
 Build the release-style runtime ZIP locally:
 
 ```powershell
@@ -277,7 +279,7 @@ For reproducible builds, pin both the workflow reference and `ref` to a reviewed
 
 The package ID is `Libmem.NET`, targeting Windows x64 / .NET 8. CI validates pack, independent PackageReference restore/build/run/publish, native runtime asset copy, and rejection of non-x64 consumers.
 
-Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. Only `v*` tags perform NuGet OIDC login, push, and GitHub Release creation. `release/v*` branches validate packages and render release notes without publication.
+Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
 The identity migration creates no new tag or public package. Verify the nuget.org Trusted Publishing policy and GitHub `NUGET_USER` secret before a formal release. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
 

@@ -545,10 +545,16 @@ assert debug_steps <= build_steps.keys()
 print("PASS Release default and manual Debug policy")
 
 release_steps = workflow_steps(release_workflow)
-for name in ["NuGet login (OIDC)", "Publish Libmem.NET to nuget.org", "Publish GitHub Release"]:
+assert re.findall(r"^        if: (.+)$", release_steps["Publish GitHub Release"], re.MULTILINE) == [
+    "github.ref_type == 'tag' && inputs.publish-nuget != true"
+], "GitHub downloads must be tag-only and separate from a later NuGet run."
+for name in ["NuGet login (OIDC)", "Publish Libmem.NET to nuget.org"]:
     assert re.findall(r"^        if: (.+)$", release_steps[name], re.MULTILINE) == [
-        "github.ref_type == 'tag'"
-    ], f"External publication must be tag-only: {name}"
+        "github.event_name == 'workflow_dispatch' && inputs.publish-nuget == true"
+    ], f"NuGet publication must require manual opt-in: {name}"
+assert 'test "$GITHUB_REF_TYPE" = "tag"' in release_steps["Validate release ref"]
+assert 'gh release view "$TAG_NAME"' in release_steps["Validate release ref"]
+assert '--prerelease --latest=false' in release_steps["Publish GitHub Release"]
 for name in ["Validate release package", "Validate NuGet package", "Render formal release notes"]:
     assert not re.search(r"^        if:", release_steps[name], re.MULTILINE), (
         f"Release branches must still perform {name}."
@@ -632,12 +638,16 @@ subprocess.run(
 print("PASS committed public API baseline")
 
 version = (root / "VERSION").read_text(encoding="utf-8").strip()
-assert re.fullmatch(r"\d+\.\d+\.\d+", version), (
-    f"VERSION must use MAJOR.MINOR.PATCH format: {version!r}"
+assert re.fullmatch(
+    r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
+    r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+    r"(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?", version
+), (
+    f"VERSION must use MAJOR.MINOR.PATCH[-PRERELEASE] format: {version!r}"
 )
 
 assembly_info = (root / "src/AssemblyInfo.cpp").read_text(encoding="utf-8")
-assembly_version = version + ".0"
+assembly_version = version.split("-", 1)[0] + ".0"
 assert f'AssemblyVersionAttribute("{assembly_version}")' in assembly_info
 assert f'AssemblyFileVersionAttribute("{assembly_version}")' in assembly_info
 assert f'AssemblyInformationalVersionAttribute("{version}")' in assembly_info

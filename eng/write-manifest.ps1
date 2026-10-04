@@ -17,8 +17,8 @@ if (-not (Test-Path $versionFile)) {
 }
 
 $version = (Get-Content $versionFile -Raw).Trim()
-if ($version -notmatch '^\d+\.\d+\.\d+$') {
-    throw "VERSION must use MAJOR.MINOR.PATCH format. Actual: $version"
+if ($version -notmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?$') {
+    throw "VERSION must use MAJOR.MINOR.PATCH[-PRERELEASE] format. Actual: $version"
 }
 
 function Get-GitValue {

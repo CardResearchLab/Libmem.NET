@@ -43,5 +43,7 @@
     <None Include="..\THIRD_PARTY_NOTICES.md"
           Pack="true"
           PackagePath="THIRD_PARTY_NOTICES.md" />
+    <None Include="..\CHANGELOG.md" Pack="true" PackagePath="CHANGELOG.md" />
+    <None Include="..\docs\MIGRATION.md" Pack="true" PackagePath="MIGRATION.md" />
   </ItemGroup>
 </Project>

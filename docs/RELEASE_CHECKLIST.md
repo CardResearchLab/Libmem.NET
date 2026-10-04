@@ -2,7 +2,7 @@
 
 Scope: Windows x64 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. Do not recreate that tag or replace its assets. Current main uses `Libmem.NET` but still carries `VERSION` = `1.0.0`; select and commit the next version before a release dry run.
+Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. Do not recreate that tag or replace its assets. The prepared Libmem.NET version is `2.0.0-preview.1`; numeric assembly/file versions are `2.0.0.0`. Preview publication remains pending.
 
 ## Repository acceptance
 
@@ -22,7 +22,7 @@ Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. 
 | Independent NuGet consumer | PackageReference restore/build/run/publish passes; native dependencies reach output; non-x64 consumers fail. |
 | Release notes | Rendered from the matching CHANGELOG section and verified manifest/checksum. |
 | GitHub Release safety | `release/v*` is dry-run only; `gh release create` is tag-only; no automatic branch deletion. |
-| NuGet publish safety | OIDC login and push are tag-only; branch validation requires no NuGet account credentials. |
+| NuGet publish safety | OIDC login and push require a manual run on a published tag with `publish-nuget` enabled; branch validation requires no NuGet account credentials. |
 
 ## Publication prerequisites — verify for the chosen version
 
@@ -31,8 +31,8 @@ Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. 
 - [ ] Verify NuGet account-side setup: Trusted Publishing policy for `HearthstoneModding/Libmem.NET` + `release.yml`, and GitHub Actions `NUGET_USER` secret. Their live readiness is not established by source review.
 - [ ] Create `release/v<version>` from that candidate and verify the complete dry run. It must build and validate ZIP/NuGet and render notes, with all three external publication steps skipped.
 - [ ] Review exact-version artifacts and generated notes; confirm ZIP and NuGet share the same source commit.
-- [ ] After explicit publication authorization, create the matching `v<version>` tag on that candidate. Creating it triggers external publication.
-- [ ] Verify the GitHub Release files/checksum and public NuGet page after publication.
+- [ ] After explicit publication authorization, create the matching `v<version>` tag on that candidate. Creating it triggers GitHub downloads; a preview tag must be marked as a prerelease. It does not push to nuget.org.
+- [ ] Verify GitHub downloads/checksum, then manually run Release on the published tag with `publish-nuget` enabled once account setup is ready. Verify the public NuGet page after that run.
 - [ ] Restore an independent x64 consumer from nuget.org using that exact version, then run and publish it to verify the public delivery path.
 
 ## Optional follow-up

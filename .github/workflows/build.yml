@@ -89,7 +89,9 @@ jobs:
 
       - name: Pack and verify local NuGet prototype
         shell: pwsh
-        run: .\eng\package-nuget.ps1 -Configuration Release
+        run: |
+          $version = (Get-Content .\VERSION -Raw).Trim()
+          .\eng\package-nuget.ps1 -Configuration Release -PackageVersion $version
 
       - name: Restore NuGet consumer from local feed
         shell: pwsh
@@ -164,5 +166,6 @@ jobs:
             artifacts/package/Libmem.NET-windows-x64/
             artifacts/package/Libmem.NET-windows-x64.zip
             artifacts/package/Libmem.NET-windows-x64.zip.sha256
+            artifacts/nuget/*.nupkg
           if-no-files-found: error
           retention-days: 14

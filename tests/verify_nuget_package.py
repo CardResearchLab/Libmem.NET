@@ -42,6 +42,8 @@ def main() -> int:
             "README.md",
             "LICENSE",
             "THIRD_PARTY_NOTICES.md",
+            "CHANGELOG.md",
+            "MIGRATION.md",
         }
         missing = sorted(required - names)
         if missing:
