@@ -1,9 +1,9 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 using namespace System;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+namespace Libmem::NET {
+using namespace ::Libmem::NET::Interop;
 
 HookManager::HookManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");
@@ -75,3 +75,5 @@ HookHandle^ Libmem::HookCode(ProcessInfo^ input,UInt64 from,UInt64 to) {
     auto n=LM_HookCodeEx(&p,native_address(from,"source"),native_address(to,"destination"),&trampoline);
     return n ? gcnew HookHandle(input,from,to,trampoline,n) : nullptr;
 }
+
+} // namespace Libmem::NET

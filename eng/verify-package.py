@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a LibmemCli runtime package, archive, checksum, and provenance."""
+"""Validate a Libmem.NET runtime package, archive, checksum, and provenance."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ def main() -> int:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest.get("schemaVersion") != 2:
         fail(f"Unsupported manifest schemaVersion: {manifest.get('schemaVersion')!r}")
-    if manifest.get("repository") != "HearthstoneModding/Libmem":
+    if manifest.get("repository") != "HearthstoneModding/Libmem.NET":
         fail(f"Unexpected repository: {manifest.get('repository')!r}")
     if manifest.get("targetFramework") != "net8.0":
         fail(f"Unexpected targetFramework: {manifest.get('targetFramework')!r}")

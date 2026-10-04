@@ -1,10 +1,12 @@
-# LibmemCli 开发路线图
+# Libmem.NET 开发路线图
+
+当前命名迁移：程序集和 namespace 统一为 `Libmem.NET`，旧消费者需要重新编译。这是原有冻结路线的一次明确身份变更；功能契约不变，迁移验收完成前不宣称新身份已完成稳定发布。参见 [迁移指南](docs/MIGRATION.md)。
 
 > 当前策略：**x64 主线优先，x86 延后。**
 
 ## 平台策略
 
-LibmemCli 当前正式开发、默认 CI、运行时验收和 GitHub Release 均以 **Windows x64 / .NET 8** 为目标。
+Libmem.NET 当前正式开发、默认 CI、运行时验收和 GitHub Release 均以 **Windows x64 / .NET 8** 为目标。
 
 x86 现状：
 
@@ -18,7 +20,7 @@ x86 现状：
 
 ## 架构原则
 
-LibmemCli 保持独立、通用的 libmem .NET/C++/CLI 封装，不与 StandaloneGameMod、Hearthstone、Unity、Mono 或任何游戏状态模型绑定。
+Libmem.NET 保持独立、通用的 libmem .NET/C++/CLI 封装，不与 StandaloneGameMod、Hearthstone、Unity、Mono 或任何游戏状态模型绑定。
 
 推荐结构：
 
@@ -52,25 +54,25 @@ Windows x64 managed contract 冻结已经完成，主线进入 **v1.0 Stable x64
 
 这一阶段仍然不加入 Snapshot、GameState、Entity、IPC、Hearthstone 或游戏版本业务逻辑。
 
-已完成的收口项：`MemoryManager` 上仅用于 v0.x 迁移的 `DeepPointer / DataScan / PatternScan / SigScan` 转发入口已移除，session-bound 扫描统一冻结在 `ProcessSession.Scanner`；静态 `Libmem.*` 兼容层继续保留。
+已完成的收口项：`MemoryManager` 上仅用于 v0.x 迁移的 `DeepPointer / DataScan / PatternScan / SigScan` 转发入口已移除，session-bound 扫描统一冻结在 `ProcessSession.Scanner`；静态 `NativeApi.*` 兼容层继续保留。
 
 已完成的收口项：目标进程退出不会隐式 Dispose `ProcessSession`；Session 保留原始身份元数据，`IsAlive()` 返回 false、`Refresh()` 返回 null，Manager 属性保持可访问。为避免外部进程精确身份检查污染读写/扫描热路径，不对所有 Manager 操作追加统一 liveness preflight。
 
-已完成的收口项：`ProcessInfo` 上仅用于早期便捷调用的 `Read / Write / ReadInt32 / WriteInt32 / SigScan` 已移除，仅保留与进程身份直接相关的 `IsAlive()`；Memory / Scan 操作统一归属 `ProcessSession` Managers，静态 `Libmem.*` 兼容层继续保留。
+已完成的收口项：`ProcessInfo` 上仅用于早期便捷调用的 `Read / Write / ReadInt32 / WriteInt32 / SigScan` 已移除，仅保留与进程身份直接相关的 `IsAlive()`；Memory / Scan 操作统一归属 `ProcessSession` Managers，静态 `NativeApi.*` 兼容层继续保留。
 
 已完成的收口项：完成冻结后 managed surface 的 XML IntelliSense / `docs/API.md` 一致性审计；补齐推荐 `ProcessSession` / Manager / ownership 类型的成员说明，并明确 `ProcessSession.Allocate` 作为正式 ownership convenience 保留。该项不改变 Public API baseline 或 runtime 行为。
 
-已完成的收口项：`ProcessInfo` 冻结为由 LibmemCli 创建的只读身份/元数据对象。消费者不能再修改 `Pid / StartTime` 等字段，也不能通过 public 默认构造器伪造空身份；`IsAlive()`、`Open(ProcessInfo)` 与 PID + StartTime 精确身份模型因此共享同一不可变基础。
+已完成的收口项：`ProcessInfo` 冻结为由 Libmem.NET 创建的只读身份/元数据对象。消费者不能再修改 `Pid / StartTime` 等字段，也不能通过 public 默认构造器伪造空身份；`IsAlive()`、`Open(ProcessInfo)` 与 PID + StartTime 精确身份模型因此共享同一不可变基础。
 
-已完成的收口项：`ModuleInfo` 冻结为由 LibmemCli 创建的只读模块描述对象。消费者不再能够修改 `Base / End / Size / Name / Path` 后再把伪造或变异后的模块记录传回 Unload / Symbol API。
+已完成的收口项：`ModuleInfo` 冻结为由 Libmem.NET 创建的只读模块描述对象。消费者不再能够修改 `Base / End / Size / Name / Path` 后再把伪造或变异后的模块记录传回 Unload / Symbol API。
 
-已完成的收口项：`ThreadInfo` 冻结为由 LibmemCli 创建的只读线程描述对象。消费者不再能够修改 `Id / OwnerPid` 后把伪造或变异后的线程记录传回 `GetThreadProcess`。
+已完成的收口项：`ThreadInfo` 冻结为由 Libmem.NET 创建的只读线程描述对象。消费者不再能够修改 `Id / OwnerPid` 后把伪造或变异后的线程记录传回 `GetThreadProcess`。
 
-已完成的收口项：`SymbolInfo` 冻结为由 LibmemCli 创建的只读符号结果对象。消费者只能读取 `Address / Name`，不能再构造或修改伪造的符号结果。
+已完成的收口项：`SymbolInfo` 冻结为由 Libmem.NET 创建的只读符号结果对象。消费者只能读取 `Address / Name`，不能再构造或修改伪造的符号结果。
 
-已完成的收口项：`SegmentInfo` 冻结为由 LibmemCli 创建的只读内存段结果对象。消费者只能读取 `Base / End / Size / Protection`，不能再构造或修改伪造的 segment 元数据。
+已完成的收口项：`SegmentInfo` 冻结为由 Libmem.NET 创建的只读内存段结果对象。消费者只能读取 `Base / End / Size / Protection`，不能再构造或修改伪造的 segment 元数据。
 
-已完成的收口项：`InstructionInfo` 冻结为由 LibmemCli 创建的深只读指令结果对象。标量/字符串属性均为 getter-only，`Bytes` 返回 defensive copy，调用方不能通过修改返回数组改变对象内部指令状态。
+已完成的收口项：`InstructionInfo` 冻结为由 Libmem.NET 创建的深只读指令结果对象。标量/字符串属性均为 getter-only，`Bytes` 返回 defensive copy，调用方不能通过修改返回数组改变对象内部指令状态。
 
 已完成的收口项：`ModuleInfo` 在保持 public surface 不变的前提下记录内部进程 provenance（PID + StartTime）；session-bound `ModuleManager.Unload` 与 `SymbolManager`、以及静态 Unload 重载会拒绝来自其他进程身份的模块描述，避免把外部进程的 module base 传入错误目标的 native 操作。
 
@@ -82,7 +84,7 @@ Windows x64 managed contract 冻结已经完成，主线进入 **v1.0 Stable x64
 
 已完成的收口项：冻结 zero-size managed contract。不会机械地把所有 `size=0` 统一成异常：Read/Write/Set 保持 no-op；Windows Protect/静态 Allocate 保留 pinned libmem 的 page-size 语义；owned `MemoryManager.Allocate(0)` 继续拒绝 0；CodeLength(0) / 空 byte[] 反汇编保持自然 zero/empty 结果。
 
-已完成的收口项：冻结 sentinel / definite native failure 分层。FindProcess/FindModule/FindSegment miss 保持 null，symbol/scan/DeepPointer miss 保持 native bad-address sentinel；低层静态 `Libmem.*` 兼容层尽量保留 native-style failure values，而 Manager/ownership API 仅对已定义为“确定失败”的操作提升为 `LibmemException`。
+已完成的收口项：冻结 sentinel / definite native failure 分层。FindProcess/FindModule/FindSegment miss 保持 null，symbol/scan/DeepPointer miss 保持 native bad-address sentinel；低层静态 `NativeApi.*` 兼容层尽量保留 native-style failure values，而 Manager/ownership API 仅对已定义为“确定失败”的操作提升为 `LibmemException`。
 
 已完成的收口项：最终 API consistency audit 已完成。Public API baseline、XML IntelliSense、Manager/static 分层、ownership/Dispose 幂等语义与文档已核对，未发现需要在 v1.0 前继续进行 breaking change 的遗留契约问题。
 
@@ -93,7 +95,7 @@ Windows x64 managed contract 冻结已经完成，主线进入 **v1.0 Stable x64
 - 完成 ProcessSession 聚合模型；
 - 完成 Core / Memory / Modules / Threads / Scanning / Symbols / Assembly 源码拆分；
 - 建立 Interop / NativeConverter 边界；
-- 保持旧静态 `Libmem.*` API 兼容；
+- 保持旧静态 `NativeApi.*` API 兼容；
 - 不加入应用或游戏业务状态。
 
 验收标准：
@@ -138,7 +140,7 @@ Windows x64 managed contract 冻结已经完成，主线进入 **v1.0 Stable x64
 - Injector Tests；
 - 独立 TestTarget（已建立 x64 外部进程测试靶）；
 - C# consumer sample（已更新为推荐的 `ProcessSession` / Manager / IDisposable / `LibmemException` 使用方式）；
-- XML 文档（已建立 `LibmemCli.xml` 生成与打包链路，持续补全公开 API 注释）；
+- XML 文档（已建立 `Libmem.NET.xml` 生成与打包链路，持续补全公开 API 注释）；
 - README / API 文档（已建立 `docs/API.md` 消费者行为参考）。
 
 全部以 x64 为默认验收平台。
@@ -156,8 +158,8 @@ Windows x64 managed contract 冻结已经完成，主线进入 **v1.0 Stable x64
 正式 Release 只发布：
 
 ```text
-LibmemCli-windows-x64.zip
-LibmemCli-windows-x64.zip.sha256
+Libmem.NET-windows-x64.zip
+Libmem.NET-windows-x64.zip.sha256
 ```
 
 ## v0.9 — x64 API Freeze
@@ -177,7 +179,7 @@ LibmemCli-windows-x64.zip.sha256
 
 v1.0 的定义是：
 
-> LibmemCli 成为稳定、通用、可被其他 .NET 项目消费的 Windows x64 libmem C++/CLI 封装。
+> Libmem.NET 成为稳定、通用、可被其他 .NET 项目消费的 Windows x64 libmem C++/CLI 封装。
 
 v1.0 不要求完成 x86。
 

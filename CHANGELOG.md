@@ -2,7 +2,15 @@
 
 ## Unreleased
 
-_No unreleased changes._
+### Breaking identity migration
+
+- Unified the managed namespace, assembly, solution/project names, test projects and runtime assets as `Libmem.NET`; the NuGet PackageId remains `Libmem.NET`.
+- Existing `LibmemCli` consumers must update references, namespaces, paths and reflection strings, then recompile. See `docs/MIGRATION.md`.
+- Preserved public member signatures, native ABI mapping, ownership, exception behavior and the pinned native dependency. Static facade calls use an explicit type alias to avoid the new root namespace collision.
+- Corrected runtime manifest provenance to `HearthstoneModding/Libmem.NET`.
+- Consolidated automatic PR validation into Build, including Debug/Release x64, all runtime suites and local NuGet restore/run/publish. Specialized workflows retain manual entry points.
+
+No release tag or NuGet publication is created by this migration.
 
 ## 1.0.0 - 2026-09-30
 

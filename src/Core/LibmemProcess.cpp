@@ -1,4 +1,4 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 #include <algorithm>
@@ -6,8 +6,8 @@
 
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+namespace Libmem::NET {
+using namespace ::Libmem::NET::Interop;
 
 List<ProcessInfo^>^ Libmem::EnumProcesses() {
     std::vector<lm_process_t> native;
@@ -88,3 +88,5 @@ array<String^>^ Libmem::GetCommandLine(ProcessInfo^ input) {
 }
 UInt64 Libmem::GetBits() { return LM_GetBits(); }
 UInt64 Libmem::GetSystemBits() { return LM_GetSystemBits(); }
+
+} // namespace Libmem::NET

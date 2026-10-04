@@ -1,6 +1,6 @@
 using namespace System::Reflection;
 
-[assembly: AssemblyTitleAttribute("LibmemCli")];
+[assembly: AssemblyTitleAttribute("Libmem.NET")];
 [assembly: AssemblyProductAttribute("Libmem.NET")];
 [assembly: AssemblyDescriptionAttribute("Libmem.NET C++/CLI wrapper for libmem")];
 [assembly: AssemblyCompanyAttribute("HearthstoneModding")];

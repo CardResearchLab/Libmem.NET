@@ -1,6 +1,6 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 using namespace System;
-using namespace LibmemCli;
+namespace Libmem::NET {
 
 namespace {
     ProcessInfo^ CloneProcessInfo(ProcessInfo^ input) {
@@ -50,7 +50,7 @@ String^ ProcessSession::Name::get() {
     ThrowIfDisposed();
     return identity_->Name;
 }
-LibmemCli::Architecture ProcessSession::Architecture::get() {
+::Libmem::NET::Architecture ProcessSession::Architecture::get() {
     ThrowIfDisposed();
     return identity_->Architecture;
 }
@@ -120,3 +120,5 @@ void ProcessSession::Detach() {
     injector_=nullptr;
 }
 ProcessSession::~ProcessSession() { Detach(); }
+
+} // namespace Libmem::NET

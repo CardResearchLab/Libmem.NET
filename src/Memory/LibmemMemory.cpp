@@ -1,11 +1,11 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 #include <vcclr.h>
 
 using namespace System;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+namespace Libmem::NET {
+using namespace ::Libmem::NET::Interop;
 
 namespace {
     array<Byte>^ read_common(const lm_process_t* processInfo, UInt64 address, int count) {
@@ -73,3 +73,5 @@ UInt64 Libmem::DeepPointer(UInt64 a,array<UInt64>^ data) {
 UInt64 Libmem::DeepPointer(ProcessInfo^ input,UInt64 a,array<UInt64>^ data) {
     auto p=proc(input); auto off=offsets(data); return LM_DeepPointerEx(&p,native_address(a,"address"),off.empty()?nullptr:off.data(),off.size());
 }
+
+} // namespace Libmem::NET

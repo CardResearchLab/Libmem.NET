@@ -1,12 +1,12 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 #include <vector>
 
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+namespace Libmem::NET {
+using namespace ::Libmem::NET::Interop;
 
 List<ThreadInfo^>^ Libmem::EnumThreads() {
     std::vector<lm_thread_t> native;
@@ -25,3 +25,5 @@ ProcessInfo^ Libmem::GetThreadProcess(ThreadInfo^ input) {
     lm_thread_t t{input->Id,input->OwnerPid}; lm_process_t p{};
     return LM_GetThreadProcess(&t,&p) ? process(p) : nullptr;
 }
+
+} // namespace Libmem::NET

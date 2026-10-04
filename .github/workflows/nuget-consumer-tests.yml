@@ -1,19 +1,6 @@
 name: NuGet Consumer Tests
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-      - 'packaging/**'
-      - 'tests/LibmemCli.NuGetConsumer/**'
-      - 'tests/verify_nuget_package.py'
-      - 'tests/check_sources.py'
-      - 'eng/**'
-      - 'build.ps1'
-      - '.gitmodules'
-      - '.github/workflows/nuget-consumer-tests.yml'
   workflow_dispatch:
 
 permissions:
@@ -48,7 +35,7 @@ jobs:
         shell: pwsh
         run: python .\tests\check_sources.py
 
-      - name: Build LibmemCli
+      - name: Build Libmem.NET
         shell: pwsh
         run: .\build.ps1 -Configuration Release -Platform x64
 
@@ -60,9 +47,9 @@ jobs:
         shell: pwsh
         run: |
           $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
-          dotnet restore .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
+          dotnet restore .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             --source .\artifacts\nuget `
-            -p:LibmemCliTestPackageVersion=$version `
+            -p:LibmemNetTestPackageVersion=$version `
             -p:NuGetAudit=false
 
       - name: Run NuGet consumer
@@ -70,10 +57,10 @@ jobs:
         run: |
           $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
           dotnet run `
-            --project .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
+            --project .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             -c Release `
             --no-restore `
-            -p:LibmemCliTestPackageVersion=$version
+            -p:LibmemNetTestPackageVersion=$version
 
       - name: Publish NuGet consumer
         shell: pwsh
@@ -81,13 +68,13 @@ jobs:
           $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
           $output = ".\artifacts\nuget-consumer-publish"
           dotnet publish `
-            .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
+            .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             -c Release `
             --no-restore `
-            -p:LibmemCliTestPackageVersion=$version `
+            -p:LibmemNetTestPackageVersion=$version `
             -o $output
 
-          foreach ($required in @("LibmemCli.dll", "libmem.dll", "Ijwhost.dll")) {
+          foreach ($required in @("Libmem.NET.dll", "libmem.dll", "Ijwhost.dll")) {
             $path = Join-Path $output $required
             if (-not (Test-Path $path -PathType Leaf)) {
               throw "Published NuGet consumer is missing $required"
@@ -99,10 +86,10 @@ jobs:
         run: |
           $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
           dotnet build `
-            .\tests\LibmemCli.NuGetConsumer\LibmemCli.NuGetConsumer.csproj `
+            .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             -c Release `
             --no-restore `
-            -p:LibmemCliTestPackageVersion=$version `
+            -p:LibmemNetTestPackageVersion=$version `
             -p:PlatformTarget=AnyCPU
 
           if ($LASTEXITCODE -eq 0) {

@@ -1,7 +1,7 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
+namespace Libmem::NET {
 
 SymbolManager::SymbolManager(ProcessSession^ session) : session_(session) {
     if(session==nullptr) throw gcnew ArgumentNullException("session");
@@ -28,3 +28,5 @@ String^ SymbolManager::Demangle(String^ name) {
     Target();
     return Libmem::DemangleSymbol(name);
 }
+
+} // namespace Libmem::NET

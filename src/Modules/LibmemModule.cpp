@@ -1,12 +1,12 @@
-#include "../LibmemCli.h"
+#include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
 
 #include <vector>
 
 using namespace System;
 using namespace System::Collections::Generic;
-using namespace LibmemCli;
-using namespace LibmemCli::Interop;
+namespace Libmem::NET {
+using namespace ::Libmem::NET::Interop;
 
 List<ModuleInfo^>^ Libmem::EnumModules() {
     auto owner=CurrentProcess();
@@ -77,3 +77,5 @@ bool Libmem::UnloadModule(ProcessInfo^ input,ModuleInfo^ m) {
     auto native=mod(m);
     return LM_UnloadModuleEx(&p,&native)!=LM_FALSE;
 }
+
+} // namespace Libmem::NET

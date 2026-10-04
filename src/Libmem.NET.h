@@ -3,7 +3,7 @@
 using namespace System;
 using namespace System::Collections::Generic;
 
-namespace LibmemCli {
+namespace Libmem::NET {
     /// <summary>CPU architectures exposed by the pinned libmem ABI.</summary>
     public enum class Architecture : unsigned int {
         Generic = LM_ARCH_GENERIC,
@@ -42,25 +42,25 @@ namespace LibmemCli {
     };
 
     /// <summary>Read-only managed description of one native process identity.</summary>
-    /// <remarks>Instances are created by LibmemCli. Process identity-sensitive APIs use PID plus StartTime to reject PID reuse.</remarks>
+    /// <remarks>Instances are created by Libmem.NET. Process identity-sensitive APIs use PID plus StartTime to reject PID reuse.</remarks>
     public ref class ProcessInfo sealed {
     private:
         UInt32 pid_;
         UInt32 parentPid_;
-        LibmemCli::Architecture architecture_;
+        ::Libmem::NET::Architecture architecture_;
         UInt64 bits_;
         UInt64 startTime_;
         String^ name_;
         String^ path_;
     internal:
-        ProcessInfo(UInt32 pid, UInt32 parentPid, LibmemCli::Architecture architecture, UInt64 bits, UInt64 startTime, String^ name, String^ path);
+        ProcessInfo(UInt32 pid, UInt32 parentPid, ::Libmem::NET::Architecture architecture, UInt64 bits, UInt64 startTime, String^ name, String^ path);
     public:
         /// <summary>Gets the process identifier.</summary>
         property UInt32 Pid { UInt32 get(); }
         /// <summary>Gets the parent process identifier reported by libmem.</summary>
         property UInt32 ParentPid { UInt32 get(); }
         /// <summary>Gets the process architecture.</summary>
-        property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+        property ::Libmem::NET::Architecture Architecture { ::Libmem::NET::Architecture get(); }
         /// <summary>Gets the native process bitness.</summary>
         property UInt64 Bits { UInt64 get(); }
         /// <summary>Gets the process start-time identity value used to reject PID reuse.</summary>
@@ -73,7 +73,7 @@ namespace LibmemCli {
         bool IsAlive();
     };
     /// <summary>Read-only managed description of a native thread.</summary>
-    /// <remarks>Instances are created by LibmemCli from native thread metadata.</remarks>
+    /// <remarks>Instances are created by Libmem.NET from native thread metadata.</remarks>
     public ref class ThreadInfo sealed {
     private:
         UInt32 id_;
@@ -87,7 +87,7 @@ namespace LibmemCli {
         property UInt32 OwnerPid { UInt32 get(); }
     };
     /// <summary>Read-only managed description of a loaded native module.</summary>
-    /// <remarks>Instances are created by LibmemCli from native module metadata.</remarks>
+    /// <remarks>Instances are created by Libmem.NET from native module metadata.</remarks>
     public ref class ModuleInfo sealed {
     private:
         UInt64 base_;
@@ -114,7 +114,7 @@ namespace LibmemCli {
         property String^ Path { String^ get(); }
     };
     /// <summary>Read-only managed description of a native symbol and its resolved address.</summary>
-    /// <remarks>Instances are created by LibmemCli from native symbol metadata.</remarks>
+    /// <remarks>Instances are created by Libmem.NET from native symbol metadata.</remarks>
     public ref class SymbolInfo sealed {
     private:
         UInt64 address_;
@@ -128,7 +128,7 @@ namespace LibmemCli {
         property String^ Name { String^ get(); }
     };
     /// <summary>Read-only managed description of a virtual-memory segment.</summary>
-    /// <remarks>Instances are created by LibmemCli from native segment metadata.</remarks>
+    /// <remarks>Instances are created by Libmem.NET from native segment metadata.</remarks>
     public ref class SegmentInfo sealed {
     private:
         UInt64 base_;
@@ -148,7 +148,7 @@ namespace LibmemCli {
         property MemoryProtection Protection { MemoryProtection get(); }
     };
     /// <summary>Deeply read-only managed representation of one assembled or disassembled instruction.</summary>
-    /// <remarks>Instances are created by LibmemCli. The Bytes getter returns a copy so callers cannot mutate stored instruction state.</remarks>
+    /// <remarks>Instances are created by Libmem.NET. The Bytes getter returns a copy so callers cannot mutate stored instruction state.</remarks>
     public ref class InstructionInfo sealed {
     private:
         UInt64 address_;
@@ -242,7 +242,7 @@ namespace LibmemCli {
         /// <summary>Gets the bound process name.</summary>
         property String^ Name { String^ get(); }
         /// <summary>Gets the bound process architecture.</summary>
-        property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+        property ::Libmem::NET::Architecture Architecture { ::Libmem::NET::Architecture get(); }
         /// <summary>Gets the bound process bitness.</summary>
         property UInt64 Bits { UInt64 get(); }
         /// <summary>Gets session-bound memory operations.</summary>
@@ -355,7 +355,7 @@ namespace LibmemCli {
         AssemblyManager(ProcessSession^ session);
     public:
         /// <summary>Gets the target architecture used by this manager.</summary>
-        property LibmemCli::Architecture Architecture { LibmemCli::Architecture get(); }
+        property ::Libmem::NET::Architecture Architecture { ::Libmem::NET::Architecture get(); }
         /// <summary>Assembles source text for the target architecture.</summary>
         /// <exception cref="LibmemException">Thrown when LM_AssembleEx reports failure.</exception>
         array<Byte>^ Assemble(String^ code, UInt64 runtimeAddress);
@@ -587,12 +587,12 @@ namespace LibmemCli {
         static UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
         static UInt64 SigScan(ProcessInfo^ process, String^ signature, UInt64 address, UInt64 scanSize);
         // Assembler and disassembler
-        static LibmemCli::Architecture GetArchitecture();
+        static ::Libmem::NET::Architecture GetArchitecture();
         static InstructionInfo^ Assemble(String^ code);
-        static array<Byte>^ Assemble(String^ code, LibmemCli::Architecture architecture, UInt64 runtimeAddress);
+        static array<Byte>^ Assemble(String^ code, ::Libmem::NET::Architecture architecture, UInt64 runtimeAddress);
         static InstructionInfo^ Disassemble(UInt64 codeAddress);
-        static List<InstructionInfo^>^ Disassemble(UInt64 codeAddress, LibmemCli::Architecture architecture, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
-        static List<InstructionInfo^>^ Disassemble(array<Byte>^ code, LibmemCli::Architecture architecture, UInt64 instructionCount, UInt64 runtimeAddress);
+        static List<InstructionInfo^>^ Disassemble(UInt64 codeAddress, ::Libmem::NET::Architecture architecture, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
+        static List<InstructionInfo^>^ Disassemble(array<Byte>^ code, ::Libmem::NET::Architecture architecture, UInt64 instructionCount, UInt64 runtimeAddress);
         static UInt64 CodeLength(UInt64 codeAddress, UInt64 minimumLength);
         static UInt64 CodeLength(ProcessInfo^ process, UInt64 codeAddress, UInt64 minimumLength);
         /// <summary>Installs a native code hook in the current process.</summary>
