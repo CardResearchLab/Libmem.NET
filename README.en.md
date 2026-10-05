@@ -2,13 +2,15 @@
 
 [简体中文](README.md) | [English](README.en.md)
 
-[![CI Build](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml/badge.svg)](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/HearthstoneModding/Libmem.NET)](https://github.com/HearthstoneModding/Libmem.NET/releases/latest)
+[![CI Build](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/build.yml/badge.svg)](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/CardResearchLab/Libmem.NET)](https://github.com/CardResearchLab/Libmem.NET/releases/latest)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
 
 **Libmem.NET** is a Windows C++/CLI wrapper around [rdbo/libmem](https://github.com/rdbo/libmem), exposing process, thread, module, memory, scanning, symbol, assembly/disassembly, Hook, VMT, and DLL injection capabilities to C# / .NET.
+
+Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
 Current source uses the **Libmem.NET** identity; the prepared version is **2.0.0-preview.1**, pending public release validation. Historical stable **v1.0.0** uses `LibmemCli`. Consumers must update references and recompile; see the [migration guide](docs/MIGRATION.md).
 
@@ -23,13 +25,13 @@ Official support target:
 
 ## Download
 
-Build current Libmem.NET from source or download an artifact from a successful [Build workflow](https://github.com/HearthstoneModding/Libmem.NET/actions/workflows/build.yml) run.
+Build current Libmem.NET from source or download an artifact from a successful [Build workflow](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/build.yml) run.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
-- [LibmemCli v1.0.0](https://github.com/HearthstoneModding/Libmem.NET/releases/tag/v1.0.0)
-- [LibmemCli-windows-x64.zip](https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip)
-- [LibmemCli-windows-x64.zip.sha256](https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256)
+- [LibmemCli v1.0.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v1.0.0)
+- [LibmemCli-windows-x64.zip](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip)
+- [LibmemCli-windows-x64.zip.sha256](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256)
 
 Historical ZIP SHA-256: `647f93c73bbd9fc77e2eb84dc2d5530953b12212c75c09d97b19388e4b331b99`.
 
@@ -206,7 +208,7 @@ Requirements:
 Clone recursively:
 
 ```powershell
-git clone --recursive https://github.com/HearthstoneModding/Libmem.NET.git
+git clone --recursive https://github.com/CardResearchLab/Libmem.NET.git
 cd Libmem.NET
 .\build.ps1 -Configuration Release -Platform x64
 ```
@@ -248,7 +250,7 @@ artifacts/package/Libmem.NET-windows-x64.zip.sha256
 For source-level reproducible integration:
 
 ```powershell
-git submodule add https://github.com/HearthstoneModding/Libmem.NET.git external/Libmem.NET
+git submodule add https://github.com/CardResearchLab/Libmem.NET.git external/Libmem.NET
 git submodule update --init --recursive
 ```
 
@@ -265,7 +267,7 @@ The repository also provides a reusable GitHub Actions build workflow.
 ```yaml
 jobs:
   build-libmem:
-    uses: HearthstoneModding/Libmem.NET/.github/workflows/reusable-build.yml@main
+    uses: CardResearchLab/Libmem.NET/.github/workflows/reusable-build.yml@main
     with:
       ref: main
       configuration: Release

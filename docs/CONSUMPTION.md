@@ -8,7 +8,7 @@ Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validat
 
 For current Libmem.NET, build from source or use a successful Build artifact. No new formal release was created by the identity migration.
 
-Historical [v1.0.0](https://github.com/HearthstoneModding/Libmem.NET/releases/tag/v1.0.0) provides [LibmemCli-windows-x64.zip](https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip) and its [SHA-256 file](https://github.com/HearthstoneModding/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256). Those assets contain `LibmemCli.dll`, not `Libmem.NET.dll`, and require the old namespace. Do not rename old binaries to use the new examples.
+Historical [v1.0.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v1.0.0) provides [LibmemCli-windows-x64.zip](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip) and its [SHA-256 file](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256). Those assets contain `LibmemCli.dll`, not `Libmem.NET.dll`, and require the old namespace. Do not rename old binaries to use the new examples.
 
 Current build artifact names:
 
@@ -171,11 +171,13 @@ One-time setup:
 
 1. Sign in to nuget.org and open **Trusted Publishing**.
 2. Add a GitHub policy with:
-   - Repository owner: `HearthstoneModding`
+   - Repository owner: `CardResearchLab`
    - Repository: `Libmem.NET`
    - Workflow file: `release.yml`
    - Environment: leave empty unless the workflow is later moved behind a GitHub Environment.
 3. In GitHub Actions secrets, add `NUGET_USER` containing the nuget.org profile username (not the email address).
+
+The repository is now `CardResearchLab/Libmem.NET`. Trusted Publishing's Repository owner must be `CardResearchLab`, matching the current GitHub organization login. NuGet `Authors` credits `xiaohei7972`; the Package Owner and `NUGET_USER` refer to the publishing NuGet account, currently `xiaohei`.
 
 Both `v*` tags and `release/v*` branches build the runtime ZIP and exact-version `Libmem.NET.<version>.nupkg`, validate both, and render release notes. Tags create GitHub downloads; versions with prerelease suffixes use the prerelease flag and do not replace the latest stable release. Release branches remain dry runs. Automatic pushes do not log in to nuget.org or publish there.
 

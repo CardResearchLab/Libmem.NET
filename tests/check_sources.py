@@ -599,7 +599,7 @@ for manual_workflow in [hook_workflow, injector_workflow, external_process_workf
 for consumer in [sample_source, nuget_consumer_source, external_process_test_source]:
     assert "using NativeApi = global::Libmem.NET.Libmem;" in consumer
     assert not re.search(r"(?<![\w.])Libmem\.(?!NET\b)", consumer), "Ambiguous static facade reference remains."
-assert "repository = 'HearthstoneModding/Libmem.NET'" in manifest_script
+assert "repository = 'CardResearchLab/Libmem.NET'" in manifest_script
 assert "Hook and VMT x64" in hook_workflow
 assert "setup-dotnet-x86.ps1" not in hook_workflow
 assert "Injector x64" in injector_workflow

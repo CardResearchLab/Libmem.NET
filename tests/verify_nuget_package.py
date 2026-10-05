@@ -90,7 +90,7 @@ def main() -> int:
                 f"got {None if version is None else version.text!r}"
             )
 
-        if authors is None or authors.text != "HearthstoneModding":
+        if authors is None or authors.text != "xiaohei7972":
             raise AssertionError("Unexpected NuGet authors metadata.")
 
         if description is None or "Windows x64" not in (description.text or ""):
@@ -108,7 +108,7 @@ def main() -> int:
 
         if (
             project_url is None
-            or project_url.text != "https://github.com/HearthstoneModding/Libmem.NET"
+            or project_url.text != "https://github.com/CardResearchLab/Libmem.NET"
         ):
             raise AssertionError("NuGet project URL mismatch.")
 
@@ -118,7 +118,7 @@ def main() -> int:
         if repository.attrib.get("type") != "git":
             raise AssertionError("NuGet repository type is not git.")
 
-        if repository.attrib.get("url") != "https://github.com/HearthstoneModding/Libmem.NET":
+        if repository.attrib.get("url") != "https://github.com/CardResearchLab/Libmem.NET":
             raise AssertionError("NuGet repository URL mismatch.")
 
         if repository.attrib.get("commit") != args.expected_commit:
