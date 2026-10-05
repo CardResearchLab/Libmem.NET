@@ -14,8 +14,6 @@ on:
     paths:
       - '.github/workflows/published-nuget-smoke.yml'
       - 'tests/Libmem.NET.NuGetConsumer/**'
-      - 'VERSION'
-      - 'docs/POST_RELEASE_2.0.0-preview.1.md'
 
 permissions:
   contents: read
