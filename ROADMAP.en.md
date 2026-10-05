@@ -38,9 +38,9 @@ ProcessSession
 
 Snapshots, caches, entities, game state, event state, IPC, and game-version adaptation belong to consumers.
 
-## Current phase: v2.0.0-preview.1 — Naming migration acceptance
+## Current phase: v2.0.0-preview.1 — Post-release stabilization
 
-The former `LibmemCli v1.0.0` is released. The mainline now uses **2.0.0-preview.1** to accept the breaking namespace/assembly migration to `Libmem.NET`, preserving member behavior and native ABI. Version metadata, migration documentation and downloadable packages are prepared before the separate nuget.org publication step. x86 remains deferred.
+The former `LibmemCli v1.0.0` is released. The mainline now uses **2.0.0-preview.1** for the breaking namespace/assembly migration to `Libmem.NET`. The preview is published on GitHub and nuget.org and has passed public PackageReference acceptance. The current phase is post-release stabilization and documentation consistency auditing while preserving member behavior and native ABI. x86 remains deferred.
 
 Current audit priorities:
 
