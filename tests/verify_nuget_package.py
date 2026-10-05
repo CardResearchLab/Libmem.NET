@@ -49,6 +49,13 @@ def main() -> int:
         if missing:
             raise AssertionError("NuGet package is missing: " + ", ".join(missing))
 
+        package_readme = archive.read("README.md").decode("utf-8")
+        for marker in ("**English**", "# 简体中文"):
+            if marker not in package_readme:
+                raise AssertionError(
+                    f"NuGet package README is missing bilingual marker: {marker}"
+                )
+
         forbidden_fragments = [
             "win-x86",
             "/x86/",
