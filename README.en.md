@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-Current source uses the **Libmem.NET** identity; the prepared version is **2.0.0-preview.1**, pending public release validation. Historical stable **v1.0.0** uses `LibmemCli`. Consumers must update references and recompile; see the [migration guide](docs/MIGRATION.md).
+Current public preview is **2.0.0-preview.1**. It has passed GitHub Release publication, NuGet Trusted Publishing, and an independent nuget.org PackageReference acceptance test. Historical stable **v1.0.0** uses `LibmemCli`. Consumers must update references and recompile; see the [migration guide](docs/MIGRATION.md).
 
 Official support target:
 
@@ -21,11 +21,11 @@ Official support target:
 - C# / .NET consumers
 - a pinned rdbo/libmem native backend
 
-> x86 source/build configuration is retained but is outside the current stable support and official Release scope. The local NuGet PackageReference path is CI-validated; account-side Trusted Publishing configuration must still be verified before publication.
+> x86 source/build configuration is retained but is outside the current stable support and official Release scope. The public NuGet PackageReference path is validated on Windows x64 / .NET 8 through restore, build, run, and publish.
 
 ## Download
 
-Build current Libmem.NET from source or download an artifact from a successful [Build workflow](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/build.yml) run.
+**Libmem.NET 2.0.0-preview.1** is published as both a GitHub prerelease and a nuget.org prerelease. Install it with `dotnet add package Libmem.NET --version 2.0.0-preview.1`, or download the runtime ZIP from the [v2.0.0-preview.1 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1).
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
@@ -226,7 +226,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The prepared version is **2.0.0-preview.1**. Namespace and assembly identity changes break the former v1.0.0 identity and require consumer recompilation. `VERSION`, NuGet and informational version use `2.0.0-preview.1`; numeric assembly/file versions use `2.0.0.0`. Build downloads include the runtime ZIP, SHA-256 and `Libmem.NET.2.0.0-preview.1.nupkg`, with changelog and migration documentation inside the packages. Preparation does not imply public availability; GitHub preview downloads and the later manual NuGet push are separate steps.
+The current public preview is **2.0.0-preview.1**. Namespace and assembly identity changes break the former v1.0.0 identity and require consumer recompilation. `VERSION`, NuGet and informational version use `2.0.0-preview.1`; numeric assembly/file versions use `2.0.0.0`. The GitHub prerelease contains the runtime ZIP, SHA-256 and exact-version `.nupkg`; the same version is also published on nuget.org through Trusted Publishing.
 
 Build the release-style runtime ZIP locally:
 
@@ -283,7 +283,7 @@ The package ID is `Libmem.NET`, targeting Windows x64 / .NET 8. CI validates pac
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-The identity migration creates no new tag or public package. Verify the nuget.org Trusted Publishing policy and GitHub `NUGET_USER` secret before a formal release. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
+`v2.0.0-preview.1` is published on GitHub and nuget.org; Trusted Publishing / OIDC login, NuGet push, and public PackageReference consumption have all been exercised successfully. Future versions keep the split flow: tags create GitHub releases, while NuGet publication remains an explicit manual opt-in. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 
