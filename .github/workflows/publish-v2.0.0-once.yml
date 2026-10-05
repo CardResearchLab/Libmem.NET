@@ -1,0 +1,172 @@
+name: Publish Libmem.NET v2.0.0 Once
+
+on:
+  push:
+    branches:
+      - release/v2.0.0
+    paths:
+      - '.github/workflows/publish-v2.0.0-once.yml'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  publish:
+    name: Publish v2.0.0
+    runs-on: ubuntu-latest
+    env:
+      EXPECTED_SOURCE_SHA: 792ddb206157a3f516785d14774d4c1eb3957c94
+      RELEASE_TAG: v2.0.0
+
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify exact stable candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --tags --force
+
+          MAIN_SHA="$(git rev-parse origin/main)"
+          test "$MAIN_SHA" = "$EXPECTED_SOURCE_SHA" || {
+            echo "main moved: expected $EXPECTED_SOURCE_SHA, got $MAIN_SHA"
+            exit 1
+          }
+
+          VERSION_VALUE="$(git show "$EXPECTED_SOURCE_SHA:VERSION" | tr -d '\r\n')"
+          test "$VERSION_VALUE" = "2.0.0" || {
+            echo "Expected VERSION=2.0.0 at $EXPECTED_SOURCE_SHA, got $VERSION_VALUE"
+            exit 1
+          }
+
+      - name: Create exact v2.0.0 tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            git fetch origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG" --force
+            TAG_SOURCE="$(git rev-list -n 1 "$RELEASE_TAG")"
+            test "$TAG_SOURCE" = "$EXPECTED_SOURCE_SHA" || {
+              echo "$RELEASE_TAG already exists but points to $TAG_SOURCE"
+              exit 1
+            }
+            echo "$RELEASE_TAG already exists at the validated candidate."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$RELEASE_TAG" "$EXPECTED_SOURCE_SHA" -m "Libmem.NET $RELEASE_TAG"
+            git push origin "refs/tags/$RELEASE_TAG"
+          fi
+
+      - name: Publish GitHub Release through release.yml
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "GitHub Release $RELEASE_TAG already exists."
+            exit 0
+          fi
+
+          STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          gh workflow run release.yml             --repo "$GITHUB_REPOSITORY"             --ref "$RELEASE_TAG"             -f publish-nuget=false
+
+          RUN_ID=""
+          for _ in {1..30}; do
+            RUN_ID="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/release.yml/runs?event=workflow_dispatch&per_page=30"               --jq ".workflow_runs[] | select(.head_branch == \"$RELEASE_TAG\" and .created_at >= \"$STARTED_AT\") | .id"               | head -n 1)"
+            if [[ -n "$RUN_ID" ]]; then
+              break
+            fi
+            sleep 2
+          done
+
+          test -n "$RUN_ID" || {
+            echo "Could not find the GitHub Release workflow run."
+            exit 1
+          }
+
+          echo "GitHub Release workflow run: $RUN_ID"
+          gh run watch "$RUN_ID" --repo "$GITHUB_REPOSITORY" --exit-status
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"
+
+      - name: Publish NuGet through Trusted Publishing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if curl -fsSL "https://api.nuget.org/v3-flatcontainer/libmem.net/index.json" | grep -q '"2.0.0"'; then
+            echo "Libmem.NET 2.0.0 is already visible on nuget.org."
+            exit 0
+          fi
+
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
+
+          STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          gh workflow run release.yml             --repo "$GITHUB_REPOSITORY"             --ref "$RELEASE_TAG"             -f publish-nuget=true
+
+          RUN_ID=""
+          for _ in {1..30}; do
+            RUN_ID="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/release.yml/runs?event=workflow_dispatch&per_page=30"               --jq ".workflow_runs[] | select(.head_branch == \"$RELEASE_TAG\" and .created_at >= \"$STARTED_AT\") | .id"               | head -n 1)"
+            if [[ -n "$RUN_ID" ]]; then
+              break
+            fi
+            sleep 2
+          done
+
+          test -n "$RUN_ID" || {
+            echo "Could not find the NuGet publication workflow run."
+            exit 1
+          }
+
+          echo "NuGet publication workflow run: $RUN_ID"
+          gh run watch "$RUN_ID" --repo "$GITHUB_REPOSITORY" --exit-status
+
+      - name: Wait for NuGet indexing
+        shell: bash
+        run: |
+          set -euo pipefail
+          for _ in {1..60}; do
+            if curl -fsSL "https://api.nuget.org/v3-flatcontainer/libmem.net/index.json" | grep -q '"2.0.0"'; then
+              echo "Libmem.NET 2.0.0 is visible on nuget.org."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "NuGet publication succeeded but 2.0.0 did not become visible within the indexing window."
+          exit 1
+
+      - name: Validate public 2.0.0 package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          gh workflow run published-nuget-smoke.yml             --repo "$GITHUB_REPOSITORY"             --ref main             -f package-version=2.0.0
+
+          RUN_ID=""
+          for _ in {1..30}; do
+            RUN_ID="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/published-nuget-smoke.yml/runs?event=workflow_dispatch&per_page=30"               --jq ".workflow_runs[] | select(.head_branch == \"main\" and .created_at >= \"$STARTED_AT\") | .id"               | head -n 1)"
+            if [[ -n "$RUN_ID" ]]; then
+              break
+            fi
+            sleep 2
+          done
+
+          test -n "$RUN_ID" || {
+            echo "Could not find the public NuGet smoke run."
+            exit 1
+          }
+
+          echo "Public NuGet smoke run: $RUN_ID"
+          gh run watch "$RUN_ID" --repo "$GITHUB_REPOSITORY" --exit-status
