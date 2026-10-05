@@ -23,7 +23,7 @@ No changes yet.
 - Separated GitHub downloads from nuget.org publication. NuGet Trusted Publishing is explicitly invoked after the GitHub release and account setup are ready.
 - Updated assembly company metadata to `CardResearchLab` and NuGet author attribution to `xiaohei7972`. Updated repository URLs, reusable workflow references, manifest provenance, and publishing setup for the renamed organization.
 
-This section prepares the preview; it does not claim that a release tag, downloadable release or nuget.org package has already been published. The existing v1.0.0 tag and assets remain unchanged.
+The preview was subsequently published as GitHub prerelease `v2.0.0-preview.1` and pushed to nuget.org through Trusted Publishing (OIDC). A separate nuget.org-only PackageReference smoke test restored, built, ran and published the package successfully. The existing v1.0.0 tag and assets remain unchanged.
 
 ### CI and documentation follow-up
 
