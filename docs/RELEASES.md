@@ -4,9 +4,9 @@ This document describes the official release channel, current stable release, su
 
 ## Current source and historical release
 
-Current main has migrated to `Libmem.NET`. This is a breaking identity change requiring updated references and recompilation; see [MIGRATION.md](MIGRATION.md). No new tag or public package is created by the migration. The prepared `VERSION` is `2.0.0-preview.1`; numeric assembly/file versions are `2.0.0.0`. The new major version reflects this breaking change, not a replacement for historical v1.0.0.
+Current main has migrated to `Libmem.NET`. This is a breaking identity change requiring updated references and recompilation; see [MIGRATION.md](MIGRATION.md). The public preview is `2.0.0-preview.1`; numeric assembly/file versions are `2.0.0.0`. The new major version reflects this breaking change, not a replacement for historical v1.0.0.
 
-The planned tag is `v2.0.0-preview.1`. Runtime ZIP and exact-version NuGet downloads are prepared first; nuget.org publication is a later explicit step. Do not replace the existing v1.0.0 tag or assets.
+`v2.0.0-preview.1` is published as a GitHub prerelease and on nuget.org. The release workflow validated the exact Runtime ZIP / NuGet provenance, and a separate public PackageReference smoke test restored, built, ran and published the package successfully. Do not replace the existing v1.0.0 tag or assets.
 
 ### Historical v1.0.0
 
@@ -132,9 +132,9 @@ Use this when a consumer needs exact source provenance, reproducible native buil
 
 ### NuGet
 
-The `Libmem.NET` package path is validated through an independent local-feed consumer: restore/build/run/publish, native asset copy, XML documentation, provenance, and non-x64 rejection. Historical v1.0.0 did not ship an official NuGet asset.
+The `Libmem.NET` package path is validated both through local-feed CI and an independent public nuget.org consumer: restore/build/run/publish, native asset copy, XML documentation, provenance, and non-x64 rejection. Historical v1.0.0 did not ship an official NuGet asset.
 
-Public publication requires the account-side Trusted Publishing policy and `NUGET_USER` secret to be verified; repository CI alone does not establish their readiness. See [CONSUMPTION.md](CONSUMPTION.md).
+`2.0.0-preview.1` was successfully published through the account-side Trusted Publishing policy and `NUGET_USER` flow. Future publications must re-verify those settings if the repository, workflow, environment, or publishing account changes. See [CONSUMPTION.md](CONSUMPTION.md).
 
 ## Release workflow safety
 
