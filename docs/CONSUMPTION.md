@@ -2,11 +2,11 @@
 
 > Current official target: Windows x64 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and a validated NuGet package path. The prepared `2.0.0-preview.1` uses the `Libmem.NET` managed assembly and namespace. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. The published `2.0.0-preview.1` uses the `Libmem.NET` managed assembly and namespace and has passed an independent nuget.org consumer acceptance test. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
-For current Libmem.NET, build from source or use a successful Build artifact. No new formal release was created by the identity migration.
+For current Libmem.NET, use the [v2.0.0-preview.1 GitHub prerelease](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1), install the matching nuget.org package, or build from source.
 
 Historical [v1.0.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v1.0.0) provides [LibmemCli-windows-x64.zip](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip) and its [SHA-256 file](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256). Those assets contain `LibmemCli.dll`, not `Libmem.NET.dll`, and require the old namespace. Do not rename old binaries to use the new examples.
 
@@ -18,7 +18,7 @@ Libmem.NET-windows-x64.zip.sha256
 Libmem.NET.2.0.0-preview.1.nupkg
 ```
 
-The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. The `.nupkg` is a separate local-feed asset before nuget.org publication.
+The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. The exact-version `.nupkg` is also published on nuget.org; local feeds remain useful for development and pre-publication acceptance.
 
 Minimum runtime files:
 
@@ -56,16 +56,16 @@ It is more operationally complex than consuming a prebuilt package.
 
 ## 3. NuGet package
 
-The repository contains a validated PackageReference package. Public publication is wired into the release workflow, and a public nuget.org publish requires verification of the Trusted Publishing account setup described below:
+`Libmem.NET 2.0.0-preview.1` is publicly available through nuget.org and was published by the release workflow with Trusted Publishing (OIDC). The same workflow remains the publication path for future versions:
 
 ```text
 Package ID: Libmem.NET
 Status: validated for Windows x64 / .NET 8
-Publication: release workflow via nuget.org Trusted Publishing (OIDC)
+Publication: nuget.org via Trusted Publishing (OIDC); 2.0.0-preview.1 published and consumer-tested
 Target: Windows x64 / .NET 8
 ```
 
-The package ID is now fixed as `Libmem.NET` before first public publication. Development packages also use a commit-qualified prerelease version derived from `VERSION`, such as `2.0.0-preview.1.dev.<commit>`, rather than reusing a stable package version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
+The package ID is fixed as `Libmem.NET`. Development packages use a commit-qualified prerelease version derived from `VERSION`, such as `2.0.0-preview.1.dev.<commit>`, rather than reusing a published version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
 
 ### Package layout
 
@@ -181,12 +181,12 @@ The repository is now `CardResearchLab/Libmem.NET`. Trusted Publishing's Reposit
 
 Both `v*` tags and `release/v*` branches build the runtime ZIP and exact-version `Libmem.NET.<version>.nupkg`, validate both, and render release notes. Tags create GitHub downloads; versions with prerelease suffixes use the prerelease flag and do not replace the latest stable release. Release branches remain dry runs. Automatic pushes do not log in to nuget.org or publish there.
 
-After the GitHub release and account setup are ready, manually run **Release** with the existing `v2.0.0-preview.1` tag selected and **publish-nuget** enabled. This validates the exact tagged source/package and uses OIDC to push the preview to nuget.org, without recreating the GitHub Release. Ordinary branches and unpublished tags are rejected for this step. Public availability remains pending until it succeeds.
+For `2.0.0-preview.1`, this manual tagged run completed successfully: OIDC login and NuGet push both passed without recreating the GitHub Release. For future versions, use the same explicit **Release** workflow opt-in on an already published `v*` tag. Ordinary branches and unpublished tags remain rejected for NuGet publication.
 
-Repository configuration does not prove that the external account policy or secret is ready; verify them before creating a publication tag.
+The successful `2.0.0-preview.1` publication proves the current Trusted Publishing path worked at release time. Re-verify account-side policy and `NUGET_USER` before future publications if repository ownership, workflow names, environments, or publishing accounts change.
 
 ## Current recommendation
 
-For the current identity, use source/submodule/reusable-workflow integration or a verified Build runtime artifact. Use a public `Libmem.NET` package only after the intended version is visible on nuget.org. Historical v1.0.0 remains available under its original names.
+For normal Windows x64 / .NET 8 PackageReference consumption, use public `Libmem.NET 2.0.0-preview.1` with prerelease versions enabled. Runtime ZIP, source/submodule and reusable-workflow integration remain available for consumers that need binary bundles or exact source provenance. Historical v1.0.0 remains available under its original names.
 
 See [RELEASES.md](RELEASES.md) for release history, support boundaries and versioning, and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the next publication.
