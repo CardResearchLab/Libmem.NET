@@ -51,7 +51,7 @@ Previous release.
             {
                 "schemaVersion": 2,
                 "packageVersion": "9.8.7",
-                "repository": "HearthstoneModding/Libmem.NET",
+                "repository": "CardResearchLab/Libmem.NET",
                 "repositoryCommit": "a" * 40,
                 "libmemCommit": "b" * 40,
                 "targetFramework": "net8.0",
@@ -83,7 +83,7 @@ Previous release.
             "--checksum",
             str(checksum),
             "--repository",
-            "HearthstoneModding/Libmem.NET",
+            "CardResearchLab/Libmem.NET",
             "--tag",
             "v9.8.7",
             "--output",
@@ -131,7 +131,7 @@ Previous release.
     command = [
         sys.executable, str(renderer), "--version", preview,
         "--changelog", str(changelog), "--manifest", str(manifest),
-        "--checksum", str(checksum), "--repository", "HearthstoneModding/Libmem.NET",
+        "--checksum", str(checksum), "--repository", "CardResearchLab/Libmem.NET",
         "--tag", "v" + preview, "--output", str(output),
     ]
     subprocess.run(command, cwd=root, check=True)

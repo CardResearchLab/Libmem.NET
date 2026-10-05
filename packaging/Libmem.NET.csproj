@@ -9,11 +9,11 @@
     <Description>Libmem.NET: Windows x64 / .NET 8 C++/CLI wrapper around the pinned rdbo/libmem C ABI.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/HearthstoneModding/Libmem.NET</RepositoryUrl>
+    <RepositoryUrl>https://github.com/CardResearchLab/Libmem.NET</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryCommit Condition="'$(RepositoryCommit)' == '' and '$(GITHUB_SHA)' != ''">$(GITHUB_SHA)</RepositoryCommit>
     <RepositoryCommit Condition="'$(RepositoryCommit)' == ''">local</RepositoryCommit>
-    <PackageProjectUrl>https://github.com/HearthstoneModding/Libmem.NET</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/CardResearchLab/Libmem.NET</PackageProjectUrl>
     <PackageTags>libmem memory interop cpp-cli windows x64</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>

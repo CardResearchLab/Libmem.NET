@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       ref:
-        description: Git ref of HearthstoneModding/Libmem.NET to build
+        description: Git ref of CardResearchLab/Libmem.NET to build
         required: false
         default: main
         type: string
@@ -41,7 +41,7 @@ jobs:
       - name: Checkout Libmem.NET
         uses: actions/checkout@v4
         with:
-          repository: HearthstoneModding/Libmem.NET
+          repository: CardResearchLab/Libmem.NET
           ref: ${{ inputs.ref }}
           submodules: recursive
 

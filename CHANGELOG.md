@@ -11,7 +11,7 @@ No changes yet.
 - Unified the managed namespace, assembly, solution/project names, test projects and runtime assets as `Libmem.NET`; the NuGet PackageId remains `Libmem.NET`.
 - Existing `LibmemCli` consumers must update references, namespaces, paths and reflection strings, then recompile. See `docs/MIGRATION.md`.
 - Preserved public member signatures, native ABI mapping, ownership, exception behavior and the pinned native dependency. Static facade calls use an explicit type alias to avoid the new root namespace collision.
-- Corrected runtime manifest provenance to `HearthstoneModding/Libmem.NET`.
+- Corrected runtime manifest provenance to `CardResearchLab/Libmem.NET`.
 - Consolidated automatic PR validation into Build, including Release x64 by default, optional manual Debug, all runtime suites and local NuGet restore/run/publish. Specialized workflows retain manual entry points.
 
 ### Release preparation
@@ -21,7 +21,7 @@ No changes yet.
 - Enabled prerelease version validation for runtime manifests, NuGet packaging and formal Release Notes; GitHub Release publication marks preview tags as prereleases.
 - Included the changelog and migration guide in runtime ZIP and NuGet packages. Build artifacts include an exact-version `Libmem.NET.2.0.0-preview.1.nupkg` for local-feed acceptance.
 - Separated GitHub downloads from nuget.org publication. NuGet Trusted Publishing is explicitly invoked after the GitHub release and account setup are ready.
-- Updated assembly company metadata to the organization's display name `QuietForge` and NuGet author attribution to `xiaohei7972`. Repository URLs and publishing authentication retain the actual GitHub organization login `HearthstoneModding`.
+- Updated assembly company metadata to `CardResearchLab` and NuGet author attribution to `xiaohei7972`. Updated repository URLs, reusable workflow references, manifest provenance, and publishing setup for the renamed organization.
 
 This section prepares the preview; it does not claim that a release tag, downloadable release or nuget.org package has already been published. The existing v1.0.0 tag and assets remain unchanged.
 
