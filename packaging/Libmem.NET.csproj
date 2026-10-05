@@ -6,7 +6,8 @@
     <PackageId>Libmem.NET</PackageId>
     <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.0-local</PackageVersion>
     <Authors>xiaohei7972</Authors>
-    <Description>Libmem.NET: Windows x64 / .NET 8 C++/CLI wrapper around the pinned rdbo/libmem C ABI.</Description>
+    <Description>Windows x64 / .NET 8 C++/CLI wrapper for rdbo/libmem, providing managed process, memory, scanning, hooking, injection, assembly, and symbol APIs.</Description>
+    <PackageReleaseNotes>English: Libmem.NET 2.0.0-preview.1 completes the LibmemCli → Libmem.NET identity migration. Existing v1.0.0 consumers must update references and rebuild. 中文：Libmem.NET 2.0.0-preview.1 完成 LibmemCli → Libmem.NET 身份迁移，现有 v1.0.0 使用者需要更新引用并重新编译。 Full notes / 完整说明: https://github.com/CardResearchLab/Libmem.NET/blob/main/CHANGELOG.md</PackageReleaseNotes>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/CardResearchLab/Libmem.NET</RepositoryUrl>
@@ -34,7 +35,7 @@
     <None Include="Libmem.NET.targets"
           Pack="true"
           PackagePath="buildTransitive\Libmem.NET.targets" />
-    <None Include="..\README.en.md"
+    <None Include="NUGET_README.md"
           Pack="true"
           PackagePath="README.md" />
     <None Include="..\LICENSE"
