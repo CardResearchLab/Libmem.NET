@@ -2,7 +2,7 @@
 
 Scope: Windows x64 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. Do not recreate that tag or replace its assets. The prepared Libmem.NET version is `2.0.0-preview.1`; numeric assembly/file versions are `2.0.0.0`. Preview publication remains pending.
+Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. Do not recreate that tag or replace its assets. `Libmem.NET 2.0.0-preview.1` is published as a GitHub prerelease and on nuget.org; its tagged Release, Trusted Publishing/OIDC push, and public consumer smoke test all completed successfully. Numeric assembly/file versions are `2.0.0.0`. The checklist below remains the reusable gate for later versions.
 
 ## Repository acceptance
 
@@ -24,7 +24,7 @@ Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. 
 | GitHub Release safety | `release/v*` is dry-run only; `gh release create` is tag-only; no automatic branch deletion. |
 | NuGet publish safety | OIDC login and push require a manual run on a published tag with `publish-nuget` enabled; branch validation requires no NuGet account credentials. |
 
-## Publication prerequisites — verify for the chosen version
+## Publication prerequisites — verify for each future version
 
 - [ ] Select a version that accounts for the breaking `LibmemCli` → `Libmem.NET` identity migration; update `VERSION`, assembly metadata and CHANGELOG together.
 - [ ] Confirm green Release x64 Build results on the exact release candidate.
