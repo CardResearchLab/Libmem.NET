@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前源码已完成 **Libmem.NET** 命名迁移，本次准备版本为 **2.0.0-preview.1**，公开发布待验证完成。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；迁移需要修改引用并重新编译，见 [迁移指南](docs/MIGRATION.md)。
+当前公开预览版本为 **2.0.0-preview.1**，已通过 GitHub Release、NuGet Trusted Publishing 与独立 nuget.org PackageReference 验收。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；迁移需要修改引用并重新编译，见 [迁移指南](docs/MIGRATION.md)。
 
 正式支持范围：
 
@@ -21,11 +21,11 @@
 - C# / .NET 消费者
 - 固定版本的 rdbo/libmem native backend
 
-> x86 代码与构建配置仍保留，但不属于当前稳定支持和正式 Release 范围。NuGet 的本地 PackageReference 路径已通过 CI 验证；正式发布前仍须核实账户侧 Trusted Publishing 配置。
+> x86 代码与构建配置仍保留，但不属于当前稳定支持和正式 Release 范围。NuGet 公共 PackageReference 路径已经通过 Windows x64 / .NET 8 的 restore、build、run 与 publish 验收。
 
 ## 下载
 
-当前 Libmem.NET 可从源码构建，或下载 [Build 工作流](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/build.yml) 的成功运行产物。
+当前 **Libmem.NET 2.0.0-preview.1** 已作为 GitHub prerelease 与 nuget.org prerelease 发布。可直接使用 `dotnet add package Libmem.NET --version 2.0.0-preview.1`，也可从 [v2.0.0-preview.1 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1) 下载运行时 ZIP。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -226,7 +226,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前准备版本为 **2.0.0-preview.1**。命名空间与程序集身份变化破坏旧名 v1.0.0 的兼容性，消费者必须重新编译。`VERSION`、NuGet 和 informational version 为 `2.0.0-preview.1`，程序集数字版本与文件版本为 `2.0.0.0`。Build 下载产物包含 Runtime ZIP、SHA-256 和 `Libmem.NET.2.0.0-preview.1.nupkg`，包内附带变更记录与迁移说明。版本准备不代表已公开发布；GitHub 预发布下载与后续手动 NuGet 发布分开处理。
+当前公开预览版本为 **2.0.0-preview.1**。命名空间与程序集身份变化破坏旧名 v1.0.0 的兼容性，消费者必须重新编译。`VERSION`、NuGet 和 informational version 为 `2.0.0-preview.1`，程序集数字版本与文件版本为 `2.0.0.0`。GitHub prerelease 提供 Runtime ZIP、SHA-256 和精确版本 `.nupkg`，同版本包也已通过 Trusted Publishing 发布到 nuget.org。
 
 生成正式风格 Runtime ZIP：
 
@@ -281,7 +281,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-当前命名迁移没有创建新 tag 或发布新包。正式发布前须核实 nuget.org Trusted Publishing 策略及 GitHub `NUGET_USER` secret。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+`v2.0.0-preview.1` 已发布到 GitHub 与 nuget.org；Trusted Publishing / OIDC 登录、NuGet push 和公开 PackageReference 消费都已实际验证。后续版本继续沿用“tag 创建 GitHub Release、手动 opt-in 发布 NuGet”的分离发布流程。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 
