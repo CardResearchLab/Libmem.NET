@@ -1,0 +1,125 @@
+name: Published NuGet Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      package-version:
+        description: Published Libmem.NET version to validate from nuget.org
+        required: false
+        default: 2.0.0-preview.1
+        type: string
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/published-nuget-smoke.yml'
+      - 'tests/Libmem.NET.NuGetConsumer/**'
+      - 'VERSION'
+      - 'docs/POST_RELEASE_2.0.0-preview.1.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  published-nuget-smoke:
+    name: Published NuGet x64
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout consumer test source
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Resolve package version
+        id: version
+        shell: pwsh
+        run: |
+          $version = "${{ inputs.package-version }}"
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            $version = (Get-Content .\VERSION -Raw).Trim()
+          }
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "Package version is empty."
+          }
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Validating published Libmem.NET $version"
+
+      - name: Clear NuGet caches
+        shell: pwsh
+        run: dotnet nuget locals all --clear
+
+      - name: Restore consumer from nuget.org only
+        shell: pwsh
+        run: |
+          dotnet restore .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            --source https://api.nuget.org/v3/index.json `
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -p:NuGetAudit=false
+
+      - name: Verify package XML documentation
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $xml = Join-Path $env:USERPROFILE ".nuget\packages\libmem.net\$version\lib\net8.0\Libmem.NET.xml"
+          if (-not (Test-Path $xml -PathType Leaf)) {
+            throw "Published NuGet package is missing Libmem.NET.xml: $xml"
+          }
+
+      - name: Build published package consumer
+        shell: pwsh
+        run: |
+          dotnet build .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release `
+            --no-restore `
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
+
+      - name: Run published package consumer
+        shell: pwsh
+        run: |
+          dotnet run `
+            --project .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release `
+            --no-restore `
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
+
+      - name: Publish and verify runtime assets
+        shell: pwsh
+        run: |
+          $output = ".\artifacts\published-nuget-consumer"
+          dotnet publish `
+            .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release `
+            --no-restore `
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -o $output
+
+          foreach ($required in @("Libmem.NET.dll", "libmem.dll", "Ijwhost.dll")) {
+            $path = Join-Path $output $required
+            if (-not (Test-Path $path -PathType Leaf)) {
+              throw "Published NuGet consumer is missing $required"
+            }
+          }
+
+      - name: Reject non-x64 consumer
+        shell: pwsh
+        run: |
+          dotnet build `
+            .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release `
+            --no-restore `
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -p:PlatformTarget=AnyCPU
+
+          if ($LASTEXITCODE -eq 0) {
+            throw "Published package unexpectedly accepted a non-x64 consumer."
+          }
+
+          $global:LASTEXITCODE = 0
