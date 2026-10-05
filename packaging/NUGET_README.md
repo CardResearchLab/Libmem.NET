@@ -98,7 +98,7 @@ Libmem.NET 是一个面向 Windows 的 [rdbo/libmem](https://github.com/rdbo/lib
 ## 安装
 
 ```powershell
-dotnet add package Libmem.NET --version 2.0.0-preview.1
+dotnet add package Libmem.NET --version 2.0.0
 ```
 
 `2.0.0` 是 Libmem.NET 新身份下的稳定包版本。
