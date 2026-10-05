@@ -11,7 +11,7 @@ The released `LibmemCli v1.0.0` keeps its tag and assets. This breaking identity
 | Release tag | `v2.0.0-preview.1` |
 | NuGet PackageId | `Libmem.NET` |
 
-The preview tag is a planned release identifier until publication completes; this guide does not imply that the package is already on nuget.org.
+The preview tag `v2.0.0-preview.1` and the matching `Libmem.NET 2.0.0-preview.1` package are published. The package remains a prerelease and consumers must explicitly allow prerelease versions where their tooling requires it.
 
 The product and NuGet PackageId remain `Libmem.NET`. The managed namespace and assembly now also use `Libmem.NET`; the former `LibmemCli` identity is intentionally replaced. This requires recompilation of existing consumers.
 
@@ -54,9 +54,9 @@ NuGet uses the same PackageId with the new managed assets. No dual namespace com
    <PackageReference Include="Libmem.NET" Version="2.0.0-preview.1" />
    ```
 
-   Before nuget.org publication, download the exact-version `.nupkg` from the preview's GitHub Release or validated Build artifact into a local feed and restore with `dotnet restore --source <local-feed>`. The package is a preview; Visual Studio's package browser requires **Include prerelease** once it is publicly available.
+   The preview is available directly from nuget.org. Visual Studio's package browser requires **Include prerelease**; command-line consumers can install the exact version with `dotnet add package Libmem.NET --version 2.0.0-preview.1`. The GitHub Release `.nupkg` remains available for exact-version/offline local-feed use.
 4. Confirm the rebuilt output contains `Libmem.NET.dll`, `libmem.dll`, `Ijwhost.dll` and IntelliSense XML. Run the consumer's process/memory calls and the Hook/VMT/Injector paths it actually uses.
 
-Runtime ZIP and NuGet packages include this guide and `CHANGELOG.md`. GitHub downloads are published separately from the later, explicitly requested nuget.org push.
+Runtime ZIP and NuGet packages include this guide and `CHANGELOG.md`. GitHub downloads and nuget.org publication remain separate release gates; both gates completed successfully for `2.0.0-preview.1`.
 
-The implementation and acceptance plan is [LIBMEM_NET_MIGRATION_PLAN.md](LIBMEM_NET_MIGRATION_PLAN.md). Windows CI verifies Debug/Release compilation, the example, all runtime suites, local NuGet restore/run/publish and runtime package integrity before the migration is considered complete.
+The implementation and acceptance plan is [LIBMEM_NET_MIGRATION_PLAN.md](LIBMEM_NET_MIGRATION_PLAN.md). Default Windows CI verifies Release x64 compilation, the example, all runtime suites, local NuGet restore/run/publish and runtime package integrity; Debug x64 remains an optional manual check. The published preview also has a separate nuget.org-only consumer smoke test.

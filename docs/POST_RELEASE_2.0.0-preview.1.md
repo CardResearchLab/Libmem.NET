@@ -13,7 +13,7 @@
 
 ## 阶段 1 — 公开 NuGet 外部消费者验收
 
-状态：进行中。
+状态：完成。
 
 目的：证明普通用户仅通过 nuget.org 的 `PackageReference` 就能安装、构建、运行和发布 Libmem.NET。
 
@@ -26,9 +26,8 @@
    - 程序集 / namespace 身份；
    - ProcessSession；
    - Allocate / Write / Read / Dispose；
-5. `dotnet publish` 后检查：
+5. 验证 NuGet 包中的 `lib/net8.0/Libmem.NET.xml`，并在 `dotnet publish` 输出中检查：
    - `Libmem.NET.dll`
-   - `Libmem.NET.xml`
    - `libmem.dll`
    - `Ijwhost.dll`
 6. 以 AnyCPU / 非 x64 方式构建必须被包的 MSBuild 约束拒绝。
@@ -41,11 +40,11 @@
 - publish 产物完整；
 - 非 x64 拒绝符合预期。
 
-完成后：更新本文件状态并进入阶段 2。
+完成记录：Published NuGet Smoke #2 与 Build #288 均通过，PR #91 已合并。
 
 ## 阶段 2 — GitHub 分支清理审计
 
-状态：等待阶段 1。
+状态：完成。
 
 目的：减少已经被 main 吸收、废弃或仅属于旧迁移阶段的分支，避免后续开发继续在错误分支上发生。
 
@@ -72,9 +71,11 @@
 - 远程分支数量明显收敛；
 - main 与 release tag 不受影响。
 
+完成记录：远程分支从 102 个收敛到 18 个（`main` + 17 个仍有独有提交、待复核分支）；84 个已确认安全的历史分支已删除。
+
 ## 阶段 3 — 2.0.0 稳定化审计
 
-状态：等待阶段 2。
+状态：进行中。
 
 目的：确认命名迁移、Public API、NuGet、文档和运行时分发已经一致，不再带着 preview 阶段遗留进入正式版。
 

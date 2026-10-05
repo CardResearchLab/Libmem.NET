@@ -38,9 +38,9 @@ ProcessSession
 
 Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适配属于调用方。
 
-## 当前阶段：v2.0.0-preview.1 — 命名迁移验收
+## 当前阶段：v2.0.0-preview.1 — 发布后稳定化验收
 
-旧名 `LibmemCli v1.0.0` 已发布。主线的命名空间与程序集统一为 `Libmem.NET`，以 **2.0.0-preview.1** 验收这次破坏兼容性的身份迁移。保持既有成员行为与 native ABI；同步版本、迁移文档和下载包后，再处理正式 NuGet 发布。x86 继续延后。
+旧名 `LibmemCli v1.0.0` 已发布。主线的命名空间与程序集统一为 `Libmem.NET`；**2.0.0-preview.1** 已作为 GitHub prerelease 与 nuget.org prerelease 发布，并完成公开 PackageReference 消费验收。当前阶段继续做发布后稳定化与文档一致性审计，保持既有成员行为与 native ABI。x86 继续延后。
 
 当前审计重点：
 
