@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-Current public preview is **2.0.0-preview.1**. It has passed GitHub Release publication, NuGet Trusted Publishing, and an independent nuget.org PackageReference acceptance test. Historical stable **v1.0.0** uses `LibmemCli`. Consumers must update references and recompile; see the [migration guide](docs/MIGRATION.md).
+The current stable candidate is **2.0.0**. Published **2.0.0-preview.1** has passed GitHub Release publication, NuGet Trusted Publishing, and an independent nuget.org PackageReference acceptance test; 2.0.0 becomes the public stable release only after the release dry run, tag, and NuGet publication gates complete. Historical stable **v1.0.0** uses `LibmemCli`. Consumers must update references and recompile; see the [migration guide](docs/MIGRATION.md).
 
 Official support target:
 
@@ -25,7 +25,7 @@ Official support target:
 
 ## Download
 
-**Libmem.NET 2.0.0-preview.1** is published as both a GitHub prerelease and a nuget.org prerelease. Install it with `dotnet add package Libmem.NET --version 2.0.0-preview.1`, or download the runtime ZIP from the [v2.0.0-preview.1 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1).
+The **Libmem.NET 2.0.0** stable candidate is under acceptance. Until the stable tag / GitHub Release / NuGet publication completes, the public package remains [v2.0.0-preview.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1), installable with `dotnet add package Libmem.NET --version 2.0.0-preview.1`.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
@@ -226,7 +226,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The current public preview is **2.0.0-preview.1**. Namespace and assembly identity changes break the former v1.0.0 identity and require consumer recompilation. `VERSION`, NuGet and informational version use `2.0.0-preview.1`; numeric assembly/file versions use `2.0.0.0`. The GitHub prerelease contains the runtime ZIP, SHA-256 and exact-version `.nupkg`; the same version is also published on nuget.org through Trusted Publishing.
+The current `VERSION` is the stable candidate **2.0.0**. Namespace and assembly identity changes break the former v1.0.0 identity and require consumer recompilation. NuGet and informational versions use `2.0.0`; numeric assembly/file versions remain `2.0.0.0`. Candidate builds produce the runtime ZIP, SHA-256 and `Libmem.NET.2.0.0.nupkg`; passing candidate validation does not itself publish the release.
 
 Build the release-style runtime ZIP locally:
 
@@ -283,7 +283,7 @@ The package ID is `Libmem.NET`, targeting Windows x64 / .NET 8. CI validates pac
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-`v2.0.0-preview.1` is published on GitHub and nuget.org; Trusted Publishing / OIDC login, NuGet push, and public PackageReference consumption have all been exercised successfully. Future versions keep the split flow: tags create GitHub releases, while NuGet publication remains an explicit manual opt-in. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
+`v2.0.0-preview.1` is published on GitHub and nuget.org; Trusted Publishing / OIDC login, NuGet push, and public PackageReference consumption have all been exercised successfully. The current `2.0.0` candidate uses the same split flow: dry run first, then tag/GitHub Release, then explicit NuGet publication. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 
