@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-No changes yet.
+### Documentation / Packaging
+
+- Added a NuGet-specific bilingual package README with English as the primary language and a complete Simplified Chinese translation.
+- Expanded the NuGet package description and added bilingual English/Chinese package release notes for `2.0.0-preview.1`.
 
 ## 2.0.0-preview.1 - 2026-10-05
 
