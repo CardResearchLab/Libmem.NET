@@ -6,4 +6,4 @@ using namespace System::Reflection;
 [assembly: AssemblyCompanyAttribute("CardResearchLab")];
 [assembly: AssemblyVersionAttribute("2.0.0.0")];
 [assembly: AssemblyFileVersionAttribute("2.0.0.0")];
-[assembly: AssemblyInformationalVersionAttribute("2.0.0-preview.1")];
+[assembly: AssemblyInformationalVersionAttribute("2.0.0")];
