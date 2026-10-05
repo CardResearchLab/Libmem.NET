@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前公开预览版本为 **2.0.0-preview.1**，已通过 GitHub Release、NuGet Trusted Publishing 与独立 nuget.org PackageReference 验收。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；迁移需要修改引用并重新编译，见 [迁移指南](docs/MIGRATION.md)。
+当前正式版候选为 **2.0.0**。已发布的 **2.0.0-preview.1** 已通过 GitHub Release、NuGet Trusted Publishing 与独立 nuget.org PackageReference 验收；2.0.0 在完成 release dry run、tag 与 NuGet 发布门禁后才成为正式公开版本。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；迁移需要修改引用并重新编译，见 [迁移指南](docs/MIGRATION.md)。
 
 正式支持范围：
 
@@ -25,7 +25,7 @@
 
 ## 下载
 
-当前 **Libmem.NET 2.0.0-preview.1** 已作为 GitHub prerelease 与 nuget.org prerelease 发布。可直接使用 `dotnet add package Libmem.NET --version 2.0.0-preview.1`，也可从 [v2.0.0-preview.1 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1) 下载运行时 ZIP。
+正式版候选 **Libmem.NET 2.0.0** 正在验收。在正式 tag / GitHub Release / NuGet 发布完成前，公开可用版本仍是 [v2.0.0-preview.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1)，可使用 `dotnet add package Libmem.NET --version 2.0.0-preview.1` 安装。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -226,7 +226,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前公开预览版本为 **2.0.0-preview.1**。命名空间与程序集身份变化破坏旧名 v1.0.0 的兼容性，消费者必须重新编译。`VERSION`、NuGet 和 informational version 为 `2.0.0-preview.1`，程序集数字版本与文件版本为 `2.0.0.0`。GitHub prerelease 提供 Runtime ZIP、SHA-256 和精确版本 `.nupkg`，同版本包也已通过 Trusted Publishing 发布到 nuget.org。
+当前 `VERSION` 为正式版候选 **2.0.0**。命名空间与程序集身份变化破坏旧名 v1.0.0 的兼容性，消费者必须重新编译。NuGet / informational version 使用 `2.0.0`，程序集数字版本与文件版本保持 `2.0.0.0`。候选 Build 会生成 Runtime ZIP、SHA-256 和 `Libmem.NET.2.0.0.nupkg`；候选产物通过验收不等于已公开发布。
 
 生成正式风格 Runtime ZIP：
 
@@ -281,7 +281,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-`v2.0.0-preview.1` 已发布到 GitHub 与 nuget.org；Trusted Publishing / OIDC 登录、NuGet push 和公开 PackageReference 消费都已实际验证。后续版本继续沿用“tag 创建 GitHub Release、手动 opt-in 发布 NuGet”的分离发布流程。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+`v2.0.0-preview.1` 已发布到 GitHub 与 nuget.org；Trusted Publishing / OIDC 登录、NuGet push 和公开 PackageReference 消费均已实际验证。当前 `2.0.0` 正式版候选将沿用同一分离发布流程：先 dry run，再 tag/GitHub Release，最后显式 opt-in 发布 NuGet。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 
