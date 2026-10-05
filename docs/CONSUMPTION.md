@@ -2,11 +2,11 @@
 
 > Current official target: Windows x64 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. The published `2.0.0-preview.1` uses the `Libmem.NET` managed assembly and namespace and has passed an independent nuget.org consumer acceptance test. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. The published `2.0.0-preview.1` uses the `Libmem.NET` managed assembly and namespace and has passed an independent nuget.org consumer acceptance test. Current source is preparing stable `2.0.0` from that validated line. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
-For current Libmem.NET, use the [v2.0.0-preview.1 GitHub prerelease](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1), install the matching nuget.org package, or build from source.
+Until the `2.0.0` stable publication gates complete, use the [v2.0.0-preview.1 GitHub prerelease](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1), install that matching nuget.org package, or build the `2.0.0` candidate from source.
 
 Historical [v1.0.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v1.0.0) provides [LibmemCli-windows-x64.zip](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip) and its [SHA-256 file](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256). Those assets contain `LibmemCli.dll`, not `Libmem.NET.dll`, and require the old namespace. Do not rename old binaries to use the new examples.
 
@@ -15,7 +15,7 @@ Current build artifact names:
 ```text
 Libmem.NET-windows-x64.zip
 Libmem.NET-windows-x64.zip.sha256
-Libmem.NET.2.0.0-preview.1.nupkg
+Libmem.NET.2.0.0.nupkg
 ```
 
 The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. The exact-version `.nupkg` is also published on nuget.org; local feeds remain useful for development and pre-publication acceptance.
@@ -56,16 +56,16 @@ It is more operationally complex than consuming a prebuilt package.
 
 ## 3. NuGet package
 
-`Libmem.NET 2.0.0-preview.1` is publicly available through nuget.org and was published by the release workflow with Trusted Publishing (OIDC). The same workflow remains the publication path for future versions:
+`Libmem.NET 2.0.0-preview.1` is publicly available through nuget.org and was published by the release workflow with Trusted Publishing (OIDC). Stable `2.0.0` uses the same publication path after candidate and release-branch validation:
 
 ```text
 Package ID: Libmem.NET
 Status: validated for Windows x64 / .NET 8
-Publication: nuget.org via Trusted Publishing (OIDC); 2.0.0-preview.1 published and consumer-tested
+Publication: nuget.org via Trusted Publishing (OIDC); preview.1 published/consumer-tested, 2.0.0 pending release gates
 Target: Windows x64 / .NET 8
 ```
 
-The package ID is fixed as `Libmem.NET`. Development packages use a commit-qualified prerelease version derived from `VERSION`, such as `2.0.0-preview.1.dev.<commit>`, rather than reusing a published version. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
+The package ID is fixed as `Libmem.NET`. Development packages use a commit-qualified development version derived from `VERSION`; with the stable base this is `2.0.0-dev.<commit>`. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
 
 ### Package layout
 
@@ -94,13 +94,13 @@ After building Libmem.NET x64:
 .\eng\package-nuget.ps1 -Configuration Release
 ```
 
-For the exact prepared preview instead of a commit-qualified development package:
+For the exact stable candidate instead of a commit-qualified development package:
 
 ```powershell
-.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.0.0-preview.1
+.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.0.0
 ```
 
-The automatic Build gate packages the exact `VERSION` and validates restore/run/publish against it. Default local development packages use `2.0.0-preview.1.dev.<commit>`; stable base versions use `<version>-dev.<commit>`.
+The automatic Build gate packages the exact `VERSION` and validates restore/run/publish against it. Default local development packages derived from stable `2.0.0` use `2.0.0-dev.<commit>`.
 
 The script reads `VERSION`, resolves the current Git commit, validates the required x64 binaries, creates the local package, and immediately runs the package layout/provenance verifier.
 
@@ -187,6 +187,6 @@ The successful `2.0.0-preview.1` publication proves the current Trusted Publishi
 
 ## Current recommendation
 
-For normal Windows x64 / .NET 8 PackageReference consumption, use public `Libmem.NET 2.0.0-preview.1` with prerelease versions enabled. Runtime ZIP, source/submodule and reusable-workflow integration remain available for consumers that need binary bundles or exact source provenance. Historical v1.0.0 remains available under its original names.
+For normal Windows x64 / .NET 8 PackageReference consumption before the stable release completes, use public `Libmem.NET 2.0.0-preview.1` with prerelease versions enabled. After `2.0.0` is published, consumers should prefer the stable package. Runtime ZIP, source/submodule and reusable-workflow integration remain available for consumers that need binary bundles or exact source provenance. Historical v1.0.0 remains available under its original names.
 
 See [RELEASES.md](RELEASES.md) for release history, support boundaries and versioning, and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the next publication.

@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-Current naming migration: assembly and namespace are unified as `Libmem.NET`, requiring consumers to recompile. This is an explicit identity change to the previous freeze decision; behavior contracts are preserved. Stable publication of the new identity requires migration acceptance. See the [migration guide](docs/MIGRATION.md).
+The naming migration has completed preview acceptance: assembly and namespace are unified as `Libmem.NET`, requiring consumers to recompile. Behavior contracts remain preserved; current work is **2.0.0 stable release preparation**. See the [migration guide](docs/MIGRATION.md).
 
 > Current strategy: **x64 first; x86 deferred.**
 
@@ -38,9 +38,9 @@ ProcessSession
 
 Snapshots, caches, entities, game state, event state, IPC, and game-version adaptation belong to consumers.
 
-## Current phase: v2.0.0-preview.1 — Post-release stabilization
+## Current phase: v2.0.0 — Stable release preparation
 
-The former `LibmemCli v1.0.0` is released. The mainline now uses **2.0.0-preview.1** for the breaking namespace/assembly migration to `Libmem.NET`. The preview is published on GitHub and nuget.org and has passed public PackageReference acceptance. The current phase is post-release stabilization and documentation consistency auditing while preserving member behavior and native ABI. x86 remains deferred.
+The former `LibmemCli v1.0.0` is released. **2.0.0-preview.1** completed GitHub/NuGet prerelease and public PackageReference acceptance with no code, Public API, or package-layout issue requiring a `preview.2`. The same stabilized line is now promoted to a **2.0.0** stable candidate, with candidate CI and a `release/v2.0.0` dry run required before any stable tag / GitHub Release / NuGet publication. x86 remains deferred.
 
 Current audit priorities:
 
@@ -148,7 +148,7 @@ Focus:
 - manifest / SHA-256;
 - GitHub Release;
 - reusable workflow;
-- evaluate NuGet or a more standard consumption model (a local x64 `.nupkg` plus independent `PackageReference` consumer test is established; public publication still requires full-path acceptance).
+- evaluate NuGet or a more standard consumption model (local x64 packaging, public prerelease publication, independent PackageReference restore/build/run/publish, and Trusted Publishing have completed end-to-end acceptance).
 
 Official releases publish only:
 

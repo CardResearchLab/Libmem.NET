@@ -1,17 +1,17 @@
-# LibmemCli 1.0.0 → Libmem.NET 2.0.0-preview.1 migration
+# LibmemCli 1.0.0 → Libmem.NET 2.0.0 migration
 
-旧名 `LibmemCli v1.0.0` 已发布。本次命名空间与程序集身份变化破坏源码和二进制兼容性，因此新版本为 `2.0.0-preview.1`，不覆盖旧版 `v1.0.0`。所有消费者和依赖旧程序集的中间库都必须重新编译。
+旧名 `LibmemCli v1.0.0` 已发布。本次命名空间与程序集身份变化破坏源码和二进制兼容性，因此稳定版本线升级为 `2.0.0`，不覆盖旧版 `v1.0.0`。所有消费者和依赖旧程序集的中间库都必须重新编译。
 
-The released `LibmemCli v1.0.0` keeps its tag and assets. This breaking identity migration starts the new major version at `2.0.0-preview.1`, rather than reusing `1.0.0`.
+The released `LibmemCli v1.0.0` keeps its tag and assets. This breaking identity migration uses the new `2.0.0` major version rather than reusing `1.0.0`; `2.0.0-preview.1` was the published prerelease used to validate the new identity.
 
-| Metadata | Preview value |
+| Metadata | Stable value |
 | --- | --- |
-| VERSION / NuGet version / informational version | `2.0.0-preview.1` |
+| VERSION / NuGet version / informational version | `2.0.0` |
 | AssemblyVersion / AssemblyFileVersion | `2.0.0.0` |
-| Release tag | `v2.0.0-preview.1` |
+| Release tag | `v2.0.0` |
 | NuGet PackageId | `Libmem.NET` |
 
-The preview tag `v2.0.0-preview.1` and the matching `Libmem.NET 2.0.0-preview.1` package are published. The package remains a prerelease and consumers must explicitly allow prerelease versions where their tooling requires it.
+`v2.0.0-preview.1` remains the published prerelease that validated the migration. Stable `2.0.0` promotes the same accepted identity and contracts; the stable tag/package are created only after the final release gates pass.
 
 The product and NuGet PackageId remain `Libmem.NET`. The managed namespace and assembly now also use `Libmem.NET`; the former `LibmemCli` identity is intentionally replaced. This requires recompilation of existing consumers.
 
@@ -51,12 +51,12 @@ NuGet uses the same PackageId with the new managed assets. No dual namespace com
 3. For PackageReference, remove any former `HearthstoneModding.LibmemCli` reference. If already using PackageId `Libmem.NET`, update its version explicitly:
 
    ```xml
-   <PackageReference Include="Libmem.NET" Version="2.0.0-preview.1" />
+   <PackageReference Include="Libmem.NET" Version="2.0.0" />
    ```
 
-   The preview is available directly from nuget.org. Visual Studio's package browser requires **Include prerelease**; command-line consumers can install the exact version with `dotnet add package Libmem.NET --version 2.0.0-preview.1`. The GitHub Release `.nupkg` remains available for exact-version/offline local-feed use.
+   For stable consumption, use `Libmem.NET 2.0.0` after publication. During candidate validation, the already published `2.0.0-preview.1` remains available from nuget.org, while the exact `2.0.0` candidate `.nupkg` can be validated from the build/release dry-run artifacts.
 4. Confirm the rebuilt output contains `Libmem.NET.dll`, `libmem.dll`, `Ijwhost.dll` and IntelliSense XML. Run the consumer's process/memory calls and the Hook/VMT/Injector paths it actually uses.
 
-Runtime ZIP and NuGet packages include this guide and `CHANGELOG.md`. GitHub downloads and nuget.org publication remain separate release gates; both gates completed successfully for `2.0.0-preview.1`.
+Runtime ZIP and NuGet packages include this guide and `CHANGELOG.md`. GitHub downloads and nuget.org publication remain separate release gates; both gates completed successfully for `2.0.0-preview.1` and are repeated independently for stable `2.0.0`.
 
-The implementation and acceptance plan is [LIBMEM_NET_MIGRATION_PLAN.md](LIBMEM_NET_MIGRATION_PLAN.md). Default Windows CI verifies Release x64 compilation, the example, all runtime suites, local NuGet restore/run/publish and runtime package integrity; Debug x64 remains an optional manual check. The published preview also has a separate nuget.org-only consumer smoke test.
+The implementation and acceptance plan is [LIBMEM_NET_MIGRATION_PLAN.md](LIBMEM_NET_MIGRATION_PLAN.md). Default Windows CI verifies Release x64 compilation, the example, all runtime suites, local NuGet restore/run/publish and runtime package integrity; Debug x64 remains an optional manual check. Public package smoke testing is run against a version only after that version exists on nuget.org.

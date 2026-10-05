@@ -2,7 +2,7 @@
 
 Scope: Windows x64 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. Do not recreate that tag or replace its assets. `Libmem.NET 2.0.0-preview.1` is published as a GitHub prerelease and on nuget.org; its tagged Release, Trusted Publishing/OIDC push, and public consumer smoke test all completed successfully. Numeric assembly/file versions are `2.0.0.0`. The checklist below remains the reusable gate for later versions.
+Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. Do not recreate that tag or replace its assets. `Libmem.NET 2.0.0-preview.1` is published as a GitHub prerelease and on nuget.org; its tagged Release, Trusted Publishing/OIDC push, and public consumer smoke test all completed successfully. The current stable candidate is `2.0.0`; numeric assembly/file versions remain `2.0.0.0`. The checklist below is the gate for the stable release.
 
 ## Repository acceptance
 
@@ -18,7 +18,7 @@ Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. 
 | Ownership / disposal contracts | Session/resource idempotency and target-exit cleanup pass; finalizers do not perform remote restoration. |
 | Error / sentinel contracts | Argument, definite failure, normal miss, empty scan, zero-size and architecture/protection checks pass. |
 | Runtime ZIP integrity | Manifest v2, file inventory/hashes, archive checksum, exact commit, version, platform and configuration are verified. |
-| NuGet package layout | Package layout, XML documentation and commit provenance are verified. |
+| NuGet package layout | Package layout, XML documentation, commit provenance, `PackageReadmeFile`, and the English + 简体中文 package README sections are verified. |
 | Independent NuGet consumer | PackageReference restore/build/run/publish passes; native dependencies reach output; non-x64 consumers fail. |
 | Release notes | Rendered from the matching CHANGELOG section and verified manifest/checksum. |
 | GitHub Release safety | `release/v*` is dry-run only; `gh release create` is tag-only; no automatic branch deletion. |
@@ -26,7 +26,7 @@ Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. 
 
 ## Publication prerequisites — verify for each future version
 
-- [ ] Select a version that accounts for the breaking `LibmemCli` → `Libmem.NET` identity migration; update `VERSION`, assembly metadata and CHANGELOG together.
+- [x] Select stable `2.0.0` for the breaking `LibmemCli` → `Libmem.NET` identity migration; update `VERSION`, assembly metadata, CHANGELOG and NuGet package-page metadata together.
 - [ ] Confirm green Release x64 Build results on the exact release candidate.
 - [ ] Verify NuGet account-side setup: Trusted Publishing policy for `CardResearchLab/Libmem.NET` + `release.yml`, and GitHub Actions `NUGET_USER` secret. Their live readiness is not established by source review.
 - [ ] Create `release/v<version>` from that candidate and verify the complete dry run. It must build and validate ZIP/NuGet and render notes, with all three external publication steps skipped.

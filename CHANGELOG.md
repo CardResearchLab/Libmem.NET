@@ -2,10 +2,22 @@
 
 ## Unreleased
 
+No changes yet.
+
+## 2.0.0 - 2026-10-06
+
+### Stable release
+
+- Promote the validated `2.0.0-preview.1` line to the first stable release under the `Libmem.NET` identity.
+- Preserve the public API baseline, native ABI mapping, ownership model, exception behavior, runtime layout, and pinned rdbo/libmem revision from the validated preview.
+- Keep the official support target at Windows x64 / .NET 8; x86 remains outside the supported Release and NuGet scope.
+
 ### Documentation / Packaging
 
-- Added a NuGet-specific bilingual package README with English as the primary language and a complete Simplified Chinese translation.
-- Expanded the NuGet package description and added bilingual English/Chinese package release notes for `2.0.0-preview.1`.
+- Add a NuGet-specific bilingual package README with English as the primary language and a complete Simplified Chinese translation.
+- Update NuGet package description and bilingual English/Chinese release notes for `2.0.0`.
+- Verify that the packaged README contains both English and Simplified Chinese sections.
+- Retain the split release safety model: release branches dry-run exact artifacts, tags create GitHub downloads, and NuGet publication remains an explicit manual Trusted Publishing step.
 
 ## 2.0.0-preview.1 - 2026-10-05
 
