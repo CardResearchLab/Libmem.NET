@@ -1,6 +1,6 @@
 # Libmem.NET 开发路线图
 
-当前命名迁移：程序集和 namespace 统一为 `Libmem.NET`，旧消费者需要重新编译。这是原有冻结路线的一次明确身份变更；功能契约不变，迁移验收完成前不宣称新身份已完成稳定发布。参见 [迁移指南](docs/MIGRATION.md)。
+当前命名迁移已完成 preview 验收：程序集和 namespace 统一为 `Libmem.NET`，旧消费者需要重新编译。功能契约保持不变；当前工作进入 **2.0.0 正式版发布准备**。参见 [迁移指南](docs/MIGRATION.md)。
 
 > 当前策略：**x64 主线优先，x86 延后。**
 
@@ -38,9 +38,9 @@ ProcessSession
 
 Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适配属于调用方。
 
-## 当前阶段：v2.0.0-preview.1 — 发布后稳定化验收
+## 当前阶段：v2.0.0 — 正式版发布准备
 
-旧名 `LibmemCli v1.0.0` 已发布。主线的命名空间与程序集统一为 `Libmem.NET`；**2.0.0-preview.1** 已作为 GitHub prerelease 与 nuget.org prerelease 发布，并完成公开 PackageReference 消费验收。当前阶段继续做发布后稳定化与文档一致性审计，保持既有成员行为与 native ABI。x86 继续延后。
+旧名 `LibmemCli v1.0.0` 已发布。**2.0.0-preview.1** 已作为 GitHub / NuGet prerelease 完成公开消费验收，未发现需要 `preview.2` 的代码、Public API 或包布局问题。当前将同一稳定化代码线提升为 **2.0.0** 正式候选，先完成候选 CI 与 `release/v2.0.0` dry run，再决定正式 tag / GitHub Release / NuGet 发布。x86 继续延后。
 
 当前审计重点：
 
@@ -153,7 +153,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - manifest / SHA-256；
 - GitHub Release；
 - 可复用 workflow；
-- NuGet 或更标准的消费方式评估（已建立本地 x64 `.nupkg` + 独立 `PackageReference` 消费者验证，公开发布仍待全链路验收）。
+- NuGet 或更标准的消费方式评估（已完成本地 x64 `.nupkg`、公开 prerelease、独立 `PackageReference` restore/build/run/publish 与 Trusted Publishing 全链路验收）。
 
 正式 Release 只发布：
 
