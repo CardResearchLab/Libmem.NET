@@ -40,9 +40,13 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          $version = "${{ inputs.package-version }}"
-          if ([string]::IsNullOrWhiteSpace($version)) {
-            $version = (Get-Content .\VERSION -Raw).Trim()
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $version = "${{ inputs.package-version }}"
+          }
+          else {
+            # Pull requests validate the last known published package.
+            # The candidate VERSION may not exist on nuget.org yet.
+            $version = "2.0.0-preview.1"
           }
           if ([string]::IsNullOrWhiteSpace($version)) {
             throw "Package version is empty."
