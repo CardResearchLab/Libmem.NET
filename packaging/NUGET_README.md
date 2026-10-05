@@ -9,10 +9,10 @@ Libmem.NET is a Windows-focused C++/CLI wrapper for [rdbo/libmem](https://github
 ## Installation
 
 ```powershell
-dotnet add package Libmem.NET --version 2.0.0-preview.1
+dotnet add package Libmem.NET --version 2.0.0
 ```
 
-Because this is a preview release, you can also select the prerelease package from your NuGet client.
+`2.0.0` is the stable package line for the Libmem.NET identity.
 
 ## Highlights
 
@@ -61,9 +61,9 @@ The package carries the managed assembly and the required Windows x64 native run
 
 x86 source/build configuration may exist in the repository, but x86 is not part of the current official NuGet support scope.
 
-## 2.0 preview migration note
+## 2.0 migration note
 
-`2.0.0-preview.1` completes the public identity migration from `LibmemCli` to `Libmem.NET`.
+`2.0.0` is the first stable release under the `Libmem.NET` identity. The breaking identity migration was introduced and validated in `2.0.0-preview.1`.
 
 Existing v1.0.0 consumers must update assembly references, namespaces, paths, and any reflection strings that use the old identity, then rebuild their applications. Renaming the old DLL is not sufficient.
 
@@ -101,7 +101,7 @@ Libmem.NET 是一个面向 Windows 的 [rdbo/libmem](https://github.com/rdbo/lib
 dotnet add package Libmem.NET --version 2.0.0-preview.1
 ```
 
-由于当前是预览版本，也可以在 NuGet 客户端中启用“包括预发行版”后选择安装。
+`2.0.0` 是 Libmem.NET 新身份下的稳定包版本。
 
 ## 主要功能
 
@@ -150,9 +150,9 @@ foreach (var module in session.Modules.Enumerate())
 
 仓库中可能仍保留 x86 源码或构建配置，但 x86 当前不属于 NuGet 正式支持范围。
 
-## 2.0 预览版迁移说明
+## 2.0 迁移说明
 
-`2.0.0-preview.1` 完成了公开身份从 `LibmemCli` 到 `Libmem.NET` 的迁移。
+`2.0.0` 是 `Libmem.NET` 新身份下的首个稳定版本；这次破坏兼容性的身份迁移已在 `2.0.0-preview.1` 中引入并完成验证。
 
 现有 v1.0.0 使用者需要更新程序集引用、命名空间、路径以及使用旧身份的反射字符串，并重新编译应用。仅重命名旧 DLL 无法完成迁移。
 
