@@ -71,6 +71,14 @@ try
     Marshal.Copy(sourceCode, 0, hookSource, sourceCode.Length);
     Marshal.Copy(destinationCode, 0, hookDestination, destinationCode.Length);
 
+    var currentProcess = NativeMethods.GetCurrentProcess();
+    if (!NativeMethods.FlushInstructionCache(currentProcess, hookSource, (nuint)sourceCode.Length)
+        || !NativeMethods.FlushInstructionCache(currentProcess, hookDestination, (nuint)destinationCode.Length))
+    {
+        throw new InvalidOperationException(
+            $"Could not flush generated Hook test code. Win32Error={Marshal.GetLastWin32Error()}");
+    }
+
     Console.WriteLine(
         $"READY pid={Environment.ProcessId} address=0x{allocation.ToInt64():X} size={allocationSize} " +
         $"hookSource=0x{hookSource.ToInt64():X} hookDestination=0x{hookDestination.ToInt64():X}");
@@ -112,6 +120,16 @@ internal delegate int NoArgsDelegate();
 
 internal static class NativeMethods
 {
+    [DllImport("kernel32.dll")]
+    internal static extern IntPtr GetCurrentProcess();
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool FlushInstructionCache(
+        IntPtr process,
+        IntPtr baseAddress,
+        nuint size);
+
     [DllImport("kernel32.dll", SetLastError = true)]
     internal static extern IntPtr VirtualAlloc(
         IntPtr address,
