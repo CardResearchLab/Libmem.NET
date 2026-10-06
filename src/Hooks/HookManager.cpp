@@ -1,5 +1,6 @@
 #include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
+#include <vector>
 
 using namespace System;
 namespace Libmem::NET {
@@ -52,7 +53,19 @@ bool HookHandle::Remove() {
             return true;
         }
         auto p=proc(target_);
-        ok=LM_UnhookCodeEx(&p,native_address(from_,"source"),native_address(trampoline_,"trampoline"),native_size(size_,"size"))!=LM_FALSE;
+        auto source=native_address(from_,"source");
+        auto trampoline=native_address(trampoline_,"trampoline");
+        auto size=native_size(size_,"size");
+
+        // Pinned libmem changes the source page to XRW before reading the
+        // trampoline, then returns early without restoring the old protection
+        // if that read fails. Probe the trampoline first so a definitely
+        // unreadable trampoline cannot trigger that upstream side effect.
+        std::vector<lm_byte_t> trampolineProbe(size);
+        if(LM_ReadMemoryEx(&p,trampoline,trampolineProbe.data(),size)!=size)
+            return false;
+
+        ok=LM_UnhookCodeEx(&p,source,trampoline,size)!=LM_FALSE;
     } else {
         ok=LM_UnhookCode(native_address(from_,"source"),native_address(trampoline_,"trampoline"),native_size(size_,"size"))!=LM_FALSE;
     }
