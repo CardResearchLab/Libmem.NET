@@ -38,55 +38,89 @@ ProcessSession
 
 Snapshots, caches, entities, game state, event state, IPC, and game-version adaptation belong to consumers.
 
-## Current phase: v2.0.0 — Stable release preparation
+## Current phase: v2.1.0 — Hook / VMT Hardening
 
-The former `LibmemCli v1.0.0` is released. **2.0.0-preview.1** completed GitHub/NuGet prerelease and public PackageReference acceptance with no code, Public API, or package-layout issue requiring a `preview.2`. The same stabilized line is now promoted to a **2.0.0** stable candidate, with candidate CI and a `release/v2.0.0` dry run required before any stable tag / GitHub Release / NuGet publication. x86 remains deferred.
+`2.0.0` was released on 2026-10-06 and establishes the stable Windows x64 / .NET 8 assembly, NuGet, runtime archive, checksum, and Public API baseline. 2.1.0 does not perform another identity migration and does not intentionally introduce breaking changes.
 
-Current audit priorities:
+The 2.1.0 goal is:
 
-1. freeze the managed namespace, public types, method names, signatures, and overload shapes;
-2. define `ProcessSession` / Manager behavior for target identity, process exit, and disposal;
-3. freeze ownership and idempotency semantics for `RemoteAllocation`, `HookHandle`, `VmtManager`, and `InjectedModuleHandle`;
-4. normalize null/invalid arguments, normal misses, native failures, return sentinels, and exception semantics;
-5. remove public APIs that exist only for v0.x migration when carrying them into v1.0 would create permanent compatibility debt;
-6. reconcile XML IntelliSense, `docs/API.md`, and the committed public API baseline;
-7. identify any design that would otherwise force a post-v1.0 breaking change.
+> Keep the 2.0.0 Public API compatible while moving Hook / VMT from "usable" to "well-defined failure paths, stable ownership, and complete runtime coverage."
 
-This phase still excludes Snapshot, GameState, Entity, IPC, Hearthstone-specific behavior, and game-version logic.
+Current audit findings:
 
-Completed freeze cleanup: the temporary v0.x `MemoryManager` forwarding aliases for `DeepPointer / DataScan / PatternScan / SigScan` have been removed. Session-bound scanning is frozen on `ProcessSession.Scanner`, while the static `NativeApi.*` compatibility facade remains.
+- `HookManager.Install` returns an owning `HookHandle` with trampoline and patched-byte metadata;
+- `HookHandle.Remove / Dispose` are idempotent after successful removal and the finalizer never rewrites target code from the GC thread;
+- `VmtManager` works around the pinned libmem reset/free use-after-free path and exposes explicit Hook / Unhook / Reset / Dispose operations;
+- current runtime tests cover basic hook redirection, trampoline execution, Remove/Dispose idempotency, and VMT Hook/Unhook/Reset/Dispose;
+- systematic coverage is still missing for invalid inputs, duplicate/conflicting installation, native failures, target exit, failure-state preservation, external-process hooks, and documented threading/lifetime boundaries.
 
-Completed contract freeze: target-process exit does not implicitly dispose `ProcessSession`; the bound identity remains readable, `IsAlive()` returns false, `Refresh()` returns null, and Manager properties remain accessible. A universal Manager liveness preflight is intentionally avoided so exact external-process identity checks do not pollute read/write/scan hot paths.
+### 2.1.0 work items
 
-Completed freeze cleanup: the early convenience `ProcessInfo.Read / Write / ReadInt32 / WriteInt32 / SigScan` methods have been removed. `ProcessInfo` now keeps only identity-related behavior through `IsAlive()`; memory and scanning belong to the `ProcessSession` Managers, while the static `NativeApi.*` compatibility facade remains.
+1. **Managed argument and state contracts**
+   - audit zero/bad-address/width handling for source, destination, and trampoline addresses;
+   - define behavior for disposed sessions, exited targets, repeated Remove, and Remove after Dispose;
+   - avoid adding an expensive universal process-enumeration preflight to every Hook hot path.
 
-Completed freeze cleanup: audited XML IntelliSense and `docs/API.md` against the frozen managed surface, completed documentation for the recommended `ProcessSession` / Manager / ownership members, and explicitly retained `ProcessSession.Allocate` as an ownership convenience. This does not change the public API baseline or runtime behavior.
+2. **Hook install/remove failure paths**
+   - verify `LM_HookCodeEx` failure cannot expose a partially installed managed handle;
+   - verify `LM_UnhookCodeEx` failure preserves `HookHandle` ownership for explicit retry;
+   - add duplicate-hook, overlapping-source, and invalid-destination regression scenarios;
+   - preserve the static `Libmem.HookCode` compatibility-facade semantics while the Manager layer continues to promote definite failures.
 
-Completed contract freeze: `ProcessInfo` is now library-created read-only identity/metadata. Consumers can no longer rewrite `Pid / StartTime` or fabricate an empty identity through a public default constructor, so `IsAlive()`, `Open(ProcessInfo)`, and the PID + StartTime exact-identity model share the same immutable foundation.
+3. **Trampoline / instruction boundaries**
+   - validate `PatchedBytes` and trampoline metadata consistency;
+   - add runtime coverage for short functions, instruction boundaries, and relative-control-flow cases;
+   - do not reimplement native libmem relocation/disassembly logic in the managed layer.
 
-Completed freeze cleanup: `ModuleInfo` is now a Libmem.NET-created read-only module descriptor. Consumers can no longer rewrite `Base / End / Size / Name / Path` and then pass a forged or mutated native module record back into unload or symbol APIs.
+4. **VMT lifetime hardening**
+   - add repeated Hook/Unhook, untracked-index, Reset-reuse, and Dispose-failure tests;
+   - define replacement-address and index argument contracts;
+   - keep VMT local-process-only rather than inventing a remote VMT abstraction.
 
-Completed freeze cleanup: `ThreadInfo` is now a Libmem.NET-created read-only thread descriptor. Consumers can no longer rewrite `Id / OwnerPid` and then pass a forged or mutated native thread record back into `GetThreadProcess`.
+5. **Independent runtime tests**
+   - retain current self-process Hook/VMT coverage;
+   - add external-process Hook lifecycle tests using `Libmem.NET.TestTarget`;
+   - cover owning-handle state convergence after target exit;
+   - keep Windows x64 Release as the default CI requirement.
 
-Completed freeze cleanup: `SymbolInfo` is now a Libmem.NET-created read-only symbol result. Consumers can read `Address / Name` but cannot construct or mutate forged symbol results.
+6. **Consumer documentation and samples**
+   - document Hook/VMT failure, ownership, threading, and target-exit behavior in `docs/API.md`;
+   - add a C# Hook consumer example;
+   - keep the Public API baseline as a merge gate; 2.1.0 should not add unplanned breaking members.
 
-Completed freeze cleanup: `SegmentInfo` is now a Libmem.NET-created read-only memory-segment result. Consumers can read `Base / End / Size / Protection` but cannot construct or mutate forged segment metadata.
+### Explicitly out of scope for 2.1.0
 
-Completed freeze cleanup: `InstructionInfo` is now a Libmem.NET-created deeply read-only instruction result. Scalar/string properties are getter-only and `Bytes` returns a defensive copy so callers cannot mutate the stored instruction state.
+- Mono / Unity / Hearthstone method resolution;
+- Harmony-compatible Patch APIs;
+- GameState / Entity / Snapshot / IPC;
+- game-version adaptation;
+- official x86 support;
+- game-specific Hook policy.
 
-Completed freeze cleanup: `ModuleInfo` now records internal process provenance (PID + StartTime) without expanding its public surface. Session-bound `ModuleManager.Unload` / `SymbolManager` and the static unload overloads reject module descriptors captured from another process identity before native dispatch.
+Those concerns belong to consumers such as StandaloneGameMod, not Libmem.NET.
 
-Completed freeze cleanup: caller-supplied enum contracts are frozen. Undefined `Architecture` values and `MemoryProtection` flags containing unknown bits are rejected with `ArgumentOutOfRangeException` at the managed boundary instead of being forwarded to native libmem.
+### 2.1.0 acceptance
 
-Completed freeze cleanup: embedded NUL characters are rejected before UTF-8/native dispatch while preserving the real public parameter name rather than leaking the internal helper's `value` parameter.
+- Windows x64 Release build passes;
+- all Hook/VMT runtime tests pass;
+- new external-process Hook failure/exit coverage passes;
+- Public API baseline shows no undocumented breaking change;
+- XML IntelliSense / `docs/API.md` match implementation behavior;
+- NuGet consumer restore/build/run smoke passes.
 
-Completed freeze cleanup: empty scan-input semantics are frozen. Empty pattern/mask/signature inputs are managed argument errors; only well-formed non-empty scans that find no match return the native bad-address sentinel.
+## Next: v2.2.0 — Native API Coverage / Upstream Sync
 
-Completed freeze cleanup: zero-size managed contracts are frozen. Read/Write/Set remain no-ops; Windows Protect/static Allocate preserve the pinned libmem page-size semantics; owned `MemoryManager.Allocate(0)` continues to reject zero; CodeLength(0) and empty byte-array disassembly keep their natural zero/empty results.
+After 2.1.0 stabilizes, systematically compare against the pinned rdbo/libmem revision:
 
-Completed freeze cleanup: sentinel / definite-native-failure layering is frozen. FindProcess/FindModule/FindSegment misses remain nullable, symbol/scan/DeepPointer misses retain the native bad-address sentinel, and the low-level static `NativeApi.*` compatibility facade preserves native-style failure values while Manager/ownership APIs only promote failures already defined as definite managed failures.
+- maintain a native → managed API coverage matrix;
+- identify appropriate upstream APIs not yet wrapped;
+- evaluate and update the pinned upstream revision;
+- run ABI / interop / runtime regression;
+- preserve the general-purpose library boundary without application models.
 
-Completed freeze cleanup: the final API consistency audit is complete. The Public API baseline, XML IntelliSense, Manager/static layering, ownership/Dispose idempotency, and consumer documentation have been reconciled, with no remaining contract issue identified that requires a pre-v1.0 breaking change.
+## Completed: v2.0.0 — Stable Libmem.NET identity
+
+2.0.0 completed the identity migration from `LibmemCli` to the `Libmem.NET` namespace, assembly, package, and documentation model. The official target is Windows x64 / .NET 8, and later 2.x work defaults to compatibility with the 2.0.0 Public API baseline.
 
 ## v0.4 — x64 architecture cleanup
 
