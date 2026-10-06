@@ -414,6 +414,8 @@ test_target_source = (root / "tests/Libmem.NET.TestTarget/Program.cs").read_text
 external_process_test_source = (root / "tests/Libmem.NET.ExternalProcessTests/Program.cs").read_text(encoding="utf-8")
 assert "Marshal.AllocHGlobal" in test_target_source
 assert "NativeMethods.VirtualAlloc" in test_target_source
+assert "NativeMethods.VirtualProtect" in test_target_source
+assert "pageExecuteRead = 0x20" in test_target_source
 assert "hookSource=0x" in test_target_source
 assert "hookDestination=0x" in test_target_source
 assert 'command.StartsWith("call "' in test_target_source
@@ -430,6 +432,8 @@ for required_call in [
     "session.Hooks.Install",
     "remoteHook.Trampoline",
     "exitReclaimedHook.Remove",
+    "session.Memory.Free(exitReclaimedHook.Trampoline",
+    "sourceProtectionAfterFailedRemove",
     "NativeApi.FindSegment",
     "session.IsAlive",
     "session.Refresh",
