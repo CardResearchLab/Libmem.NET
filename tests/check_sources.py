@@ -419,6 +419,8 @@ assert "NativeMethods.VirtualAlloc" in test_target_source
 assert "hookSource=0x" in test_target_source
 assert "hookDestination=0x" in test_target_source
 assert 'command.StartsWith("call "' in test_target_source
+assert 'command.StartsWith("protect "' in test_target_source
+assert "NativeMethods.VirtualProtect" in test_target_source
 assert "READY pid=" in test_target_source
 for required_call in [
     "ProcessSession.Open",
@@ -432,7 +434,8 @@ for required_call in [
     "session.Hooks.Install",
     "remoteHook.Trampoline",
     "ExpectedPatchedBytes",
-    "MemoryProtection.None",
+    "SetTargetProtection",
+    "pageNoAccess",
     "retryHook.Remove",
     "ProtectionOf(process!, ready.HookSource)",
     "exitReclaimedHook.Remove",
