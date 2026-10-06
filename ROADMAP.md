@@ -38,55 +38,89 @@ ProcessSession
 
 Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适配属于调用方。
 
-## 当前阶段：v2.0.0 — 正式版发布准备
+## 当前阶段：v2.1.0 — Hook / VMT Hardening
 
-旧名 `LibmemCli v1.0.0` 已发布。**2.0.0-preview.1** 已作为 GitHub / NuGet prerelease 完成公开消费验收，未发现需要 `preview.2` 的代码、Public API 或包布局问题。当前将同一稳定化代码线提升为 **2.0.0** 正式候选，先完成候选 CI 与 `release/v2.0.0` dry run，再决定正式 tag / GitHub Release / NuGet 发布。x86 继续延后。
+`2.0.0` 已于 2026-10-06 正式发布，Windows x64 / .NET 8 的程序集、NuGet 包、运行时 ZIP、校验文件和 Public API 基线已经形成稳定基线。2.1.0 不进行新的命名迁移，也不主动引入 breaking change。
 
-当前审计重点：
+2.1.0 的目标是：
 
-1. 冻结 managed namespace、public 类型、方法名、签名与 overload 形状；
-2. 固定 `ProcessSession` / Manager 的目标进程、退出与 Dispose 行为；
-3. 固定 `RemoteAllocation`、`HookHandle`、`VmtManager`、`InjectedModuleHandle` 的 ownership / 幂等语义；
-4. 统一 null、非法参数、正常 miss、native failure 的返回值与异常契约；
-5. 清理仅为 v0.x 迁移保留、若进入 v1.0 会形成长期负担的 public API；
-6. 核对 XML IntelliSense、`docs/API.md` 与 public API baseline；
-7. 识别任何会迫使 v1.0 之后 breaking change 的设计。
+> 在保持 2.0.0 Public API 兼容的前提下，把 Hook / VMT 从“可用”推进到“失败路径清晰、生命周期稳定、运行时覆盖完整”。
 
-这一阶段仍然不加入 Snapshot、GameState、Entity、IPC、Hearthstone 或游戏版本业务逻辑。
+当前审计结论：
 
-已完成的收口项：`MemoryManager` 上仅用于 v0.x 迁移的 `DeepPointer / DataScan / PatternScan / SigScan` 转发入口已移除，session-bound 扫描统一冻结在 `ProcessSession.Scanner`；静态 `NativeApi.*` 兼容层继续保留。
+- `HookManager.Install` 已统一通过 owning `HookHandle` 返回 trampoline 与 patched-byte 元数据；
+- `HookHandle.Remove / Dispose` 已具有成功后的幂等语义，finalizer 不会在 GC 线程修改目标代码；
+- `VmtManager` 已绕开 pinned libmem 的 reset/free use-after-free 路径，并提供显式 Hook / Unhook / Reset / Dispose；
+- 当前 runtime tests 已覆盖基本 hook 跳转、trampoline 原始调用、Remove/Dispose 幂等，以及 VMT Hook/Unhook/Reset/Dispose；
+- 仍缺少系统化的非法参数、重复/冲突安装、native failure、目标进程退出、失败后状态保持、外部进程 Hook，以及文档化线程/生命周期边界。
 
-已完成的收口项：目标进程退出不会隐式 Dispose `ProcessSession`；Session 保留原始身份元数据，`IsAlive()` 返回 false、`Refresh()` 返回 null，Manager 属性保持可访问。为避免外部进程精确身份检查污染读写/扫描热路径，不对所有 Manager 操作追加统一 liveness preflight。
+### 2.1.0 工作项
 
-已完成的收口项：`ProcessInfo` 上仅用于早期便捷调用的 `Read / Write / ReadInt32 / WriteInt32 / SigScan` 已移除，仅保留与进程身份直接相关的 `IsAlive()`；Memory / Scan 操作统一归属 `ProcessSession` Managers，静态 `NativeApi.*` 兼容层继续保留。
+1. **Managed 参数与状态契约**
+   - 审计 source / destination / trampoline 地址的零值、bad-address 与位宽处理；
+   - 明确 session disposed、target exited、重复 Remove、Dispose 后 Remove 的行为；
+   - 不在所有 Hook 热路径加入昂贵的通用进程枚举 preflight。
 
-已完成的收口项：完成冻结后 managed surface 的 XML IntelliSense / `docs/API.md` 一致性审计；补齐推荐 `ProcessSession` / Manager / ownership 类型的成员说明，并明确 `ProcessSession.Allocate` 作为正式 ownership convenience 保留。该项不改变 Public API baseline 或 runtime 行为。
+2. **Hook 安装 / 卸载失败路径**
+   - 验证 `LM_HookCodeEx` 失败不会留下可观察的半安装 managed handle；
+   - 验证 `LM_UnhookCodeEx` 失败时 `HookHandle` 保留 ownership，允许显式重试；
+   - 增加重复 hook、重叠 source、无效 destination 等回归场景；
+   - 保持 static `Libmem.HookCode` 的兼容 facade 语义，Manager 层继续负责明确的 definite-failure exception。
 
-已完成的收口项：`ProcessInfo` 冻结为由 Libmem.NET 创建的只读身份/元数据对象。消费者不能再修改 `Pid / StartTime` 等字段，也不能通过 public 默认构造器伪造空身份；`IsAlive()`、`Open(ProcessInfo)` 与 PID + StartTime 精确身份模型因此共享同一不可变基础。
+3. **Trampoline / 指令边界**
+   - 验证 `PatchedBytes` 与 trampoline 元数据的一致性；
+   - 对短函数、边界指令、相对跳转等场景补 runtime coverage；
+   - 不在 managed 层重新实现 native libmem 已负责的反汇编/重定位算法。
 
-已完成的收口项：`ModuleInfo` 冻结为由 Libmem.NET 创建的只读模块描述对象。消费者不再能够修改 `Base / End / Size / Name / Path` 后再把伪造或变异后的模块记录传回 Unload / Symbol API。
+4. **VMT 生命周期加固**
+   - 增加重复 Hook/Unhook、未 Hook index、Reset 后复用、Dispose 异常路径测试；
+   - 明确 replacement address / index 参数契约；
+   - 保持 VMT 为 local-process-only，不扩展为远程 VMT 抽象。
 
-已完成的收口项：`ThreadInfo` 冻结为由 Libmem.NET 创建的只读线程描述对象。消费者不再能够修改 `Id / OwnerPid` 后把伪造或变异后的线程记录传回 `GetThreadProcess`。
+5. **独立运行时测试**
+   - 保留当前 self-process Hook/VMT 测试；
+   - 增加基于 `Libmem.NET.TestTarget` 的外部进程 Hook 生命周期测试；
+   - 覆盖 target exit 后 owning handle 的状态收敛；
+   - CI 默认继续只要求 Windows x64 Release。
 
-已完成的收口项：`SymbolInfo` 冻结为由 Libmem.NET 创建的只读符号结果对象。消费者只能读取 `Address / Name`，不能再构造或修改伪造的符号结果。
+6. **消费者文档与示例**
+   - 在 `docs/API.md` 补充 Hook/VMT 的失败、ownership、线程和 target-exit 契约；
+   - 增加 C# Hook consumer 示例；
+   - Public API baseline 作为合并门禁，2.1.0 默认不增加破坏性成员变更。
 
-已完成的收口项：`SegmentInfo` 冻结为由 Libmem.NET 创建的只读内存段结果对象。消费者只能读取 `Base / End / Size / Protection`，不能再构造或修改伪造的 segment 元数据。
+### 2.1.0 明确不做
 
-已完成的收口项：`InstructionInfo` 冻结为由 Libmem.NET 创建的深只读指令结果对象。标量/字符串属性均为 getter-only，`Bytes` 返回 defensive copy，调用方不能通过修改返回数组改变对象内部指令状态。
+- Mono / Unity / Hearthstone 方法解析；
+- Harmony-compatible Patch API；
+- GameState / Entity / Snapshot / IPC；
+- 游戏版本适配；
+- x86 正式支持；
+- 为某个具体游戏增加 Hook policy。
 
-已完成的收口项：`ModuleInfo` 在保持 public surface 不变的前提下记录内部进程 provenance（PID + StartTime）；session-bound `ModuleManager.Unload` 与 `SymbolManager`、以及静态 Unload 重载会拒绝来自其他进程身份的模块描述，避免把外部进程的 module base 传入错误目标的 native 操作。
+这些能力属于调用方（例如 StandaloneGameMod），而不是 Libmem.NET。
 
-已完成的收口项：冻结枚举输入契约。调用方传入未定义 `Architecture` 或包含未知位的 `MemoryProtection` 时，在 managed 边界直接抛出 `ArgumentOutOfRangeException`，不把非法枚举值传入 native libmem。
+### 2.1.0 验收
 
-已完成的收口项：字符串中的 embedded NUL 会在 UTF-8/native dispatch 前被拒绝，并保持真实 public 参数名，不再泄漏内部 helper 的 `value` 参数。
+- Windows x64 Release build 通过；
+- Hook/VMT runtime tests 全部通过；
+- 新增外部进程 Hook 失败/退出路径通过；
+- Public API baseline 无未记录 breaking change；
+- XML IntelliSense / `docs/API.md` 与实现一致；
+- NuGet consumer restore/build/run smoke test 通过。
 
-已完成的收口项：冻结空扫描输入语义。空 pattern/mask/signature 属于 managed 参数错误；只有格式有效且非空的扫描请求未命中时，才返回 native bad-address sentinel。
+## 后续：v2.2.0 — Native API Coverage / Upstream Sync
 
-已完成的收口项：冻结 zero-size managed contract。不会机械地把所有 `size=0` 统一成异常：Read/Write/Set 保持 no-op；Windows Protect/静态 Allocate 保留 pinned libmem 的 page-size 语义；owned `MemoryManager.Allocate(0)` 继续拒绝 0；CodeLength(0) / 空 byte[] 反汇编保持自然 zero/empty 结果。
+2.1.0 稳定后，再系统对照 pinned rdbo/libmem：
 
-已完成的收口项：冻结 sentinel / definite native failure 分层。FindProcess/FindModule/FindSegment miss 保持 null，symbol/scan/DeepPointer miss 保持 native bad-address sentinel；低层静态 `NativeApi.*` 兼容层尽量保留 native-style failure values，而 Manager/ownership API 仅对已定义为“确定失败”的操作提升为 `LibmemException`。
+- 建立 native → managed API coverage 表；
+- 识别合理但尚未封装的 libmem API；
+- 评估并更新 pinned upstream revision；
+- 执行 ABI / interop / runtime regression；
+- 继续保持通用库边界，不引入业务模型。
 
-已完成的收口项：最终 API consistency audit 已完成。Public API baseline、XML IntelliSense、Manager/static 分层、ownership/Dispose 幂等语义与文档已核对，未发现需要在 v1.0 前继续进行 breaking change 的遗留契约问题。
+## 已完成：v2.0.0 — Stable Libmem.NET identity
+
+2.0.0 完成了从旧 `LibmemCli` identity 到 `Libmem.NET` 的 namespace、assembly、package 和文档统一；正式支持目标为 Windows x64 / .NET 8。2.x 后续版本以兼容 2.0.0 Public API 为默认约束。
 
 ## v0.4 — x64 架构整理
 
