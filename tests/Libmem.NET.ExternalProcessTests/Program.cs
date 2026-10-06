@@ -168,6 +168,11 @@ try
     Check(CallTarget(child, ready.HookDestination) == 2,
         "TestTarget Hook destination did not return its expected value.");
 
+    var hookSourceSegment = NativeApi.FindSegment(process!, ready.HookSource)
+        ?? throw new InvalidOperationException("Could not resolve TestTarget Hook source segment.");
+    Check(hookSourceSegment.Protection == MemoryProtection.ExecuteRead,
+        "TestTarget Hook source page must start execute-read for protection-regression coverage.");
+
     using (var remoteHook = session.Hooks.Install(ready.HookSource, ready.HookDestination))
     {
         Check(remoteHook.Source == ready.HookSource,
@@ -290,6 +295,27 @@ try
         "Target-exit HookHandle should start installed.");
     Check(CallTarget(child, ready.HookSource) == 2,
         "Target-exit HookHandle did not redirect source before process exit.");
+
+    var sourceProtectionBeforeFailedRemove =
+        NativeApi.FindSegment(process!, ready.HookSource)?.Protection
+        ?? throw new InvalidOperationException("Could not resolve Hook source protection before failure probe.");
+    Check(sourceProtectionBeforeFailedRemove == MemoryProtection.ExecuteRead,
+        "Hook installation should restore the source page to execute-read.");
+
+    Check(session.Memory.Free(exitReclaimedHook.Trampoline, exitReclaimedHook.PatchedBytes),
+        "Could not invalidate the remote trampoline for the unhook failure probe.");
+    Check(!exitReclaimedHook.Remove(),
+        "HookHandle.Remove should report failure when the live target trampoline is no longer readable.");
+    Check(exitReclaimedHook.IsInstalled,
+        "Failed HookHandle.Remove must preserve ownership for a later cleanup attempt.");
+    Check(CallTarget(child, ready.HookSource) == 2,
+        "Failed HookHandle.Remove must leave the existing source redirection intact.");
+
+    var sourceProtectionAfterFailedRemove =
+        NativeApi.FindSegment(process!, ready.HookSource)?.Protection
+        ?? throw new InvalidOperationException("Could not resolve Hook source protection after failure probe.");
+    Check(sourceProtectionAfterFailedRemove == sourceProtectionBeforeFailedRemove,
+        "Failed HookHandle.Remove must not leave the source page with modified protection.");
 
     child.StandardInput.WriteLine("exit");
     child.StandardInput.Flush();
