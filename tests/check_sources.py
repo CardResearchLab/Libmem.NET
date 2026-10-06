@@ -267,6 +267,18 @@ build_script = (root / "build.ps1").read_text(encoding="utf-8")
 native_build_script = (root / "eng/build-native.ps1").read_text(encoding="utf-8")
 smoke_project = (root / "tests/Libmem.NET.SmokeTests/Libmem.NET.SmokeTests.csproj").read_text(encoding="utf-8")
 hook_project = (root / "tests/Libmem.NET.HookVmtTests/Libmem.NET.HookVmtTests.csproj").read_text(encoding="utf-8")
+hook_runtime_source = (root / "tests/Libmem.NET.HookVmtTests/Program.cs").read_text(encoding="utf-8")
+for required_vmt_failure_probe in [
+    "VMT failure-state backing page",
+    "failureVmt.Reset()",
+    "Failed VmtManager.Reset must leave the manager active for retry.",
+    "VmtManager.Dispose should surface restore failure while retaining ownership.",
+    "Retried VmtManager.Dispose should dispose the manager after restoration succeeds.",
+    "VmtFailureNativeMethods.VirtualAlloc",
+]:
+    assert required_vmt_failure_probe in hook_runtime_source, (
+        f"Hook/VMT runtime tests lost VMT failure-retry coverage: {required_vmt_failure_probe}"
+    )
 injector_project = (root / "tests/Libmem.NET.InjectorTests/Libmem.NET.InjectorTests.csproj").read_text(encoding="utf-8")
 sample_project = (root / "samples/Example.csproj").read_text(encoding="utf-8")
 sample_source = (root / "samples/Example.cs").read_text(encoding="utf-8")
