@@ -42,21 +42,53 @@ static string ResolveTargetDll()
             "Libmem.NET.TestTarget.dll was not found. Build tests/Libmem.NET.TestTarget first or set LIBMEM_NET_TEST_TARGET_DLL.");
 }
 
-static (uint Pid, ulong Address, ulong Size) ParseReady(string line)
+static (uint Pid, ulong Address, ulong Size, ulong HookSource, ulong HookDestination) ParseReady(string line)
 {
     var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-    if (parts.Length != 4 || parts[0] != "READY")
+    if (parts.Length < 2 || parts[0] != "READY")
         throw new InvalidOperationException($"Unexpected TestTarget handshake: {line}");
 
-    uint pid = uint.Parse(parts[1].Split('=', 2)[1], CultureInfo.InvariantCulture);
+    var fields = parts[1..]
+        .Select(part => part.Split('=', 2))
+        .Where(pair => pair.Length == 2)
+        .ToDictionary(pair => pair[0], pair => pair[1], StringComparer.OrdinalIgnoreCase);
 
-    var addressText = parts[2].Split('=', 2)[1];
-    if (!addressText.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-        throw new InvalidOperationException($"Unexpected address in handshake: {addressText}");
+    string Field(string name) =>
+        fields.TryGetValue(name, out var value)
+            ? value
+            : throw new InvalidOperationException($"Handshake is missing {name}: {line}");
 
-    ulong address = ulong.Parse(addressText[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-    ulong size = ulong.Parse(parts[3].Split('=', 2)[1], CultureInfo.InvariantCulture);
-    return (pid, address, size);
+    static ulong HexAddress(string value, string name)
+    {
+        if (!value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException($"Unexpected {name} in handshake: {value}");
+        return ulong.Parse(value[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+    }
+
+    uint pid = uint.Parse(Field("pid"), CultureInfo.InvariantCulture);
+    ulong address = HexAddress(Field("address"), "address");
+    ulong size = ulong.Parse(Field("size"), CultureInfo.InvariantCulture);
+    ulong hookSource = HexAddress(Field("hookSource"), "hookSource");
+    ulong hookDestination = HexAddress(Field("hookDestination"), "hookDestination");
+    return (pid, address, size, hookSource, hookDestination);
+}
+
+static string SendCommand(Process child, string command)
+{
+    child.StandardInput.WriteLine(command);
+    child.StandardInput.Flush();
+    return child.StandardOutput.ReadLine()
+        ?? throw new InvalidOperationException($"TestTarget returned no response for command: {command}");
+}
+
+static int CallTarget(Process child, ulong address)
+{
+    var response = SendCommand(child, $"call 0x{address:X}");
+    const string prefix = "RESULT ";
+    if (!response.StartsWith(prefix, StringComparison.Ordinal))
+        throw new InvalidOperationException($"Unexpected TestTarget call response: {response}");
+
+    return int.Parse(response[prefix.Length..], CultureInfo.InvariantCulture);
 }
 
 Console.WriteLine("Libmem.NET external-process runtime tests");
@@ -85,6 +117,10 @@ try
     var ready = ParseReady(readyLine);
     Check(ready.Pid == (uint)child.Id, "Handshake PID does not match the launched child process.");
     Check(ready.Address != 0 && ready.Size >= 64, "TestTarget returned an invalid allocation.");
+    Check(ready.HookSource != 0 && ready.HookDestination != 0,
+        "TestTarget returned an invalid Hook function address.");
+    Check(ready.HookSource != ready.HookDestination,
+        "TestTarget Hook source and destination must be distinct.");
 
     var process = NativeApi.GetProcess(ready.Pid);
     Check(process is not null, "NativeApi.GetProcess could not resolve the TestTarget process.");
@@ -125,6 +161,38 @@ try
 
     Check(session.Pid == ready.Pid, "ProcessSession attached to the wrong PID.");
     Check(session.IsAlive(), "TestTarget should be alive after attach.");
+
+    // Real cross-process HookManager / HookHandle lifecycle.
+    Check(CallTarget(child, ready.HookSource) == 1,
+        "TestTarget Hook source did not return its original value.");
+    Check(CallTarget(child, ready.HookDestination) == 2,
+        "TestTarget Hook destination did not return its expected value.");
+
+    using (var remoteHook = session.Hooks.Install(ready.HookSource, ready.HookDestination))
+    {
+        Check(remoteHook.Source == ready.HookSource,
+            "Remote HookHandle.Source does not match TestTarget source.");
+        Check(remoteHook.Destination == ready.HookDestination,
+            "Remote HookHandle.Destination does not match TestTarget destination.");
+        Check(remoteHook.Trampoline != 0 && remoteHook.Trampoline != ulong.MaxValue,
+            "Remote HookHandle.Trampoline is invalid.");
+        Check(remoteHook.PatchedBytes > 0,
+            "Remote HookHandle.PatchedBytes must be greater than zero.");
+        Check(remoteHook.IsInstalled && !remoteHook.IsDisposed,
+            "Remote HookHandle should own an installed hook.");
+
+        Check(CallTarget(child, ready.HookSource) == 2,
+            "Remote hook did not redirect TestTarget source to destination.");
+        Check(CallTarget(child, remoteHook.Trampoline) == 1,
+            "Remote trampoline did not execute the original TestTarget source behavior.");
+
+        Check(remoteHook.Remove(), "Remote HookHandle.Remove failed.");
+        Check(!remoteHook.IsInstalled, "Remote HookHandle should report removed.");
+        Check(CallTarget(child, ready.HookSource) == 1,
+            "Remote HookHandle.Remove did not restore TestTarget source behavior.");
+        Check(remoteHook.Remove(),
+            "Remote HookHandle.Remove should be idempotent after successful removal.");
+    }
 
     var foreignModule = NativeApi.EnumModules().FirstOrDefault(module => module is not null)
         ?? throw new InvalidOperationException("Current process exposed no module for provenance validation.");
@@ -212,9 +280,16 @@ try
         }
     }
 
-    child.StandardInput.WriteLine("ping");
-    child.StandardInput.Flush();
-    Check(child.StandardOutput.ReadLine() == "PONG", "TestTarget control channel did not respond to ping.");
+    Check(SendCommand(child, "ping") == "PONG",
+        "TestTarget control channel did not respond to ping.");
+
+    using var exitReclaimedHook = session.Hooks.Install(
+        ready.HookSource,
+        ready.HookDestination);
+    Check(exitReclaimedHook.IsInstalled,
+        "Target-exit HookHandle should start installed.");
+    Check(CallTarget(child, ready.HookSource) == 2,
+        "Target-exit HookHandle did not redirect source before process exit.");
 
     child.StandardInput.WriteLine("exit");
     child.StandardInput.Flush();
@@ -247,6 +322,13 @@ try
     ExpectThrows<InvalidOperationException>(
         () => session.Injector.InjectLibrary("libmemcli-target-exit-probe.dll"),
         "InjectorManager.InjectLibrary should reject a dead target before file resolution.");
+
+    Check(exitReclaimedHook.Remove(),
+        "HookHandle.Remove should treat target-process exit as OS-reclaimed ownership.");
+    Check(!exitReclaimedHook.IsInstalled,
+        "HookHandle should become inactive after target-process exit is observed during Remove.");
+    Check(exitReclaimedHook.Remove(),
+        "HookHandle.Remove should remain idempotent after target-process exit.");
 
     Check(exitReclaimedAllocation.Free(),
         "RemoteAllocation.Free should treat target-process exit as OS-reclaimed ownership.");
