@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 const int allocationSize = 4096;
 const uint memCommitReserve = 0x3000;
 const uint memRelease = 0x8000;
+const uint pageExecuteRead = 0x20;
 const uint pageExecuteReadWrite = 0x40;
 
 static byte[] ReturnConstant(int value, int size = 64)
@@ -79,6 +80,13 @@ try
             $"Could not flush generated Hook test code. Win32Error={Marshal.GetLastWin32Error()}");
     }
 
+    if (!NativeMethods.VirtualProtect(hookSource, (nuint)allocationSize, pageExecuteRead, out _)
+        || !NativeMethods.VirtualProtect(hookDestination, (nuint)allocationSize, pageExecuteRead, out _))
+    {
+        throw new InvalidOperationException(
+            $"Could not protect generated Hook test code as execute-read. Win32Error={Marshal.GetLastWin32Error()}");
+    }
+
     Console.WriteLine(
         $"READY pid={Environment.ProcessId} address=0x{allocation.ToInt64():X} size={allocationSize} " +
         $"hookSource=0x{hookSource.ToInt64():X} hookDestination=0x{hookDestination.ToInt64():X}");
@@ -136,6 +144,14 @@ internal static class NativeMethods
         nuint size,
         uint allocationType,
         uint protection);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool VirtualProtect(
+        IntPtr address,
+        nuint size,
+        uint newProtection,
+        out uint oldProtection);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
