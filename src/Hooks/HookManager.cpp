@@ -1,5 +1,6 @@
 #include "../Libmem.NET.h"
 #include "../Interop/NativeConverter.h"
+#include <vector>
 
 using namespace System;
 namespace Libmem::NET {
@@ -52,7 +53,18 @@ bool HookHandle::Remove() {
             return true;
         }
         auto p=proc(target_);
-        ok=LM_UnhookCodeEx(&p,native_address(from_,"source"),native_address(trampoline_,"trampoline"),native_size(size_,"size"))!=LM_FALSE;
+        auto trampoline=native_address(trampoline_,"trampoline");
+        auto size=native_size(size_,"size");
+
+        // Pinned libmem changes source protection before reading the trampoline.
+        // If that read then fails, LM_UnhookCodeEx returns without restoring the
+        // original source protection. Preflight the complete trampoline bytes so
+        // a recoverable read failure preserves both ownership and source state.
+        std::vector<lm_byte_t> trampoline_probe(static_cast<size_t>(size));
+        if(LM_ReadMemoryEx(&p,trampoline,trampoline_probe.data(),size)!=size)
+            return false;
+
+        ok=LM_UnhookCodeEx(&p,native_address(from_,"source"),trampoline,size)!=LM_FALSE;
     } else {
         ok=LM_UnhookCode(native_address(from_,"source"),native_address(trampoline_,"trampoline"),native_size(size_,"size"))!=LM_FALSE;
     }
