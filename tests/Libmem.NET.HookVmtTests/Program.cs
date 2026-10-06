@@ -7,6 +7,21 @@ static void Check(bool condition, string message)
         throw new InvalidOperationException(message);
 }
 
+static TException ExpectThrows<TException>(Action action, string message)
+    where TException : Exception
+{
+    try
+    {
+        action();
+    }
+    catch (TException ex)
+    {
+        return ex;
+    }
+
+    throw new InvalidOperationException(message);
+}
+
 static byte[] ReturnConstant(int value, int size = 64)
 {
     if (size < 16)
@@ -61,6 +76,27 @@ using var session = NativeApi.Attach((uint)Environment.ProcessId)
 
 var memory = session.Memory;
 
+// Managed HookManager argument/state contracts.
+var zeroSource = ExpectThrows<ArgumentOutOfRangeException>(
+    () => session.Hooks.Install(0, 1),
+    "HookManager.Install should reject a zero source address.");
+Check(zeroSource.ParamName == "source", "Zero source reported the wrong parameter name.");
+
+var zeroDestination = ExpectThrows<ArgumentOutOfRangeException>(
+    () => session.Hooks.Install(1, 0),
+    "HookManager.Install should reject a zero destination address.");
+Check(zeroDestination.ParamName == "destination", "Zero destination reported the wrong parameter name.");
+
+var badSource = ExpectThrows<ArgumentOutOfRangeException>(
+    () => session.Hooks.Install(invalidAddress, 1),
+    "HookManager.Install should reject the bad-address source sentinel.");
+Check(badSource.ParamName == "source", "Bad source reported the wrong parameter name.");
+
+var badDestination = ExpectThrows<ArgumentOutOfRangeException>(
+    () => session.Hooks.Install(1, invalidAddress),
+    "HookManager.Install should reject the bad-address destination sentinel.");
+Check(badDestination.ParamName == "destination", "Bad destination reported the wrong parameter name.");
+
 // HookManager + HookHandle + trampoline lifecycle.
 using var source = memory.Allocate(4096, MemoryProtection.ExecuteReadWrite)
     ?? throw new InvalidOperationException("Could not allocate source code page.");
@@ -101,25 +137,57 @@ Check(!disposeHook.IsInstalled, "HookHandle should report uninstalled after repe
 Check(disposeHook.Remove(), "HookHandle.Remove should remain idempotent after successful Dispose.");
 Check(CallNoArgs(source.Address) == 1, "HookHandle.Dispose did not restore source behavior.");
 
+var disposedSession = NativeApi.Attach((uint)Environment.ProcessId)
+    ?? throw new InvalidOperationException("Could not create disposed-session HookManager coverage.");
+var disposedHooks = disposedSession.Hooks;
+disposedSession.Dispose();
+ExpectThrows<ObjectDisposedException>(
+    () => disposedHooks.Install(0, 0),
+    "Disposed HookManager should reject use before validating hook addresses.");
+
 // VmtManager lifecycle on an isolated page owned by this test process.
 using var vtablePage = memory.Allocate(4096, MemoryProtection.ReadWrite)
     ?? throw new InvalidOperationException("Could not allocate VMT test page.");
 
 const ulong original0 = 0x11112222UL;
 const ulong original1 = 0x55556666UL;
+const ulong original2 = 0x13572468UL;
 const ulong replacement0 = 0x9999AAAAUL;
 const ulong replacement1 = 0xDDDDEEEEUL;
+const ulong replacement0Second = 0xABCDEF01UL;
 
 WritePointer(memory, vtablePage.Address, original0);
 WritePointer(memory, vtablePage.Address + (ulong)IntPtr.Size, original1);
+WritePointer(memory, vtablePage.Address + (ulong)(2 * IntPtr.Size), original2);
 
 var vmt = new VmtManager(vtablePage.Address);
 Check(!vmt.IsDisposed, "VmtManager should start undisposed.");
 Check(vmt.GetOriginal(0) == original0, "VmtManager.GetOriginal returned the wrong initial slot value.");
 
+var zeroReplacement = ExpectThrows<ArgumentOutOfRangeException>(
+    () => vmt.Hook(0, 0),
+    "VmtManager.Hook should reject a zero replacement address.");
+Check(zeroReplacement.ParamName == "replacementAddress", "Zero VMT replacement reported the wrong parameter name.");
+
+var badReplacement = ExpectThrows<ArgumentOutOfRangeException>(
+    () => vmt.Hook(0, invalidAddress),
+    "VmtManager.Hook should reject the bad-address replacement sentinel.");
+Check(badReplacement.ParamName == "replacementAddress", "Bad VMT replacement reported the wrong parameter name.");
+
+Check(vmt.Unhook(2), "VmtManager.Unhook should be idempotent for an untracked in-range slot.");
+Check(ReadPointer(memory, vtablePage.Address + (ulong)(2 * IntPtr.Size)) == original2,
+    "Unhooking an untracked slot should not change its value.");
+
 vmt.Hook(0, replacement0);
 Check(ReadPointer(memory, vtablePage.Address) == replacement0, "VmtManager.Hook did not update slot 0.");
 Check(vmt.GetOriginal(0) == original0, "VmtManager did not preserve the original slot 0 value.");
+
+vmt.Hook(0, replacement0Second);
+Check(ReadPointer(memory, vtablePage.Address) == replacement0Second,
+    "Repeated VmtManager.Hook did not update slot 0 to the latest replacement.");
+Check(vmt.GetOriginal(0) == original0,
+    "Repeated VmtManager.Hook must preserve the first original slot 0 value.");
+
 Check(vmt.Unhook(0), "VmtManager.Unhook failed for slot 0.");
 Check(ReadPointer(memory, vtablePage.Address) == original0, "VmtManager.Unhook did not restore slot 0.");
 
@@ -130,6 +198,14 @@ Check(ReadPointer(memory, vtablePage.Address + (ulong)IntPtr.Size) == replacemen
 vmt.Reset();
 Check(ReadPointer(memory, vtablePage.Address) == original0, "VmtManager.Reset did not restore slot 0.");
 Check(ReadPointer(memory, vtablePage.Address + (ulong)IntPtr.Size) == original1, "VmtManager.Reset did not restore slot 1.");
+
+vmt.Hook(1, replacement1);
+Check(ReadPointer(memory, vtablePage.Address + (ulong)IntPtr.Size) == replacement1,
+    "VmtManager should remain reusable after Reset.");
+Check(vmt.GetOriginal(1) == original1, "VmtManager lost the original slot value after Reset/reuse.");
+Check(vmt.Unhook(1), "VmtManager.Unhook failed after Reset/reuse.");
+Check(ReadPointer(memory, vtablePage.Address + (ulong)IntPtr.Size) == original1,
+    "VmtManager.Unhook did not restore slot 1 after Reset/reuse.");
 
 vmt.Hook(0, replacement0);
 ((IDisposable)vmt).Dispose();
