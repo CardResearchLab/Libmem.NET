@@ -91,6 +91,21 @@ static int CallTarget(Process child, ulong address)
     return int.Parse(response[prefix.Length..], CultureInfo.InvariantCulture);
 }
 
+static ulong ExpectedPatchedBytes(ulong source, ulong destination)
+{
+    var relative = checked((long)destination - (long)source - 5L);
+    var usesRelativeJump = relative >= int.MinValue && relative <= int.MaxValue;
+
+    // Pinned libmem uses a 5-byte rel32 jump when possible, otherwise a
+    // 14-byte absolute jump. The generated source begins with a 10-byte
+    // instruction followed by a 5-byte instruction.
+    return usesRelativeJump ? 10UL : 15UL;
+}
+
+static MemoryProtection ProtectionOf(ProcessInfo process, ulong address) =>
+    NativeApi.FindSegment(process, address)?.Protection
+    ?? throw new InvalidOperationException($"Could not resolve protection for 0x{address:X}.");
+
 Console.WriteLine("Libmem.NET external-process runtime tests");
 
 var targetDll = ResolveTargetDll();
@@ -163,10 +178,41 @@ try
     Check(session.IsAlive(), "TestTarget should be alive after attach.");
 
     // Real cross-process HookManager / HookHandle lifecycle.
+    session.Memory.Protect(ready.HookSource, 4096, MemoryProtection.ExecuteRead);
+    session.Memory.Protect(ready.HookDestination, 4096, MemoryProtection.ExecuteRead);
+    Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+        "Hook source should start ExecuteRead for protection-lifetime coverage.");
+
     Check(CallTarget(child, ready.HookSource) == 1,
         "TestTarget Hook source did not return its original value.");
     Check(CallTarget(child, ready.HookDestination) == 2,
         "TestTarget Hook destination did not return its expected value.");
+
+    // Installation failure must be atomic: an unreadable source cannot produce
+    // a managed handle or leave patched bytes behind.
+    var originalSourceBytes = session.Memory.Read(ready.HookSource, 24);
+    var readableProtection = session.Memory.Protect(
+        ready.HookSource,
+        4096,
+        MemoryProtection.None);
+    try
+    {
+        var installFailure = ExpectThrows<LibmemException>(
+            () => session.Hooks.Install(ready.HookSource, ready.HookDestination),
+            "HookManager.Install should surface an unreadable source as a definite native failure.");
+        Check(installFailure.Operation == "LM_HookCodeEx",
+            "Unreadable-source install failure reported the wrong native operation.");
+    }
+    finally
+    {
+        session.Memory.Protect(ready.HookSource, 4096, readableProtection);
+    }
+
+    Check(session.Memory.Read(ready.HookSource, originalSourceBytes.Length)
+            .SequenceEqual(originalSourceBytes),
+        "Failed HookManager.Install changed source bytes.");
+    Check(CallTarget(child, ready.HookSource) == 1,
+        "Failed HookManager.Install changed source behavior.");
 
     using (var remoteHook = session.Hooks.Install(ready.HookSource, ready.HookDestination))
     {
@@ -176,8 +222,10 @@ try
             "Remote HookHandle.Destination does not match TestTarget destination.");
         Check(remoteHook.Trampoline != 0 && remoteHook.Trampoline != ulong.MaxValue,
             "Remote HookHandle.Trampoline is invalid.");
-        Check(remoteHook.PatchedBytes > 0,
-            "Remote HookHandle.PatchedBytes must be greater than zero.");
+        Check(remoteHook.PatchedBytes == ExpectedPatchedBytes(
+                ready.HookSource,
+                ready.HookDestination),
+            "Remote HookHandle.PatchedBytes did not stop on the expected instruction boundary.");
         Check(remoteHook.IsInstalled && !remoteHook.IsDisposed,
             "Remote HookHandle should own an installed hook.");
 
@@ -192,6 +240,46 @@ try
             "Remote HookHandle.Remove did not restore TestTarget source behavior.");
         Check(remoteHook.Remove(),
             "Remote HookHandle.Remove should be idempotent after successful removal.");
+        Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+            "Successful HookHandle.Remove did not restore source protection.");
+    }
+
+    // A failed explicit Remove must preserve ownership and source protection so
+    // the caller can fix the transient condition and retry deterministically.
+    using (var retryHook = session.Hooks.Install(ready.HookSource, ready.HookDestination))
+    {
+        Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+            "Hook installation did not restore source protection before retry coverage.");
+
+        var trampolineProtection = session.Memory.Protect(
+            retryHook.Trampoline,
+            retryHook.PatchedBytes,
+            MemoryProtection.None);
+        try
+        {
+            Check(!retryHook.Remove(),
+                "HookHandle.Remove should report failure while the trampoline is unreadable.");
+            Check(retryHook.IsInstalled && !retryHook.IsDisposed,
+                "Failed HookHandle.Remove must preserve managed ownership.");
+            Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+                "Failed HookHandle.Remove must not change source protection.");
+        }
+        finally
+        {
+            session.Memory.Protect(
+                retryHook.Trampoline,
+                retryHook.PatchedBytes,
+                trampolineProtection);
+        }
+
+        Check(retryHook.Remove(),
+            "HookHandle.Remove should succeed after the transient trampoline failure is repaired.");
+        Check(!retryHook.IsInstalled,
+            "Retry HookHandle should become inactive after successful removal.");
+        Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+            "Retried HookHandle.Remove did not restore source protection.");
+        Check(CallTarget(child, ready.HookSource) == 1,
+            "Retried HookHandle.Remove did not restore source behavior.");
     }
 
     var foreignModule = NativeApi.EnumModules().FirstOrDefault(module => module is not null)
