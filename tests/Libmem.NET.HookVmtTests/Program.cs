@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Libmem.NET;
 using NativeApi = global::Libmem.NET.Libmem;
 
@@ -224,4 +225,116 @@ catch (ObjectDisposedException)
 }
 Check(disposedVmtThrows, "VmtManager should reject operations after Dispose.");
 
+
+// VmtManager failure-state ownership and retry lifecycle.
+// Free the backing page while a hook is tracked so LM_VmtUnhook cannot change
+// its protection. Reset/Dispose must fail without discarding bookkeeping; after
+// remapping the same address, both operations must be retryable.
+using var failurePage = memory.Allocate(4096, MemoryProtection.ReadWrite)
+    ?? throw new InvalidOperationException("Could not allocate VMT failure-state test page.");
+
+const ulong failureOriginal = 0x24681357UL;
+const ulong failureReplacement = 0xDEADBEEFUL;
+var failureAddress = failurePage.Address;
+
+WritePointer(memory, failureAddress, failureOriginal);
+var failureVmt = new VmtManager(failureAddress);
+failureVmt.Hook(0, failureReplacement);
+Check(ReadPointer(memory, failureAddress) == failureReplacement,
+    "VMT failure-state hook did not update the test slot.");
+
+Check(failurePage.Free(), "Could not release the VMT failure-state backing page.");
+
+var resetFailure = ExpectThrows<LibmemException>(
+    () => failureVmt.Reset(),
+    "VmtManager.Reset should fail when the tracked VTable page no longer exists.");
+Check(resetFailure.Operation == "LM_VmtUnhook",
+    "VmtManager.Reset reported the wrong native operation for restore failure.");
+Check(!failureVmt.IsDisposed,
+    "Failed VmtManager.Reset must leave the manager active for retry.");
+Check(failureVmt.GetOriginal(0) == failureOriginal,
+    "Failed VmtManager.Reset must preserve tracked original metadata.");
+
+var remapped = VmtFailureNativeMethods.VirtualAlloc(
+    new IntPtr(unchecked((long)failureAddress)),
+    (nuint)4096,
+    VmtFailureNativeMethods.MemCommit | VmtFailureNativeMethods.MemReserve,
+    VmtFailureNativeMethods.PageReadWrite);
+Check(remapped != IntPtr.Zero && unchecked((ulong)remapped.ToInt64()) == failureAddress,
+    "Could not remap the VMT failure-state page at its original address.");
+
+try
+{
+    WritePointer(memory, failureAddress, failureReplacement);
+    failureVmt.Reset();
+    Check(ReadPointer(memory, failureAddress) == failureOriginal,
+        "Retried VmtManager.Reset did not restore the original slot.");
+    Check(!failureVmt.IsDisposed,
+        "Successful VmtManager.Reset should keep the manager reusable.");
+
+    failureVmt.Hook(0, failureReplacement);
+    Check(ReadPointer(memory, failureAddress) == failureReplacement,
+        "VmtManager was not reusable after retrying Reset.");
+
+    Check(VmtFailureNativeMethods.VirtualFree(
+            remapped,
+            0,
+            VmtFailureNativeMethods.MemRelease),
+        "Could not release the remapped VMT page for Dispose failure coverage.");
+    remapped = IntPtr.Zero;
+
+    var disposeFailure = ExpectThrows<LibmemException>(
+        () => ((IDisposable)failureVmt).Dispose(),
+        "VmtManager.Dispose should surface restore failure while retaining ownership.");
+    Check(disposeFailure.Operation == "LM_VmtUnhook",
+        "VmtManager.Dispose reported the wrong native operation for restore failure.");
+    Check(!failureVmt.IsDisposed,
+        "Failed VmtManager.Dispose must leave the manager active for retry.");
+    Check(failureVmt.GetOriginal(0) == failureOriginal,
+        "Failed VmtManager.Dispose must preserve tracked original metadata.");
+
+    remapped = VmtFailureNativeMethods.VirtualAlloc(
+        new IntPtr(unchecked((long)failureAddress)),
+        (nuint)4096,
+        VmtFailureNativeMethods.MemCommit | VmtFailureNativeMethods.MemReserve,
+        VmtFailureNativeMethods.PageReadWrite);
+    Check(remapped != IntPtr.Zero && unchecked((ulong)remapped.ToInt64()) == failureAddress,
+        "Could not remap the VMT page for Dispose retry.");
+
+    WritePointer(memory, failureAddress, failureReplacement);
+    ((IDisposable)failureVmt).Dispose();
+    Check(failureVmt.IsDisposed,
+        "Retried VmtManager.Dispose should dispose the manager after restoration succeeds.");
+    Check(ReadPointer(memory, failureAddress) == failureOriginal,
+        "Retried VmtManager.Dispose did not restore the original slot.");
+}
+finally
+{
+    if (remapped != IntPtr.Zero)
+        VmtFailureNativeMethods.VirtualFree(remapped, 0, VmtFailureNativeMethods.MemRelease);
+}
+
 Console.WriteLine("HOOK/VMT RUNTIME TESTS PASS");
+
+
+internal static class VmtFailureNativeMethods
+{
+    internal const uint MemCommit = 0x1000;
+    internal const uint MemReserve = 0x2000;
+    internal const uint MemRelease = 0x8000;
+    internal const uint PageReadWrite = 0x04;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    internal static extern IntPtr VirtualAlloc(
+        IntPtr address,
+        nuint size,
+        uint allocationType,
+        uint protection);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool VirtualFree(
+        IntPtr address,
+        nuint size,
+        uint freeType);
+}
