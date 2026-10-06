@@ -239,6 +239,8 @@ print("PASS Injector lifecycle contract")
 assert "UInt64 HookHandle::Destination::get()" in source
 assert "bool HookHandle::IsInstalled::get()" in source
 assert "bool HookHandle::IsDisposed::get()" in source
+assert "std::vector<lm_byte_t> trampolineProbe" in source
+assert "LM_ReadMemoryEx(&p,trampoline,trampolineProbe.data(),size)!=size" in source
 hook_dispose = source.split("HookHandle::~HookHandle()", 1)[1].split("\n}", 1)[0]
 assert "installed_ && !Remove()" in hook_dispose
 assert "hook remains installed" in hook_dispose
