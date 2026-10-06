@@ -113,6 +113,42 @@ try
             continue;
         }
 
+        if (command.StartsWith("protect ", StringComparison.OrdinalIgnoreCase))
+        {
+            var parts = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 3)
+            {
+                Console.WriteLine("ERROR protect");
+                Console.Out.Flush();
+                continue;
+            }
+
+            var address = ParseAddress(parts[1]);
+            var protectionText = parts[2].StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                ? parts[2][2..]
+                : parts[2];
+            var protection = uint.Parse(
+                protectionText,
+                NumberStyles.HexNumber,
+                CultureInfo.InvariantCulture);
+
+            if (!NativeMethods.VirtualProtect(
+                    new IntPtr(unchecked((long)address)),
+                    1,
+                    protection,
+                    out var oldProtection))
+            {
+                Console.WriteLine($"ERROR protect {Marshal.GetLastWin32Error()}");
+            }
+            else
+            {
+                Console.WriteLine($"PROTECT old=0x{oldProtection:X}");
+            }
+
+            Console.Out.Flush();
+            continue;
+        }
+
         Console.WriteLine("UNKNOWN");
         Console.Out.Flush();
     }
@@ -145,6 +181,14 @@ internal static class NativeMethods
         nuint size,
         uint allocationType,
         uint protection);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool VirtualProtect(
+        IntPtr address,
+        nuint size,
+        uint newProtection,
+        out uint oldProtection);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
