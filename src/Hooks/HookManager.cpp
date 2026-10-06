@@ -13,6 +13,8 @@ ProcessInfo^ HookManager::Target() {
     return session_->Target;
 }
 HookHandle^ HookManager::Install(UInt64 source,UInt64 destination) {
+    auto target=Target();
+
     if(source==0 || bad_address(source))
         throw gcnew ArgumentOutOfRangeException(
             "source",
@@ -22,7 +24,7 @@ HookHandle^ HookManager::Install(UInt64 source,UInt64 destination) {
             "destination",
             "Hook destination address must not be zero or the bad-address sentinel.");
 
-    auto handle=Libmem::HookCode(Target(),source,destination);
+    auto handle=Libmem::HookCode(target,source,destination);
     if(handle==nullptr)
         throw gcnew LibmemException("LM_HookCodeEx", "Failed to install hook in the target process.");
     return handle;
