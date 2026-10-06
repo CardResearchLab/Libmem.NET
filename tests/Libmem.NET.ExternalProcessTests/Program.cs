@@ -91,6 +91,19 @@ static int CallTarget(Process child, ulong address)
     return int.Parse(response[prefix.Length..], CultureInfo.InvariantCulture);
 }
 
+static uint SetTargetProtection(Process child, ulong address, uint protection)
+{
+    var response = SendCommand(child, $"protect 0x{address:X} 0x{protection:X}");
+    const string prefix = "PROTECT old=0x";
+    if (!response.StartsWith(prefix, StringComparison.Ordinal))
+        throw new InvalidOperationException($"Unexpected TestTarget protect response: {response}");
+
+    return uint.Parse(
+        response[prefix.Length..],
+        NumberStyles.HexNumber,
+        CultureInfo.InvariantCulture);
+}
+
 static ulong ExpectedPatchedBytes(ulong source, ulong destination)
 {
     var relative = checked((long)destination - (long)source - 5L);
@@ -191,10 +204,16 @@ try
     // Installation failure must be atomic: an unreadable source cannot produce
     // a managed handle or leave patched bytes behind.
     var originalSourceBytes = session.Memory.Read(ready.HookSource, 24);
-    var readableProtection = session.Memory.Protect(
+    const uint pageNoAccess = 0x01;
+    const uint pageExecuteRead = 0x20;
+    const uint pageExecuteReadWrite = 0x40;
+
+    var previousSourceProtection = SetTargetProtection(
+        child,
         ready.HookSource,
-        4096,
-        MemoryProtection.None);
+        pageNoAccess);
+    Check(previousSourceProtection == pageExecuteRead,
+        "TestTarget source did not enter install-failure coverage from ExecuteRead.");
     try
     {
         var installFailure = ExpectThrows<LibmemException>(
@@ -205,7 +224,7 @@ try
     }
     finally
     {
-        session.Memory.Protect(ready.HookSource, 4096, readableProtection);
+        SetTargetProtection(child, ready.HookSource, previousSourceProtection);
     }
 
     Check(session.Memory.Read(ready.HookSource, originalSourceBytes.Length)
@@ -251,10 +270,12 @@ try
         Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
             "Hook installation did not restore source protection before retry coverage.");
 
-        var trampolineProtection = session.Memory.Protect(
+        var trampolineProtection = SetTargetProtection(
+            child,
             retryHook.Trampoline,
-            retryHook.PatchedBytes,
-            MemoryProtection.None);
+            pageNoAccess);
+        Check(trampolineProtection == pageExecuteReadWrite,
+            "Hook trampoline did not start with ExecuteReadWrite protection.");
         try
         {
             Check(!retryHook.Remove(),
@@ -266,9 +287,9 @@ try
         }
         finally
         {
-            session.Memory.Protect(
+            SetTargetProtection(
+                child,
                 retryHook.Trampoline,
-                retryHook.PatchedBytes,
                 trampolineProtection);
         }
 
