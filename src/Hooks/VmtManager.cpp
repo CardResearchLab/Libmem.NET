@@ -28,7 +28,11 @@ bool VmtManager::ResetNative() {
 }
 void VmtManager::Hook(UInt64 index,UInt64 to) {
     if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
-    if(!LM_VmtHook(native_,native_size(index,"index"),native_address(to,"destination")))
+    if(to==0 || bad_address(to))
+        throw gcnew ArgumentOutOfRangeException(
+            "replacementAddress",
+            "VMT replacement address must not be zero or the bad-address sentinel.");
+    if(!LM_VmtHook(native_,native_size(index,"index"),native_address(to,"replacementAddress")))
         throw gcnew LibmemException("LM_VmtHook", "LM_VmtHook failed.");
 }
 bool VmtManager::Unhook(UInt64 index) {
