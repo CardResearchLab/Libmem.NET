@@ -142,8 +142,8 @@ var disposedSession = NativeApi.Attach((uint)Environment.ProcessId)
 var disposedHooks = disposedSession.Hooks;
 disposedSession.Dispose();
 ExpectThrows<ObjectDisposedException>(
-    () => disposedHooks.Install(source.Address, destination.Address),
-    "HookManager should reject use after its ProcessSession is disposed.");
+    () => disposedHooks.Install(0, 0),
+    "Disposed HookManager should reject use before validating hook addresses.");
 
 // VmtManager lifecycle on an isolated page owned by this test process.
 using var vtablePage = memory.Allocate(4096, MemoryProtection.ReadWrite)
