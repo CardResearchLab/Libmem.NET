@@ -43,6 +43,8 @@ vmt_source = (root / "src/Hooks/VmtManager.cpp").read_text(encoding="utf-8")
 assert "HookManager::HookManager" in hook_source
 assert "HookHandle::HookHandle" in hook_source
 assert "HookHandle^ Libmem::HookCode" in hook_source
+assert "trampoline_probe" in hook_source
+assert "LM_ReadMemoryEx(&p,trampoline,trampoline_probe.data(),size)!=size" in hook_source
 assert "VmtManager::VmtManager" in vmt_source
 assert "HookManager::HookManager" not in libmem_facade_source
 assert "HookHandle::HookHandle" not in libmem_facade_source
