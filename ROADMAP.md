@@ -44,8 +44,8 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 - 修复 `VmtManager` 构造函数未拒绝 bad-address sentinel 的托管边界缺口；
 - 为该无效 VTable 基址补充运行时和源码契约回归测试；
-- 将 Published NuGet Smoke 的已发布基线推进到 2.1.0；
-- 清理 2.1.0 发布后仍残留的 candidate / stable 状态文档。
+- 记录独立 nuget.org restore 对 2.1.0 的失败结果（nuget.org 当前最新仍为 2.0.0），在 2.1.1 正式发布前保留 2.0.0 自动 smoke 基线；
+- 清理 2.1.0 发布后仍残留的 candidate / stable / NuGet 状态文档。
 
 ## 已完成阶段：v2.1.0 — Hook / VMT Hardening
 
