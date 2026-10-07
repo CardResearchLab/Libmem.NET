@@ -151,7 +151,7 @@ The `Libmem.NET` package path is validated both through local-feed CI and an ind
 | Version | Date | Status | Official platform |
 | --- | --- | --- | --- |
 | 2.0.0-preview.1 | 2026-10-05 | Published prerelease, Libmem.NET identity | Windows x64 / .NET 8 |
-| 2.1.0 | 2026-10-07 | Release candidate; dry-run validation pending/completing | Windows x64 / .NET 8 |
+| 2.1.0 | 2026-10-07 | Release candidate; dry-run validated; publication authorization pending | Windows x64 / .NET 8 |
 | 2.0.0 | 2026-10-06 | Published stable, Libmem.NET identity | Windows x64 / .NET 8 |
 | 1.0.0 | 2026-09-30 | Historical stable, LibmemCli identity | Windows x64 / .NET 8 |
 | 0.3.0 | 2026-09-29 | Historical | Windows x86/x64 |

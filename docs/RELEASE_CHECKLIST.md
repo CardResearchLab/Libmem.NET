@@ -27,10 +27,10 @@ Published stable: `2.0.0`. Current candidate: `2.1.0`; numeric assembly/file ver
 ## Publication prerequisites — verify for each future version
 
 - [x] Select `2.1.0` for the backward-compatible Hook / VMT hardening release; update `VERSION`, assembly metadata, CHANGELOG and NuGet package-page metadata together.
-- [ ] Confirm green Release x64 Build results on the exact release candidate.
+- [x] Confirm green Release x64 Build results on the exact release candidate. `main` Build run #338 passed on candidate `f38eb2810b9b7823ba0fd921372e506bdae07ceb`.
 - [ ] Verify NuGet account-side setup: Trusted Publishing policy for `CardResearchLab/Libmem.NET` + `release.yml`, and GitHub Actions `NUGET_USER` secret. Their live readiness is not established by source review.
-- [ ] Create `release/v<version>` from that candidate and verify the complete dry run. It must build and validate ZIP/NuGet and render notes, with all three external publication steps skipped.
-- [ ] Review exact-version artifacts and generated notes; confirm ZIP and NuGet share the same source commit.
+- [x] Create `release/v<version>` from that candidate and verify the complete dry run. `release/v2.1.0` Release run #27 passed on `f38eb2810b9b7823ba0fd921372e506bdae07ceb`; ZIP/NuGet validation and release-note rendering succeeded, while GitHub Release creation, OIDC login, and NuGet push were skipped.
+- [x] Review exact-version artifacts and generated notes; confirm ZIP and NuGet share the same source commit. The dry-run artifact `Libmem.NET-windows-x64` is bound to candidate `f38eb2810b9b7823ba0fd921372e506bdae07ceb`, and both runtime/NuGet verification steps enforce that same repository commit.
 - [ ] After explicit publication authorization, create the matching `v<version>` tag on that candidate. Creating it triggers GitHub downloads; a preview tag must be marked as a prerelease. It does not push to nuget.org.
 - [ ] Verify GitHub downloads/checksum, then manually run Release on the published tag with `publish-nuget` enabled once account setup is ready. Verify the public NuGet page after that run.
 - [ ] Restore an independent x64 consumer from nuget.org using that exact version, then run and publish it to verify the public delivery path.
