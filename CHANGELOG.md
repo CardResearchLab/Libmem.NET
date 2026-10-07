@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.1.1 - 2026-10-07
+
+### Fixed
+
+- Reject the libmem bad-address sentinel in `VmtManager` construction before native VMT state is retained, matching the managed Hook/VMT argument contract and preventing an invalid VTable base from being accepted.
+- Add regression coverage for the invalid VTable sentinel and source-contract checks that keep the guard in place.
+- Advance the published-package smoke baseline from `2.0.0` to the released `2.1.0` package.
+- Refresh post-release README, roadmap, consumption, and release-status documentation after the 2.1.0 publication.
+
+### Compatibility
+
+- Preserve the 2.1.0 Public API and pinned rdbo/libmem revision.
+- Keep Windows x64 / .NET 8 as the official support and release target.
+
 ## 2.1.0 - 2026-10-07
 
 ### Hook / VMT hardening
