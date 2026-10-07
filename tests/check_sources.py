@@ -745,10 +745,17 @@ for consumer in [sample_source, nuget_consumer_source, external_process_test_sou
     assert "using NativeApi = global::Libmem.NET.Libmem;" in consumer
     assert not re.search(r"(?<![\w.])Libmem\.(?!NET\b)", consumer), "Ambiguous static facade reference remains."
 assert "repository = 'CardResearchLab/Libmem.NET'" in manifest_script
-assert "Hook and VMT x64" in hook_workflow
-assert "setup-dotnet-x86.ps1" not in hook_workflow
-assert "Injector x64" in injector_workflow
-assert "setup-dotnet-x86.ps1" not in injector_workflow
+for manual_arch_workflow, job_name in [
+    (hook_workflow, "Hook and VMT ${{ inputs.platform }}"),
+    (injector_workflow, "Injector ${{ inputs.platform }}"),
+]:
+    assert "type: choice" in manual_arch_workflow
+    assert "- x64" in manual_arch_workflow and "- x86" in manual_arch_workflow
+    assert "setup-dotnet-x86.ps1" in manual_arch_workflow
+    assert "inputs.platform == 'x86'" in manual_arch_workflow
+    assert job_name in manual_arch_workflow
+    assert '-Platform "${{ inputs.platform }}"' in manual_arch_workflow
+    assert '-p:Platform="${{ inputs.platform }}"' in manual_arch_workflow
 assert "External Process ${{ inputs.platform }}" in external_process_workflow
 assert "type: choice" in external_process_workflow
 assert "- x64" in external_process_workflow and "- x86" in external_process_workflow

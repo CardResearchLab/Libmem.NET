@@ -301,8 +301,8 @@ PR 自动验证集中在 Build，默认构建并验证 **Release x64 与 Release
 
 以下专项工作流保留为手动入口：
 
-- [Hook/VMT](.github/workflows/hook-vmt-tests.yml)
-- [Injector](.github/workflows/injector-tests.yml)
+- [Hook/VMT](.github/workflows/hook-vmt-tests.yml)，可手动选择 x64 / x86
+- [Injector](.github/workflows/injector-tests.yml)，可手动选择 x64 / x86
 - [External Process](.github/workflows/external-process-tests.yml)，使用独立的 `Libmem.NET.TestTarget`
 - [NuGet Consumer](.github/workflows/nuget-consumer-tests.yml)
 
