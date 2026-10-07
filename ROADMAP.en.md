@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-`2.0.0` has completed stable publication; current work is **2.1.0 Hook / VMT Hardening final acceptance and release-candidate validation**. See the [migration guide](docs/MIGRATION.md) for the historical identity transition.
+`2.1.0` was released on 2026-10-07; current work is **2.1.1 post-release regression and compatibility maintenance**. See the [migration guide](docs/MIGRATION.md) for the historical identity transition.
 
 > Current strategy: **x64 first; x86 deferred.**
 
@@ -38,7 +38,16 @@ ProcessSession
 
 Snapshots, caches, entities, game state, event state, IPC, and game-version adaptation belong to consumers.
 
-## Current phase: v2.1.0 — Hook / VMT Hardening (final acceptance)
+## Current phase: v2.1.1 — post-release maintenance
+
+2.1.1 is a backward-compatible patch over 2.1.0. It does not add Public API and does not upgrade the pinned libmem revision. Current maintenance goals are:
+
+- reject the bad-address sentinel at the `VmtManager` managed construction boundary;
+- add runtime and source-contract regression coverage for that invalid VTable base;
+- record the failed independent nuget.org restore for 2.1.0 (nuget.org still exposes 2.0.0) and retain 2.0.0 as the automatic smoke baseline until 2.1.1 is formally published;
+- remove stale candidate/stable/NuGet wording left after the 2.1.0 publication.
+
+## Completed phase: v2.1.0 — Hook / VMT Hardening
 
 `2.0.0` was released on 2026-10-06 and establishes the stable Windows x64 / .NET 8 assembly, NuGet, runtime archive, checksum, and Public API baseline. 2.1.0 does not perform another identity migration and does not intentionally introduce breaking changes.
 

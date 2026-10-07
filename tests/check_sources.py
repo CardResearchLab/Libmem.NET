@@ -249,6 +249,9 @@ assert "LM_UnhookCode" not in hook_finalizer
 print("PASS HookHandle lifecycle contract")
 
 assert "bool VmtManager::IsDisposed::get()" in source
+vmt_constructor = source.split("VmtManager::VmtManager(UInt64 address)", 1)[1].split("\n}", 1)[0]
+assert "address==0 || bad_address(address)" in vmt_constructor
+assert "bad-address sentinel" in vmt_constructor
 assert "bool VmtManager::ResetNative()" in source
 assert "while(native_->hkentries!=LM_NULLPTR)" in source
 vmt_dispose = source.split("VmtManager::~VmtManager()", 1)[1].split("\n}", 1)[0]

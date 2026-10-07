@@ -1,6 +1,6 @@
 # Libmem.NET 开发路线图
 
-`2.0.0` 已完成正式发布；当前工作进入 **2.1.0 Hook / VMT Hardening 最终验收与发布候选阶段**。身份迁移历史见 [迁移指南](docs/MIGRATION.md)。
+`2.1.0` 已于 2026-10-07 正式发布；当前工作进入 **2.1.1 发布后回归与兼容性修复阶段**。身份迁移历史见 [迁移指南](docs/MIGRATION.md)。
 
 > 当前策略：**x64 主线优先，x86 延后。**
 
@@ -38,7 +38,16 @@ ProcessSession
 
 Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适配属于调用方。
 
-## 当前阶段：v2.1.0 — Hook / VMT Hardening（最终验收）
+## 当前阶段：v2.1.1 — 发布后维护
+
+2.1.1 是 2.1.0 的向后兼容 patch，不增加 Public API，也不升级 pinned libmem。当前维护目标：
+
+- 修复 `VmtManager` 构造函数未拒绝 bad-address sentinel 的托管边界缺口；
+- 为该无效 VTable 基址补充运行时和源码契约回归测试；
+- 记录独立 nuget.org restore 对 2.1.0 的失败结果（nuget.org 当前最新仍为 2.0.0），在 2.1.1 正式发布前保留 2.0.0 自动 smoke 基线；
+- 清理 2.1.0 发布后仍残留的 candidate / stable / NuGet 状态文档。
+
+## 已完成阶段：v2.1.0 — Hook / VMT Hardening
 
 `2.0.0` 已于 2026-10-06 正式发布，Windows x64 / .NET 8 的程序集、NuGet 包、运行时 ZIP、校验文件和 Public API 基线已经形成稳定基线。2.1.0 不进行新的命名迁移，也不主动引入 breaking change。
 
