@@ -7,30 +7,19 @@ const uint memRelease = 0x8000;
 const uint pageExecuteRead = 0x20;
 const uint pageExecuteReadWrite = 0x40;
 
-static byte[] ReturnConstant(int value, int size = 64)
-{
-    if (size < 24)
-        throw new ArgumentOutOfRangeException(nameof(size));
+static ulong PointerAddress(IntPtr pointer) =>
+    IntPtr.Size == sizeof(long)
+        ? unchecked((ulong)pointer.ToInt64())
+        : unchecked((uint)pointer.ToInt32());
 
-    var code = Enumerable.Repeat((byte)0x90, size).ToArray();
-
-    // A 10-byte instruction forces HookCode to respect an instruction boundary:
-    // mov r10, 0x1122334455667788
-    code[0] = 0x49;
-    code[1] = 0xBA;
-    BitConverter.GetBytes(0x1122334455667788UL).CopyTo(code, 2);
-
-    // mov eax, imm32
-    code[10] = 0xB8;
-    BitConverter.GetBytes(value).CopyTo(code, 11);
-
-    code[^1] = 0xC3; // ret
-    return code;
-}
+static IntPtr NativePointer(ulong address) =>
+    IntPtr.Size == sizeof(long)
+        ? new IntPtr(unchecked((long)address))
+        : new IntPtr(unchecked((int)address));
 
 static int CallAddress(ulong address)
 {
-    var pointer = new IntPtr(unchecked((long)address));
+    var pointer = NativePointer(address);
     var function = Marshal.GetDelegateForFunctionPointer<NoArgsDelegate>(pointer);
     return function();
 }
@@ -49,6 +38,7 @@ byte[] payload =
     0x54, 0x41, 0x52, 0x47, 0x45, 0x54
 ];
 
+var fixture = MachineCodeFixture.Current;
 var allocation = Marshal.AllocHGlobal(allocationSize);
 var hookSource = NativeMethods.VirtualAlloc(
     IntPtr.Zero,
@@ -76,8 +66,8 @@ try
 {
     Marshal.Copy(payload, 0, allocation, payload.Length);
 
-    var sourceCode = ReturnConstant(1);
-    var destinationCode = ReturnConstant(2);
+    var sourceCode = fixture.CreateReturnConstant(1);
+    var destinationCode = fixture.CreateReturnConstant(2);
     Marshal.Copy(sourceCode, 0, hookSource, sourceCode.Length);
     Marshal.Copy(destinationCode, 0, hookDestination, destinationCode.Length);
 
@@ -97,8 +87,10 @@ try
     }
 
     Console.WriteLine(
-        $"READY pid={Environment.ProcessId} address=0x{allocation.ToInt64():X} size={allocationSize} " +
-        $"hookSource=0x{hookSource.ToInt64():X} hookDestination=0x{hookDestination.ToInt64():X}");
+        $"READY pid={Environment.ProcessId} arch={fixture.Name} " +
+        $"address=0x{PointerAddress(allocation):X} size={allocationSize} " +
+        $"hookSource=0x{PointerAddress(hookSource):X} hookDestination=0x{PointerAddress(hookDestination):X} " +
+        $"expectedPatchBytes={fixture.ExpectedPatchedBytes(PointerAddress(hookSource), PointerAddress(hookDestination))}");
     Console.Out.Flush();
 
     while (Console.ReadLine() is { } command)
@@ -141,7 +133,7 @@ try
                 CultureInfo.InvariantCulture);
 
             if (!NativeMethods.VirtualProtect(
-                    new IntPtr(unchecked((long)address)),
+                    NativePointer(address),
                     1,
                     protection,
                     out var oldProtection))
