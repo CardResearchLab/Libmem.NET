@@ -1,6 +1,6 @@
 # Libmem.NET 开发路线图
 
-`2.2.0` 已进入发布候选阶段：Windows x86 已完成运行时、外部进程、NuGet 与 Release 交付链路，并与 x64 一起成为正式支持目标。当前已发布稳定版仍为 `2.1.1`。身份迁移历史见 [迁移指南](docs/MIGRATION.md)。
+`2.2.0` 已正式发布：Windows x86 已完成运行时、外部进程、NuGet 与 Release 交付链路，并与 x64 一起成为正式支持目标。GitHub 与 nuget.org 当前稳定版均为 `2.2.0`。身份迁移历史见 [迁移指南](docs/MIGRATION.md)。
 
 > 当前策略：**Windows x64 与 x86 同级支持；共享设计保持架构中立，为后续 ARM64 留出扩展点。**
 
