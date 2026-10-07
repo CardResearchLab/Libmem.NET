@@ -300,6 +300,24 @@ assert "NativeApi.Attach" not in sample_source
 assert "Hearthstone" not in sample_source
 print("PASS C# consumer sample contract")
 
+hook_sample_project = (root / "samples/HookExample/HookExample.csproj").read_text(encoding="utf-8")
+hook_sample_source = (root / "samples/HookExample/Program.cs").read_text(encoding="utf-8")
+assert "<Platforms>x64</Platforms>" in hook_sample_project
+assert "<PlatformTarget>x64</PlatformTarget>" in hook_sample_project
+for hook_sample_marker in [
+    "ProcessSession.Open",
+    "session.Hooks.Install",
+    "hook.Trampoline",
+    "hook.PatchedBytes",
+    "hook.Remove()",
+    "MemoryProtection.ExecuteReadWrite",
+]:
+    assert hook_sample_marker in hook_sample_source, (
+        f"Hook consumer sample lost required behavior: {hook_sample_marker}"
+    )
+assert "Hearthstone" not in hook_sample_source
+print("PASS Hook consumer sample contract")
+
 nuget_package_project = (root / "packaging/Libmem.NET.csproj").read_text(encoding="utf-8")
 nuget_targets = (root / "packaging/Libmem.NET.targets").read_text(encoding="utf-8")
 nuget_consumer_project = (root / "tests/Libmem.NET.NuGetConsumer/Libmem.NET.NuGetConsumer.csproj").read_text(encoding="utf-8")
