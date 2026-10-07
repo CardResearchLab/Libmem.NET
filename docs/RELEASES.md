@@ -4,9 +4,11 @@ This document describes the official release channel, current stable release, su
 
 ## Current source and historical release
 
-Current main has migrated to `Libmem.NET`. This is a breaking identity change requiring updated references and recompilation; see [MIGRATION.md](MIGRATION.md). The current stable candidate is `2.0.0`; numeric assembly/file versions remain `2.0.0.0`. The new major version reflects this breaking change, not a replacement for historical v1.0.0.
+The published stable Libmem.NET line is `2.0.0`. The current release candidate is `2.1.0`, with numeric assembly/file versions `2.1.0.0`.
 
-`v2.0.0-preview.1` is published as a GitHub prerelease and on nuget.org. The release workflow validated the exact Runtime ZIP / NuGet provenance, and a separate public PackageReference smoke test restored, built, ran and published the package successfully. The `2.0.0` candidate promotes that validated line to stable without intentional Public API or runtime-behavior changes. Do not replace the existing v1.0.0 or preview tags/assets.
+2.1.0 preserves the 2.0.0 Public API baseline and focuses on Hook / VMT hardening: managed argument/state contracts, external-process Hook lifecycle coverage, instruction-boundary validation, retryable cleanup failures, VMT restore-failure lifecycle coverage, and consumer documentation/sample improvements.
+
+The historical `LibmemCli` → `Libmem.NET` identity migration remains documented in [MIGRATION.md](MIGRATION.md). Existing historical tags and assets remain immutable.
 
 ### Historical v1.0.0
 
@@ -149,7 +151,8 @@ The `Libmem.NET` package path is validated both through local-feed CI and an ind
 | Version | Date | Status | Official platform |
 | --- | --- | --- | --- |
 | 2.0.0-preview.1 | 2026-10-05 | Published prerelease, Libmem.NET identity | Windows x64 / .NET 8 |
-| 2.0.0 | 2026-10-06 | Stable candidate; publish only after release gates pass | Windows x64 / .NET 8 |
+| 2.1.0 | 2026-10-07 | Release candidate; dry-run validation pending/completing | Windows x64 / .NET 8 |
+| 2.0.0 | 2026-10-06 | Published stable, Libmem.NET identity | Windows x64 / .NET 8 |
 | 1.0.0 | 2026-09-30 | Historical stable, LibmemCli identity | Windows x64 / .NET 8 |
 | 0.3.0 | 2026-09-29 | Historical | Windows x86/x64 |
 | 0.2.0 | 2026-09-28 | Historical | Windows |
