@@ -424,6 +424,10 @@ assert "'$(OS)' != 'Windows_NT'" in nuget_targets
 assert "currently supports only Windows x64/x86" in nuget_targets
 assert "_LibmemNetPlatform" in nuget_targets
 assert "PlatformTarget" in nuget_targets
+assert "'$(PlatformTarget)' == '' and '$(Platform)' == 'x64'" in nuget_targets
+assert "'$(PlatformTarget)' == '' and ('$(Platform)' == 'x86' or '$(Platform)' == 'Win32')" in nuget_targets
+assert "'$(PlatformTarget)' != '' and '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86'" in nuget_targets
+assert "AnyCPU, ARM64, and other targets are unsupported." in nuget_targets
 assert "win-$(_LibmemNetPlatform)" in nuget_targets
 for consumer_marker in [
     "ProcessSession.Open",
@@ -739,7 +743,7 @@ print("PASS release documentation and historical identity contract")
 
 for suite in ["SmokeTests", "ExternalProcessTests", "HookVmtTests", "InjectorTests", "NuGetConsumer"]:
     assert f"Libmem.NET.{suite}" in build_workflow, f"Unified PR gate lost {suite}"
-for step in ["Run C# example", "Run Hook lifecycle sample", "Publish x64 NuGet consumer", "Publish x86 NuGet consumer", "Reject AnyCPU NuGet consumer", "Verify runtime package"]:
+for step in ["Run C# example", "Run Hook lifecycle sample", "Publish x64 NuGet consumer", "Publish x86 NuGet consumer", "Reject AnyCPU NuGet consumer", "Reject unsupported explicit PlatformTarget", "Verify runtime package"]:
     assert step in build_workflow, f"Unified PR gate lost {step}"
 for manual_workflow in [hook_workflow, injector_workflow, external_process_workflow, nuget_consumer_workflow]:
     assert "workflow_dispatch:" in manual_workflow
@@ -774,6 +778,8 @@ assert "Libmem.NET.NuGetConsumer" in nuget_consumer_workflow
 assert "Publish x64 NuGet consumer" in nuget_consumer_workflow
 assert "Publish x86 NuGet consumer" in nuget_consumer_workflow
 assert "Reject AnyCPU NuGet consumer" in nuget_consumer_workflow
+assert "Reject unsupported explicit PlatformTarget" in nuget_consumer_workflow
+assert 'foreach ($unsupportedTarget in @("AnyCPU", "arm64"))' in nuget_consumer_workflow
 assert "Libmem.NET.dll" in nuget_consumer_workflow
 assert "Ijwhost.dll" in nuget_consumer_workflow
 assert "nuget.org" not in nuget_consumer_workflow
