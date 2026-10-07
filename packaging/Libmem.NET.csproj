@@ -7,7 +7,7 @@
     <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.0-local</PackageVersion>
     <Authors>xiaohei7972</Authors>
     <Description>Windows x64 / .NET 8 C++/CLI wrapper for rdbo/libmem, providing managed process, memory, scanning, hooking, injection, assembly, and symbol APIs.</Description>
-    <PackageReleaseNotes>English: Libmem.NET 2.1.0 hardens Hook/VMT failure paths and ownership while preserving the 2.0.0 Public API baseline. It adds external-process Hook failure/exit coverage, instruction-boundary validation, retryable unhook/VMT restoration behavior, and updated consumer documentation/sample guidance. 中文：Libmem.NET 2.1.0 在保持 2.0.0 Public API 兼容的前提下加固 Hook/VMT 失败路径与生命周期，补充外部进程 Hook、指令边界、可重试清理失败以及消费者文档/示例。 Full notes / 完整说明: https://github.com/CardResearchLab/Libmem.NET/blob/main/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>English: Libmem.NET 2.1.1 is a backward-compatible maintenance release. It rejects the libmem bad-address sentinel when constructing VmtManager, adds regression coverage for that managed boundary, advances the published-package smoke baseline to 2.1.0, and refreshes post-release documentation while preserving the 2.1.0 Public API. 中文：Libmem.NET 2.1.1 是向后兼容的维护修复版本，修复 VmtManager 构造时未拒绝 libmem bad-address sentinel 的问题，补充对应回归测试，将已发布 NuGet smoke 基线更新到 2.1.0，并刷新发布后文档状态；Public API 保持与 2.1.0 兼容。 Full notes / 完整说明: https://github.com/CardResearchLab/Libmem.NET/blob/main/CHANGELOG.md</PackageReleaseNotes>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/CardResearchLab/Libmem.NET</RepositoryUrl>
