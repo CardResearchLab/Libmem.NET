@@ -115,6 +115,10 @@ jobs:
             echo "Select a v* tag or release/v* branch; ordinary branches cannot publish."
             exit 1
           fi
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$GITHUB_REF_TYPE" == "tag" && "$PUBLISH_NUGET" != "true" ]]; then
+            echo "Manual runs on an existing v* tag are reserved for NuGet publication. Enable publish-nuget; GitHub Releases are created by the tag push."
+            exit 1
+          fi
           if [[ "$PUBLISH_NUGET" == "true" ]]; then
             test "$GITHUB_REF_TYPE" = "tag" || { echo "NuGet publication requires an existing tag."; exit 1; }
             gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null
