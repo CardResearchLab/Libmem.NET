@@ -95,6 +95,7 @@ print("PASS split translation units included in vcxproj")
 for file in [
     "src/Libmem.NET.vcxproj",
     "samples/Example.csproj",
+    "samples/HookExample/HookExample.csproj",
     "tests/Libmem.NET.SmokeTests/Libmem.NET.SmokeTests.csproj",
     "tests/Libmem.NET.HookVmtTests/Libmem.NET.HookVmtTests.csproj",
     "tests/Libmem.NET.InjectorTests/Libmem.NET.InjectorTests.csproj",
