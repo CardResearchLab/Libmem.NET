@@ -445,6 +445,7 @@ namespace Libmem::NET {
     };
 
     /// <summary>Session-bound native code hook installation.</summary>
+    /// <remarks>Install validates managed address sentinels and surfaces definite LM_HookCodeEx failure as LibmemException. A handle is returned only after native installation succeeds.</remarks>
     public ref class HookManager sealed {
     private:
         ProcessSession^ session_;
@@ -458,7 +459,7 @@ namespace Libmem::NET {
     };
 
     /// <summary>Owns one installed native hook and its trampoline.</summary>
-    /// <remarks>Explicit disposal restores original code. Finalization never patches target-process code.</remarks>
+    /// <remarks>Explicit removal/disposal restores original code. Failed removal retains ownership for retry while a live target still exists; target exit converges the handle to released. Finalization never patches target-process code.</remarks>
     public ref class HookHandle sealed : IDisposable {
     private:
         ProcessInfo^ target_;
@@ -489,7 +490,7 @@ namespace Libmem::NET {
     };
 
     /// <summary>Owns local-process VMT hook bookkeeping.</summary>
-    /// <remarks>The target VMT and replacement code must remain valid for this object's lifetime. VMT operations are local-process only. Successful disposal is idempotent; operational methods after disposal throw ObjectDisposedException.</remarks>
+    /// <remarks>The target VMT and replacement code must remain valid for this object's lifetime. VMT operations are local-process only. Successful disposal is idempotent; failed restoration retains bookkeeping for retry; operational methods after disposal throw ObjectDisposedException.</remarks>
     public ref class VmtManager sealed : IDisposable {
     private:
         lm_vmt_t* native_;
