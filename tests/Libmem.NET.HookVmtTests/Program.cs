@@ -72,6 +72,12 @@ catch (ArgumentOutOfRangeException ex)
     Check(ex.ParamName == "vtableAddress", "VmtManager(0) reported the wrong parameter name.");
 }
 
+var badVtable = ExpectThrows<ArgumentOutOfRangeException>(
+    () => { _ = new VmtManager(invalidAddress); },
+    "VmtManager should reject the bad-address VTable sentinel.");
+Check(badVtable.ParamName == "vtableAddress",
+    "Bad VTable sentinel reported the wrong parameter name.");
+
 using var session = NativeApi.Attach((uint)Environment.ProcessId)
     ?? throw new InvalidOperationException("Could not attach to the current process.");
 
