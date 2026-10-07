@@ -695,6 +695,8 @@ for name in ["NuGet login (OIDC)", "Publish Libmem.NET to nuget.org"]:
         "github.event_name == 'workflow_dispatch' && inputs.publish-nuget == true"
     ], f"NuGet publication must require manual opt-in: {name}"
 assert 'test "$GITHUB_REF_TYPE" = "tag"' in release_steps["Validate release ref"]
+assert 'GITHUB_EVENT_NAME" == "workflow_dispatch"' in release_steps["Validate release ref"]
+assert 'Manual runs on an existing v* tag are reserved for NuGet publication.' in release_steps["Validate release ref"]
 assert 'gh release view "$TAG_NAME"' in release_steps["Validate release ref"]
 assert '--prerelease --latest=false' in release_steps["Publish GitHub Release"]
 assert 'artifacts/nuget/*.nupkg' in build_workflow
