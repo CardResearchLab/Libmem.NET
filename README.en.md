@@ -280,7 +280,7 @@ For reproducible builds, pin both the workflow reference and `ref` to a reviewed
 
 ## NuGet status
 
-The package ID is `Libmem.NET`, targeting Windows x64 / .NET 8. CI validates pack, independent PackageReference restore/build/run/publish, native runtime asset copy, and rejection of non-x64 consumers.
+The package ID is `Libmem.NET`, targeting Windows x64/x86 / .NET 8. CI validates multi-architecture pack composition, independent x64 and x86 PackageReference restore/build/run/publish, architecture-matched runtime asset copy, and explicit AnyCPU rejection.
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
