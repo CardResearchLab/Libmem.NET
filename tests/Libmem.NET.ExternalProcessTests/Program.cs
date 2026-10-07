@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using RuntimeArchitecture = System.Runtime.InteropServices.Architecture;
 using Libmem.NET;
 using NativeApi = global::Libmem.NET.Libmem;
 
@@ -29,9 +30,9 @@ static string CurrentPlatform()
 {
     return RuntimeInformation.ProcessArchitecture switch
     {
-        Architecture.X86 => "x86",
-        Architecture.X64 => "x64",
-        Architecture.Arm64 => "arm64",
+        RuntimeArchitecture.X86 => "x86",
+        RuntimeArchitecture.X64 => "x64",
+        RuntimeArchitecture.Arm64 => "arm64",
         var architecture => throw new PlatformNotSupportedException(
             $"External-process tests do not support {architecture}.")
     };
@@ -66,7 +67,7 @@ static ProcessStartInfo CreateTargetStartInfo(string targetPath)
     if (isDll)
     {
         fileName = "dotnet";
-        if (RuntimeInformation.ProcessArchitecture == Architecture.X86)
+        if (RuntimeInformation.ProcessArchitecture == RuntimeArchitecture.X86)
         {
             var x86Root = Environment.GetEnvironmentVariable("DOTNET_ROOT_X86");
             if (!string.IsNullOrWhiteSpace(x86Root))
