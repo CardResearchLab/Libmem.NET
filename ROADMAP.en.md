@@ -46,13 +46,13 @@ The 2.1.0 goal is:
 
 > Keep the 2.0.0 Public API compatible while moving Hook / VMT from "usable" to "well-defined failure paths, stable ownership, and complete runtime coverage."
 
-Current audit findings:
+Pre-release audit findings:
 
-- `HookManager.Install` returns an owning `HookHandle` with trampoline and patched-byte metadata;
-- `HookHandle.Remove / Dispose` are idempotent after successful removal and the finalizer never rewrites target code from the GC thread;
-- `VmtManager` works around the pinned libmem reset/free use-after-free path and exposes explicit Hook / Unhook / Reset / Dispose operations;
-- current runtime tests cover basic hook redirection, trampoline execution, Remove/Dispose idempotency, and VMT Hook/Unhook/Reset/Dispose;
-- systematic coverage is still missing for invalid inputs, duplicate/conflicting installation, native failures, target exit, failure-state preservation, external-process hooks, and documented threading/lifetime boundaries.
+- `HookManager.Install` zero/bad-address, definite-native-failure, and disposed-session contracts are frozen;
+- self-process and external-process runtime tests cover redirection, trampoline execution, instruction boundaries, Remove/Dispose idempotency, target exit, and retryable failed ownership cleanup;
+- `VmtManager` covers repeated Hook, untracked Unhook, Reset/reuse, Dispose, and restore-failure retry lifecycles;
+- remote unhook preflights the complete trampoline read so a pinned `LM_UnhookCodeEx` read failure cannot leak source-protection state;
+- duplicate/overlapping code-hook conflicts are not managed through a global Libmem.NET registry, and relative-control-flow trampoline safety remains a pinned-libmem capability; both are now explicit consumer/upstream boundaries.
 
 ### 2.1.0 work items
 
