@@ -9,10 +9,10 @@ Libmem.NET is a Windows-focused C++/CLI wrapper for [rdbo/libmem](https://github
 ## Installation
 
 ```powershell
-dotnet add package Libmem.NET --version 2.0.0
+dotnet add package Libmem.NET --version 2.1.0
 ```
 
-`2.0.0` is the stable package line for the Libmem.NET identity.
+`2.1.0` is the current stable package line for the Libmem.NET identity.
 
 ## Highlights
 
@@ -98,10 +98,10 @@ Libmem.NET 是一个面向 Windows 的 [rdbo/libmem](https://github.com/rdbo/lib
 ## 安装
 
 ```powershell
-dotnet add package Libmem.NET --version 2.0.0
+dotnet add package Libmem.NET --version 2.1.0
 ```
 
-`2.0.0` 是 Libmem.NET 新身份下的稳定包版本。
+`2.1.0` 是 Libmem.NET 新身份下的当前稳定包版本。
 
 ## 主要功能
 
