@@ -452,13 +452,15 @@ namespace Libmem::NET {
     internal:
         HookManager(ProcessSession^ session);
     public:
-        /// <summary>Installs a hook in the target process.</summary>
-        /// <exception cref="LibmemException">Thrown when LM_HookCodeEx reports failure.</exception>
+        /// <summary>Installs a native code hook in the target process and returns its owning handle.</summary>
+        /// <remarks>The destination must remain valid executable native code while the hook is installed. PatchedBytes reports the complete instruction-aligned source span selected by native libmem.</remarks>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when source or destination is zero or the bad-address sentinel.</exception>
+        /// <exception cref="LibmemException">Thrown when LM_HookCodeEx reports definite installation failure.</exception>
         HookHandle^ Install(UInt64 source, UInt64 destination);
     };
 
     /// <summary>Owns one installed native hook and its trampoline.</summary>
-    /// <remarks>Explicit disposal restores original code. Finalization never patches target-process code.</remarks>
+    /// <remarks>Successful removal is idempotent. Failed explicit removal preserves ownership for retry. Target-process exit converges the handle to not installed because the target address space no longer exists. Finalization never patches target-process code.</remarks>
     public ref class HookHandle sealed : IDisposable {
     private:
         ProcessInfo^ target_;
@@ -481,7 +483,7 @@ namespace Libmem::NET {
         /// <summary>Gets whether the managed ownership lifetime has ended.</summary>
         property bool IsDisposed { bool get(); }
         /// <summary>Attempts to restore the original code and release the installed hook.</summary>
-        /// <remarks>After successful removal, repeated calls are idempotent.</remarks>
+        /// <remarks>After successful removal, repeated calls are idempotent. A failed live-target removal keeps IsInstalled true so the caller can repair a transient condition and retry.</remarks>
         /// <returns>true when the hook is no longer installed; false when removal fails while it remains active.</returns>
         bool Remove();
         ~HookHandle();
@@ -489,7 +491,7 @@ namespace Libmem::NET {
     };
 
     /// <summary>Owns local-process VMT hook bookkeeping.</summary>
-    /// <remarks>The target VMT and replacement code must remain valid for this object's lifetime. VMT operations are local-process only. Successful disposal is idempotent; operational methods after disposal throw ObjectDisposedException.</remarks>
+    /// <remarks>The target VMT and replacement code must remain valid for this object's lifetime. VMT operations are local-process only. Reset or explicit disposal preserves ownership when restoration fails so callers can retry. Successful disposal is idempotent; operational methods after disposal throw ObjectDisposedException. Finalization never restores VTable entries.</remarks>
     public ref class VmtManager sealed : IDisposable {
     private:
         lm_vmt_t* native_;
@@ -501,12 +503,16 @@ namespace Libmem::NET {
         /// <summary>Gets whether the manager has been disposed.</summary>
         property bool IsDisposed { bool get(); }
         /// <summary>Replaces one VTable entry and tracks its original value.</summary>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when replacementAddress is zero or the bad-address sentinel.</exception>
+        /// <exception cref="LibmemException">Thrown when LM_VmtHook reports failure.</exception>
         void Hook(UInt64 index, UInt64 replacementAddress);
         /// <summary>Restores one tracked VTable entry.</summary>
         bool Unhook(UInt64 index);
         /// <summary>Gets the original address recorded for a hooked VTable entry.</summary>
         UInt64 GetOriginal(UInt64 index);
         /// <summary>Restores all tracked VTable entries.</summary>
+        /// <remarks>If restoration fails, the manager remains active so cleanup can be retried.</remarks>
+        /// <exception cref="LibmemException">Thrown when a tracked entry cannot be restored through LM_VmtUnhook.</exception>
         void Reset();
         ~VmtManager();
         !VmtManager();
