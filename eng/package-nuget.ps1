@@ -26,16 +26,17 @@ if ($baseVersion -notmatch $versionPattern) {
     throw "VERSION must use MAJOR.MINOR.PATCH[-PRERELEASE] format: '$baseVersion'"
 }
 
-$requiredArtifacts = @(
-    (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\Libmem.NET.dll"),
-    (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\Libmem.NET.xml"),
-    (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\Ijwhost.dll"),
-    (Join-Path $repoRoot "artifacts\native\x64\$Configuration\bin\libmem.dll")
-)
+$requiredArtifacts = @()
+foreach ($platform in @('x64', 'x86')) {
+    $runtimeRoot = Join-Path $repoRoot "artifacts\package\Libmem.NET-windows-$platform"
+    foreach ($file in @('Libmem.NET.dll', 'Libmem.NET.xml', 'Ijwhost.dll', 'libmem.dll', 'manifest.json')) {
+        $requiredArtifacts += Join-Path $runtimeRoot $file
+    }
+}
 
 foreach ($artifact in $requiredArtifacts) {
     if (-not (Test-Path $artifact -PathType Leaf)) {
-        throw "Required x64 artifact is missing: $artifact. Run build.ps1 first."
+        throw "Required multi-architecture runtime artifact is missing: $artifact. Build and package both x64 and x86 runtimes first."
     }
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the local x64 NuGet prototype package layout and provenance."""
+"""Validate the multi-architecture NuGet package layout and provenance."""
 
 from __future__ import annotations
 
@@ -34,10 +34,14 @@ def main() -> int:
         names = set(archive.namelist())
 
         required = {
-            "lib/net8.0/Libmem.NET.dll",
-            "lib/net8.0/Libmem.NET.xml",
+            "runtimes/win-x64/lib/net8.0/Libmem.NET.dll",
+            "runtimes/win-x64/lib/net8.0/Libmem.NET.xml",
             "runtimes/win-x64/native/libmem.dll",
             "runtimes/win-x64/native/Ijwhost.dll",
+            "runtimes/win-x86/lib/net8.0/Libmem.NET.dll",
+            "runtimes/win-x86/lib/net8.0/Libmem.NET.xml",
+            "runtimes/win-x86/native/libmem.dll",
+            "runtimes/win-x86/native/Ijwhost.dll",
             "buildTransitive/Libmem.NET.targets",
             "README.md",
             "LICENSE",
@@ -49,6 +53,17 @@ def main() -> int:
         if missing:
             raise AssertionError("NuGet package is missing: " + ", ".join(missing))
 
+        forbidden = {
+            "lib/net8.0/Libmem.NET.dll",
+            "lib/net8.0/Libmem.NET.xml",
+        }
+        unexpected = sorted(forbidden & names)
+        if unexpected:
+            raise AssertionError(
+                "NuGet package still exposes architecture-specific managed assets "
+                "as generic compile assets: " + ", ".join(unexpected)
+            )
+
         package_readme = archive.read("README.md").decode("utf-8")
         for marker in ("**English**", "# 简体中文"):
             if marker not in package_readme:
@@ -56,17 +71,9 @@ def main() -> int:
                     f"NuGet package README is missing bilingual marker: {marker}"
                 )
 
-        forbidden_fragments = [
-            "win-x86",
-            "/x86/",
-            "Libmem.NET.pdb",
-        ]
         for name in names:
-            for fragment in forbidden_fragments:
-                if fragment.lower() in name.lower():
-                    raise AssertionError(
-                        f"Unexpected x86/debug asset in NuGet package: {name}"
-                    )
+            if "Libmem.NET.pdb" in name:
+                raise AssertionError(f"Unexpected debug asset in NuGet package: {name}")
 
         nuspec_names = [name for name in names if name.endswith(".nuspec")]
         if len(nuspec_names) != 1:
@@ -100,8 +107,11 @@ def main() -> int:
         if authors is None or authors.text != "xiaohei7972":
             raise AssertionError("Unexpected NuGet authors metadata.")
 
-        if description is None or "Windows x64" not in (description.text or ""):
-            raise AssertionError("NuGet description does not declare the Windows x64 scope.")
+        description_text = "" if description is None else (description.text or "")
+        if "Windows x64/x86" not in description_text:
+            raise AssertionError(
+                "NuGet description does not declare the Windows x64/x86 scope."
+            )
 
         if (
             license_element is None
@@ -134,7 +144,7 @@ def main() -> int:
                 f"got {repository.attrib.get('commit')!r}"
             )
 
-    print("NUGET PACKAGE LAYOUT AND PROVENANCE PASS")
+    print("NUGET MULTI-ARCH PACKAGE LAYOUT AND PROVENANCE PASS")
     return 0
 
 

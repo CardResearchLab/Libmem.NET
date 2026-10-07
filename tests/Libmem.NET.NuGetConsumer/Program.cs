@@ -1,7 +1,12 @@
+using System.Runtime.InteropServices;
+using RuntimeArchitecture = System.Runtime.InteropServices.Architecture;
 using Libmem.NET;
 using NativeApi = global::Libmem.NET.Libmem;
 
-Console.WriteLine("Libmem.NET NuGet consumer test");
+Console.WriteLine($"Libmem.NET NuGet consumer test ({RuntimeInformation.ProcessArchitecture})");
+
+if (RuntimeInformation.ProcessArchitecture is not (RuntimeArchitecture.X64 or RuntimeArchitecture.X86))
+    throw new PlatformNotSupportedException($"Unexpected NuGet consumer architecture: {RuntimeInformation.ProcessArchitecture}.");
 
 var wrapperAssembly = typeof(ProcessSession).Assembly;
 if (wrapperAssembly.GetName().Name != "Libmem.NET")
@@ -102,7 +107,7 @@ using var allocation = session.Memory.Allocate(
     4096,
     MemoryProtection.ReadWrite);
 
-byte[] payload = [0x4E, 0x55, 0x47, 0x45, 0x54, 0x2D, 0x58, 0x36, 0x34];
+byte[] payload = [0x4E, 0x55, 0x47, 0x45, 0x54, 0x2D, 0x41, 0x52, 0x43, 0x48];
 
 if (session.Memory.Write(allocation.Address, payload) != payload.Length)
     throw new InvalidOperationException("NuGet consumer short write.");

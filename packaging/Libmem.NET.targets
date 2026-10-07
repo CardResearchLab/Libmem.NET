@@ -1,16 +1,43 @@
 <Project>
   <PropertyGroup>
-    <_LibmemNetNativeRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\runtimes\win-x64\native'))</_LibmemNetNativeRoot>
+    <_LibmemNetPlatform Condition="'$(PlatformTarget)' == 'x64'">x64</_LibmemNetPlatform>
+    <_LibmemNetPlatform Condition="'$(PlatformTarget)' == 'x86'">x86</_LibmemNetPlatform>
+    <_LibmemNetPlatform Condition="'$(_LibmemNetPlatform)' == '' and '$(Platform)' == 'x64'">x64</_LibmemNetPlatform>
+    <_LibmemNetPlatform Condition="'$(_LibmemNetPlatform)' == '' and ('$(Platform)' == 'x86' or '$(Platform)' == 'Win32')">x86</_LibmemNetPlatform>
+
+    <_LibmemNetRuntimeRoot Condition="'$(_LibmemNetPlatform)' != ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\runtimes\win-$(_LibmemNetPlatform)'))</_LibmemNetRuntimeRoot>
+    <_LibmemNetManagedRoot Condition="'$(_LibmemNetPlatform)' != ''">$(_LibmemNetRuntimeRoot)\lib\net8.0</_LibmemNetManagedRoot>
+    <_LibmemNetNativeRoot Condition="'$(_LibmemNetPlatform)' != ''">$(_LibmemNetRuntimeRoot)\native</_LibmemNetNativeRoot>
   </PropertyGroup>
 
-  <Target Name="LibmemNetValidateX64" BeforeTargets="ResolveReferences">
+  <Target Name="LibmemNetValidatePlatform" BeforeTargets="ResolveReferences">
     <Error Condition="'$(OS)' != 'Windows_NT'"
-           Text="Libmem.NET currently supports only Windows x64." />
-    <Error Condition="'$(PlatformTarget)' != 'x64' and '$(Platform)' != 'x64'"
-           Text="Libmem.NET currently supports only Windows x64. Set PlatformTarget or Platform to x64." />
+           Text="Libmem.NET currently supports only Windows x64/x86." />
+    <Error Condition="'$(_LibmemNetPlatform)' == ''"
+           Text="Libmem.NET requires an explicit Windows architecture. Set PlatformTarget or Platform to x64 or x86." />
+    <Error Condition="!Exists('$(_LibmemNetManagedRoot)\Libmem.NET.dll')"
+           Text="Libmem.NET package does not contain the managed runtime for win-$(_LibmemNetPlatform)." />
+    <Error Condition="!Exists('$(_LibmemNetNativeRoot)\libmem.dll') or !Exists('$(_LibmemNetNativeRoot)\Ijwhost.dll')"
+           Text="Libmem.NET package does not contain the native runtime for win-$(_LibmemNetPlatform)." />
   </Target>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(_LibmemNetPlatform)' != ''">
+    <Reference Include="Libmem.NET">
+      <HintPath>$(_LibmemNetManagedRoot)\Libmem.NET.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+
+    <ContentWithTargetPath Include="$(_LibmemNetManagedRoot)\Libmem.NET.dll">
+      <TargetPath>Libmem.NET.dll</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="$(_LibmemNetManagedRoot)\Libmem.NET.xml">
+      <TargetPath>Libmem.NET.xml</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </ContentWithTargetPath>
+
     <ContentWithTargetPath Include="$(_LibmemNetNativeRoot)\libmem.dll">
       <TargetPath>libmem.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
