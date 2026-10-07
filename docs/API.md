@@ -340,6 +340,8 @@ Relevant state:
 
 A successful unload request does not guarantee the DLL disappears from the target process, because Windows DLL loading is reference-counted.
 
+If the requested file exists but the target process cannot load it, or the load does not produce a module that can be resolved by the normalized requested full path, `InjectorManager.InjectLibrary` reports `LibmemException("LM_LoadModuleEx", ...)`. Module enumeration failures raised by `Libmem::EnumModules` remain `LM_EnumModulesEx`; a successful enumeration that simply cannot confirm the injected module is not misreported as an enumeration failure.
+
 ### VmtManager
 
 Local-process-only VMT wrapper.
