@@ -175,3 +175,60 @@ jobs:
             artifacts/package/*.nupkg
           if-no-files-found: error
           retention-days: 14
+
+  x86:
+    name: Release x86
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout x86
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET 8 SDK for x86
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup .NET 8 x86 runtime
+        shell: pwsh
+        run: .\eng\setup-dotnet-x86.ps1
+
+      - name: Build Libmem.NET Release x86
+        shell: pwsh
+        run: .\build.ps1 -Configuration Release -Platform x86
+
+      - name: Run x86 runtime smoke tests
+        shell: pwsh
+        run: dotnet run --project .\tests\Libmem.NET.SmokeTests\Libmem.NET.SmokeTests.csproj -c Release -p:Platform=x86
+
+      - name: Run x86 Hook and VMT runtime tests
+        shell: pwsh
+        run: dotnet run --project .\tests\Libmem.NET.HookVmtTests\Libmem.NET.HookVmtTests.csproj -c Release -p:Platform=x86
+
+      - name: Run x86 Injector runtime tests
+        shell: pwsh
+        run: dotnet run --project .\tests\Libmem.NET.InjectorTests\Libmem.NET.InjectorTests.csproj -c Release -p:Platform=x86
+
+      - name: Package x86 runtime
+        shell: pwsh
+        run: .\eng\package-runtime.ps1 -Configuration Release -Platform x86
+
+      - name: Verify x86 runtime package
+        shell: pwsh
+        run: |
+          $commit = (git rev-parse HEAD).Trim()
+          python .\eng\verify-package.py --package-dir .\artifacts\package\Libmem.NET-windows-x86 --archive .\artifacts\package\Libmem.NET-windows-x86.zip --checksum .\artifacts\package\Libmem.NET-windows-x86.zip.sha256 --expected-repository-commit $commit --expected-platform win-x86 --expected-configuration Release
+
+      - name: Upload x86 runtime artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Libmem.NET-windows-x86
+          path: |
+            artifacts/package/Libmem.NET-windows-x86/
+            artifacts/package/Libmem.NET-windows-x86.zip
+            artifacts/package/Libmem.NET-windows-x86.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
+
