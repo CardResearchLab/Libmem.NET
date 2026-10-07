@@ -43,6 +43,8 @@ vmt_source = (root / "src/Hooks/VmtManager.cpp").read_text(encoding="utf-8")
 assert "HookManager::HookManager" in hook_source
 assert "HookHandle::HookHandle" in hook_source
 assert "HookHandle^ Libmem::HookCode" in hook_source
+assert "trampoline_probe" in hook_source
+assert "LM_ReadMemoryEx(&p,trampoline,trampoline_probe.data(),size)!=size" in hook_source
 assert "VmtManager::VmtManager" in vmt_source
 assert "HookManager::HookManager" not in libmem_facade_source
 assert "HookHandle::HookHandle" not in libmem_facade_source
@@ -433,6 +435,8 @@ assert "pageExecuteRead = 0x20" in test_target_source
 assert "hookSource=0x" in test_target_source
 assert "hookDestination=0x" in test_target_source
 assert 'command.StartsWith("call "' in test_target_source
+assert 'command.StartsWith("protect "' in test_target_source
+assert "NativeMethods.VirtualProtect" in test_target_source
 assert "READY pid=" in test_target_source
 for required_call in [
     "ProcessSession.Open",
@@ -445,6 +449,11 @@ for required_call in [
     "session.Scanner.SigScan",
     "session.Hooks.Install",
     "remoteHook.Trampoline",
+    "ExpectedPatchedBytes",
+    "SetTargetProtection",
+    "pageNoAccess",
+    "retryHook.Remove",
+    "ProtectionOf(process!, ready.HookSource)",
     "exitReclaimedHook.Remove",
     "session.Memory.Free(exitReclaimedHook.Trampoline",
     "sourceProtectionAfterFailedRemove",
