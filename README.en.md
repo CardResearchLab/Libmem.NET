@@ -25,7 +25,7 @@ Official support target:
 
 ## Download
 
-The published stable release is [Libmem.NET v2.1.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.1.0). Current source prepares the **2.1.1** patch and does not replace 2.1.0 until its release gates and publication complete.
+GitHub has published stable [Libmem.NET v2.1.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.1.0). Post-release independent validation found that nuget.org still exposes **2.0.0** as the newest package, so 2.1.0 is not treated as a completed NuGet delivery. Current source prepares **2.1.1**, which should be the next NuGet publication after full acceptance.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
