@@ -4,7 +4,8 @@
     <RootNamespace>Libmem.NET.NuGetConsumer</RootNamespace>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>x64;x86</Platforms>
+    <PlatformTarget>$(Platform)</PlatformTarget>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LibmemNetTestPackageVersion Condition="'$(LibmemNetTestPackageVersion)' == ''">0.0.0-local</LibmemNetTestPackageVersion>
