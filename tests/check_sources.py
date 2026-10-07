@@ -470,13 +470,9 @@ for script in [
     (root / "eng/write-manifest.ps1").read_text(encoding="utf-8"),
 ]:
     assert "[ValidateSet('x64', 'x86')]" in script
-for project in [sample_project, smoke_project, hook_project, injector_project]:
+for project in [sample_project, smoke_project, hook_project, injector_project, test_target_project, external_process_project]:
     assert "<Platforms>x64;x86</Platforms>" in project
     assert "<PlatformTarget>$(Platform)</PlatformTarget>" in project
-assert "<Platforms>x64</Platforms>" in test_target_project, "TestTarget must remain x64-only for the current roadmap."
-assert "<PlatformTarget>x64</PlatformTarget>" in test_target_project
-assert "<Platforms>x64</Platforms>" in external_process_project, "ExternalProcessTests must remain x64-only for the current roadmap."
-assert "<PlatformTarget>x64</PlatformTarget>" in external_process_project
 assert "<PlatformTarget>x64</PlatformTarget>" in nuget_consumer_project, "NuGetConsumer must remain x64-only."
 assert "Libmem.NET" in nuget_consumer_project
 assert "lm_address_t native_address(UInt64 value" in source
@@ -487,6 +483,7 @@ assert "Size or index does not fit the current process architecture." in source
 print("PASS x86/x64 architecture contract")
 
 test_target_source = (root / "tests/Libmem.NET.TestTarget/Program.cs").read_text(encoding="utf-8")
+test_target_architecture_source = (root / "tests/Libmem.NET.TestTarget/ArchitectureMachineCode.cs").read_text(encoding="utf-8")
 external_process_test_source = (root / "tests/Libmem.NET.ExternalProcessTests/Program.cs").read_text(encoding="utf-8")
 assert "Marshal.AllocHGlobal" in test_target_source
 assert "NativeMethods.VirtualAlloc" in test_target_source
@@ -497,6 +494,23 @@ assert "hookDestination=0x" in test_target_source
 assert 'command.StartsWith("call "' in test_target_source
 assert 'command.StartsWith("protect "' in test_target_source
 assert "READY pid=" in test_target_source
+assert "expectedPatchBytes=" in test_target_source
+assert "MachineCodeFixture.Current" in test_target_source
+for architecture_fixture_marker in [
+    "IMachineCodeFixture",
+    "X86MachineCodeFixture",
+    "X64MachineCodeFixture",
+    "Arm64MachineCodeFixture",
+    "Architecture.X86",
+    "Architecture.X64",
+    "Architecture.Arm64",
+]:
+    assert architecture_fixture_marker in test_target_architecture_source, (
+        f"Architecture fixture contract lost marker: {architecture_fixture_marker}"
+    )
+assert "mov eax, imm32" in test_target_architecture_source
+assert "mov r10" in test_target_architecture_source
+print("PASS architecture-specific TestTarget fixture contract")
 for required_call in [
     "ProcessSession.Open",
     "ProcessSession.Open(ready.Pid)",
@@ -508,7 +522,9 @@ for required_call in [
     "session.Scanner.SigScan",
     "session.Hooks.Install",
     "remoteHook.Trampoline",
-    "ExpectedPatchedBytes",
+    "ready.ExpectedPatchBytes",
+    "ResolveTargetExecutable",
+    "LIBMEM_NET_TEST_TARGET_EXE",
     "SetTargetProtection",
     "pageNoAccess",
     "retryHook.Remove",
@@ -615,6 +631,8 @@ assert build_workflow.count(".\\build.ps1 -Configuration Debug -Platform x64") =
 assert build_workflow.count(".\\build.ps1 -Configuration Release -Platform x86") == 1
 for x86_step in [
     "Run x86 runtime smoke tests",
+    "Build x86 external-process TestTarget",
+    "Run x86 external-process runtime tests",
     "Run x86 Hook and VMT runtime tests",
     "Run x86 Injector runtime tests",
     "Package x86 runtime",
@@ -708,10 +726,12 @@ assert "Hook and VMT x64" in hook_workflow
 assert "setup-dotnet-x86.ps1" not in hook_workflow
 assert "Injector x64" in injector_workflow
 assert "setup-dotnet-x86.ps1" not in injector_workflow
-assert "External Process x64" in external_process_workflow
+assert "External Process ${{ matrix.platform }}" in external_process_workflow
+assert "platform: [x64, x86]" in external_process_workflow
 assert "Libmem.NET.TestTarget" in external_process_workflow
 assert "Libmem.NET.ExternalProcessTests" in external_process_workflow
-assert "setup-dotnet-x86.ps1" not in external_process_workflow
+assert "setup-dotnet-x86.ps1" in external_process_workflow
+assert "LIBMEM_NET_TEST_TARGET_EXE" in external_process_workflow
 assert "NuGet Consumer x64" in nuget_consumer_workflow
 assert "package-nuget.ps1" in nuget_consumer_workflow
 assert "package-version.txt" in nuget_consumer_workflow
