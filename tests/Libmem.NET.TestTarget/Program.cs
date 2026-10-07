@@ -4,17 +4,25 @@ using System.Runtime.InteropServices;
 const int allocationSize = 4096;
 const uint memCommitReserve = 0x3000;
 const uint memRelease = 0x8000;
-const uint pageExecuteRead = 0x20;
 const uint pageExecuteReadWrite = 0x40;
 
 static byte[] ReturnConstant(int value, int size = 64)
 {
-    if (size < 16)
+    if (size < 24)
         throw new ArgumentOutOfRangeException(nameof(size));
 
     var code = Enumerable.Repeat((byte)0x90, size).ToArray();
-    code[0] = 0xB8; // mov eax, imm32
-    BitConverter.GetBytes(value).CopyTo(code, 1);
+
+    // A 10-byte instruction forces HookCode to respect an instruction boundary:
+    // mov r10, 0x1122334455667788
+    code[0] = 0x49;
+    code[1] = 0xBA;
+    BitConverter.GetBytes(0x1122334455667788UL).CopyTo(code, 2);
+
+    // mov eax, imm32
+    code[10] = 0xB8;
+    BitConverter.GetBytes(value).CopyTo(code, 11);
+
     code[^1] = 0xC3; // ret
     return code;
 }
@@ -80,13 +88,6 @@ try
             $"Could not flush generated Hook test code. Win32Error={Marshal.GetLastWin32Error()}");
     }
 
-    if (!NativeMethods.VirtualProtect(hookSource, (nuint)allocationSize, pageExecuteRead, out _)
-        || !NativeMethods.VirtualProtect(hookDestination, (nuint)allocationSize, pageExecuteRead, out _))
-    {
-        throw new InvalidOperationException(
-            $"Could not protect generated Hook test code as execute-read. Win32Error={Marshal.GetLastWin32Error()}");
-    }
-
     Console.WriteLine(
         $"READY pid={Environment.ProcessId} address=0x{allocation.ToInt64():X} size={allocationSize} " +
         $"hookSource=0x{hookSource.ToInt64():X} hookDestination=0x{hookDestination.ToInt64():X}");
@@ -108,6 +109,42 @@ try
         {
             var address = ParseAddress(command[5..].Trim());
             Console.WriteLine($"RESULT {CallAddress(address)}");
+            Console.Out.Flush();
+            continue;
+        }
+
+        if (command.StartsWith("protect ", StringComparison.OrdinalIgnoreCase))
+        {
+            var parts = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 3)
+            {
+                Console.WriteLine("ERROR protect");
+                Console.Out.Flush();
+                continue;
+            }
+
+            var address = ParseAddress(parts[1]);
+            var protectionText = parts[2].StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                ? parts[2][2..]
+                : parts[2];
+            var protection = uint.Parse(
+                protectionText,
+                NumberStyles.HexNumber,
+                CultureInfo.InvariantCulture);
+
+            if (!NativeMethods.VirtualProtect(
+                    new IntPtr(unchecked((long)address)),
+                    1,
+                    protection,
+                    out var oldProtection))
+            {
+                Console.WriteLine($"ERROR protect {Marshal.GetLastWin32Error()}");
+            }
+            else
+            {
+                Console.WriteLine($"PROTECT old=0x{oldProtection:X}");
+            }
+
             Console.Out.Flush();
             continue;
         }
