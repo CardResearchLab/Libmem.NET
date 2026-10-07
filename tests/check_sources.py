@@ -611,6 +611,9 @@ assert "package-nuget.ps1" not in reusable_workflow
 assert "verify-package.py" in release_workflow
 assert "--expected-repository-commit" in release_workflow
 assert "id-token: write" in release_workflow
+assert "concurrency:" in release_workflow
+assert "group: ${{ github.workflow }}-${{ github.ref }}" in release_workflow
+assert "cancel-in-progress: false" in release_workflow
 assert "NuGet/login@v1" in release_workflow
 assert "secrets.NUGET_USER" in release_workflow
 assert "Libmem.NET.${EXPECTED_VERSION}.nupkg" in release_workflow
@@ -708,7 +711,8 @@ assert "gh api -X DELETE" not in release_workflow
 assert release_workflow.count("gh release create") == 1
 assert release_workflow.count("dotnet nuget push") == 1
 assert release_workflow.count("NuGet/login@v1") == 1
-print("PASS tag-only publication and branch dry-run policy")
+assert "--skip-duplicate" in release_steps["Publish Libmem.NET to nuget.org"]
+print("PASS serialized tag-only publication and branch dry-run policy")
 
 release_doc = (root / "docs/RELEASES.md").read_text(encoding="utf-8")
 release_checklist = (root / "docs/RELEASE_CHECKLIST.md").read_text(encoding="utf-8")
