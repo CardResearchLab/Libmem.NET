@@ -282,6 +282,8 @@ for required_vmt_failure_probe in [
 injector_project = (root / "tests/Libmem.NET.InjectorTests/Libmem.NET.InjectorTests.csproj").read_text(encoding="utf-8")
 sample_project = (root / "samples/Example.csproj").read_text(encoding="utf-8")
 sample_source = (root / "samples/Example.cs").read_text(encoding="utf-8")
+hook_sample_project = (root / "samples/HookLifecycle/HookLifecycle.csproj").read_text(encoding="utf-8")
+hook_sample_source = (root / "samples/HookLifecycle/Program.cs").read_text(encoding="utf-8")
 for required_sample_api in [
     "ProcessSession.Open",
     "session.Modules.Enumerate",
@@ -300,6 +302,26 @@ assert "NativeApi.Attach" not in sample_source
 assert "Hearthstone" not in sample_source
 print("PASS C# consumer sample contract")
 
+for hook_sample_marker in [
+    "ProcessSession.Open",
+    "session.Hooks.Install",
+    "hook.Trampoline",
+    "hook.PatchedBytes",
+    "hook.Remove",
+    "LibmemException",
+]:
+    assert hook_sample_marker in hook_sample_source, (
+        f"Hook lifecycle sample lost required API: {hook_sample_marker}"
+    )
+assert "<PlatformTarget>x64</PlatformTarget>" in hook_sample_project
+assert "<ProjectReference" not in hook_sample_project, (
+    "Hook lifecycle sample must consume the already-built Libmem.NET artifact in dotnet CLI CI."
+)
+assert "artifacts\\managed\\x64\\$(Configuration)\\Libmem.NET.dll" in hook_sample_project
+assert "artifacts\\managed\\x64\\$(Configuration)\\Ijwhost.dll" in hook_sample_project
+assert "artifacts\\native\\x64\\$(Configuration)\\bin\\libmem.dll" in hook_sample_project
+print("PASS Hook lifecycle consumer sample contract")
+
 nuget_package_project = (root / "packaging/Libmem.NET.csproj").read_text(encoding="utf-8")
 nuget_targets = (root / "packaging/Libmem.NET.targets").read_text(encoding="utf-8")
 nuget_consumer_project = (root / "tests/Libmem.NET.NuGetConsumer/Libmem.NET.NuGetConsumer.csproj").read_text(encoding="utf-8")
@@ -317,6 +339,8 @@ for api_reference_marker in [
     "## Upstream compatibility workarounds",
     "LM_GetProcessEx start time",
     "## IntelliSense documentation",
+    "## Hook consumer example",
+    "Hook conflict and trampoline boundaries",
     "api/Libmem.NET.PublicApi.txt",
 ]:
     assert api_reference_marker in api_reference, (
@@ -622,7 +646,7 @@ print("PASS release documentation and historical identity contract")
 
 for suite in ["SmokeTests", "ExternalProcessTests", "HookVmtTests", "InjectorTests", "NuGetConsumer"]:
     assert f"Libmem.NET.{suite}" in build_workflow, f"Unified PR gate lost {suite}"
-for step in ["Run C# example", "Publish NuGet consumer", "Reject non-x64 NuGet consumer", "Verify runtime package"]:
+for step in ["Run C# example", "Run Hook lifecycle sample", "Publish NuGet consumer", "Reject non-x64 NuGet consumer", "Verify runtime package"]:
     assert step in build_workflow, f"Unified PR gate lost {step}"
 for manual_workflow in [hook_workflow, injector_workflow, external_process_workflow, nuget_consumer_workflow]:
     assert "workflow_dispatch:" in manual_workflow

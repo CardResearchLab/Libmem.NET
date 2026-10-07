@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The current stable candidate is **2.0.0**. Published **2.0.0-preview.1** has passed GitHub Release publication, NuGet Trusted Publishing, and an independent nuget.org PackageReference acceptance test; 2.0.0 becomes the public stable release only after the release dry run, tag, and NuGet publication gates complete. Historical stable **v1.0.0** uses `LibmemCli`. Consumers must update references and recompile; see the [migration guide](docs/MIGRATION.md).
+The current stable candidate is **2.1.0**, while **2.0.0** remains the published stable release. 2.1.0 is a Public-API-compatible Hook / VMT hardening release focused on failure paths, ownership, external-process runtime coverage, and consumer documentation. Historical stable **v1.0.0** uses `LibmemCli`; see the [migration guide](docs/MIGRATION.md) for the identity transition.
 
 Official support target:
 
@@ -226,7 +226,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The current `VERSION` is the stable candidate **2.0.0**. Namespace and assembly identity changes break the former v1.0.0 identity and require consumer recompilation. NuGet and informational versions use `2.0.0`; numeric assembly/file versions remain `2.0.0.0`. Candidate builds produce the runtime ZIP, SHA-256 and `Libmem.NET.2.0.0.nupkg`; passing candidate validation does not itself publish the release.
+The current `VERSION` is the stable candidate **2.1.0**. NuGet and informational versions use `2.1.0`; numeric assembly/file versions are `2.1.0.0`. Candidate builds produce the runtime ZIP, SHA-256 and `Libmem.NET.2.1.0.nupkg`; passing candidate validation does not itself publish the release. Published stable `2.0.0` remains available until the 2.1.0 tag and NuGet publication complete.
 
 Build the release-style runtime ZIP locally:
 

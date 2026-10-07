@@ -2,7 +2,7 @@
 
 Scope: Windows x64 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. Do not recreate that tag or replace its assets. `Libmem.NET 2.0.0-preview.1` is published as a GitHub prerelease and on nuget.org; its tagged Release, Trusted Publishing/OIDC push, and public consumer smoke test all completed successfully. The current stable candidate is `2.0.0`; numeric assembly/file versions remain `2.0.0.0`. The checklist below is the gate for the stable release.
+Published stable: `2.0.0`. Current candidate: `2.1.0`; numeric assembly/file versions are `2.1.0.0`. This release preserves the 2.0.0 Public API baseline and hardens Hook / VMT behavior without expanding official x86 support.
 
 ## Repository acceptance
 
@@ -26,7 +26,7 @@ Historical `v1.0.0` was published on 2026-09-30 under the `LibmemCli` identity. 
 
 ## Publication prerequisites — verify for each future version
 
-- [x] Select stable `2.0.0` for the breaking `LibmemCli` → `Libmem.NET` identity migration; update `VERSION`, assembly metadata, CHANGELOG and NuGet package-page metadata together.
+- [x] Select `2.1.0` for the backward-compatible Hook / VMT hardening release; update `VERSION`, assembly metadata, CHANGELOG and NuGet package-page metadata together.
 - [ ] Confirm green Release x64 Build results on the exact release candidate.
 - [ ] Verify NuGet account-side setup: Trusted Publishing policy for `CardResearchLab/Libmem.NET` + `release.yml`, and GitHub Actions `NUGET_USER` secret. Their live readiness is not established by source review.
 - [ ] Create `release/v<version>` from that candidate and verify the complete dry run. It must build and validate ZIP/NuGet and render notes, with all three external publication steps skipped.
