@@ -44,7 +44,7 @@ Snapshots, caches, entities, game state, event state, IPC, and game-version adap
 
 - reject the bad-address sentinel at the `VmtManager` managed construction boundary;
 - add runtime and source-contract regression coverage for that invalid VTable base;
-- record the failed independent nuget.org restore for 2.1.0 (nuget.org still exposes 2.0.0) and retain 2.0.0 as the automatic smoke baseline until 2.1.1 is formally published;
+- preserve the initial failed 2.1.0 nuget.org restore as historical release evidence, while using the subsequently published 2.1.0 package as the automatic public-NuGet smoke baseline;
 - remove stale candidate/stable/NuGet wording left after the 2.1.0 publication.
 
 ## Completed phase: v2.1.0 — Hook / VMT Hardening
