@@ -11,6 +11,7 @@
 - Harden remote `HookHandle.Remove` by preflighting the full trampoline read before the pinned `LM_UnhookCodeEx` path; failed removal preserves source protection and ownership for retry.
 - Add VMT restore-failure retry coverage so failed `Reset` / `Dispose` keeps bookkeeping until restoration can succeed.
 - Expand Hook/VMT XML IntelliSense and API documentation, and add a buildable x64 Hook lifecycle consumer sample with CI execution.
+- Document that duplicate/overlapping code-hook coordination and relative-control-flow trampoline safety remain caller/pinned-libmem responsibilities; 2.1.0 does not add a managed conflict registry or relocation engine.
 - Keep Mono/Unity/game-specific patch systems and official x86 release support outside the 2.1.0 scope.
 
 ## 2.0.0 - 2026-10-06
