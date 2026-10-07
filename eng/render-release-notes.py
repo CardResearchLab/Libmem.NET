@@ -62,45 +62,66 @@ def read_checksum(path: Path, archive_name: str) -> str:
     return digest
 
 
-def render_notes(
-    *,
-    version: str,
-    changelog_section: str,
-    manifest: dict,
-    archive_sha256: str,
-    repository: str,
-    tag: str,
-) -> str:
-    platform = manifest.get("platform")
-    framework = manifest.get("targetFramework")
-    repository_commit = manifest.get("repositoryCommit")
-    libmem_commit = manifest.get("libmemCommit")
+def validate_manifest(manifest: dict, *, version: str, repository: str, platform: str) -> list[str]:
+    if manifest.get("packageVersion") != version:
+        fail(
+            f"{platform} manifest packageVersion mismatch: "
+            f"expected {version!r}, got {manifest.get('packageVersion')!r}"
+        )
+    if manifest.get("repository") != repository:
+        fail(
+            f"{platform} manifest repository mismatch: "
+            f"expected {repository!r}, got {manifest.get('repository')!r}"
+        )
+    if manifest.get("platform") != platform:
+        fail(f"Expected {platform} manifest, got {manifest.get('platform')!r}.")
+    if manifest.get("targetFramework") != "net8.0":
+        fail(f"Unexpected target framework in {platform}: {manifest.get('targetFramework')!r}.")
+    if not manifest.get("repositoryCommit") or manifest.get("repositoryCommit") == "unknown":
+        fail(f"{platform} manifest repositoryCommit is unavailable.")
+    if not manifest.get("libmemCommit") or manifest.get("libmemCommit") == "unknown":
+        fail(f"{platform} manifest libmemCommit is unavailable.")
     files = manifest.get("files")
-
-    if platform != "win-x64":
-        fail(f"Formal release notes currently require win-x64; got {platform!r}.")
-    if framework != "net8.0":
-        fail(f"Unexpected target framework: {framework!r}.")
-    if not repository_commit or repository_commit == "unknown":
-        fail("Manifest repositoryCommit is unavailable.")
-    if not libmem_commit or libmem_commit == "unknown":
-        fail("Manifest libmemCommit is unavailable.")
     if not isinstance(files, list) or not files:
-        fail("Manifest files must be a non-empty list.")
-
-    package_name = "Libmem.NET-windows-x64.zip"
-    checksum_name = package_name + ".sha256"
-
-    packaged_files = sorted(
+        fail(f"{platform} manifest files must be a non-empty list.")
+    packaged = sorted(
         str(entry.get("name"))
         for entry in files
         if isinstance(entry, dict) and entry.get("name")
     )
-    packaged_files.append("manifest.json")
+    packaged.append("manifest.json")
+    return packaged
+
+
+def render_notes(
+    *,
+    version: str,
+    changelog_section: str,
+    manifest_x64: dict,
+    manifest_x86: dict,
+    x64_sha256: str,
+    x86_sha256: str,
+    repository: str,
+    tag: str,
+) -> str:
+    x64_files = validate_manifest(
+        manifest_x64, version=version, repository=repository, platform="win-x64"
+    )
+    x86_files = validate_manifest(
+        manifest_x86, version=version, repository=repository, platform="win-x86"
+    )
+
+    if manifest_x64.get("repositoryCommit") != manifest_x86.get("repositoryCommit"):
+        fail("x64 and x86 manifests were not built from the same repository commit.")
+    if manifest_x64.get("libmemCommit") != manifest_x86.get("libmemCommit"):
+        fail("x64 and x86 manifests do not pin the same libmem commit.")
 
     release_kind = "preview release" if "-" in version else "official release"
+    repository_commit = manifest_x64["repositoryCommit"]
+    libmem_commit = manifest_x64["libmemCommit"]
+
     lines = [
-        f"Libmem.NET **v{version}** is a Windows x64 / .NET 8 {release_kind} "
+        f"Libmem.NET **v{version}** is a Windows x64/x86 / .NET 8 {release_kind} "
         "of the reusable C++/CLI wrapper around the pinned rdbo/libmem native library.",
         "",
         "## Release highlights",
@@ -109,31 +130,36 @@ def render_notes(
         "",
         "## Platform and compatibility",
         "",
-        "- **OS / architecture:** Windows x64",
+        "- **OS / architectures:** Windows x64 and Windows x86",
         "- **Managed runtime:** .NET 8",
         "- **Native backend:** pinned rdbo/libmem revision",
-        "- **x86:** retained only as deferred/best-effort source compatibility; no x86 asset is published by this release",
+        "- **AnyCPU:** not supported; consumers must select x64 or x86 explicitly",
         "",
         "## Downloads",
         "",
-        f"- **{package_name}** — runtime package for Windows x64",
-        f"- **{checksum_name}** — SHA-256 checksum for the runtime archive",
-        f"- **Libmem.NET.{version}.nupkg** — exact-version package for a local NuGet feed; nuget.org publication is a separate step",
+        "- **Libmem.NET-windows-x64.zip** — runtime package for Windows x64",
+        "- **Libmem.NET-windows-x64.zip.sha256** — SHA-256 checksum for the x64 archive",
+        "- **Libmem.NET-windows-x86.zip** — runtime package for Windows x86",
+        "- **Libmem.NET-windows-x86.zip.sha256** — SHA-256 checksum for the x86 archive",
+        f"- **Libmem.NET.{version}.nupkg** — one PackageReference package carrying both architectures; nuget.org publication is a separate step",
         "",
-        "## Package contents",
+        "## x64 package contents",
         "",
     ]
-    lines.extend(f"- `{name}`" for name in packaged_files)
+    lines.extend(f"- `{name}`" for name in x64_files)
+    lines.extend(["", "## x86 package contents", ""])
+    lines.extend(f"- `{name}`" for name in x86_files)
     lines.extend(
         [
             "",
             "## Integrity and provenance",
             "",
-            f"- **Archive SHA-256:** `{archive_sha256}`",
+            f"- **x64 archive SHA-256:** `{x64_sha256}`",
+            f"- **x86 archive SHA-256:** `{x86_sha256}`",
             f"- **Repository commit:** `{repository_commit}`",
             f"- **Pinned libmem commit:** `{libmem_commit}`",
-            "- The runtime manifest records each packaged file's size and SHA-256.",
-            "- Release publication verifies the package version, repository commit, platform, configuration, archive contents, and checksum before upload.",
+            "- Both runtime manifests record each packaged file's size and SHA-256.",
+            "- Release publication verifies both package versions, repository commit, platform, configuration, archive contents, and checksums before upload.",
             "",
             "## Documentation",
             "",
@@ -153,8 +179,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--version", required=True)
     parser.add_argument("--changelog", required=True, type=Path)
-    parser.add_argument("--manifest", required=True, type=Path)
-    parser.add_argument("--checksum", required=True, type=Path)
+    parser.add_argument("--manifest-x64", required=True, type=Path)
+    parser.add_argument("--checksum-x64", required=True, type=Path)
+    parser.add_argument("--manifest-x86", required=True, type=Path)
+    parser.add_argument("--checksum-x86", required=True, type=Path)
     parser.add_argument("--repository", required=True)
     parser.add_argument("--tag", required=True)
     parser.add_argument("--output", required=True, type=Path)
@@ -168,26 +196,23 @@ def main() -> int:
     changelog_text = args.changelog.read_text(encoding="utf-8")
     changelog_section = extract_changelog_section(changelog_text, version)
 
-    manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
-    if manifest.get("packageVersion") != version:
-        fail(
-            "Manifest packageVersion mismatch: "
-            f"expected {version!r}, got {manifest.get('packageVersion')!r}"
-        )
-    if manifest.get("repository") != args.repository:
-        fail(
-            "Manifest repository mismatch: "
-            f"expected {args.repository!r}, got {manifest.get('repository')!r}"
-        )
+    manifest_x64 = json.loads(args.manifest_x64.read_text(encoding="utf-8"))
+    manifest_x86 = json.loads(args.manifest_x86.read_text(encoding="utf-8"))
 
-    archive_sha256 = read_checksum(
-        args.checksum, "Libmem.NET-windows-x64.zip"
+    x64_sha256 = read_checksum(
+        args.checksum_x64, "Libmem.NET-windows-x64.zip"
     )
+    x86_sha256 = read_checksum(
+        args.checksum_x86, "Libmem.NET-windows-x86.zip"
+    )
+
     notes = render_notes(
         version=version,
         changelog_section=changelog_section,
-        manifest=manifest,
-        archive_sha256=archive_sha256,
+        manifest_x64=manifest_x64,
+        manifest_x86=manifest_x86,
+        x64_sha256=x64_sha256,
+        x86_sha256=x86_sha256,
         repository=args.repository,
         tag=tag,
     )
