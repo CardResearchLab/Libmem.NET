@@ -640,7 +640,7 @@ print("PASS release documentation and historical identity contract")
 
 for suite in ["SmokeTests", "ExternalProcessTests", "HookVmtTests", "InjectorTests", "NuGetConsumer"]:
     assert f"Libmem.NET.{suite}" in build_workflow, f"Unified PR gate lost {suite}"
-for step in ["Run C# example", "Publish NuGet consumer", "Reject non-x64 NuGet consumer", "Verify runtime package"]:
+for step in ["Run C# example", "Run Hook example", "Publish NuGet consumer", "Reject non-x64 NuGet consumer", "Verify runtime package"]:
     assert step in build_workflow, f"Unified PR gate lost {step}"
 for manual_workflow in [hook_workflow, injector_workflow, external_process_workflow, nuget_consumer_workflow]:
     assert "workflow_dispatch:" in manual_workflow
