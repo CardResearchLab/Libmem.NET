@@ -33,9 +33,9 @@ Published GitHub/nuget.org stable: `2.1.1`; previous stable: `2.1.0`. Numeric as
 - [ ] Review exact-version ZIP/NuGet artifacts and generated notes; confirm both are bound to the same source commit.
 - [x] After explicit publication authorization, create the matching `v2.1.1` tag. Tag creation publishes GitHub downloads only.
 - [ ] Verify GitHub downloads/checksum, then manually run Release on the published tag with `publish-nuget` enabled.
-- [ ] Restore an independent x64 consumer from nuget.org using exact version `2.1.1`, then run and publish it to verify the public delivery path.
+- [x] Restore an independent x64 consumer from nuget.org using exact version `2.1.1`, then run and publish it to verify the public delivery path.
 
-Historical post-release evidence: the first clean nuget.org-only restore of exact `2.1.0` failed with NU1102 before the NuGet publication completed. 2.1.0 was subsequently published. 2.1.1 is now published; do not mark its NuGet delivery complete until the exact-version public consumer test passes.
+Historical post-release evidence: the first clean nuget.org-only restore of exact `2.1.0` failed with NU1102 before the NuGet publication completed. 2.1.0 was subsequently published. Libmem.NET `2.1.1` is published and its exact-version public nuget.org restore/build/run/publish smoke test now passes.
 
 The completed GitHub 2.1.0 acceptance evidence remains in repository history and the v2.1.0 release metadata.
 
