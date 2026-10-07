@@ -2,7 +2,7 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Current source candidate: `2.2.0`; published GitHub/nuget.org stable: `2.1.1`. Numeric assembly/file versions for the candidate are `2.2.0.0`. The candidate preserves the 2.1.1 Public API and pinned rdbo/libmem revision while promoting x86 to official support.
+Current source and published GitHub/nuget.org stable: `2.2.0`. Numeric assembly/file versions are `2.2.0.0`. The release preserves the 2.1.1 Public API and pinned rdbo/libmem revision while promoting x86 to official support.
 
 ## Repository acceptance
 
@@ -25,8 +25,8 @@ Current source candidate: `2.2.0`; published GitHub/nuget.org stable: `2.1.1`. N
 
 ## NuGet account-side setup
 
-- [ ] Verify the nuget.org Trusted Publishing policy matches `CardResearchLab/Libmem.NET` and the `.github/workflows/release.yml` workflow.
-- [ ] Verify the GitHub Actions repository secret `NUGET_USER` contains the NuGet account username consumed by `NuGet/login@v1`.
+- [x] Verify the nuget.org Trusted Publishing policy matches `CardResearchLab/Libmem.NET` and the `.github/workflows/release.yml` workflow.
+- [x] Verify the GitHub Actions repository secret `NUGET_USER` contains the NuGet account username consumed by `NuGet/login@v1`.
 - OIDC supplies the short-lived publish credential at workflow runtime; do not store a long-lived NuGet API key in the repository.
 - Release-branch dry runs and ordinary PR validation must not require NuGet account credentials.
 
@@ -34,14 +34,14 @@ Current source candidate: `2.2.0`; published GitHub/nuget.org stable: `2.1.1`. N
 
 - [x] Select `2.2.0` for the first stable dual-architecture release line.
 - [x] Update version metadata and consumer-facing release documentation for x64/x86 support.
-- [ ] Confirm the release-preparation PR passes Release x64, Release x86 and the multi-architecture NuGet gate.
-- [ ] Create `release/v2.2.0` from the accepted candidate and verify the complete dry run.
-- [ ] Review both Runtime ZIPs, both SHA-256 files, the exact-version NuGet package, manifests and generated release notes; confirm all artifacts bind to the same source commit.
-- [ ] Create the matching `v2.2.0` tag only after the dry run is green.
-- [ ] Verify the GitHub Release publishes x64/x86 downloads and the exact-version NuGet asset.
-- [ ] Manually run Release on the published tag with `publish-nuget` enabled.
-- [ ] Restore independent x64 and x86 consumers from nuget.org using exact version `2.2.0`, then build, run and publish both.
-- [ ] Advance the automatic public-NuGet smoke baseline from 2.1.1 to 2.2.0 only after public x64/x86 validation succeeds.
+- [x] Confirm the release-preparation PR passes Release x64, Release x86 and the multi-architecture NuGet gate.
+- [x] Create `release/v2.2.0` from the accepted candidate and verify the complete dry run.
+- [x] Review both Runtime ZIPs, both SHA-256 files, the exact-version NuGet package, manifests and generated release notes; confirm all artifacts bind to the same source commit.
+- [x] Create the matching `v2.2.0` tag only after the dry run is green.
+- [x] Verify the GitHub Release publishes x64/x86 downloads and the exact-version NuGet asset.
+- [x] Manually run Release on the published tag with `publish-nuget` enabled.
+- [x] Restore independent x64 and x86 consumers from nuget.org using exact version `2.2.0`, then build, run and publish both.
+- [x] Advance the automatic public-NuGet smoke baseline from 2.1.1 to 2.2.0 only after public x64/x86 validation succeeds.
 
 ## Compatibility boundary
 
