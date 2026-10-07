@@ -733,10 +733,14 @@ assert "Hook and VMT x64" in hook_workflow
 assert "setup-dotnet-x86.ps1" not in hook_workflow
 assert "Injector x64" in injector_workflow
 assert "setup-dotnet-x86.ps1" not in injector_workflow
-assert "External Process x64" in external_process_workflow
+assert "External Process ${{ inputs.platform }}" in external_process_workflow
+assert "type: choice" in external_process_workflow
+assert "- x64" in external_process_workflow and "- x86" in external_process_workflow
+assert "setup-dotnet-x86.ps1" in external_process_workflow
+assert "inputs.platform == 'x86'" in external_process_workflow
 assert "Libmem.NET.TestTarget" in external_process_workflow
 assert "Libmem.NET.ExternalProcessTests" in external_process_workflow
-assert "setup-dotnet-x86.ps1" not in external_process_workflow
+assert "LIBMEM_NET_TEST_TARGET:" in external_process_workflow
 assert "NuGet Consumer x64" in nuget_consumer_workflow
 assert "package-nuget.ps1" in nuget_consumer_workflow
 assert "package-version.txt" in nuget_consumer_workflow
