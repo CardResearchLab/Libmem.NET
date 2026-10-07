@@ -80,7 +80,7 @@ jobs:
       - name: Run external-process runtime tests
         shell: pwsh
         env:
-          LIBMEM_NET_TEST_TARGET_DLL: ${{ github.workspace }}\tests\Libmem.NET.TestTarget\bin\x64\Release\net8.0\Libmem.NET.TestTarget.dll
+          LIBMEM_NET_TEST_TARGET_EXE: ${{ github.workspace }}\tests\Libmem.NET.TestTarget\bin\x64\Release\net8.0\Libmem.NET.TestTarget.exe
         run: dotnet run --project .\tests\Libmem.NET.ExternalProcessTests\Libmem.NET.ExternalProcessTests.csproj -c Release -p:Platform=x64
 
       - name: Run Hook and VMT runtime tests
@@ -202,6 +202,16 @@ jobs:
       - name: Run x86 runtime smoke tests
         shell: pwsh
         run: dotnet run --project .\tests\Libmem.NET.SmokeTests\Libmem.NET.SmokeTests.csproj -c Release -p:Platform=x86
+
+      - name: Build x86 external-process TestTarget
+        shell: pwsh
+        run: dotnet build .\tests\Libmem.NET.TestTarget\Libmem.NET.TestTarget.csproj -c Release -p:Platform=x86
+
+      - name: Run x86 external-process runtime tests
+        shell: pwsh
+        env:
+          LIBMEM_NET_TEST_TARGET_EXE: ${{ github.workspace }}\tests\Libmem.NET.TestTarget\bin\x86\Release\net8.0\Libmem.NET.TestTarget.exe
+        run: dotnet run --project .\tests\Libmem.NET.ExternalProcessTests\Libmem.NET.ExternalProcessTests.csproj -c Release -p:Platform=x86
 
       - name: Run x86 Hook and VMT runtime tests
         shell: pwsh
