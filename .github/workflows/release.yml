@@ -17,6 +17,12 @@ permissions:
   contents: write
   id-token: write
 
+# Never allow two release/publish runs for the same ref to execute at once.
+# A later accidental manual trigger waits instead of cancelling an in-flight publish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-x64:
     uses: ./.github/workflows/reusable-build.yml
