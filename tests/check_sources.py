@@ -258,7 +258,7 @@ vmt_unhook = source.split("bool VmtManager::Unhook(UInt64 index)", 1)[1].split("
 assert "auto nativeIndex=native_size(index,\"index\")" in vmt_unhook
 assert "native_->hkentries" in vmt_unhook
 assert "entry->index==nativeIndex" in vmt_unhook
-assert vmt_unhook.index("entry->index==nativeIndex") < vmt_unhook.index("LM_VmtUnhook")
+assert vmt_unhook.index("entry->index==nativeIndex") < vmt_unhook.index("return LM_VmtUnhook")
 assert "return true;" in vmt_unhook
 vmt_dispose = source.split("VmtManager::~VmtManager()", 1)[1].split("\n}", 1)[0]
 assert "if(!ResetNative())" in vmt_dispose
