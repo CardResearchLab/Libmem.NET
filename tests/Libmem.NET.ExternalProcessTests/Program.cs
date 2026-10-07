@@ -382,6 +382,15 @@ try
     Check(session.Scanner.SigScan(signature, ready.Address, ready.Size) == ready.Address,
         "Remote signature scan did not resolve the TestTarget allocation.");
 
+    var exactRemoteScanSize = (ulong)expected.Length;
+    var exactRemoteMask = new string('x', expected.Length);
+    Check(session.Scanner.DataScan(expected, ready.Address, exactRemoteScanSize) == ready.Address,
+        "Remote DataScan missed the final candidate in an exact-size window.");
+    Check(session.Scanner.PatternScan(expected, exactRemoteMask, ready.Address, exactRemoteScanSize) == ready.Address,
+        "Remote PatternScan missed the final candidate in an exact-size window.");
+    Check(session.Scanner.SigScan(signature, ready.Address, exactRemoteScanSize) == ready.Address,
+        "Remote SigScan missed the final candidate in an exact-size window.");
+
     var segment = NativeApi.FindSegment(process!, ready.Address);
     Check(segment is not null
           && segment.Base <= ready.Address
