@@ -4,9 +4,9 @@ This document describes the official release channel, current stable release, su
 
 ## Current source and historical release
 
-The published stable line on GitHub and nuget.org is `2.1.0`. The current maintenance candidate is `2.1.1`, with numeric assembly/file versions `2.1.1.0`.
+The published stable line on GitHub and nuget.org is `2.1.1`, with numeric assembly/file versions `2.1.1.0`. `2.1.0` is the previous stable release.
 
-2.1.1 preserves the 2.1.0 Public API and pinned native dependency. It fixes the missing bad-address-sentinel guard on `VmtManager` construction, adds regression coverage for that managed boundary, refreshes post-release documentation, and advances public-NuGet smoke coverage to the published 2.1.0 baseline.
+2.1.1 preserves the 2.1.0 Public API and pinned native dependency. It fixes the missing bad-address-sentinel guard on `VmtManager` construction and the untracked `VmtManager.Unhook` page-protection issue, strengthens regression coverage, and advances public-NuGet smoke coverage to the published 2.1.1 baseline.
 
 The historical `LibmemCli` → `Libmem.NET` identity migration remains documented in [MIGRATION.md](MIGRATION.md). Existing historical tags and assets remain immutable.
 
@@ -151,7 +151,8 @@ The `Libmem.NET` package path is validated both through local-feed CI and an ind
 | Version | Date | Status | Official platform |
 | --- | --- | --- | --- |
 | 2.0.0-preview.1 | 2026-10-05 | Published prerelease, Libmem.NET identity | Windows x64 / .NET 8 |
-| 2.1.0 | 2026-10-07 | Published stable on GitHub and nuget.org; public PackageReference baseline | Windows x64 / .NET 8 |
+| 2.1.1 | 2026-10-07 | Published stable on GitHub and nuget.org; current public PackageReference baseline | Windows x64 / .NET 8 |
+| 2.1.0 | 2026-10-07 | Previous stable release | Windows x64 / .NET 8 |
 | 2.0.0 | 2026-10-06 | Published stable, Libmem.NET identity | Windows x64 / .NET 8 |
 | 1.0.0 | 2026-09-30 | Historical stable, LibmemCli identity | Windows x64 / .NET 8 |
 | 0.3.0 | 2026-09-29 | Historical | Windows x86/x64 |

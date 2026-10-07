@@ -2,11 +2,11 @@
 
 > Current official target: Windows x64 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. Stable `2.1.0` is published on both GitHub and nuget.org and uses the `Libmem.NET` managed assembly and namespace. Current source is preparing the backward-compatible `2.1.1` maintenance patch. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. Stable `2.1.1` is published on both GitHub and nuget.org and uses the `Libmem.NET` managed assembly and namespace. `2.1.0` remains the previous stable release. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
-Use published stable `2.1.0` for normal consumption. The exact `2.1.1` maintenance candidate can be built from source or validated through release dry-run artifacts until it is formally published.
+Use published stable `2.1.1` for normal consumption. Pin `2.1.0` only when a consumer intentionally needs the previous stable release.
 
 Historical [v1.0.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v1.0.0) provides [LibmemCli-windows-x64.zip](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip) and its [SHA-256 file](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256). Those assets contain `LibmemCli.dll`, not `Libmem.NET.dll`, and require the old namespace. Do not rename old binaries to use the new examples.
 
@@ -18,7 +18,7 @@ Libmem.NET-windows-x64.zip.sha256
 Libmem.NET.2.1.1.nupkg
 ```
 
-The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. Candidate builds produce an exact-version `.nupkg` for local acceptance; stable 2.1.0 is available from nuget.org and GitHub while 2.1.1 remains under acceptance.
+The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. Stable 2.1.1 is available from nuget.org and GitHub; local packaging can still produce exact-version `.nupkg` files for acceptance and reproducibility checks.
 
 Minimum runtime files:
 
@@ -56,12 +56,12 @@ It is more operationally complex than consuming a prebuilt package.
 
 ## 3. NuGet package
 
-`Libmem.NET 2.1.0` is the current published stable package on nuget.org. Candidate `2.1.1` uses the same Trusted Publishing (OIDC) path after release-branch validation:
+`Libmem.NET 2.1.1` is the current published stable package on nuget.org and uses the same Trusted Publishing (OIDC) release path:
 
 ```text
 Package ID: Libmem.NET
 Status: validated for Windows x64 / .NET 8
-Publication: nuget.org via Trusted Publishing (OIDC); 2.1.0 is the current public baseline, 2.1.1 pending release gates
+Publication: nuget.org via Trusted Publishing (OIDC); 2.1.1 is the current public baseline
 Target: Windows x64 / .NET 8
 ```
 
@@ -94,7 +94,7 @@ After building Libmem.NET x64:
 .\eng\package-nuget.ps1 -Configuration Release
 ```
 
-For the exact stable candidate instead of a commit-qualified development package:
+For the exact stable package instead of a commit-qualified development package:
 
 ```powershell
 .\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.1.1
@@ -187,6 +187,6 @@ The successful `2.0.0-preview.1` publication proves the current Trusted Publishi
 
 ## Current recommendation
 
-For normal Windows x64 / .NET 8 PackageReference consumption while 2.1.1 is under candidate validation, use published stable `Libmem.NET 2.1.0`. After 2.1.1 is published, consumers should prefer the new maintenance package. Runtime ZIP, source/submodule and reusable-workflow integration remain available for consumers that need binary bundles or exact source provenance. Historical v1.0.0 remains available under its original names.
+For normal Windows x64 / .NET 8 PackageReference consumption, use published stable `Libmem.NET 2.1.1`. Runtime ZIP, source/submodule and reusable-workflow integration remain available for consumers that need binary bundles or exact source provenance. `2.1.0` remains the previous stable release, and historical v1.0.0 remains available under its original names.
 
 See [RELEASES.md](RELEASES.md) for release history, support boundaries and versioning, and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the next publication.
