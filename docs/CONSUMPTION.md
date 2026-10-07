@@ -51,12 +51,12 @@ This is useful when the consumer wants:
 
 ## 3. NuGet package
 
-The 2.2.0 candidate uses one multi-architecture package:
+The 2.2.0 stable release uses one multi-architecture package:
 
 ```text
 Package ID: Libmem.NET
-Candidate: 2.2.0
-Published public baseline until release: 2.1.1
+Stable version: 2.2.0
+Published public baseline: 2.2.0
 Target: Windows x64/x86 / .NET 8
 Architecture selection: explicit Platform / PlatformTarget
 Unsupported: AnyCPU
