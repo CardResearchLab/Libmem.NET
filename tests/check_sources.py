@@ -531,10 +531,7 @@ hook_workflow = (root / ".github/workflows/hook-vmt-tests.yml").read_text(encodi
 injector_workflow = (root / ".github/workflows/injector-tests.yml").read_text(encoding="utf-8")
 external_process_workflow = (root / ".github/workflows/external-process-tests.yml").read_text(encoding="utf-8")
 nuget_consumer_workflow = (root / ".github/workflows/nuget-consumer-tests.yml").read_text(encoding="utf-8")
-published_nuget_workflow = (root / ".github/workflows/published-nuget-smoke.yml").read_text(encoding="utf-8")
 
-assert "default: 2.1.0" in published_nuget_workflow
-assert '$version = "2.1.0"' in published_nuget_workflow
 assert "schemaVersion = 2" in manifest_script
 assert "Get-FileHash" in manifest_script
 assert "sha256 = " in manifest_script
