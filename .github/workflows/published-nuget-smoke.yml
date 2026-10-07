@@ -74,9 +74,12 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
-          $xml = Join-Path $env:USERPROFILE ".nuget\packages\libmem.net\$version\lib\net8.0\Libmem.NET.xml"
-          if (-not (Test-Path $xml -PathType Leaf)) {
-            throw "Published NuGet package is missing Libmem.NET.xml: $xml"
+          $packageRoot = Join-Path $env:USERPROFILE ".nuget\packages\libmem.net\$version"
+          foreach ($platform in @("win-x64", "win-x86")) {
+            $xml = Join-Path $packageRoot "runtimes\$platform\lib\net8.0\Libmem.NET.xml"
+            if (-not (Test-Path $xml -PathType Leaf)) {
+              throw "Published NuGet package is missing $platform XML documentation: $xml"
+            }
           }
 
       - name: Build x64 published package consumer
