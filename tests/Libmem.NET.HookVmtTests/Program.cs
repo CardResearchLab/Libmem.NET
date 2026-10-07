@@ -220,16 +220,18 @@ vmt.Hook(0, replacement0);
 Check(vmt.IsDisposed, "VmtManager should report disposed after repeated Dispose calls.");
 Check(ReadPointer(memory, vtablePage.Address) == original0, "VmtManager.Dispose did not restore an active hook.");
 
-var disposedVmtThrows = false;
-try
-{
-    _ = vmt.GetOriginal(0);
-}
-catch (ObjectDisposedException)
-{
-    disposedVmtThrows = true;
-}
-Check(disposedVmtThrows, "VmtManager should reject operations after Dispose.");
+ExpectThrows<ObjectDisposedException>(
+    () => vmt.Hook(0, replacement0),
+    "Disposed VmtManager.Hook should reject use before validating replacement arguments.");
+ExpectThrows<ObjectDisposedException>(
+    () => vmt.Unhook(0),
+    "Disposed VmtManager.Unhook should reject use.");
+ExpectThrows<ObjectDisposedException>(
+    () => { _ = vmt.GetOriginal(0); },
+    "Disposed VmtManager.GetOriginal should reject use.");
+ExpectThrows<ObjectDisposedException>(
+    () => vmt.Reset(),
+    "Disposed VmtManager.Reset should reject use.");
 
 
 // VmtManager failure-state ownership and retry lifecycle.
