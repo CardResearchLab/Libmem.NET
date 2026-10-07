@@ -92,7 +92,8 @@ jobs:
             --project .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             -c Release `
             --no-restore `
-            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -p:Platform=x64
 
       - name: Publish and verify runtime assets
         shell: pwsh
