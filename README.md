@@ -25,7 +25,7 @@
 
 ## 下载
 
-GitHub 已发布稳定版 **Libmem.NET 2.1.0**。发布后独立验证发现 nuget.org 当前最新仍为 **2.0.0**，因此 2.1.0 不再视为已完成 NuGet 交付；当前源码准备 **2.1.1** patch，建议在完整验收后直接把 2.1.1 作为下一次 NuGet 发布版本。
+GitHub 与 nuget.org 均已发布稳定版 **Libmem.NET 2.1.0**。当前源码正在准备向后兼容的 **2.1.1** 维护修复版本，完整验收后将作为下一稳定包发布。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -226,7 +226,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前 `VERSION` 为正式版候选 **2.1.0**。NuGet / informational version 使用 `2.1.0`，程序集数字版本与文件版本为 `2.1.0.0`。候选 Build 会生成 Runtime ZIP、SHA-256 和 `Libmem.NET.2.1.0.nupkg`；候选产物通过验收不等于已公开发布。已发布稳定版 `2.0.0` 继续可用，直到 2.1.0 完成 tag 与 NuGet 发布。
+当前 `VERSION` 为维护修复候选 **2.1.1**。NuGet / informational version 使用 `2.1.1`，程序集数字版本与文件版本为 `2.1.1.0`。候选 Build 会生成 Runtime ZIP、SHA-256 和 `Libmem.NET.2.1.1.nupkg`；候选产物通过验收不等于已公开发布。已发布稳定版 `2.1.0` 继续作为公共基线，直到 2.1.1 完成 tag 与 NuGet 发布。
 
 生成正式风格 Runtime ZIP：
 
@@ -281,7 +281,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-`v2.0.0-preview.1` 已发布到 GitHub 与 nuget.org；Trusted Publishing / OIDC 登录、NuGet push 和公开 PackageReference 消费均已实际验证。当前 `2.0.0` 正式版候选将沿用同一分离发布流程：先 dry run，再 tag/GitHub Release，最后显式 opt-in 发布 NuGet。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+Trusted Publishing / OIDC、NuGet push 与公开 PackageReference 消费链路均已实际验证。稳定版 `2.1.0` 已发布到 GitHub 与 nuget.org，公开 NuGet smoke 基线也已推进到 2.1.0。当前 `2.1.1` 维护版本沿用同一分离发布流程：先 dry run，再 tag/GitHub Release，最后显式 opt-in 发布 NuGet。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 
