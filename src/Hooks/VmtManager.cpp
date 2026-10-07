@@ -39,7 +39,19 @@ void VmtManager::Hook(UInt64 index,UInt64 to) {
 }
 bool VmtManager::Unhook(UInt64 index) {
     if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");
-    return LM_VmtUnhook(native_,native_size(index,"index"))!=LM_FALSE;
+
+    auto nativeIndex=native_size(index,"index");
+
+    // The pinned libmem LM_VmtUnhook changes the slot page to XRW before it
+    // checks whether the index is tracked. For an untracked index it returns
+    // LM_TRUE without restoring the previous protection. Preserve the public
+    // idempotent-success contract without calling into that unsafe path.
+    for(auto entry=native_->hkentries; entry!=LM_NULLPTR; entry=entry->next) {
+        if(entry->index==nativeIndex)
+            return LM_VmtUnhook(native_,nativeIndex)!=LM_FALSE;
+    }
+
+    return true;
 }
 UInt64 VmtManager::GetOriginal(UInt64 index) {
     if(disposed_ || !native_) throw gcnew ObjectDisposedException("VmtManager");

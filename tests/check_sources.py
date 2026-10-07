@@ -124,6 +124,16 @@ assert upstream_header_path.exists(), (
 )
 upstream_header = upstream_header_path.read_text(encoding="utf-8", errors="replace")
 
+upstream_vmt_path = root / "third_party/libmem/src/common/vmt.c"
+assert upstream_vmt_path.exists(), "Pinned libmem VMT source was not found."
+upstream_vmt_source = upstream_vmt_path.read_text(encoding="utf-8", errors="replace")
+upstream_unhook = upstream_vmt_source.split("LM_VmtUnhook(lm_vmt_t *vmt,", 1)[1].split("/********************************/", 1)[0]
+assert upstream_unhook.index("LM_ProtMemory") < upstream_unhook.index("entry = vmt_search")
+assert re.search(r"if \(!entry\)\s+return LM_TRUE;", upstream_unhook), (
+    "Pinned LM_VmtUnhook untracked-index behavior changed; review the Libmem.NET protection workaround."
+)
+print("PASS pinned LM_VmtUnhook untracked-index compatibility contract")
+
 without_comments = re.sub(r"/\*.*?\*/", "", upstream_header, flags=re.S)
 without_comments = re.sub(r"//.*", "", without_comments)
 
@@ -254,6 +264,12 @@ assert "address==0 || bad_address(address)" in vmt_constructor
 assert "bad-address sentinel" in vmt_constructor
 assert "bool VmtManager::ResetNative()" in source
 assert "while(native_->hkentries!=LM_NULLPTR)" in source
+vmt_unhook = source.split("bool VmtManager::Unhook(UInt64 index)", 1)[1].split("UInt64 VmtManager::GetOriginal", 1)[0]
+assert "auto nativeIndex=native_size(index,\"index\")" in vmt_unhook
+assert "native_->hkentries" in vmt_unhook
+assert "entry->index==nativeIndex" in vmt_unhook
+assert vmt_unhook.index("entry->index==nativeIndex") < vmt_unhook.index("return LM_VmtUnhook")
+assert "return true;" in vmt_unhook
 vmt_dispose = source.split("VmtManager::~VmtManager()", 1)[1].split("\n}", 1)[0]
 assert "if(!ResetNative())" in vmt_dispose
 assert "manager remains active" in vmt_dispose
@@ -271,6 +287,25 @@ native_build_script = (root / "eng/build-native.ps1").read_text(encoding="utf-8"
 smoke_project = (root / "tests/Libmem.NET.SmokeTests/Libmem.NET.SmokeTests.csproj").read_text(encoding="utf-8")
 hook_project = (root / "tests/Libmem.NET.HookVmtTests/Libmem.NET.HookVmtTests.csproj").read_text(encoding="utf-8")
 hook_runtime_source = (root / "tests/Libmem.NET.HookVmtTests/Program.cs").read_text(encoding="utf-8")
+for required_vmt_protection_probe in [
+    "protectionBeforeUntrackedUnhook",
+    "protectionAfterUntrackedUnhook",
+    "Unhooking an untracked VMT slot must preserve the page protection.",
+]:
+    assert required_vmt_protection_probe in hook_runtime_source, (
+        f"Hook/VMT runtime tests lost untracked-protection coverage: {required_vmt_protection_probe}"
+    )
+
+for required_vmt_disposed_probe in [
+    "Disposed VmtManager.Hook should reject use before validating replacement arguments.",
+    "Disposed VmtManager.Unhook should reject use.",
+    "Disposed VmtManager.GetOriginal should reject use.",
+    "Disposed VmtManager.Reset should reject use.",
+]:
+    assert required_vmt_disposed_probe in hook_runtime_source, (
+        f"Hook/VMT runtime tests lost disposed-state coverage: {required_vmt_disposed_probe}"
+    )
+
 for required_vmt_failure_probe in [
     "VMT failure-state backing page",
     "failureVmt.Reset()",

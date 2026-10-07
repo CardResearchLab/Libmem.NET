@@ -181,9 +181,19 @@ var badReplacement = ExpectThrows<ArgumentOutOfRangeException>(
     "VmtManager.Hook should reject the bad-address replacement sentinel.");
 Check(badReplacement.ParamName == "replacementAddress", "Bad VMT replacement reported the wrong parameter name.");
 
+var protectionBeforeUntrackedUnhook = NativeApi.FindSegment(vtablePage.Address)?.Protection
+    ?? throw new InvalidOperationException("Could not query VMT page protection before untracked Unhook.");
+Check(protectionBeforeUntrackedUnhook == MemoryProtection.ReadWrite,
+    "VMT test page should start ReadWrite before untracked Unhook.");
+
 Check(vmt.Unhook(2), "VmtManager.Unhook should be idempotent for an untracked in-range slot.");
 Check(ReadPointer(memory, vtablePage.Address + (ulong)(2 * IntPtr.Size)) == original2,
     "Unhooking an untracked slot should not change its value.");
+
+var protectionAfterUntrackedUnhook = NativeApi.FindSegment(vtablePage.Address)?.Protection
+    ?? throw new InvalidOperationException("Could not query VMT page protection after untracked Unhook.");
+Check(protectionAfterUntrackedUnhook == protectionBeforeUntrackedUnhook,
+    "Unhooking an untracked VMT slot must preserve the page protection.");
 
 vmt.Hook(0, replacement0);
 Check(ReadPointer(memory, vtablePage.Address) == replacement0, "VmtManager.Hook did not update slot 0.");
@@ -220,16 +230,18 @@ vmt.Hook(0, replacement0);
 Check(vmt.IsDisposed, "VmtManager should report disposed after repeated Dispose calls.");
 Check(ReadPointer(memory, vtablePage.Address) == original0, "VmtManager.Dispose did not restore an active hook.");
 
-var disposedVmtThrows = false;
-try
-{
-    _ = vmt.GetOriginal(0);
-}
-catch (ObjectDisposedException)
-{
-    disposedVmtThrows = true;
-}
-Check(disposedVmtThrows, "VmtManager should reject operations after Dispose.");
+ExpectThrows<ObjectDisposedException>(
+    () => vmt.Hook(0, replacement0),
+    "Disposed VmtManager.Hook should reject use before validating replacement arguments.");
+ExpectThrows<ObjectDisposedException>(
+    () => vmt.Unhook(0),
+    "Disposed VmtManager.Unhook should reject use.");
+ExpectThrows<ObjectDisposedException>(
+    () => { _ = vmt.GetOriginal(0); },
+    "Disposed VmtManager.GetOriginal should reject use.");
+ExpectThrows<ObjectDisposedException>(
+    () => vmt.Reset(),
+    "Disposed VmtManager.Reset should reject use.");
 
 
 // VmtManager failure-state ownership and retry lifecycle.
