@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-`2.1.0` was released on 2026-10-07; current work is **2.1.1 post-release regression and compatibility maintenance**. See the [migration guide](docs/MIGRATION.md) for the historical identity transition.
+`2.1.1` is published on GitHub and nuget.org; the main line now returns to stable maintenance and preparation for **v2.2.0 Native API Coverage / Upstream Sync**. See the [migration guide](docs/MIGRATION.md) for the historical identity transition.
 
 > Current strategy: **x64 first; x86 deferred.**
 
@@ -38,14 +38,14 @@ ProcessSession
 
 Snapshots, caches, entities, game state, event state, IPC, and game-version adaptation belong to consumers.
 
-## Current phase: v2.1.1 — post-release maintenance
+## Completed phase: v2.1.1 — post-release maintenance
 
-2.1.1 is a backward-compatible patch over 2.1.0. It does not add Public API and does not upgrade the pinned libmem revision. Current maintenance goals are:
+2.1.1 is a backward-compatible patch over 2.1.0. It does not add Public API and does not upgrade the pinned libmem revision. Completed work:
 
 - reject the bad-address sentinel at the `VmtManager` managed construction boundary;
 - add runtime and source-contract regression coverage for that invalid VTable base;
-- preserve the initial failed 2.1.0 nuget.org restore as historical release evidence, while using the subsequently published 2.1.0 package as the automatic public-NuGet smoke baseline;
-- remove stale candidate/stable/NuGet wording left after the 2.1.0 publication.
+- preserve the initial failed 2.1.0 nuget.org restore as historical release evidence and advance the automatic public-NuGet smoke baseline to 2.1.1 after publication;
+- remove stale candidate/stable/NuGet wording left after the 2.1.1 publication.
 
 ## Completed phase: v2.1.0 — Hook / VMT Hardening
 
@@ -119,7 +119,7 @@ Those concerns belong to consumers such as StandaloneGameMod, not Libmem.NET.
 
 ## Next: v2.2.0 — Native API Coverage / Upstream Sync
 
-After 2.1.0 stabilizes, systematically compare against the pinned rdbo/libmem revision:
+After the stable 2.1.1 publication, systematically compare against the pinned rdbo/libmem revision:
 
 - maintain a native → managed API coverage matrix;
 - identify appropriate upstream APIs not yet wrapped;
