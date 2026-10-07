@@ -4,9 +4,9 @@ This document describes the official release channel, current stable release, su
 
 ## Current source and historical release
 
-The published stable Libmem.NET line is `2.1.0`. The current maintenance candidate is `2.1.1`, with numeric assembly/file versions `2.1.1.0`.
+The published GitHub stable line is `2.1.0`; nuget.org currently exposes `2.0.0` as the newest public package. The current maintenance candidate is `2.1.1`, with numeric assembly/file versions `2.1.1.0`.
 
-2.1.1 preserves the 2.1.0 Public API and pinned native dependency. It fixes the missing bad-address-sentinel guard on `VmtManager` construction, adds regression coverage for that managed boundary, advances published-package smoke validation to the 2.1.0 baseline, and refreshes post-release documentation.
+2.1.1 preserves the 2.1.0 Public API and pinned native dependency. It fixes the missing bad-address-sentinel guard on `VmtManager` construction, adds regression coverage for that managed boundary, records the missing 2.1.0 NuGet delivery found by an independent restore, and refreshes post-release documentation.
 
 The historical `LibmemCli` → `Libmem.NET` identity migration remains documented in [MIGRATION.md](MIGRATION.md). Existing historical tags and assets remain immutable.
 
