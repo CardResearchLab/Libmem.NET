@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 internal interface ITestTargetArchitecture
 {
-    Architecture Architecture { get; }
+    Architecture ProcessArchitecture { get; }
 
     byte[] CreateReturnConstant(int value, int size = 64);
 }
@@ -22,7 +22,7 @@ internal static class TestTargetArchitecture
 
 internal sealed class X86TestTargetArchitecture : ITestTargetArchitecture
 {
-    public Architecture Architecture => Architecture.X86;
+    public Architecture ProcessArchitecture => Architecture.X86;
 
     public byte[] CreateReturnConstant(int value, int size = 64)
     {
@@ -43,7 +43,7 @@ internal sealed class X86TestTargetArchitecture : ITestTargetArchitecture
 
 internal sealed class X64TestTargetArchitecture : ITestTargetArchitecture
 {
-    public Architecture Architecture => Architecture.X64;
+    public Architecture ProcessArchitecture => Architecture.X64;
 
     public byte[] CreateReturnConstant(int value, int size = 64)
     {
@@ -70,7 +70,7 @@ internal sealed class X64TestTargetArchitecture : ITestTargetArchitecture
 
 internal sealed class Arm64TestTargetArchitecture : ITestTargetArchitecture
 {
-    public Architecture Architecture => Architecture.Arm64;
+    public Architecture ProcessArchitecture => Architecture.Arm64;
 
     public byte[] CreateReturnConstant(int value, int size = 64) =>
         throw new PlatformNotSupportedException(
