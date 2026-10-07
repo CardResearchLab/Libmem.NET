@@ -91,6 +91,30 @@ static int CallTarget(Process child, ulong address)
     return int.Parse(response[prefix.Length..], CultureInfo.InvariantCulture);
 }
 
+static uint SetTargetProtection(Process child, ulong address, uint protection)
+{
+    var response = SendCommand(child, $"protect 0x{address:X} 0x{protection:X}");
+    const string prefix = "PROTECT old=0x";
+    if (!response.StartsWith(prefix, StringComparison.Ordinal))
+        throw new InvalidOperationException($"Unexpected TestTarget protect response: {response}");
+
+    return uint.Parse(
+        response[prefix.Length..],
+        NumberStyles.HexNumber,
+        CultureInfo.InvariantCulture);
+}
+
+static ulong ExpectedPatchedBytes(ulong source, ulong destination)
+{
+    var relative = checked((long)destination - (long)source - 5L);
+    var usesRelativeJump = relative >= int.MinValue && relative <= int.MaxValue;
+    return usesRelativeJump ? 10UL : 15UL;
+}
+
+static MemoryProtection ProtectionOf(ProcessInfo process, ulong address) =>
+    NativeApi.FindSegment(process, address)?.Protection
+    ?? throw new InvalidOperationException($"Could not resolve protection for 0x{address:X}.");
+
 Console.WriteLine("Libmem.NET external-process runtime tests");
 
 var targetDll = ResolveTargetDll();
@@ -173,6 +197,34 @@ try
     Check(hookSourceSegment.Protection == MemoryProtection.ExecuteRead,
         "TestTarget Hook source page must start execute-read for protection-regression coverage.");
 
+    // Installation failure must be atomic: an unreadable source cannot produce
+    // a managed handle or leave patched bytes behind.
+    var originalSourceBytes = session.Memory.Read(ready.HookSource, 24);
+    const uint pageNoAccess = 0x01;
+    const uint pageExecuteRead = 0x20;
+    const uint pageExecuteReadWrite = 0x40;
+
+    var previousSourceProtection = SetTargetProtection(child, ready.HookSource, pageNoAccess);
+    Check(previousSourceProtection == pageExecuteRead,
+        "TestTarget source did not enter install-failure coverage from ExecuteRead.");
+    try
+    {
+        var installFailure = ExpectThrows<LibmemException>(
+            () => session.Hooks.Install(ready.HookSource, ready.HookDestination),
+            "HookManager.Install should surface an unreadable source as a definite native failure.");
+        Check(installFailure.Operation == "LM_HookCodeEx",
+            "Unreadable-source install failure reported the wrong native operation.");
+    }
+    finally
+    {
+        SetTargetProtection(child, ready.HookSource, previousSourceProtection);
+    }
+
+    Check(session.Memory.Read(ready.HookSource, originalSourceBytes.Length).SequenceEqual(originalSourceBytes),
+        "Failed HookManager.Install changed source bytes.");
+    Check(CallTarget(child, ready.HookSource) == 1,
+        "Failed HookManager.Install changed source behavior.");
+
     using (var remoteHook = session.Hooks.Install(ready.HookSource, ready.HookDestination))
     {
         Check(remoteHook.Source == ready.HookSource,
@@ -181,8 +233,10 @@ try
             "Remote HookHandle.Destination does not match TestTarget destination.");
         Check(remoteHook.Trampoline != 0 && remoteHook.Trampoline != ulong.MaxValue,
             "Remote HookHandle.Trampoline is invalid.");
-        Check(remoteHook.PatchedBytes > 0,
-            "Remote HookHandle.PatchedBytes must be greater than zero.");
+        Check(remoteHook.PatchedBytes == ExpectedPatchedBytes(
+                ready.HookSource,
+                ready.HookDestination),
+            "Remote HookHandle.PatchedBytes did not stop on the expected instruction boundary.");
         Check(remoteHook.IsInstalled && !remoteHook.IsDisposed,
             "Remote HookHandle should own an installed hook.");
 
@@ -197,6 +251,42 @@ try
             "Remote HookHandle.Remove did not restore TestTarget source behavior.");
         Check(remoteHook.Remove(),
             "Remote HookHandle.Remove should be idempotent after successful removal.");
+        Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+            "Successful HookHandle.Remove did not restore source protection.");
+    }
+
+    // A failed explicit Remove must preserve ownership and source protection so
+    // the caller can fix the transient condition and retry deterministically.
+    using (var retryHook = session.Hooks.Install(ready.HookSource, ready.HookDestination))
+    {
+        Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+            "Hook installation did not restore source protection before retry coverage.");
+
+        var trampolineProtection = SetTargetProtection(child, retryHook.Trampoline, pageNoAccess);
+        Check(trampolineProtection == pageExecuteReadWrite,
+            "Hook trampoline did not start with ExecuteReadWrite protection.");
+        try
+        {
+            Check(!retryHook.Remove(),
+                "HookHandle.Remove should report failure while the trampoline is unreadable.");
+            Check(retryHook.IsInstalled && !retryHook.IsDisposed,
+                "Failed HookHandle.Remove must preserve managed ownership.");
+            Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+                "Failed HookHandle.Remove must not change source protection.");
+        }
+        finally
+        {
+            SetTargetProtection(child, retryHook.Trampoline, trampolineProtection);
+        }
+
+        Check(retryHook.Remove(),
+            "HookHandle.Remove should succeed after the transient trampoline failure is repaired.");
+        Check(!retryHook.IsInstalled,
+            "Retry HookHandle should become inactive after successful removal.");
+        Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+            "Retried HookHandle.Remove did not restore source protection.");
+        Check(CallTarget(child, ready.HookSource) == 1,
+            "Retried HookHandle.Remove did not restore source behavior.");
     }
 
     var foreignModule = NativeApi.EnumModules().FirstOrDefault(module => module is not null)
