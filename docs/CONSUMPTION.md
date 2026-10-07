@@ -2,11 +2,11 @@
 
 > Current official target: Windows x64 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. Published stable `2.0.0` uses the `Libmem.NET` managed assembly and namespace; current source is validating the backward-compatible `2.1.0` Hook / VMT hardening candidate. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. Published stable `2.1.0` uses the `Libmem.NET` managed assembly and namespace; current source is preparing the backward-compatible `2.1.1` maintenance patch. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
-Use published stable `2.0.0` for normal consumption until `2.1.0` completes release validation and publication. The exact `2.1.0` candidate can be built from source or validated through release dry-run artifacts.
+Use published stable `2.1.0` for normal consumption. The exact `2.1.1` maintenance candidate can be built from source or validated through release dry-run artifacts until it is formally published.
 
 Historical [v1.0.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v1.0.0) provides [LibmemCli-windows-x64.zip](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip) and its [SHA-256 file](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256). Those assets contain `LibmemCli.dll`, not `Libmem.NET.dll`, and require the old namespace. Do not rename old binaries to use the new examples.
 
@@ -15,10 +15,10 @@ Current build artifact names:
 ```text
 Libmem.NET-windows-x64.zip
 Libmem.NET-windows-x64.zip.sha256
-Libmem.NET.2.1.0.nupkg
+Libmem.NET.2.1.1.nupkg
 ```
 
-The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. The exact-version `.nupkg` is also published on nuget.org; local feeds remain useful for development and pre-publication acceptance.
+The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. Candidate builds produce an exact-version `.nupkg` for local acceptance; the published stable 2.1.0 package remains available on nuget.org until a later patch is formally published.
 
 Minimum runtime files:
 
@@ -56,16 +56,16 @@ It is more operationally complex than consuming a prebuilt package.
 
 ## 3. NuGet package
 
-`Libmem.NET 2.0.0` is the published stable package. Candidate `2.1.0` uses the same Trusted Publishing (OIDC) path after release-branch validation:
+`Libmem.NET 2.1.0` is the published stable package. Candidate `2.1.1` uses the same Trusted Publishing (OIDC) path after release-branch validation:
 
 ```text
 Package ID: Libmem.NET
 Status: validated for Windows x64 / .NET 8
-Publication: nuget.org via Trusted Publishing (OIDC); 2.0.0 published/consumer-tested, 2.1.0 pending release gates
+Publication: nuget.org via Trusted Publishing (OIDC); 2.1.0 is the published baseline, 2.1.1 pending release gates
 Target: Windows x64 / .NET 8
 ```
 
-The package ID is fixed as `Libmem.NET`. Development packages use a commit-qualified development version derived from `VERSION`; with the stable base this is `2.1.0-dev.<commit>`. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
+The package ID is fixed as `Libmem.NET`. Development packages use a commit-qualified development version derived from `VERSION`; with the maintenance base this is `2.1.1-dev.<commit>`. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
 
 ### Package layout
 
