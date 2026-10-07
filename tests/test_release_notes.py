@@ -14,11 +14,31 @@ import tempfile
 root = Path(__file__).resolve().parents[1]
 renderer = root / "eng" / "render-release-notes.py"
 
+
+def manifest_payload(platform: str, version: str = "9.8.7") -> dict:
+    return {
+        "schemaVersion": 2,
+        "packageVersion": version,
+        "repository": "CardResearchLab/Libmem.NET",
+        "repositoryCommit": "a" * 40,
+        "libmemCommit": "b" * 40,
+        "targetFramework": "net8.0",
+        "platform": platform,
+        "configuration": "Release",
+        "files": [
+            {"name": "Libmem.NET.dll", "size": 1, "sha256": "0" * 64},
+            {"name": "libmem.dll", "size": 1, "sha256": "1" * 64},
+        ],
+    }
+
+
 with tempfile.TemporaryDirectory() as temp:
     temp_dir = Path(temp)
     changelog = temp_dir / "CHANGELOG.md"
-    manifest = temp_dir / "manifest.json"
-    checksum = temp_dir / "Libmem.NET-windows-x64.zip.sha256"
+    manifest_x64 = temp_dir / "manifest-x64.json"
+    manifest_x86 = temp_dir / "manifest-x86.json"
+    checksum_x64 = temp_dir / "Libmem.NET-windows-x64.zip.sha256"
+    checksum_x86 = temp_dir / "Libmem.NET-windows-x86.zip.sha256"
     output = temp_dir / "release-notes.md"
 
     changelog.write_text(
@@ -46,52 +66,42 @@ Previous release.
 """,
         encoding="utf-8",
     )
-    manifest.write_text(
-        json.dumps(
-            {
-                "schemaVersion": 2,
-                "packageVersion": "9.8.7",
-                "repository": "CardResearchLab/Libmem.NET",
-                "repositoryCommit": "a" * 40,
-                "libmemCommit": "b" * 40,
-                "targetFramework": "net8.0",
-                "platform": "win-x64",
-                "configuration": "Release",
-                "files": [
-                    {"name": "Libmem.NET.dll", "size": 1, "sha256": "0" * 64},
-                    {"name": "libmem.dll", "size": 1, "sha256": "1" * 64},
-                ],
-            }
-        ),
-        encoding="utf-8",
-    )
-    checksum.write_text(
+    manifest_x64.write_text(json.dumps(manifest_payload("win-x64")), encoding="utf-8")
+    manifest_x86.write_text(json.dumps(manifest_payload("win-x86")), encoding="utf-8")
+    checksum_x64.write_text(
         f"{'c' * 64}  Libmem.NET-windows-x64.zip\n",
         encoding="utf-8",
     )
+    checksum_x86.write_text(
+        f"{'d' * 64}  Libmem.NET-windows-x86.zip\n",
+        encoding="utf-8",
+    )
 
-    subprocess.run(
-        [
+    def command(version: str) -> list[str]:
+        return [
             sys.executable,
             str(renderer),
             "--version",
-            "9.8.7",
+            version,
             "--changelog",
             str(changelog),
-            "--manifest",
-            str(manifest),
-            "--checksum",
-            str(checksum),
+            "--manifest-x64",
+            str(manifest_x64),
+            "--checksum-x64",
+            str(checksum_x64),
+            "--manifest-x86",
+            str(manifest_x86),
+            "--checksum-x86",
+            str(checksum_x86),
             "--repository",
             "CardResearchLab/Libmem.NET",
             "--tag",
-            "v9.8.7",
+            "v" + version,
             "--output",
             str(output),
-        ],
-        cwd=root,
-        check=True,
-    )
+        ]
+
+    subprocess.run(command("9.8.7"), cwd=root, check=True)
 
     notes = output.read_text(encoding="utf-8")
     required = [
@@ -101,13 +111,16 @@ Previous release.
         "### Added",
         "Session-bound example capability.",
         "## Platform and compatibility",
-        "Windows x64",
+        "Windows x64 and Windows x86",
         "## Downloads",
         "Libmem.NET-windows-x64.zip",
-        "## Package contents",
+        "Libmem.NET-windows-x86.zip",
+        "## x64 package contents",
+        "## x86 package contents",
         "`Libmem.NET.dll`",
         "## Integrity and provenance",
         "c" * 64,
+        "d" * 64,
         "## Documentation",
     ]
     for marker in required:
@@ -122,29 +135,25 @@ Previous release.
     for marker in forbidden:
         assert marker not in notes, f"Generated notes contain PR-feed marker: {marker}"
 
-    # Exercise the complete prerelease CLI path, including changelog/tag/manifest agreement.
     preview = "2.0.0-preview.1"
     changelog.write_text(changelog.read_text().replace("9.8.7", preview), encoding="utf-8")
-    metadata = json.loads(manifest.read_text())
-    metadata["packageVersion"] = preview
-    manifest.write_text(json.dumps(metadata), encoding="utf-8")
-    command = [
-        sys.executable, str(renderer), "--version", preview,
-        "--changelog", str(changelog), "--manifest", str(manifest),
-        "--checksum", str(checksum), "--repository", "CardResearchLab/Libmem.NET",
-        "--tag", "v" + preview, "--output", str(output),
-    ]
-    subprocess.run(command, cwd=root, check=True)
+    x64_metadata = manifest_payload("win-x64", preview)
+    x86_metadata = manifest_payload("win-x86", preview)
+    manifest_x64.write_text(json.dumps(x64_metadata), encoding="utf-8")
+    manifest_x86.write_text(json.dumps(x86_metadata), encoding="utf-8")
+
+    preview_command = command(preview)
+    subprocess.run(preview_command, cwd=root, check=True)
     notes = output.read_text(encoding="utf-8")
     assert "preview release" in notes
     assert f"Libmem.NET.{preview}.nupkg" in notes
     assert f"/blob/v{preview}/docs/MIGRATION.md" in notes
     assert "official release" not in notes
 
-    metadata["packageVersion"] = "2.0.0"
-    manifest.write_text(json.dumps(metadata), encoding="utf-8")
-    result = subprocess.run(command, cwd=root, capture_output=True, text=True)
-    assert result.returncode != 0 and "Manifest packageVersion mismatch" in result.stderr
+    x86_metadata["packageVersion"] = "2.0.0"
+    manifest_x86.write_text(json.dumps(x86_metadata), encoding="utf-8")
+    result = subprocess.run(preview_command, cwd=root, capture_output=True, text=True)
+    assert result.returncode != 0 and "win-x86 manifest packageVersion mismatch" in result.stderr
 
 normalize = runpy.run_path(str(renderer))["normalize_version"]
 for valid in ["1.0.0", "v2.0.0-preview.1", "2.0.0-rc.2", "2.0.0-0"]:
