@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-The naming migration has completed preview acceptance: assembly and namespace are unified as `Libmem.NET`, requiring consumers to recompile. Behavior contracts remain preserved; current work is **2.0.0 stable release preparation**. See the [migration guide](docs/MIGRATION.md).
+`2.0.0` has completed stable publication; current work is **2.1.0 Hook / VMT Hardening final acceptance and release-candidate validation**. See the [migration guide](docs/MIGRATION.md) for the historical identity transition.
 
 > Current strategy: **x64 first; x86 deferred.**
 
@@ -38,7 +38,7 @@ ProcessSession
 
 Snapshots, caches, entities, game state, event state, IPC, and game-version adaptation belong to consumers.
 
-## Current phase: v2.1.0 — Hook / VMT Hardening
+## Current phase: v2.1.0 — Hook / VMT Hardening (final acceptance)
 
 `2.0.0` was released on 2026-10-06 and establishes the stable Windows x64 / .NET 8 assembly, NuGet, runtime archive, checksum, and Public API baseline. 2.1.0 does not perform another identity migration and does not intentionally introduce breaking changes.
 
