@@ -7,12 +7,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   nuget-consumer:
-    name: NuGet Consumer x64
+    name: NuGet Consumer x64/x86
     runs-on: windows-2022
 
     steps:
@@ -26,6 +26,10 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Setup .NET 8 x86 runtime
+        shell: pwsh
+        run: .\eng\setup-dotnet-x86.ps1
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -35,65 +39,94 @@ jobs:
         shell: pwsh
         run: python .\tests\check_sources.py
 
-      - name: Build Libmem.NET
+      - name: Build x64
         shell: pwsh
         run: .\build.ps1 -Configuration Release -Platform x64
 
-      - name: Pack and verify local NuGet prototype
+      - name: Package x64 runtime
+        shell: pwsh
+        run: .\eng\package-runtime.ps1 -Configuration Release -Platform x64
+
+      - name: Build x86
+        shell: pwsh
+        run: .\build.ps1 -Configuration Release -Platform x86
+
+      - name: Package x86 runtime
+        shell: pwsh
+        run: .\eng\package-runtime.ps1 -Configuration Release -Platform x86
+
+      - name: Pack and verify local multi-architecture NuGet
         shell: pwsh
         run: .\eng\package-nuget.ps1 -Configuration Release
 
-      - name: Restore NuGet consumer from local feed
+      - name: Restore x64 NuGet consumer
         shell: pwsh
         run: |
           $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
           dotnet restore .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             --source .\artifacts\nuget `
             -p:LibmemNetTestPackageVersion=$version `
+            -p:Platform=x64 `
             -p:NuGetAudit=false
 
-      - name: Run NuGet consumer
+      - name: Run x64 NuGet consumer
         shell: pwsh
         run: |
           $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
-          dotnet run `
-            --project .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
-            -c Release `
-            --no-restore `
-            -p:LibmemNetTestPackageVersion=$version
+          dotnet run --project .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release --no-restore -p:Platform=x64 -p:LibmemNetTestPackageVersion=$version
 
-      - name: Publish NuGet consumer
+      - name: Publish x64 NuGet consumer
         shell: pwsh
         run: |
           $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
-          $output = ".\artifacts\nuget-consumer-publish"
-          dotnet publish `
-            .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
-            -c Release `
-            --no-restore `
-            -p:LibmemNetTestPackageVersion=$version `
-            -o $output
-
+          $output = ".\artifacts\nuget-consumer-publish\x64"
+          dotnet publish .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release --no-restore -p:Platform=x64 -p:LibmemNetTestPackageVersion=$version -o $output
           foreach ($required in @("Libmem.NET.dll", "libmem.dll", "Ijwhost.dll")) {
-            $path = Join-Path $output $required
-            if (-not (Test-Path $path -PathType Leaf)) {
-              throw "Published NuGet consumer is missing $required"
+            if (-not (Test-Path (Join-Path $output $required) -PathType Leaf)) {
+              throw "Published x64 NuGet consumer is missing $required"
             }
           }
 
-      - name: Reject non-x64 NuGet consumer
+      - name: Restore x86 NuGet consumer
         shell: pwsh
         run: |
           $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
-          dotnet build `
-            .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
-            -c Release `
-            --no-restore `
+          dotnet restore .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            --source .\artifacts\nuget `
             -p:LibmemNetTestPackageVersion=$version `
-            -p:PlatformTarget=AnyCPU
+            -p:Platform=x86 `
+            -p:NuGetAudit=false
 
-          if ($LASTEXITCODE -eq 0) {
-            throw "NuGet prototype unexpectedly accepted a non-x64 consumer."
+      - name: Run x86 NuGet consumer
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
+          dotnet run --project .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release --no-restore -p:Platform=x86 -p:LibmemNetTestPackageVersion=$version
+
+      - name: Publish x86 NuGet consumer
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
+          $output = ".\artifacts\nuget-consumer-publish\x86"
+          dotnet publish .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release --no-restore -p:Platform=x86 -p:LibmemNetTestPackageVersion=$version -o $output
+          foreach ($required in @("Libmem.NET.dll", "libmem.dll", "Ijwhost.dll")) {
+            if (-not (Test-Path (Join-Path $output $required) -PathType Leaf)) {
+              throw "Published x86 NuGet consumer is missing $required"
+            }
           }
 
+      - name: Reject AnyCPU NuGet consumer
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
+          dotnet build .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release --no-restore -p:Platform=AnyCPU -p:PlatformTarget=AnyCPU `
+            -p:LibmemNetTestPackageVersion=$version
+          if ($LASTEXITCODE -eq 0) {
+            throw "NuGet package unexpectedly accepted an AnyCPU consumer."
+          }
           $global:LASTEXITCODE = 0
