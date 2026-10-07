@@ -2,7 +2,7 @@
 
 Scope: Windows x64 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Published stable: `2.0.0`. Current candidate: `2.1.0`; numeric assembly/file versions are `2.1.0.0`. This release preserves the 2.0.0 Public API baseline and hardens Hook / VMT behavior without expanding official x86 support.
+Published stable: `2.1.0`. Current candidate: `2.1.1`; numeric assembly/file versions are `2.1.1.0`. This patch preserves the 2.1.0 Public API baseline, fixes VMT bad-address-sentinel validation, and does not expand official x86 support.
 
 ## Repository acceptance
 
@@ -26,14 +26,16 @@ Published stable: `2.0.0`. Current candidate: `2.1.0`; numeric assembly/file ver
 
 ## Publication prerequisites — verify for each future version
 
-- [x] Select `2.1.0` for the backward-compatible Hook / VMT hardening release; update `VERSION`, assembly metadata, CHANGELOG and NuGet package-page metadata together.
-- [x] Confirm green Release x64 Build results on the exact release candidate. `main` Build run #338 passed on candidate `f38eb2810b9b7823ba0fd921372e506bdae07ceb`.
-- [ ] Verify NuGet account-side setup: Trusted Publishing policy for `CardResearchLab/Libmem.NET` + `release.yml`, and GitHub Actions `NUGET_USER` secret. Their live readiness is not established by source review.
-- [x] Create `release/v<version>` from that candidate and verify the complete dry run. `release/v2.1.0` Release run #27 passed on `f38eb2810b9b7823ba0fd921372e506bdae07ceb`; ZIP/NuGet validation and release-note rendering succeeded, while GitHub Release creation, OIDC login, and NuGet push were skipped.
-- [x] Review exact-version artifacts and generated notes; confirm ZIP and NuGet share the same source commit. The dry-run artifact `Libmem.NET-windows-x64` is bound to candidate `f38eb2810b9b7823ba0fd921372e506bdae07ceb`, and both runtime/NuGet verification steps enforce that same repository commit.
-- [ ] After explicit publication authorization, create the matching `v<version>` tag on that candidate. Creating it triggers GitHub downloads; a preview tag must be marked as a prerelease. It does not push to nuget.org.
-- [ ] Verify GitHub downloads/checksum, then manually run Release on the published tag with `publish-nuget` enabled once account setup is ready. Verify the public NuGet page after that run.
-- [ ] Restore an independent x64 consumer from nuget.org using that exact version, then run and publish it to verify the public delivery path.
+- [x] Select `2.1.1` for the backward-compatible maintenance fix; update `VERSION`, assembly metadata, CHANGELOG and NuGet package-page metadata together.
+- [ ] Confirm green Release x64 Build results on the exact 2.1.1 candidate, including Hook/VMT regression coverage and package verification.
+- [ ] Verify NuGet account-side setup: Trusted Publishing policy for `CardResearchLab/Libmem.NET` + `release.yml`, and GitHub Actions `NUGET_USER` secret.
+- [ ] Create `release/v2.1.1` from the accepted candidate and verify the complete dry run.
+- [ ] Review exact-version ZIP/NuGet artifacts and generated notes; confirm both are bound to the same source commit.
+- [ ] After explicit publication authorization, create the matching `v2.1.1` tag. Tag creation publishes GitHub downloads only.
+- [ ] Verify GitHub downloads/checksum, then manually run Release on the published tag with `publish-nuget` enabled.
+- [ ] Restore an independent x64 consumer from nuget.org using exact version `2.1.1`, then run and publish it to verify the public delivery path.
+
+The completed 2.1.0 acceptance evidence remains in repository history and the v2.1.0 release metadata.
 
 ## Optional follow-up
 
