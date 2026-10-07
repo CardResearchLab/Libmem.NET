@@ -17,32 +17,36 @@
     <PackageProjectUrl>https://github.com/CardResearchLab/Libmem.NET</PackageProjectUrl>
     <PackageTags>libmem memory interop cpp-cli windows x64 x86</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <LibmemNetX64ManagedRoot Condition="'$(LibmemNetX64ManagedRoot)' == ''">$(LibmemNetX64ManagedRoot)</LibmemNetX64ManagedRoot>
+    <LibmemNetX64NativeRoot Condition="'$(LibmemNetX64NativeRoot)' == ''">$(LibmemNetX64NativeRoot)</LibmemNetX64NativeRoot>
+    <LibmemNetX86ManagedRoot Condition="'$(LibmemNetX86ManagedRoot)' == ''">$(LibmemNetX86ManagedRoot)</LibmemNetX86ManagedRoot>
+    <LibmemNetX86NativeRoot Condition="'$(LibmemNetX86NativeRoot)' == ''">$(LibmemNetX86NativeRoot)</LibmemNetX86NativeRoot>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\artifacts\managed\x64\$(Configuration)\Libmem.NET.dll"
+    <None Include="$(LibmemNetX64ManagedRoot)\Libmem.NET.dll"
           Pack="true"
           PackagePath="runtimes\win-x64\lib\net8.0\Libmem.NET.dll" />
-    <None Include="..\artifacts\managed\x64\$(Configuration)\Libmem.NET.xml"
+    <None Include="$(LibmemNetX64ManagedRoot)\Libmem.NET.xml"
           Pack="true"
           PackagePath="runtimes\win-x64\lib\net8.0\Libmem.NET.xml" />
-    <None Include="..\artifacts\native\x64\$(Configuration)\bin\libmem.dll"
+    <None Include="$(LibmemNetX64NativeRoot)\libmem.dll"
           Pack="true"
           PackagePath="runtimes\win-x64\native\libmem.dll" />
-    <None Include="..\artifacts\managed\x64\$(Configuration)\Ijwhost.dll"
+    <None Include="$(LibmemNetX64ManagedRoot)\Ijwhost.dll"
           Pack="true"
           PackagePath="runtimes\win-x64\native\Ijwhost.dll" />
 
-    <None Include="..\artifacts\managed\x86\$(Configuration)\Libmem.NET.dll"
+    <None Include="$(LibmemNetX86ManagedRoot)\Libmem.NET.dll"
           Pack="true"
           PackagePath="runtimes\win-x86\lib\net8.0\Libmem.NET.dll" />
-    <None Include="..\artifacts\managed\x86\$(Configuration)\Libmem.NET.xml"
+    <None Include="$(LibmemNetX86ManagedRoot)\Libmem.NET.xml"
           Pack="true"
           PackagePath="runtimes\win-x86\lib\net8.0\Libmem.NET.xml" />
-    <None Include="..\artifacts\native\x86\$(Configuration)\bin\libmem.dll"
+    <None Include="$(LibmemNetX86NativeRoot)\libmem.dll"
           Pack="true"
           PackagePath="runtimes\win-x86\native\libmem.dll" />
-    <None Include="..\artifacts\managed\x86\$(Configuration)\Ijwhost.dll"
+    <None Include="$(LibmemNetX86ManagedRoot)\Ijwhost.dll"
           Pack="true"
           PackagePath="runtimes\win-x86\native\Ijwhost.dll" />
 
