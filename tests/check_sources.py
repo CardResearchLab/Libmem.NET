@@ -499,7 +499,7 @@ assert "hookDestination=0x" in test_target_source
 assert 'command.StartsWith("call "' in test_target_source
 assert 'command.StartsWith("protect "' in test_target_source
 assert "READY pid=" in test_target_source
-assert "arch={architecture.Architecture}" in test_target_source
+assert "arch={architecture.ProcessArchitecture}" in test_target_source
 for architecture_fixture in [
     "ITestTargetArchitecture",
     "X86TestTargetArchitecture",
@@ -508,6 +508,7 @@ for architecture_fixture in [
     "Architecture.X86",
     "Architecture.X64",
     "Architecture.Arm64",
+    "ProcessArchitecture",
 ]:
     assert architecture_fixture in test_target_architecture_source, (
         f"TestTarget architecture fixture lost required marker: {architecture_fixture}"
@@ -515,6 +516,10 @@ for architecture_fixture in [
 assert "mov r10" in test_target_architecture_source
 assert "mov eax, imm32" in test_target_architecture_source
 assert "ARM64 external-process machine-code fixtures are reserved" in test_target_architecture_source
+for pointer_marker in ["AddressPointer", "PointerAddress", "pointer.ToInt32()", "pointer.ToInt64()"]:
+    assert pointer_marker in test_target_source, (
+        f"TestTarget pointer-width conversion lost required marker: {pointer_marker}"
+    )
 for required_call in [
     "ProcessSession.Open",
     "ProcessSession.Open(ready.Pid)",
