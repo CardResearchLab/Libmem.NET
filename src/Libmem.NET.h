@@ -445,7 +445,7 @@ namespace Libmem::NET {
     };
 
     /// <summary>Session-bound native code hook installation.</summary>
-    /// <remarks>Install validates managed address sentinels and surfaces definite LM_HookCodeEx failure as LibmemException. A handle is returned only after native installation succeeds.</remarks>
+    /// <remarks>Install validates managed address sentinels and surfaces definite LM_HookCodeEx failure as LibmemException. A handle is returned only after native installation succeeds. Libmem.NET does not provide global duplicate/overlapping-source Hook conflict detection.</remarks>
     public ref class HookManager sealed {
     private:
         ProcessSession^ session_;
@@ -459,7 +459,7 @@ namespace Libmem::NET {
     };
 
     /// <summary>Owns one installed native hook and its trampoline.</summary>
-    /// <remarks>Explicit removal/disposal restores original code. Failed removal retains ownership for retry while a live target still exists; target exit converges the handle to released. Finalization never patches target-process code.</remarks>
+    /// <remarks>Explicit removal/disposal restores original code. Failed removal retains ownership for retry while a live target still exists; target exit converges the handle to released. PatchedBytes is instruction-aligned, but trampoline relocation capabilities remain those of the pinned native libmem backend. Finalization never patches target-process code.</remarks>
     public ref class HookHandle sealed : IDisposable {
     private:
         ProcessInfo^ target_;
