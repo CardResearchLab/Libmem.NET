@@ -6,6 +6,7 @@
 
 - Reject the libmem bad-address sentinel in `VmtManager` construction before native VMT state is retained, matching the managed Hook/VMT argument contract and preventing an invalid VTable base from being accepted.
 - Add regression coverage for the invalid VTable sentinel and source-contract checks that keep the guard in place.
+- Lock the post-disposal VMT contract with runtime/source checks for `Hook`, `Unhook`, `GetOriginal`, and `Reset`, including disposed-state precedence over replacement-address validation.
 - Record and close the post-release delivery gap: an initial nuget.org-only restore exposed only 2.0.0, then 2.1.0 was published and adopted as the public-NuGet smoke baseline.
 - Refresh post-release README, roadmap, consumption, release-status, and package metadata; advance the automatic public-NuGet smoke baseline to 2.1.0 before the 2.1.1 publication.
 
