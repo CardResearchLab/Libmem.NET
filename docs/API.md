@@ -307,7 +307,13 @@ Relevant state:
 
 `Remove()` attempts explicit unhooking. After a successful removal, repeated `Remove()` / `Dispose()` calls are idempotent.
 
-A failed explicit restoration does not silently mark the hook as released. The finalizer never rewrites target code.
+For a remote target, installation returns an owned handle only after native installation succeeds. If installation fails, `HookManager.Install` throws `LibmemException("LM_HookCodeEx", ...)` and no `HookHandle` is exposed.
+
+`PatchedBytes` is the native relocation span consumed by libmem. It ends on an instruction boundary and can therefore be larger than the minimum jump encoding.
+
+If explicit remote removal fails while the target is still alive, `Remove()` returns `false`, `IsInstalled` stays `true`, and ownership is retained so the caller can repair a transient condition and retry. Libmem.NET preflights the complete remote trampoline read before calling the pinned `LM_UnhookCodeEx` path so a definitely unreadable trampoline cannot leak a temporary source-page protection change.
+
+If the remote target has exited, the target address space no longer exists; `Remove()` converges the handle to the released state and returns `true`. The finalizer never rewrites target code.
 
 ### InjectedModuleHandle
 
@@ -342,6 +348,10 @@ Primary operations:
 The VTable and replacement code must remain valid throughout the manager lifetime.
 
 Explicit disposal restores tracked entries deterministically. After successful cleanup, repeated `Dispose()` calls are idempotent; operational methods after disposal throw `ObjectDisposedException`. The finalizer does not rewrite VTable entries.
+
+`VmtManager` is intentionally local-process only. The VTable storage and every replacement function pointer must remain valid for the manager lifetime.
+
+If `Reset()` or `Dispose()` cannot restore a tracked entry, the operation surfaces the native restoration failure and retains bookkeeping/ownership instead of pretending cleanup succeeded. The manager remains available for a later retry after the underlying condition is repaired.
 
 ## Exception model
 
@@ -480,3 +490,16 @@ api/Libmem.NET.PublicApi.txt
 CI compares the public declarations in `src/Libmem.NET.h` with that baseline.
 
 Intentional public API changes must update the baseline and changelog explicitly. Accidental signature drift fails validation.
+
+
+## Hook consumer example
+
+A complete buildable x64 example lives in `samples/HookLifecycle`. It demonstrates:
+
+- allocating executable source and destination stubs in the current process;
+- installing through `ProcessSession.Hooks`;
+- calling the trampoline to reach original behavior;
+- explicit `Remove()` and idempotent cleanup;
+- handling definite installation failure through `LibmemException`.
+
+The example deliberately uses self-process generated code. Applications that hook another process are responsible for ensuring source/destination addresses are valid executable addresses in that target and for coordinating target lifetime.

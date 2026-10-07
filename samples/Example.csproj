@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Platforms>x64;x86</Platforms><PlatformTarget>$(Platform)</PlatformTarget><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
   <ItemGroup><ProjectReference Include="..\src\Libmem.NET.vcxproj" /></ItemGroup>
+  <ItemGroup><Compile Remove="HookLifecycle\**\*.cs" /></ItemGroup>
   <ItemGroup>
     <None Include="..\artifacts\native\$(Platform)\$(Configuration)\bin\libmem.dll" Link="libmem.dll" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\artifacts\native\$(Platform)\$(Configuration)\bin\libmem.dll')" />
   </ItemGroup>

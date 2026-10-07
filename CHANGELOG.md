@@ -7,6 +7,10 @@
 - Move the active roadmap to `2.1.0` Hook/VMT hardening after the stable `2.0.0` release.
 - Define 2.1.0 as a non-breaking hardening cycle focused on Hook/VMT failure paths, ownership, runtime coverage, external-process tests, and consumer documentation.
 - Keep Mono/Unity/game-specific patching and official x86 work out of Libmem.NET 2.1.0.
+- Add external-process Hook lifecycle coverage, including trampoline execution and target-exit ownership convergence.
+- Harden remote unhook failure handling so a definitely unreadable trampoline does not leak source-page protection state and ownership remains retryable.
+- Add VMT restore-failure retry lifecycle coverage.
+- Document Hook/VMT ownership, failure, target-exit, instruction-boundary, and local-process-only semantics; add a buildable Hook lifecycle consumer sample.
 
 ## 2.0.0 - 2026-10-06
 

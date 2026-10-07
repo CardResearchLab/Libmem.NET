@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Libmem.NET">
+      <HintPath>..\..\artifacts\managed\x64\$(Configuration)\Libmem.NET.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\artifacts\managed\x64\$(Configuration)\Ijwhost.dll"
+          Link="Ijwhost.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          Condition="Exists('..\..\artifacts\managed\x64\$(Configuration)\Ijwhost.dll')" />
+    <None Include="..\..\artifacts\managed\x64\$(Configuration)\Libmem.NET.xml"
+          Link="Libmem.NET.xml"
+          CopyToOutputDirectory="PreserveNewest"
+          Condition="Exists('..\..\artifacts\managed\x64\$(Configuration)\Libmem.NET.xml')" />
+    <None Include="..\..\artifacts\native\x64\$(Configuration)\bin\libmem.dll"
+          Link="libmem.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          Condition="Exists('..\..\artifacts\native\x64\$(Configuration)\bin\libmem.dll')" />
+  </ItemGroup>
+</Project>
