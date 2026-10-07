@@ -25,7 +25,7 @@ Official support target:
 
 ## Download
 
-GitHub has published stable [Libmem.NET v2.1.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.1.0). Post-release independent validation found that nuget.org still exposes **2.0.0** as the newest package, so 2.1.0 is not treated as a completed NuGet delivery. Current source prepares **2.1.1**, which should be the next NuGet publication after full acceptance.
+GitHub and nuget.org both publish stable **Libmem.NET 2.1.0**. Current source prepares the backward-compatible **2.1.1** maintenance patch, which will become the next stable package after full acceptance.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
@@ -226,7 +226,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The current `VERSION` is the stable candidate **2.1.0**. NuGet and informational versions use `2.1.0`; numeric assembly/file versions are `2.1.0.0`. Candidate builds produce the runtime ZIP, SHA-256 and `Libmem.NET.2.1.0.nupkg`; passing candidate validation does not itself publish the release. Published stable `2.0.0` remains available until the 2.1.0 tag and NuGet publication complete.
+The current `VERSION` is the maintenance candidate **2.1.1**. NuGet and informational versions use `2.1.1`; numeric assembly/file versions are `2.1.1.0`. Candidate builds produce the runtime ZIP, SHA-256 and `Libmem.NET.2.1.1.nupkg`; passing candidate validation does not itself publish the release. Published stable `2.1.0` remains the public baseline until 2.1.1 completes tag and NuGet publication.
 
 Build the release-style runtime ZIP locally:
 
@@ -283,7 +283,7 @@ The package ID is `Libmem.NET`, targeting Windows x64 / .NET 8. CI validates pac
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-`v2.0.0-preview.1` is published on GitHub and nuget.org; Trusted Publishing / OIDC login, NuGet push, and public PackageReference consumption have all been exercised successfully. The current `2.0.0` candidate uses the same split flow: dry run first, then tag/GitHub Release, then explicit NuGet publication. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
+The Trusted Publishing / OIDC flow has been exercised successfully through public PackageReference consumption. Stable `2.1.0` is published on GitHub and nuget.org, and the public-NuGet smoke baseline now targets 2.1.0. The `2.1.1` maintenance release uses the same split flow: dry run first, then tag/GitHub Release, then explicit NuGet publication. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 
