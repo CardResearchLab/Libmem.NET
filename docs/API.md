@@ -260,6 +260,21 @@ Definite failures:
 - `Assemble` -> `LibmemException("LM_AssembleEx", ...)`
 - non-zero `CodeLength` query failure -> `LibmemException("LM_CodeLengthEx", ...)`
 
+### HookManager
+
+`session.Hooks.Install(source, destination)` installs a native code hook in the process bound to the session and returns an owning `HookHandle`.
+
+Managed validation rejects zero and bad-address sentinel values for both addresses with `ArgumentOutOfRangeException`. A definite native installation failure is surfaced as:
+
+```text
+LibmemException
+Operation = "LM_HookCodeEx"
+```
+
+The destination must remain valid executable native code while the hook is installed. Libmem.NET does not add a managed relocation engine: the pinned native libmem implementation selects the jump form, relocates the overwritten instructions, and returns the trampoline. `HookHandle.PatchedBytes` reports the complete instruction-aligned source span consumed by that native hook.
+
+For a complete executable example, see `samples/HookExample`.
+
 ## Owned resources
 
 Libmem.NET distinguishes a native operation result from a resource that has an explicit managed ownership lifetime.
@@ -305,9 +320,13 @@ Relevant state:
 - `IsInstalled`
 - `IsDisposed`
 
-`Remove()` attempts explicit unhooking. After a successful removal, repeated `Remove()` / `Dispose()` calls are idempotent.
+`Remove()` attempts explicit unhooking. After a successful removal, `IsInstalled` becomes `false` and repeated `Remove()` / `Dispose()` calls are idempotent.
 
-A failed explicit restoration does not silently mark the hook as released. The finalizer never rewrites target code.
+If explicit removal fails while the target process is still alive, `Remove()` returns `false` and ownership is preserved: `IsInstalled` remains `true` so the caller can repair a transient condition and retry. For remote hooks, Libmem.NET preflights a complete trampoline read before invoking the pinned `LM_UnhookCodeEx`; an unreadable trampoline therefore fails without letting that upstream path alter the source-page protection first.
+
+If the bound target process has exited, the target address space no longer exists and `Remove()` converges the handle to the not-installed state. Target exit does not implicitly dispose the surrounding `ProcessSession`.
+
+Explicit `Dispose()` is deterministic and can surface `LibmemException` if restoration still fails. The finalizer never rewrites target code, so consumers that require deterministic restoration should dispose explicitly and handle removal failure deliberately.
 
 ### InjectedModuleHandle
 
@@ -339,9 +358,13 @@ Primary operations:
 - `GetOriginal`
 - `Reset`
 
-The VTable and replacement code must remain valid throughout the manager lifetime.
+The VTable and replacement code must remain valid throughout the manager lifetime. This wrapper is intentionally **local-process-only**; it is not a remote VTable patching abstraction.
 
-Explicit disposal restores tracked entries deterministically. After successful cleanup, repeated `Dispose()` calls are idempotent; operational methods after disposal throw `ObjectDisposedException`. The finalizer does not rewrite VTable entries.
+`Hook(index, replacementAddress)` rejects zero/bad replacement addresses at the managed boundary and surfaces definite native hook failure as `LibmemException("LM_VmtHook", ...)`. `Unhook(index)` returns the native success result. `GetOriginal(index)` exposes the original entry recorded by libmem.
+
+`Reset()` restores every tracked entry. If one restoration fails, it throws `LibmemException("LM_VmtUnhook", ...)` and keeps the manager active so the caller can repair the condition and retry. Explicit disposal follows the same ownership rule: bookkeeping is not discarded when restoration fails. After successful cleanup, repeated `Dispose()` calls are idempotent; operational methods after disposal throw `ObjectDisposedException`.
+
+The finalizer never rewrites VTable entries. Deterministic VMT restoration therefore requires explicit disposal.
 
 ## Exception model
 
