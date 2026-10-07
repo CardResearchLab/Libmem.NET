@@ -6,7 +6,7 @@ on:
       package-version:
         description: Published Libmem.NET version to validate from nuget.org
         required: false
-        default: 2.1.1
+        default: 2.2.0
         type: string
   pull_request:
     branches:
@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   published-nuget-smoke:
-    name: Published NuGet x64
+    name: Published NuGet x64/x86
     runs-on: windows-2022
 
     steps:
@@ -36,6 +36,10 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Setup .NET 8 x86 runtime
+        shell: pwsh
+        run: .\eng\setup-dotnet-x86.ps1
+
       - name: Resolve package version
         id: version
         shell: pwsh
@@ -45,8 +49,7 @@ jobs:
           }
           else {
             # Pull requests validate the last known published package.
-            # The candidate VERSION may not exist on nuget.org yet.
-            $version = "2.1.1"
+            $version = "2.2.0"
           }
           if ([string]::IsNullOrWhiteSpace($version)) {
             throw "Package version is empty."
@@ -58,7 +61,7 @@ jobs:
         shell: pwsh
         run: dotnet nuget locals all --clear
 
-      - name: Restore consumer from nuget.org only
+      - name: Restore x64 consumer from nuget.org only
         shell: pwsh
         run: |
           dotnet restore .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
@@ -76,7 +79,7 @@ jobs:
             throw "Published NuGet package is missing Libmem.NET.xml: $xml"
           }
 
-      - name: Build published package consumer
+      - name: Build x64 published package consumer
         shell: pwsh
         run: |
           dotnet build .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
@@ -85,7 +88,7 @@ jobs:
             -p:Platform=x64 `
             -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
 
-      - name: Run published package consumer
+      - name: Run x64 published package consumer
         shell: pwsh
         run: |
           dotnet run `
@@ -95,10 +98,10 @@ jobs:
             -p:Platform=x64 `
             -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
 
-      - name: Publish and verify runtime assets
+      - name: Publish and verify x64 runtime assets
         shell: pwsh
         run: |
-          $output = ".\artifacts\published-nuget-consumer"
+          $output = ".\artifacts\published-nuget-consumer\x64"
           dotnet publish `
             .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             -c Release `
@@ -110,11 +113,58 @@ jobs:
           foreach ($required in @("Libmem.NET.dll", "libmem.dll", "Ijwhost.dll")) {
             $path = Join-Path $output $required
             if (-not (Test-Path $path -PathType Leaf)) {
-              throw "Published NuGet consumer is missing $required"
+              throw "Published x64 NuGet consumer is missing $required"
             }
           }
 
-      - name: Reject non-x64 consumer
+      - name: Restore x86 consumer from nuget.org only
+        shell: pwsh
+        run: |
+          dotnet restore .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            --source https://api.nuget.org/v3/index.json `
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -p:Platform=x86 `
+            -p:NuGetAudit=false
+
+      - name: Build x86 published package consumer
+        shell: pwsh
+        run: |
+          dotnet build .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release `
+            --no-restore `
+            -p:Platform=x86 `
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
+
+      - name: Run x86 published package consumer
+        shell: pwsh
+        run: |
+          dotnet run `
+            --project .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release `
+            --no-restore `
+            -p:Platform=x86 `
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
+
+      - name: Publish and verify x86 runtime assets
+        shell: pwsh
+        run: |
+          $output = ".\artifacts\published-nuget-consumer\x86"
+          dotnet publish `
+            .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+            -c Release `
+            --no-restore `
+            -p:Platform=x86 `
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -o $output
+
+          foreach ($required in @("Libmem.NET.dll", "libmem.dll", "Ijwhost.dll")) {
+            $path = Join-Path $output $required
+            if (-not (Test-Path $path -PathType Leaf)) {
+              throw "Published x86 NuGet consumer is missing $required"
+            }
+          }
+
+      - name: Reject AnyCPU consumer
         shell: pwsh
         run: |
           dotnet build `
@@ -122,10 +172,11 @@ jobs:
             -c Release `
             --no-restore `
             -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -p:Platform=AnyCPU `
             -p:PlatformTarget=AnyCPU
 
           if ($LASTEXITCODE -eq 0) {
-            throw "Published package unexpectedly accepted a non-x64 consumer."
+            throw "Published package unexpectedly accepted an AnyCPU consumer."
           }
 
           $global:LASTEXITCODE = 0
