@@ -2,7 +2,7 @@
 
 Scope: Windows x64 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Published stable: `2.1.0`. Current candidate: `2.1.1`; numeric assembly/file versions are `2.1.1.0`. This patch preserves the 2.1.0 Public API baseline, fixes VMT bad-address-sentinel validation, and does not expand official x86 support.
+Published GitHub stable: `2.1.0`. Current nuget.org stable: `2.0.0`. Current candidate: `2.1.1`; numeric assembly/file versions are `2.1.1.0`. This patch preserves the 2.1.0 Public API baseline, fixes VMT bad-address-sentinel validation, and does not expand official x86 support.
 
 ## Repository acceptance
 
@@ -35,7 +35,9 @@ Published stable: `2.1.0`. Current candidate: `2.1.1`; numeric assembly/file ver
 - [ ] Verify GitHub downloads/checksum, then manually run Release on the published tag with `publish-nuget` enabled.
 - [ ] Restore an independent x64 consumer from nuget.org using exact version `2.1.1`, then run and publish it to verify the public delivery path.
 
-The completed 2.1.0 acceptance evidence remains in repository history and the v2.1.0 release metadata.
+Post-release evidence: a clean nuget.org-only restore of exact `2.1.0` failed with NU1102 and reported `2.0.0` as the nearest/current package. Do not mark the 2.1.1 NuGet delivery complete until the exact-version public consumer test passes.
+
+The completed GitHub 2.1.0 acceptance evidence remains in repository history and the v2.1.0 release metadata.
 
 ## Optional follow-up
 
