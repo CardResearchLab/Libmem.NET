@@ -64,6 +64,7 @@ jobs:
           dotnet restore .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             --source https://api.nuget.org/v3/index.json `
             -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -p:Platform=x64 `
             -p:NuGetAudit=false
 
       - name: Verify package XML documentation
@@ -81,7 +82,8 @@ jobs:
           dotnet build .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             -c Release `
             --no-restore `
-            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
+            -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -p:Platform=x64
 
       - name: Run published package consumer
         shell: pwsh
@@ -101,6 +103,7 @@ jobs:
             -c Release `
             --no-restore `
             -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -p:Platform=x64 `
             -o $output
 
           foreach ($required in @("Libmem.NET.dll", "libmem.dll", "Ijwhost.dll")) {
