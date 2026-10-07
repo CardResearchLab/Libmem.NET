@@ -17,10 +17,10 @@
     <PackageProjectUrl>https://github.com/CardResearchLab/Libmem.NET</PackageProjectUrl>
     <PackageTags>libmem memory interop cpp-cli windows x64 x86</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <LibmemNetX64ManagedRoot Condition="'$(LibmemNetX64ManagedRoot)' == ''">$(LibmemNetX64ManagedRoot)</LibmemNetX64ManagedRoot>
-    <LibmemNetX64NativeRoot Condition="'$(LibmemNetX64NativeRoot)' == ''">$(LibmemNetX64NativeRoot)</LibmemNetX64NativeRoot>
-    <LibmemNetX86ManagedRoot Condition="'$(LibmemNetX86ManagedRoot)' == ''">$(LibmemNetX86ManagedRoot)</LibmemNetX86ManagedRoot>
-    <LibmemNetX86NativeRoot Condition="'$(LibmemNetX86NativeRoot)' == ''">$(LibmemNetX86NativeRoot)</LibmemNetX86NativeRoot>
+    <LibmemNetX64ManagedRoot Condition="'$(LibmemNetX64ManagedRoot)' == ''">..\artifacts\managed\x64\$(Configuration)</LibmemNetX64ManagedRoot>
+    <LibmemNetX64NativeRoot Condition="'$(LibmemNetX64NativeRoot)' == ''">..\artifacts\native\x64\$(Configuration)\bin</LibmemNetX64NativeRoot>
+    <LibmemNetX86ManagedRoot Condition="'$(LibmemNetX86ManagedRoot)' == ''">..\artifacts\managed\x86\$(Configuration)</LibmemNetX86ManagedRoot>
+    <LibmemNetX86NativeRoot Condition="'$(LibmemNetX86NativeRoot)' == ''">..\artifacts\native\x86\$(Configuration)\bin</LibmemNetX86NativeRoot>
   </PropertyGroup>
 
   <ItemGroup>
