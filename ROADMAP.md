@@ -1,6 +1,6 @@
 # Libmem.NET 开发路线图
 
-`2.1.0` 已于 2026-10-07 正式发布；当前工作进入 **2.1.1 发布后回归与兼容性修复阶段**。身份迁移历史见 [迁移指南](docs/MIGRATION.md)。
+`2.1.1` 已正式发布到 GitHub 与 nuget.org；当前主线进入稳定维护，并准备后续 **v2.2.0 Native API Coverage / Upstream Sync**。身份迁移历史见 [迁移指南](docs/MIGRATION.md)。
 
 > 当前策略：**x64 主线优先，x86 延后。**
 
@@ -38,14 +38,14 @@ ProcessSession
 
 Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适配属于调用方。
 
-## 当前阶段：v2.1.1 — 发布后维护
+## 已完成阶段：v2.1.1 — 发布后维护
 
-2.1.1 是 2.1.0 的向后兼容 patch，不增加 Public API，也不升级 pinned libmem。当前维护目标：
+2.1.1 是 2.1.0 的向后兼容 patch，不增加 Public API，也不升级 pinned libmem。已完成：
 
 - 修复 `VmtManager` 构造函数未拒绝 bad-address sentinel 的托管边界缺口；
 - 为该无效 VTable 基址补充运行时和源码契约回归测试；
-- 保留 2.1.0 初次 nuget.org restore 失败作为历史发布证据，同时在 2.1.0 后续成功发布后将自动 public-NuGet smoke 基线推进到 2.1.0；
-- 清理 2.1.0 发布后仍残留的 candidate / stable / NuGet 状态文档。
+- 保留 2.1.0 初次 nuget.org restore 失败作为历史发布证据，并在 2.1.1 发布后将自动 public-NuGet smoke 基线推进到 2.1.1；
+- 清理 2.1.1 发布后残留的 candidate / stable / NuGet 状态文档。
 
 ## 已完成阶段：v2.1.0 — Hook / VMT Hardening
 
@@ -119,7 +119,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 ## 后续：v2.2.0 — Native API Coverage / Upstream Sync
 
-2.1.0 稳定后，再系统对照 pinned rdbo/libmem：
+2.1.1 稳定发布后，再系统对照 pinned rdbo/libmem：
 
 - 建立 native → managed API coverage 表；
 - 识别合理但尚未封装的 libmem API；
