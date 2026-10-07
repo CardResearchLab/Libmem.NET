@@ -6,7 +6,7 @@ on:
       package-version:
         description: Published Libmem.NET version to validate from nuget.org
         required: false
-        default: 2.1.0
+        default: 2.0.0
         type: string
   pull_request:
     branches:
@@ -46,7 +46,7 @@ jobs:
           else {
             # Pull requests validate the last known published package.
             # The candidate VERSION may not exist on nuget.org yet.
-            $version = "2.1.0"
+            $version = "2.0.0"
           }
           if ([string]::IsNullOrWhiteSpace($version)) {
             throw "Package version is empty."
