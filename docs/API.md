@@ -453,6 +453,12 @@ Libmem.NET still calls `LM_GetProcessEx` for native metadata/API coverage, then 
 
 This preserves the wrapper's PID + start-time identity model rather than weakening process identity checks.
 
+### LM_VmtUnhook untracked-index protection
+
+The pinned `LM_VmtUnhook` changes the target VTable slot page to executable/read/write protection before checking whether the index is present in its hook-entry list. If the index is not tracked, upstream returns success without restoring the previous protection.
+
+Libmem.NET preserves the existing idempotent `VmtManager.Unhook` contract by checking its tracked-entry list first. An untracked index returns `true` without entering the pinned native path, so the VTable page protection is left unchanged.
+
 ## x64 policy
 
 Current supported/default target:
