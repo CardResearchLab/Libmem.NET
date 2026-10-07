@@ -254,7 +254,7 @@ assert "address==0 || bad_address(address)" in vmt_constructor
 assert "bad-address sentinel" in vmt_constructor
 assert "bool VmtManager::ResetNative()" in source
 assert "while(native_->hkentries!=LM_NULLPTR)" in source
-vmt_unhook = source.split("bool VmtManager::Unhook(UInt64 index)", 1)[1].split("\n}", 1)[0]
+vmt_unhook = source.split("bool VmtManager::Unhook(UInt64 index)", 1)[1].split("UInt64 VmtManager::GetOriginal", 1)[0]
 assert "auto nativeIndex=native_size(index,\"index\")" in vmt_unhook
 assert "native_->hkentries" in vmt_unhook
 assert "entry->index==nativeIndex" in vmt_unhook
