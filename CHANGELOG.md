@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.2.0 - 2026-10-08
+
+### Windows x86 official support
+
+- Promote Windows x86 / .NET 8 from retained compatibility code to an official support and release target alongside Windows x64.
+- Require Release x86 in the unified PR gate with runtime Smoke, external-process, Hook/VMT, Injector, runtime-package, manifest, checksum, and artifact validation.
+- Make the external-process TestTarget architecture-aware with dedicated x86/x64 machine-code fixtures and an explicit ARM64 extension seam without claiming ARM64 support.
+- Preserve pointer-width correctness on x86, including architecture-width bad-address sentinel handling instead of assuming the x64 sentinel.
+
+### Multi-architecture delivery
+
+- Package and verify both `Libmem.NET-windows-x64.zip` and `Libmem.NET-windows-x86.zip`, each with its own SHA-256 checksum and manifest.
+- Ship one `Libmem.NET` NuGet package carrying architecture-specific C++/CLI assemblies, XML documentation, `libmem.dll`, and `Ijwhost.dll` under `win-x64` and `win-x86` runtime paths.
+- Select the matching managed/native runtime through `buildTransitive/Libmem.NET.targets` from `PlatformTarget` / `Platform`; x64 and x86 PackageReference consumers are independently restored, run, and published in CI.
+- Continue rejecting AnyCPU consumers with a clear diagnostic because `Libmem.NET.dll` is a mixed-mode architecture-specific assembly.
+- Compose the formal GitHub Release from verified x64 and x86 runtime artifacts plus one exact-version NuGet package; release notes validate both manifests and both archive checksums.
+
+### Compatibility
+
+- Preserve the 2.1.1 Public API baseline and the pinned rdbo/libmem revision.
+- Keep Windows as the supported operating-system family and .NET 8 as the managed target.
+- Cross-bitness injection remains unsupported.
+- ARM64 remains a future architecture; 2.2.0 only preserves an extension seam and does not publish ARM64 binaries.
+
 ## 2.1.1 - 2026-10-07
 
 ### Fixed
