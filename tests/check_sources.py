@@ -271,6 +271,16 @@ native_build_script = (root / "eng/build-native.ps1").read_text(encoding="utf-8"
 smoke_project = (root / "tests/Libmem.NET.SmokeTests/Libmem.NET.SmokeTests.csproj").read_text(encoding="utf-8")
 hook_project = (root / "tests/Libmem.NET.HookVmtTests/Libmem.NET.HookVmtTests.csproj").read_text(encoding="utf-8")
 hook_runtime_source = (root / "tests/Libmem.NET.HookVmtTests/Program.cs").read_text(encoding="utf-8")
+for required_vmt_disposed_probe in [
+    "Disposed VmtManager.Hook should reject use before validating replacement arguments.",
+    "Disposed VmtManager.Unhook should reject use.",
+    "Disposed VmtManager.GetOriginal should reject use.",
+    "Disposed VmtManager.Reset should reject use.",
+]:
+    assert required_vmt_disposed_probe in hook_runtime_source, (
+        f"Hook/VMT runtime tests lost disposed-state coverage: {required_vmt_disposed_probe}"
+    )
+
 for required_vmt_failure_probe in [
     "VMT failure-state backing page",
     "failureVmt.Reset()",
