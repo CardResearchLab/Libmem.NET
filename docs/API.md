@@ -1,6 +1,6 @@
 # Libmem.NET API Reference
 
-> Target: Windows x64 / .NET 8  
+> Target: Windows x64/x86 / .NET 8  
 > Scope: general-purpose managed wrapper over the pinned rdbo/libmem C ABI.
 
 This document focuses on **consumer-facing behavior**. Build instructions, project architecture, release packaging, and contributor workflows remain in the root README and roadmap.
@@ -468,7 +468,7 @@ Windows x64
 .NET 8
 ```
 
-Existing x86 source/build compatibility paths remain in the repository, but x86 is deferred and is not currently part of official Release assets or the default merge gate.
+Windows x86 is a first-class 2.2.0 release architecture alongside x64. Architecture-specific mixed-mode/native assets are selected from explicit `Platform` / `PlatformTarget`; AnyCPU remains unsupported.
 
 ## IntelliSense documentation
 
@@ -485,11 +485,11 @@ Keep `Libmem.NET.xml` beside `Libmem.NET.dll` so Visual Studio / C# editors can 
 
 ## Distribution and consumption
 
-The current Libmem.NET build targets Windows x64 / .NET 8 through runtime ZIP, source/reusable-workflow integration, and a validated `Libmem.NET` NuGet package path. Historical v1.0.0 binaries retain the `LibmemCli` identity; see [MIGRATION.md](MIGRATION.md).
+The current Libmem.NET 2.2.0 candidate targets Windows x64/x86 / .NET 8 through runtime ZIP, source/reusable-workflow integration, and a validated multi-architecture `Libmem.NET` NuGet package path. Historical v1.0.0 binaries retain the `LibmemCli` identity; see [MIGRATION.md](MIGRATION.md).
 
-An independent PackageReference consumer validates the NuGet package. Published stable `Libmem.NET 2.1.1` is the current public nuget.org restore/build/run/publish baseline and preserves the 2.1.0 Public API contract. Public publication uses Trusted Publishing (OIDC) as an explicit step after release-branch validation and GitHub Release creation; `release/v*` branches validate packages and notes without publishing.
+An independent PackageReference consumer validates the NuGet package. Published stable `Libmem.NET 2.1.1` remains the current public nuget.org baseline until 2.2.0 publication; the 2.2.0 candidate preserves the 2.1.1 Public API while adding official x86 delivery. Public publication uses Trusted Publishing (OIDC) as an explicit step after release-branch validation and GitHub Release creation; `release/v*` branches validate packages and notes without publishing.
 
-See [CONSUMPTION.md](CONSUMPTION.md) for package layout, x64 constraints, release gating, and Trusted Publishing setup.
+See [CONSUMPTION.md](CONSUMPTION.md) for package layout, architecture constraints, release gating, and Trusted Publishing setup.
 
 ## Public API stability
 
