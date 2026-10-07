@@ -2,11 +2,20 @@
 
 This document describes the official release channel, current stable release, support boundaries, integrity model, and versioning policy for Libmem.NET.
 
-## Current source and historical release
+## Current stable release
 
-The current source line is the `2.2.0` release candidate, with numeric assembly/file versions `2.2.0.0`. The published stable line on GitHub and nuget.org remains `2.1.1` until the 2.2.0 publication is completed.
+The current source and published stable line on GitHub and nuget.org are `2.2.0`, with numeric assembly/file versions `2.2.0.0`.
 
-2.2.0 preserves the 2.1.1 Public API and pinned native dependency while promoting Windows x86 to official support alongside x64. The candidate validates both runtime architectures, architecture-aware external-process coverage, dual runtime ZIP/checksum output, and one multi-architecture NuGet package.
+2.2.0 preserves the 2.1.1 Public API and pinned native dependency while promoting Windows x86 to official support alongside x64. The release validates both runtime architectures, architecture-aware external-process coverage, dual runtime ZIP/checksum output, and one multi-architecture NuGet package.
+
+### Libmem.NET v2.2.0
+
+- Release: https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.2.0
+- Release commit: `fefc0819d6b1c62a00f469ad64f98c64c4accc0f`
+- Pinned libmem commit: `a07c9942bf1358dabcc83eb0cd072736c749d7f8`
+- x64 Runtime ZIP SHA-256: `57615efad451832584c510e83ff60656c8e6d81a241bd1d8d288d56e6f19eff3`
+- x86 Runtime ZIP SHA-256: `dbf07c4047f61505e95ca45f5a3cc0e93802bda933ac6713269c49220fa9e94e`
+- NuGet package: `Libmem.NET 2.2.0`
 
 The historical `LibmemCli` → `Libmem.NET` identity migration remains documented in [MIGRATION.md](MIGRATION.md). Existing historical tags and assets remain immutable.
 
@@ -36,7 +45,6 @@ The current target does **not** promise:
 - ARM64 production support;
 - AnyCPU compatibility;
 - cross-bitness injection;
-- public NuGet availability before release setup and publication are verified;
 - game-specific state, Snapshot, Entity, GameState, IPC, Unity, Mono, or Hearthstone business logic.
 
 Those application-level concerns remain the responsibility of consuming projects.
