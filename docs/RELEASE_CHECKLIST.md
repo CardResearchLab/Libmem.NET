@@ -22,6 +22,14 @@ Current source candidate: `2.2.0`; published GitHub/nuget.org stable: `2.1.1`. N
 | GitHub Release safety | `release/v*` is dry-run only; `gh release create` is tag-only; no automatic branch deletion. |
 | NuGet publish safety | OIDC login and push require a manual run on a published tag with `publish-nuget` enabled; branch validation requires no NuGet account credentials. |
 
+
+## NuGet account-side setup
+
+- [ ] Verify the nuget.org Trusted Publishing policy matches `CardResearchLab/Libmem.NET` and the `.github/workflows/release.yml` workflow.
+- [ ] Verify the GitHub Actions repository secret `NUGET_USER` contains the NuGet account username consumed by `NuGet/login@v1`.
+- OIDC supplies the short-lived publish credential at workflow runtime; do not store a long-lived NuGet API key in the repository.
+- Release-branch dry runs and ordinary PR validation must not require NuGet account credentials.
+
 ## 2.2.0 publication sequence
 
 - [x] Select `2.2.0` for the first stable dual-architecture release line.
