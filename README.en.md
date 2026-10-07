@@ -303,8 +303,8 @@ Build is the single automatic PR gate. It builds and validates **Release x64 and
 
 Specialized workflows remain manual entry points:
 
-- [Hook/VMT](.github/workflows/hook-vmt-tests.yml)
-- [Injector](.github/workflows/injector-tests.yml)
+- [Hook/VMT](.github/workflows/hook-vmt-tests.yml), with manual x64 / x86 selection
+- [Injector](.github/workflows/injector-tests.yml), with manual x64 / x86 selection
 - [External Process](.github/workflows/external-process-tests.yml), using the independent `Libmem.NET.TestTarget`
 - [NuGet Consumer](.github/workflows/nuget-consumer-tests.yml)
 
