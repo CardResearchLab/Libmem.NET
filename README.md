@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前已发布稳定版为 **2.1.0**。当前源码进入向后兼容的 **2.1.1** 维护修复阶段，修复 VMT 基址 bad-address sentinel 参数校验、补充回归测试并校正发布后验证/文档状态；Public API 继续保持与 2.1.0 兼容。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
+当前已发布稳定版为 **2.1.1**。2.1.1 是向后兼容的维护修复版，修复 VMT 基址 bad-address sentinel 参数校验与未跟踪 `VmtManager.Unhook` 页保护问题，补充回归测试，并保持与 2.1.0 的 Public API 兼容。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
 
 正式支持范围：
 
@@ -25,7 +25,7 @@
 
 ## 下载
 
-GitHub 与 nuget.org 均已发布稳定版 **Libmem.NET 2.1.0**。当前源码正在准备向后兼容的 **2.1.1** 维护修复版本，完整验收后将作为下一稳定包发布。
+GitHub 与 nuget.org 均已发布稳定版 **Libmem.NET 2.1.1**。`2.1.0` 作为上一稳定版继续保留。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -226,7 +226,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前 `VERSION` 为维护修复候选 **2.1.1**。NuGet / informational version 使用 `2.1.1`，程序集数字版本与文件版本为 `2.1.1.0`。候选 Build 会生成 Runtime ZIP、SHA-256 和 `Libmem.NET.2.1.1.nupkg`；候选产物通过验收不等于已公开发布。已发布稳定版 `2.1.0` 继续作为公共基线，直到 2.1.1 完成 tag 与 NuGet 发布。
+当前稳定版为 **2.1.1**。NuGet / informational version 使用 `2.1.1`，程序集数字版本与文件版本为 `2.1.1.0`。正式 GitHub Release 提供 Runtime ZIP、SHA-256 和 `Libmem.NET.2.1.1.nupkg`，nuget.org 也提供 exact `2.1.1` PackageReference。
 
 生成正式风格 Runtime ZIP：
 
@@ -281,7 +281,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-Trusted Publishing / OIDC、NuGet push 与公开 PackageReference 消费链路均已实际验证。稳定版 `2.1.0` 已发布到 GitHub 与 nuget.org，公开 NuGet smoke 基线也已推进到 2.1.0。当前 `2.1.1` 维护版本沿用同一分离发布流程：先 dry run，再 tag/GitHub Release，最后显式 opt-in 发布 NuGet。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+Trusted Publishing / OIDC、NuGet push 与公开 PackageReference 消费链路均已实际验证。稳定版 `2.1.1` 已发布到 GitHub 与 nuget.org，公开 NuGet smoke 基线推进到 2.1.1；`2.1.0` 作为上一稳定版保留。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 
