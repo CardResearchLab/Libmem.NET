@@ -6,8 +6,10 @@ namespace Libmem::NET {
 using namespace ::Libmem::NET::Interop;
 
 VmtManager::VmtManager(UInt64 address) : native_(nullptr), disposed_(false) {
-    if(address==0)
-        throw gcnew ArgumentOutOfRangeException("vtableAddress", "VTable address must not be zero.");
+    if(address==0 || bad_address(address))
+        throw gcnew ArgumentOutOfRangeException(
+            "vtableAddress",
+            "VTable address must not be zero or the bad-address sentinel.");
 
     native_=new lm_vmt_t{};
     if(!LM_VmtNew(reinterpret_cast<lm_address_t*>(static_cast<uintptr_t>(native_address(address,"vtableAddress"))),native_)) {
