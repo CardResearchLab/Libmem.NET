@@ -64,6 +64,7 @@ jobs:
           dotnet restore .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             --source https://api.nuget.org/v3/index.json `
             -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
+            -p:Platform=x64 `
             -p:NuGetAudit=false
 
       - name: Verify package XML documentation
@@ -81,6 +82,7 @@ jobs:
           dotnet build .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             -c Release `
             --no-restore `
+            -p:Platform=x64 `
             -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
 
       - name: Run published package consumer
@@ -100,6 +102,7 @@ jobs:
             .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             -c Release `
             --no-restore `
+            -p:Platform=x64 `
             -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }} `
             -o $output
 
