@@ -46,13 +46,13 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 > 在保持 2.0.0 Public API 兼容的前提下，把 Hook / VMT 从“可用”推进到“失败路径清晰、生命周期稳定、运行时覆盖完整”。
 
-当前审计结论：
+最终验收前审计结论：
 
-- `HookManager.Install` 已统一通过 owning `HookHandle` 返回 trampoline 与 patched-byte 元数据；
-- `HookHandle.Remove / Dispose` 已具有成功后的幂等语义，finalizer 不会在 GC 线程修改目标代码；
-- `VmtManager` 已绕开 pinned libmem 的 reset/free use-after-free 路径，并提供显式 Hook / Unhook / Reset / Dispose；
-- 当前 runtime tests 已覆盖基本 hook 跳转、trampoline 原始调用、Remove/Dispose 幂等，以及 VMT Hook/Unhook/Reset/Dispose；
-- 仍缺少系统化的非法参数、重复/冲突安装、native failure、目标进程退出、失败后状态保持、外部进程 Hook，以及文档化线程/生命周期边界。
+- `HookManager.Install` 的零值/bad-address、definite native failure 与 disposed-session 契约已经冻结；
+- self-process 与 external-process runtime tests 已覆盖 hook 跳转、trampoline、指令边界、Remove/Dispose 幂等、目标退出与失败后 ownership 重试；
+- `VmtManager` 已覆盖重复 Hook、untracked Unhook、Reset/reuse、Dispose 以及 restore-failure retry 生命周期；
+- remote unhook 已对 trampoline 完整读取做 preflight，避免 pinned `LM_UnhookCodeEx` 失败时泄漏 source protection 状态；
+- duplicate/overlapping code-hook 冲突不由 Libmem.NET 建立全局 registry 处理；relative-control-flow trampoline 安全性继承 pinned libmem 能力，这两项已作为调用方/上游边界明确记录。
 
 ### 2.1.0 工作项
 
