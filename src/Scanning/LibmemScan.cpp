@@ -81,9 +81,10 @@ namespace {
         size_t byteCount=0;
 
         while(ptr && *ptr) {
-            char* endPtr=nullptr;
-            const long value=std::strtol(ptr,&endPtr,16);
-            if(value==0 && ptr==endPtr)
+            char* parsedEnd=nullptr;
+            const long value=std::strtol(ptr,&parsedEnd,16);
+            const char* endPtr=parsedEnd;
+            if(value==0 && ptr==parsedEnd)
                 endPtr=std::strchr(ptr+1,' ');
 
             ++byteCount;
