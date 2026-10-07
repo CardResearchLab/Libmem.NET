@@ -605,12 +605,23 @@ assert "-Architecture x86" in x86_runtime_setup
 assert "DOTNET_ROOT_X86" in x86_runtime_setup
 assert "DOTNET_ROOT(x86)" in x86_runtime_setup
 
-# x64 is the supported/default CI and release target.
+# x64 remains the supported/default release target, while x86 now has
+# first-class runtime validation in the unified PR build.
 assert "Release x64" in build_workflow
-assert "Platform x86" not in build_workflow
-assert "setup-dotnet-x86.ps1" not in build_workflow
+assert "Release x86" in build_workflow
+assert "setup-dotnet-x86.ps1" in build_workflow
 assert build_workflow.count(".\\build.ps1 -Configuration Release -Platform x64") == 1
 assert build_workflow.count(".\\build.ps1 -Configuration Debug -Platform x64") == 1
+assert build_workflow.count(".\\build.ps1 -Configuration Release -Platform x86") == 1
+for x86_step in [
+    "Run x86 runtime smoke tests",
+    "Run x86 Hook and VMT runtime tests",
+    "Run x86 Injector runtime tests",
+    "Package x86 runtime",
+    "Verify x86 runtime package",
+    "Upload x86 runtime artifact",
+]:
+    assert x86_step in build_workflow, f"Unified PR gate lost x86 validation step: {x86_step}"
 
 def workflow_steps(workflow):
     """Extract named step blocks at the workflow's step indentation."""
@@ -714,11 +725,12 @@ assert "setup-dotnet-x86.ps1" not in nuget_consumer_workflow
 assert "needs: [build-x64]" in release_workflow
 assert "build-x86:" not in release_workflow
 
-# Keep the reusable/manual x86 path available for future compatibility work.
+# Keep the reusable/manual x86 path available alongside the unified x86 PR gate.
 assert "setup-dotnet-x86.ps1" in reusable_workflow
 assert "platform:" in reusable_workflow
 assert "x64 is the supported release target" in reusable_workflow
-print("PASS x64-first package integrity and release provenance contract")
+assert "Release x86" in build_workflow
+print("PASS x64 release provenance with x86 runtime CI contract")
 
 subprocess.run(
     [
