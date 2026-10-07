@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 2.1.0 - 2026-10-07
 
-### Planning
+### Hook / VMT hardening
 
 - Move the active roadmap to `2.1.0` Hook/VMT hardening after the stable `2.0.0` release.
 - Define 2.1.0 as a non-breaking hardening cycle focused on Hook/VMT failure paths, ownership, runtime coverage, external-process tests, and consumer documentation.
