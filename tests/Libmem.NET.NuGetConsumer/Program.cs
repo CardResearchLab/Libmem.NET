@@ -1,7 +1,11 @@
-using System.Runtime.InteropServices;\nusing Libmem.NET;
+using System.Runtime.InteropServices;
+using Libmem.NET;
 using NativeApi = global::Libmem.NET.Libmem;
 
-Console.WriteLine($"Libmem.NET NuGet consumer test ({RuntimeInformation.ProcessArchitecture})");\n\nif (RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.X86))\n    throw new PlatformNotSupportedException($"Unexpected NuGet consumer architecture: {RuntimeInformation.ProcessArchitecture}.");
+Console.WriteLine($"Libmem.NET NuGet consumer test ({RuntimeInformation.ProcessArchitecture})");
+
+if (RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.X86))
+    throw new PlatformNotSupportedException($"Unexpected NuGet consumer architecture: {RuntimeInformation.ProcessArchitecture}.");
 
 var wrapperAssembly = typeof(ProcessSession).Assembly;
 if (wrapperAssembly.GetName().Name != "Libmem.NET")
