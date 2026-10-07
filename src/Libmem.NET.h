@@ -504,6 +504,7 @@ namespace Libmem::NET {
         /// <summary>Replaces one VTable entry and tracks its original value.</summary>
         void Hook(UInt64 index, UInt64 replacementAddress);
         /// <summary>Restores one tracked VTable entry.</summary>
+        /// <remarks>An untracked index is an idempotent success and does not change the VTable slot or its page protection.</remarks>
         bool Unhook(UInt64 index);
         /// <summary>Gets the original address recorded for a hooked VTable entry.</summary>
         UInt64 GetOriginal(UInt64 index);
