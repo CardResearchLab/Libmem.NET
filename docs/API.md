@@ -485,9 +485,9 @@ Keep `Libmem.NET.xml` beside `Libmem.NET.dll` so Visual Studio / C# editors can 
 
 ## Distribution and consumption
 
-The current Libmem.NET 2.2.0 candidate targets Windows x64/x86 / .NET 8 through runtime ZIP, source/reusable-workflow integration, and a validated multi-architecture `Libmem.NET` NuGet package path. Historical v1.0.0 binaries retain the `LibmemCli` identity; see [MIGRATION.md](MIGRATION.md).
+The current Libmem.NET 2.2.0 stable release targets Windows x64/x86 / .NET 8 through runtime ZIP, source/reusable-workflow integration, and a validated multi-architecture `Libmem.NET` NuGet package path. Historical v1.0.0 binaries retain the `LibmemCli` identity; see [MIGRATION.md](MIGRATION.md).
 
-An independent PackageReference consumer validates the NuGet package. Published stable `Libmem.NET 2.1.1` remains the current public nuget.org baseline until 2.2.0 publication; the 2.2.0 candidate preserves the 2.1.1 Public API while adding official x86 delivery. Public publication uses Trusted Publishing (OIDC) as an explicit step after release-branch validation and GitHub Release creation; `release/v*` branches validate packages and notes without publishing.
+Independent PackageReference consumers validate the published NuGet package on both x64 and x86. Published stable `Libmem.NET 2.2.0` is the current public nuget.org baseline; 2.2.0 preserves the 2.1.1 Public API while adding official x86 delivery. Public publication uses Trusted Publishing (OIDC) as an explicit step after release-branch validation and GitHub Release creation; `release/v*` branches validate packages and notes without publishing.
 
 See [CONSUMPTION.md](CONSUMPTION.md) for package layout, architecture constraints, release gating, and Trusted Publishing setup.
 
