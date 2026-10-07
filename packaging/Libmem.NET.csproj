@@ -6,8 +6,8 @@
     <PackageId>Libmem.NET</PackageId>
     <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.0-local</PackageVersion>
     <Authors>xiaohei7972</Authors>
-    <Description>Windows x64 / .NET 8 C++/CLI wrapper for rdbo/libmem, providing managed process, memory, scanning, hooking, injection, assembly, and symbol APIs.</Description>
-    <PackageReleaseNotes>English: Libmem.NET 2.1.1 is a backward-compatible maintenance release. Bug fixes: reject the libmem bad-address sentinel before VmtManager creates native VMT state; preserve VTable page protection when Unhook is called for an untracked index; add regression coverage for invalid VTable addresses and VMT lifecycle/protection contracts; improve NuGet publication and post-release smoke-test coverage. Compatibility: no intentional Public API changes from 2.1.0; the pinned rdbo/libmem revision is unchanged; the official target remains Windows x64 / .NET 8. 中文：Libmem.NET 2.1.1 是向后兼容的维护修复版本。Bug 修复：在 VmtManager 创建 native VMT 状态前拒绝 libmem bad-address sentinel；修复对未跟踪 index 调用 Unhook 时可能改变 VTable 页保护的问题；补充无效 VTable 地址及 VMT 生命周期/页保护回归测试；完善 NuGet 发布与发布后 smoke test 覆盖。兼容性：相比 2.1.0 不主动引入 Public API 变更；固定的 rdbo/libmem 版本不变；正式支持目标仍为 Windows x64 / .NET 8。 Full notes / 完整说明: https://github.com/CardResearchLab/Libmem.NET/blob/main/CHANGELOG.md</PackageReleaseNotes>
+    <Description>Windows x64 / x86 .NET 8 C++/CLI wrapper for rdbo/libmem, providing managed process, memory, scanning, hooking, injection, assembly, and symbol APIs.</Description>
+    <PackageReleaseNotes>English: Libmem.NET 2.1.1 is the current stable baseline. The 2.2 development line adds validated Windows x86 support while preserving the managed Public API. 中文：Libmem.NET 2.1.1 为当前稳定基线；2.2 开发线在保持托管 Public API 不变的前提下加入经过验证的 Windows x86 支持。 Full notes / 完整说明: https://github.com/CardResearchLab/Libmem.NET/blob/main/CHANGELOG.md</PackageReleaseNotes>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/CardResearchLab/Libmem.NET</RepositoryUrl>
@@ -15,23 +15,37 @@
     <RepositoryCommit Condition="'$(RepositoryCommit)' == '' and '$(GITHUB_SHA)' != ''">$(GITHUB_SHA)</RepositoryCommit>
     <RepositoryCommit Condition="'$(RepositoryCommit)' == ''">local</RepositoryCommit>
     <PackageProjectUrl>https://github.com/CardResearchLab/Libmem.NET</PackageProjectUrl>
-    <PackageTags>libmem memory interop cpp-cli windows x64</PackageTags>
+    <PackageTags>libmem memory interop cpp-cli windows x64 x86</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\artifacts\managed\x64\$(Configuration)\Libmem.NET.dll"
           Pack="true"
-          PackagePath="lib\net8.0\Libmem.NET.dll" />
+          PackagePath="runtimes\win-x64\lib\net8.0\Libmem.NET.dll" />
     <None Include="..\artifacts\managed\x64\$(Configuration)\Libmem.NET.xml"
           Pack="true"
-          PackagePath="lib\net8.0\Libmem.NET.xml" />
+          PackagePath="runtimes\win-x64\lib\net8.0\Libmem.NET.xml" />
     <None Include="..\artifacts\native\x64\$(Configuration)\bin\libmem.dll"
           Pack="true"
           PackagePath="runtimes\win-x64\native\libmem.dll" />
     <None Include="..\artifacts\managed\x64\$(Configuration)\Ijwhost.dll"
           Pack="true"
           PackagePath="runtimes\win-x64\native\Ijwhost.dll" />
+
+    <None Include="..\artifacts\managed\x86\$(Configuration)\Libmem.NET.dll"
+          Pack="true"
+          PackagePath="runtimes\win-x86\lib\net8.0\Libmem.NET.dll" />
+    <None Include="..\artifacts\managed\x86\$(Configuration)\Libmem.NET.xml"
+          Pack="true"
+          PackagePath="runtimes\win-x86\lib\net8.0\Libmem.NET.xml" />
+    <None Include="..\artifacts\native\x86\$(Configuration)\bin\libmem.dll"
+          Pack="true"
+          PackagePath="runtimes\win-x86\native\libmem.dll" />
+    <None Include="..\artifacts\managed\x86\$(Configuration)\Ijwhost.dll"
+          Pack="true"
+          PackagePath="runtimes\win-x86\native\Ijwhost.dll" />
+
     <None Include="Libmem.NET.targets"
           Pack="true"
           PackagePath="buildTransitive\Libmem.NET.targets" />
