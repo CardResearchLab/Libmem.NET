@@ -26,21 +26,49 @@ if ($baseVersion -notmatch $versionPattern) {
     throw "VERSION must use MAJOR.MINOR.PATCH[-PRERELEASE] format: '$baseVersion'"
 }
 
-$requiredArtifacts = @()
-foreach ($platform in @('x64', 'x86')) {
-    $requiredArtifacts += @(
-        (Join-Path $repoRoot "artifacts\managed\$platform\$Configuration\Libmem.NET.dll"),
-        (Join-Path $repoRoot "artifacts\managed\$platform\$Configuration\Libmem.NET.xml"),
-        (Join-Path $repoRoot "artifacts\managed\$platform\$Configuration\Ijwhost.dll"),
-        (Join-Path $repoRoot "artifacts\native\$platform\$Configuration\bin\libmem.dll")
+function Resolve-ArchitectureAssets([string]$Platform) {
+    $managedRoot = Join-Path $repoRoot "artifacts\managed\$Platform\$Configuration"
+    $nativeRoot = Join-Path $repoRoot "artifacts\native\$Platform\$Configuration\bin"
+
+    $buildFiles = @(
+        (Join-Path $managedRoot 'Libmem.NET.dll'),
+        (Join-Path $managedRoot 'Libmem.NET.xml'),
+        (Join-Path $managedRoot 'Ijwhost.dll'),
+        (Join-Path $nativeRoot 'libmem.dll')
     )
+
+    if (($buildFiles | Where-Object { -not (Test-Path $_ -PathType Leaf) }).Count -eq 0) {
+        return @{
+            ManagedRoot = $managedRoot
+            NativeRoot = $nativeRoot
+            Source = 'build'
+        }
+    }
+
+    $runtimeRoot = Join-Path $repoRoot "artifacts\package\Libmem.NET-windows-$Platform"
+    $runtimeFiles = @(
+        (Join-Path $runtimeRoot 'Libmem.NET.dll'),
+        (Join-Path $runtimeRoot 'Libmem.NET.xml'),
+        (Join-Path $runtimeRoot 'Ijwhost.dll'),
+        (Join-Path $runtimeRoot 'libmem.dll')
+    )
+
+    if (($runtimeFiles | Where-Object { -not (Test-Path $_ -PathType Leaf) }).Count -eq 0) {
+        return @{
+            ManagedRoot = $runtimeRoot
+            NativeRoot = $runtimeRoot
+            Source = 'runtime-package'
+        }
+    }
+
+    throw "Required $Platform NuGet assets were not found. Build $Platform locally or stage artifacts/package/Libmem.NET-windows-$Platform first."
 }
 
-foreach ($artifact in $requiredArtifacts) {
-    if (-not (Test-Path $artifact -PathType Leaf)) {
-        throw "Required multi-architecture NuGet artifact is missing: $artifact. Build both x64 and x86 first."
-    }
-}
+$x64Assets = Resolve-ArchitectureAssets 'x64'
+$x86Assets = Resolve-ArchitectureAssets 'x86'
+
+Write-Host "NuGet x64 assets: $($x64Assets.Source) -> $($x64Assets.ManagedRoot)"
+Write-Host "NuGet x86 assets: $($x86Assets.Source) -> $($x86Assets.ManagedRoot)"
 
 $repositoryCommit = (& git -C $repoRoot rev-parse HEAD).Trim().ToLowerInvariant()
 if ($LASTEXITCODE -ne 0 -or $repositoryCommit -notmatch '^[0-9a-f]{40}$') {
@@ -68,6 +96,10 @@ dotnet pack $project `
     -c $Configuration `
     -p:PackageVersion=$PackageVersion `
     -p:RepositoryCommit=$repositoryCommit `
+    -p:LibmemNetX64ManagedRoot="$($x64Assets.ManagedRoot)" `
+    -p:LibmemNetX64NativeRoot="$($x64Assets.NativeRoot)" `
+    -p:LibmemNetX86ManagedRoot="$($x86Assets.ManagedRoot)" `
+    -p:LibmemNetX86NativeRoot="$($x86Assets.NativeRoot)" `
     -p:NuGetAudit=false `
     -o $OutputDirectory
 
