@@ -69,6 +69,10 @@ jobs:
         shell: pwsh
         run: dotnet .\samples\bin\x64\Release\net8.0\Example.dll
 
+      - name: Run Hook example
+        shell: pwsh
+        run: dotnet run --project .\samples\HookExample\HookExample.csproj -c Release -p:Platform=x64
+
       - name: Build external-process TestTarget
         shell: pwsh
         run: dotnet build .\tests\Libmem.NET.TestTarget\Libmem.NET.TestTarget.csproj -c Release -p:Platform=x64
