@@ -7,31 +7,23 @@ const uint memRelease = 0x8000;
 const uint pageExecuteRead = 0x20;
 const uint pageExecuteReadWrite = 0x40;
 
-static byte[] ReturnConstant(int value, int size = 64)
+static IntPtr AddressPointer(ulong address)
 {
-    if (size < 24)
-        throw new ArgumentOutOfRangeException(nameof(size));
+    return IntPtr.Size == 4
+        ? new IntPtr(unchecked((int)(uint)address))
+        : new IntPtr(unchecked((long)address));
+}
 
-    var code = Enumerable.Repeat((byte)0x90, size).ToArray();
-
-    // A 10-byte instruction forces HookCode to respect an instruction boundary:
-    // mov r10, 0x1122334455667788
-    code[0] = 0x49;
-    code[1] = 0xBA;
-    BitConverter.GetBytes(0x1122334455667788UL).CopyTo(code, 2);
-
-    // mov eax, imm32
-    code[10] = 0xB8;
-    BitConverter.GetBytes(value).CopyTo(code, 11);
-
-    code[^1] = 0xC3; // ret
-    return code;
+static ulong PointerAddress(IntPtr pointer)
+{
+    return IntPtr.Size == 4
+        ? unchecked((uint)pointer.ToInt32())
+        : unchecked((ulong)pointer.ToInt64());
 }
 
 static int CallAddress(ulong address)
 {
-    var pointer = new IntPtr(unchecked((long)address));
-    var function = Marshal.GetDelegateForFunctionPointer<NoArgsDelegate>(pointer);
+    var function = Marshal.GetDelegateForFunctionPointer<NoArgsDelegate>(AddressPointer(address));
     return function();
 }
 
@@ -49,6 +41,7 @@ byte[] payload =
     0x54, 0x41, 0x52, 0x47, 0x45, 0x54
 ];
 
+var architecture = TestTargetArchitecture.Current;
 var allocation = Marshal.AllocHGlobal(allocationSize);
 var hookSource = NativeMethods.VirtualAlloc(
     IntPtr.Zero,
@@ -76,8 +69,8 @@ try
 {
     Marshal.Copy(payload, 0, allocation, payload.Length);
 
-    var sourceCode = ReturnConstant(1);
-    var destinationCode = ReturnConstant(2);
+    var sourceCode = architecture.CreateReturnConstant(1);
+    var destinationCode = architecture.CreateReturnConstant(2);
     Marshal.Copy(sourceCode, 0, hookSource, sourceCode.Length);
     Marshal.Copy(destinationCode, 0, hookDestination, destinationCode.Length);
 
@@ -97,8 +90,9 @@ try
     }
 
     Console.WriteLine(
-        $"READY pid={Environment.ProcessId} address=0x{allocation.ToInt64():X} size={allocationSize} " +
-        $"hookSource=0x{hookSource.ToInt64():X} hookDestination=0x{hookDestination.ToInt64():X}");
+        $"READY pid={Environment.ProcessId} arch={architecture.ProcessArchitecture} " +
+        $"address=0x{PointerAddress(allocation):X} size={allocationSize} " +
+        $"hookSource=0x{PointerAddress(hookSource):X} hookDestination=0x{PointerAddress(hookDestination):X}");
     Console.Out.Flush();
 
     while (Console.ReadLine() is { } command)
@@ -141,7 +135,7 @@ try
                 CultureInfo.InvariantCulture);
 
             if (!NativeMethods.VirtualProtect(
-                    new IntPtr(unchecked((long)address)),
+                    AddressPointer(address),
                     1,
                     protection,
                     out var oldProtection))

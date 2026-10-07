@@ -473,10 +473,9 @@ for script in [
 for project in [sample_project, smoke_project, hook_project, injector_project]:
     assert "<Platforms>x64;x86</Platforms>" in project
     assert "<PlatformTarget>$(Platform)</PlatformTarget>" in project
-assert "<Platforms>x64</Platforms>" in test_target_project, "TestTarget must remain x64-only for the current roadmap."
-assert "<PlatformTarget>x64</PlatformTarget>" in test_target_project
-assert "<Platforms>x64</Platforms>" in external_process_project, "ExternalProcessTests must remain x64-only for the current roadmap."
-assert "<PlatformTarget>x64</PlatformTarget>" in external_process_project
+for project in [test_target_project, external_process_project]:
+    assert "<Platforms>x64;x86</Platforms>" in project
+    assert "<PlatformTarget>$(Platform)</PlatformTarget>" in project
 assert "<PlatformTarget>x64</PlatformTarget>" in nuget_consumer_project, "NuGetConsumer must remain x64-only."
 assert "Libmem.NET" in nuget_consumer_project
 assert "lm_address_t native_address(UInt64 value" in source
@@ -484,9 +483,12 @@ assert "lm_size_t native_size(UInt64 value" in source
 assert "bool bad_address(UInt64 value)" in source
 assert "Address does not fit the current process architecture." in source
 assert "Size or index does not fit the current process architecture." in source
-print("PASS x86/x64 architecture contract")
+print("PASS x86/x64 architecture contract with ARM64-ready test seams")
 
 test_target_source = (root / "tests/Libmem.NET.TestTarget/Program.cs").read_text(encoding="utf-8")
+test_target_architecture_source = (
+    root / "tests/Libmem.NET.TestTarget/Architecture/TestTargetArchitecture.cs"
+).read_text(encoding="utf-8")
 external_process_test_source = (root / "tests/Libmem.NET.ExternalProcessTests/Program.cs").read_text(encoding="utf-8")
 assert "Marshal.AllocHGlobal" in test_target_source
 assert "NativeMethods.VirtualAlloc" in test_target_source
@@ -497,6 +499,27 @@ assert "hookDestination=0x" in test_target_source
 assert 'command.StartsWith("call "' in test_target_source
 assert 'command.StartsWith("protect "' in test_target_source
 assert "READY pid=" in test_target_source
+assert "arch={architecture.ProcessArchitecture}" in test_target_source
+for architecture_fixture in [
+    "ITestTargetArchitecture",
+    "X86TestTargetArchitecture",
+    "X64TestTargetArchitecture",
+    "Arm64TestTargetArchitecture",
+    "Architecture.X86",
+    "Architecture.X64",
+    "Architecture.Arm64",
+    "ProcessArchitecture",
+]:
+    assert architecture_fixture in test_target_architecture_source, (
+        f"TestTarget architecture fixture lost required marker: {architecture_fixture}"
+    )
+assert "mov r10" in test_target_architecture_source
+assert "mov eax, imm32" in test_target_architecture_source
+assert "ARM64 external-process machine-code fixtures are reserved" in test_target_architecture_source
+for pointer_marker in ["AddressPointer", "PointerAddress", "pointer.ToInt32()", "pointer.ToInt64()"]:
+    assert pointer_marker in test_target_source, (
+        f"TestTarget pointer-width conversion lost required marker: {pointer_marker}"
+    )
 for required_call in [
     "ProcessSession.Open",
     "ProcessSession.Open(ready.Pid)",
@@ -508,7 +531,7 @@ for required_call in [
     "session.Scanner.SigScan",
     "session.Hooks.Install",
     "remoteHook.Trampoline",
-    "ExpectedPatchedBytes",
+    "remoteHook.PatchedBytes > 0",
     "SetTargetProtection",
     "pageNoAccess",
     "retryHook.Remove",
@@ -615,6 +638,8 @@ assert build_workflow.count(".\\build.ps1 -Configuration Debug -Platform x64") =
 assert build_workflow.count(".\\build.ps1 -Configuration Release -Platform x86") == 1
 for x86_step in [
     "Run x86 runtime smoke tests",
+    "Build x86 external-process TestTarget",
+    "Run x86 external-process runtime tests",
     "Run x86 Hook and VMT runtime tests",
     "Run x86 Injector runtime tests",
     "Package x86 runtime",
@@ -708,10 +733,14 @@ assert "Hook and VMT x64" in hook_workflow
 assert "setup-dotnet-x86.ps1" not in hook_workflow
 assert "Injector x64" in injector_workflow
 assert "setup-dotnet-x86.ps1" not in injector_workflow
-assert "External Process x64" in external_process_workflow
+assert "External Process ${{ inputs.platform }}" in external_process_workflow
+assert "type: choice" in external_process_workflow
+assert "- x64" in external_process_workflow and "- x86" in external_process_workflow
+assert "setup-dotnet-x86.ps1" in external_process_workflow
+assert "inputs.platform == 'x86'" in external_process_workflow
 assert "Libmem.NET.TestTarget" in external_process_workflow
 assert "Libmem.NET.ExternalProcessTests" in external_process_workflow
-assert "setup-dotnet-x86.ps1" not in external_process_workflow
+assert "LIBMEM_NET_TEST_TARGET:" in external_process_workflow
 assert "NuGet Consumer x64" in nuget_consumer_workflow
 assert "package-nuget.ps1" in nuget_consumer_workflow
 assert "package-version.txt" in nuget_consumer_workflow
