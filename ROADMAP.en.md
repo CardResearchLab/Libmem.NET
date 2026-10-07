@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-`2.2.0` is now a release candidate: Windows x86 has completed runtime, external-process, NuGet, and Release delivery enablement and is promoted alongside x64 as an official target. The currently published stable release remains `2.1.1`. See the [migration guide](docs/MIGRATION.md) for the historical identity transition.
+`2.2.0` is now formally released: Windows x86 has completed runtime, external-process, NuGet, and Release delivery enablement and is promoted alongside x64 as an official target. GitHub and nuget.org both publish `2.2.0` as the current stable release. See the [migration guide](docs/MIGRATION.md) for the historical identity transition.
 
 > Current strategy: **Windows x64 and x86 are first-class targets; shared design stays architecture-neutral for a future ARM64 phase.**
 
