@@ -1,6 +1,6 @@
 # Libmem.NET 开发路线图
 
-当前命名迁移已完成 preview 验收：程序集和 namespace 统一为 `Libmem.NET`，旧消费者需要重新编译。功能契约保持不变；当前工作进入 **2.0.0 正式版发布准备**。参见 [迁移指南](docs/MIGRATION.md)。
+`2.0.0` 已完成正式发布；当前工作进入 **2.1.0 Hook / VMT Hardening 最终验收与发布候选阶段**。身份迁移历史见 [迁移指南](docs/MIGRATION.md)。
 
 > 当前策略：**x64 主线优先，x86 延后。**
 
@@ -38,7 +38,7 @@ ProcessSession
 
 Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适配属于调用方。
 
-## 当前阶段：v2.1.0 — Hook / VMT Hardening
+## 当前阶段：v2.1.0 — Hook / VMT Hardening（最终验收）
 
 `2.0.0` 已于 2026-10-06 正式发布，Windows x64 / .NET 8 的程序集、NuGet 包、运行时 ZIP、校验文件和 Public API 基线已经形成稳定基线。2.1.0 不进行新的命名迁移，也不主动引入 breaking change。
 
