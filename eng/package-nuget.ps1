@@ -26,16 +26,19 @@ if ($baseVersion -notmatch $versionPattern) {
     throw "VERSION must use MAJOR.MINOR.PATCH[-PRERELEASE] format: '$baseVersion'"
 }
 
-$requiredArtifacts = @(
-    (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\Libmem.NET.dll"),
-    (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\Libmem.NET.xml"),
-    (Join-Path $repoRoot "artifacts\managed\x64\$Configuration\Ijwhost.dll"),
-    (Join-Path $repoRoot "artifacts\native\x64\$Configuration\bin\libmem.dll")
-)
+$requiredArtifacts = @()
+foreach ($platform in @('x64', 'x86')) {
+    $requiredArtifacts += @(
+        (Join-Path $repoRoot "artifacts\managed\$platform\$Configuration\Libmem.NET.dll"),
+        (Join-Path $repoRoot "artifacts\managed\$platform\$Configuration\Libmem.NET.xml"),
+        (Join-Path $repoRoot "artifacts\managed\$platform\$Configuration\Ijwhost.dll"),
+        (Join-Path $repoRoot "artifacts\native\$platform\$Configuration\bin\libmem.dll")
+    )
+}
 
 foreach ($artifact in $requiredArtifacts) {
     if (-not (Test-Path $artifact -PathType Leaf)) {
-        throw "Required x64 artifact is missing: $artifact. Run build.ps1 first."
+        throw "Required multi-architecture NuGet artifact is missing: $artifact. Build both x64 and x86 first."
     }
 }
 
@@ -90,5 +93,5 @@ if ($LASTEXITCODE -ne 0) {
 $versionOutput = Join-Path $OutputDirectory 'package-version.txt'
 Set-Content -Path $versionOutput -Value $PackageVersion -Encoding ascii
 
-Write-Host "Libmem.NET NuGet version: $PackageVersion"
+Write-Host "Libmem.NET multi-architecture NuGet version: $PackageVersion"
 Write-Host "Libmem.NET NuGet package: $package"
