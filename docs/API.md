@@ -315,6 +315,12 @@ If explicit remote removal fails while the target is still alive, `Remove()` ret
 
 If the remote target has exited, the target address space no longer exists; `Remove()` converges the handle to the released state and returns `true`. The finalizer never rewrites target code.
 
+#### Hook conflict and trampoline boundaries
+
+Libmem.NET does not maintain a global registry of installed code hooks. Installing multiple live hooks whose source ranges are identical or overlap is therefore not rejected by a managed conflict layer. Consumers must coordinate HookHandle ownership so concurrently installed hooks do not patch the same source bytes.
+
+Trampoline relocation behavior is inherited from the pinned libmem implementation. Libmem.NET aligns `PatchedBytes` to complete instructions, but it does not rewrite copied PC-relative/relative-control-flow instructions in managed code. Consumers that hook functions whose overwritten span contains relative branches/calls or other location-sensitive instructions must validate that target against the pinned native backend rather than assuming every instruction sequence is trampoline-safe.
+
 ### InjectedModuleHandle
 
 Created by:
