@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前正式版候选为 **2.1.0**，已发布稳定版为 **2.0.0**。2.1.0 是保持 2.0.0 Public API 兼容的 Hook / VMT 加固版本，重点补齐失败路径、ownership、外部进程运行时覆盖与消费者文档。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
+当前已发布稳定版为 **2.1.0**。当前源码进入向后兼容的 **2.1.1** 维护修复阶段，修复 VMT 基址 bad-address sentinel 参数校验、补充回归测试并校正发布后验证/文档状态；Public API 继续保持与 2.1.0 兼容。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
 
 正式支持范围：
 
@@ -25,7 +25,7 @@
 
 ## 下载
 
-已发布稳定版 **Libmem.NET 2.0.0** 继续可用；当前 **2.1.0** 正在进行 release candidate 验收。2.1.0 在 release dry run、tag 与 NuGet 发布完成前不会替代 2.0.0。
+已发布稳定版 **Libmem.NET 2.1.0** 可通过 GitHub Release 获取；NuGet 公共包路径由独立 smoke workflow 验证。当前源码准备 **2.1.1** patch，在完成 release dry run、tag 与 NuGet 发布前不会替代 2.1.0。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
