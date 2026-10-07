@@ -33,6 +33,9 @@ assert "RemoteAllocation::~RemoteAllocation()" in remote_allocation_source
 assert "InjectedModuleHandle::InjectedModuleHandle" in injector_source
 assert "InjectedModuleHandle::~InjectedModuleHandle()" in injector_source
 assert "InjectorManager::InjectLibrary" in injector_source
+assert '"LM_LoadModuleEx"' in injector_source
+assert "Library injection did not produce a resolvable module in the target process." in injector_source
+assert '"LM_EnumModulesEx"' not in injector_source
 assert "RemoteAllocation::RemoteAllocation" not in libmem_facade_source
 assert "InjectedModuleHandle::InjectedModuleHandle" not in libmem_facade_source
 assert "InjectorManager::InjectLibrary" not in libmem_facade_source

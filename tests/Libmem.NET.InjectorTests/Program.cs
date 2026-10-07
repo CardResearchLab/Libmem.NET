@@ -31,6 +31,7 @@ Directory.CreateDirectory(fixtureDirectory);
 
 string? manualFixture = null;
 string? disposeFixture = null;
+string? invalidFixture = null;
 
 try
 {
@@ -82,10 +83,30 @@ try
         missingThrows = true;
     }
     Check(missingThrows, "Injector should reject a library path that does not exist.");
+
+    invalidFixture = Path.Combine(
+        fixtureDirectory,
+        $"Libmem.NET.InjectorFixture.invalid.{Guid.NewGuid():N}.dll");
+    File.WriteAllText(invalidFixture, "not a PE image");
+
+    var invalidLoadMapped = false;
+    try
+    {
+        _ = injector.InjectLibrary(invalidFixture);
+    }
+    catch (LibmemException ex) when (ex.Operation == "LM_LoadModuleEx")
+    {
+        invalidLoadMapped = true;
+    }
+
+    Check(invalidLoadMapped,
+        "An existing but unloadable DLL should be reported as LM_LoadModuleEx.");
+    Check(session.Modules.Find(Path.GetFileName(invalidFixture)) is null,
+        "An unloadable DLL unexpectedly appeared in the target module list.");
 }
 finally
 {
-    foreach (var fixture in new[] { manualFixture, disposeFixture })
+    foreach (var fixture in new[] { manualFixture, disposeFixture, invalidFixture })
     {
         if (fixture is null)
             continue;

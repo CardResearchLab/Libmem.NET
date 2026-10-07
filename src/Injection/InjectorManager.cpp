@@ -106,8 +106,8 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
 
     if(loaded==nullptr)
         throw gcnew LibmemException(
-            "LM_EnumModulesEx",
-            "LoadLibrary completed but the injected module could not be resolved by full path.");
+            "LM_LoadModuleEx",
+            "Library injection did not produce a resolvable module in the target process.");
 
     return gcnew InjectedModuleHandle(target,loaded,fullPath);
 }
