@@ -24,25 +24,26 @@ static TException ExpectThrows<TException>(Action action, string message)
     throw new Exception(message);
 }
 
-static string ResolveTargetDll()
+static string ResolveTargetExecutable()
 {
-    var configured = Environment.GetEnvironmentVariable("LIBMEM_NET_TEST_TARGET_DLL");
+    var configured = Environment.GetEnvironmentVariable("LIBMEM_NET_TEST_TARGET_EXE");
     if (!string.IsNullOrWhiteSpace(configured))
         return Path.GetFullPath(configured);
 
-    var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+    var platform = IntPtr.Size == sizeof(long) ? "x64" : "x86";
+    var testsRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
     var candidates = new[]
     {
-        Path.Combine(repoRoot, "Libmem.NET.TestTarget", "bin", "x64", "Release", "net8.0", "Libmem.NET.TestTarget.dll"),
-        Path.Combine(repoRoot, "Libmem.NET.TestTarget", "bin", "Release", "net8.0", "Libmem.NET.TestTarget.dll"),
+        Path.Combine(testsRoot, "Libmem.NET.TestTarget", "bin", platform, "Release", "net8.0", "Libmem.NET.TestTarget.exe"),
+        Path.Combine(testsRoot, "Libmem.NET.TestTarget", "bin", "Release", "net8.0", "Libmem.NET.TestTarget.exe"),
     };
 
     return candidates.FirstOrDefault(File.Exists)
         ?? throw new FileNotFoundException(
-            "Libmem.NET.TestTarget.dll was not found. Build tests/Libmem.NET.TestTarget first or set LIBMEM_NET_TEST_TARGET_DLL.");
+            $"Libmem.NET.TestTarget.exe for {platform} was not found. Build tests/Libmem.NET.TestTarget first or set LIBMEM_NET_TEST_TARGET_EXE.");
 }
 
-static (uint Pid, ulong Address, ulong Size, ulong HookSource, ulong HookDestination) ParseReady(string line)
+static (uint Pid, string Architecture, ulong Address, ulong Size, ulong HookSource, ulong HookDestination, ulong ExpectedPatchBytes) ParseReady(string line)
 {
     var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
     if (parts.Length < 2 || parts[0] != "READY")
@@ -66,11 +67,13 @@ static (uint Pid, ulong Address, ulong Size, ulong HookSource, ulong HookDestina
     }
 
     uint pid = uint.Parse(Field("pid"), CultureInfo.InvariantCulture);
+    string architecture = Field("arch");
     ulong address = HexAddress(Field("address"), "address");
     ulong size = ulong.Parse(Field("size"), CultureInfo.InvariantCulture);
     ulong hookSource = HexAddress(Field("hookSource"), "hookSource");
     ulong hookDestination = HexAddress(Field("hookDestination"), "hookDestination");
-    return (pid, address, size, hookSource, hookDestination);
+    ulong expectedPatchBytes = ulong.Parse(Field("expectedPatchBytes"), CultureInfo.InvariantCulture);
+    return (pid, architecture, address, size, hookSource, hookDestination, expectedPatchBytes);
 }
 
 static string SendCommand(Process child, string command)
@@ -104,30 +107,24 @@ static uint SetTargetProtection(Process child, ulong address, uint protection)
         CultureInfo.InvariantCulture);
 }
 
-static ulong ExpectedPatchedBytes(ulong source, ulong destination)
-{
-    var relative = checked((long)destination - (long)source - 5L);
-    var usesRelativeJump = relative >= int.MinValue && relative <= int.MaxValue;
-    return usesRelativeJump ? 10UL : 15UL;
-}
-
 static MemoryProtection ProtectionOf(ProcessInfo process, ulong address) =>
     NativeApi.FindSegment(process, address)?.Protection
     ?? throw new InvalidOperationException($"Could not resolve protection for 0x{address:X}.");
 
 Console.WriteLine("Libmem.NET external-process runtime tests");
+var expectedArchitecture = IntPtr.Size == sizeof(long) ? "x64" : "x86";
+var invalidAddress = IntPtr.Size == sizeof(long) ? ulong.MaxValue : uint.MaxValue;
 
-var targetDll = ResolveTargetDll();
+var targetExecutable = ResolveTargetExecutable();
 var startInfo = new ProcessStartInfo
 {
-    FileName = "dotnet",
+    FileName = targetExecutable,
     UseShellExecute = false,
     RedirectStandardOutput = true,
     RedirectStandardError = true,
     RedirectStandardInput = true,
     CreateNoWindow = true,
 };
-startInfo.ArgumentList.Add(targetDll);
 
 using var child = Process.Start(startInfo)
     ?? throw new InvalidOperationException("Could not start Libmem.NET.TestTarget.");
@@ -140,6 +137,8 @@ try
 
     var ready = ParseReady(readyLine);
     Check(ready.Pid == (uint)child.Id, "Handshake PID does not match the launched child process.");
+    Check(string.Equals(ready.Architecture, expectedArchitecture, StringComparison.OrdinalIgnoreCase),
+        $"TestTarget architecture mismatch: expected {expectedArchitecture}, got {ready.Architecture}.");
     Check(ready.Address != 0 && ready.Size >= 64, "TestTarget returned an invalid allocation.");
     Check(ready.HookSource != 0 && ready.HookDestination != 0,
         "TestTarget returned an invalid Hook function address.");
@@ -231,12 +230,10 @@ try
             "Remote HookHandle.Source does not match TestTarget source.");
         Check(remoteHook.Destination == ready.HookDestination,
             "Remote HookHandle.Destination does not match TestTarget destination.");
-        Check(remoteHook.Trampoline != 0 && remoteHook.Trampoline != ulong.MaxValue,
+        Check(remoteHook.Trampoline != 0 && remoteHook.Trampoline != invalidAddress,
             "Remote HookHandle.Trampoline is invalid.");
-        Check(remoteHook.PatchedBytes == ExpectedPatchedBytes(
-                ready.HookSource,
-                ready.HookDestination),
-            "Remote HookHandle.PatchedBytes did not stop on the expected instruction boundary.");
+        Check(remoteHook.PatchedBytes == ready.ExpectedPatchBytes,
+            "Remote HookHandle.PatchedBytes did not stop on the architecture fixture's expected instruction boundary.");
         Check(remoteHook.IsInstalled && !remoteHook.IsDisposed,
             "Remote HookHandle should own an installed hook.");
 
@@ -333,7 +330,7 @@ try
     var initial = session.Memory.Read(ready.Address, expected.Length);
     Check(initial.SequenceEqual(expected), "Remote Read did not match the TestTarget payload.");
 
-    byte[] replacement = [0x58, 0x36, 0x34, 0x2D, 0x54, 0x45, 0x53, 0x54];
+    byte[] replacement = [0x41, 0x52, 0x43, 0x48, 0x2D, 0x54, 0x45, 0x53, 0x54];
     Check(session.Memory.Write(ready.Address + 32, replacement) == replacement.Length,
         "Remote Write did not write the full replacement payload.");
     Check(session.Memory.Read(ready.Address + 32, replacement.Length).SequenceEqual(replacement),
@@ -351,7 +348,7 @@ try
 
     using (var remoteAllocation = session.Memory.Allocate(4096, MemoryProtection.ReadWrite))
     {
-        byte[] remotePayload = [0x52, 0x45, 0x4D, 0x4F, 0x54, 0x45, 0x2D, 0x58, 0x36, 0x34];
+        byte[] remotePayload = [0x52, 0x45, 0x4D, 0x4F, 0x54, 0x45, 0x2D, 0x41, 0x52, 0x43, 0x48];
         Check(session.Memory.Write(remoteAllocation.Address, remotePayload) == remotePayload.Length,
             "Remote allocation Write did not write the full payload.");
         Check(session.Memory.Read(remoteAllocation.Address, remotePayload.Length).SequenceEqual(remotePayload),
