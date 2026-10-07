@@ -191,15 +191,15 @@ try
     Check(session.IsAlive(), "TestTarget should be alive after attach.");
 
     // Real cross-process HookManager / HookHandle lifecycle.
-    session.Memory.Protect(ready.HookSource, 4096, MemoryProtection.ExecuteRead);
-    session.Memory.Protect(ready.HookDestination, 4096, MemoryProtection.ExecuteRead);
-    Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
-        "Hook source should start ExecuteRead for protection-lifetime coverage.");
-
     Check(CallTarget(child, ready.HookSource) == 1,
         "TestTarget Hook source did not return its original value.");
     Check(CallTarget(child, ready.HookDestination) == 2,
         "TestTarget Hook destination did not return its expected value.");
+
+    var hookSourceSegment = NativeApi.FindSegment(process!, ready.HookSource)
+        ?? throw new InvalidOperationException("Could not resolve TestTarget Hook source segment.");
+    Check(hookSourceSegment.Protection == MemoryProtection.ExecuteRead,
+        "TestTarget Hook source page must start execute-read for protection-regression coverage.");
 
     // Installation failure must be atomic: an unreadable source cannot produce
     // a managed handle or leave patched bytes behind.
@@ -399,6 +399,27 @@ try
         "Target-exit HookHandle should start installed.");
     Check(CallTarget(child, ready.HookSource) == 2,
         "Target-exit HookHandle did not redirect source before process exit.");
+
+    var sourceProtectionBeforeFailedRemove =
+        NativeApi.FindSegment(process!, ready.HookSource)?.Protection
+        ?? throw new InvalidOperationException("Could not resolve Hook source protection before failure probe.");
+    Check(sourceProtectionBeforeFailedRemove == MemoryProtection.ExecuteRead,
+        "Hook installation should restore the source page to execute-read.");
+
+    Check(session.Memory.Free(exitReclaimedHook.Trampoline, exitReclaimedHook.PatchedBytes),
+        "Could not invalidate the remote trampoline for the unhook failure probe.");
+    Check(!exitReclaimedHook.Remove(),
+        "HookHandle.Remove should report failure when the live target trampoline is no longer readable.");
+    Check(exitReclaimedHook.IsInstalled,
+        "Failed HookHandle.Remove must preserve ownership for a later cleanup attempt.");
+    Check(CallTarget(child, ready.HookSource) == 2,
+        "Failed HookHandle.Remove must leave the existing source redirection intact.");
+
+    var sourceProtectionAfterFailedRemove =
+        NativeApi.FindSegment(process!, ready.HookSource)?.Protection
+        ?? throw new InvalidOperationException("Could not resolve Hook source protection after failure probe.");
+    Check(sourceProtectionAfterFailedRemove == sourceProtectionBeforeFailedRemove,
+        "Failed HookHandle.Remove must not leave the source page with modified protection.");
 
     child.StandardInput.WriteLine("exit");
     child.StandardInput.Flush();
