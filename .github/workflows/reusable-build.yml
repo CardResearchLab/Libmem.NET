@@ -14,7 +14,7 @@ on:
         default: Release
         type: string
       platform:
-        description: Target platform (x64 is the supported release target; x86 is compatibility/manual only)
+        description: Target platform (x64 or x86)
         required: false
         default: x64
         type: string
@@ -23,12 +23,6 @@ on:
         required: false
         default: Libmem.NET-windows-x64
         type: string
-      include-nuget:
-        description: Also create the official Libmem.NET NuGet package (x64 only)
-        required: false
-        default: false
-        type: boolean
-
 permissions:
   contents: read
 
@@ -82,14 +76,6 @@ jobs:
           $commit = (git rev-parse HEAD).Trim()
           python .\eng\verify-package.py --package-dir .\artifacts\package\Libmem.NET-windows-${{ inputs.platform }} --archive .\artifacts\package\Libmem.NET-windows-${{ inputs.platform }}.zip --checksum .\artifacts\package\Libmem.NET-windows-${{ inputs.platform }}.zip.sha256 --expected-repository-commit $commit --expected-platform win-${{ inputs.platform }} --expected-configuration "${{ inputs.configuration }}"
 
-      - name: Package official NuGet release
-        if: inputs.include-nuget && inputs.platform == 'x64'
-        shell: pwsh
-        run: |
-          $version = (Get-Content .\VERSION -Raw).Trim()
-          .\eng\package-nuget.ps1 -Configuration "${{ inputs.configuration }}" -PackageVersion $version
-          Copy-Item .\artifacts\nuget\*.nupkg .\artifacts\package\ -Force
-
       - name: Upload runtime artifact
         uses: actions/upload-artifact@v4
         with:
@@ -98,6 +84,5 @@ jobs:
             artifacts/package/Libmem.NET-windows-${{ inputs.platform }}/
             artifacts/package/Libmem.NET-windows-${{ inputs.platform }}.zip
             artifacts/package/Libmem.NET-windows-${{ inputs.platform }}.zip.sha256
-            ${{ inputs.include-nuget && inputs.platform == 'x64' && 'artifacts/package/*.nupkg' || '' }}
           if-no-files-found: error
           retention-days: 14
