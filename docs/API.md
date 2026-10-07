@@ -315,6 +315,12 @@ If explicit remote removal fails while the target is still alive, `Remove()` ret
 
 If the remote target has exited, the target address space no longer exists; `Remove()` converges the handle to the released state and returns `true`. The finalizer never rewrites target code.
 
+#### Hook conflict and trampoline boundaries
+
+Libmem.NET does not maintain a global registry of installed code hooks. Installing multiple live hooks whose source ranges are identical or overlap is therefore not rejected by a managed conflict layer. Consumers must coordinate HookHandle ownership so concurrently installed hooks do not patch the same source bytes.
+
+Trampoline relocation behavior is inherited from the pinned libmem implementation. Libmem.NET aligns `PatchedBytes` to complete instructions, but it does not rewrite copied PC-relative/relative-control-flow instructions in managed code. Consumers that hook functions whose overwritten span contains relative branches/calls or other location-sensitive instructions must validate that target against the pinned native backend rather than assuming every instruction sequence is trampoline-safe.
+
 ### InjectedModuleHandle
 
 Created by:
@@ -475,7 +481,7 @@ Keep `Libmem.NET.xml` beside `Libmem.NET.dll` so Visual Studio / C# editors can 
 
 The current Libmem.NET build targets Windows x64 / .NET 8 through runtime ZIP, source/reusable-workflow integration, and a validated `Libmem.NET` NuGet package path. Historical v1.0.0 binaries retain the `LibmemCli` identity; see [MIGRATION.md](MIGRATION.md).
 
-An independent PackageReference consumer validates the NuGet package. `Libmem.NET 2.0.0-preview.1` has also passed a nuget.org-only restore/build/run/publish smoke test. Stable `2.0.0` keeps the same package/runtime contract and is validated locally as a release candidate before publication; after it is published, the public smoke test is run again against the exact stable version. Public publication uses Trusted Publishing (OIDC) as an explicit manual step on an existing published tag; `release/v*` branches validate packages and notes without publishing.
+An independent PackageReference consumer validates the NuGet package. Published stable `Libmem.NET 2.0.0` has passed the public nuget.org restore/build/run/publish path. Candidate `2.1.0` preserves the same package/runtime contract and is validated locally and through a release-branch dry run before publication; after publication, the public smoke test is run again against the exact stable version. Public publication uses Trusted Publishing (OIDC) as an explicit manual step on an existing published tag; `release/v*` branches validate packages and notes without publishing.
 
 See [CONSUMPTION.md](CONSUMPTION.md) for package layout, x64 constraints, release gating, and Trusted Publishing setup.
 
