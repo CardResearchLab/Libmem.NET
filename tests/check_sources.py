@@ -638,8 +638,8 @@ assert "-Architecture x86" in x86_runtime_setup
 assert "DOTNET_ROOT_X86" in x86_runtime_setup
 assert "DOTNET_ROOT(x86)" in x86_runtime_setup
 
-# x64 remains the supported/default release target, while x86 now has
-# first-class runtime validation in the unified PR build.
+# x64 and x86 are first-class supported release targets; the unified gate
+# validates both runtimes and the shared multi-architecture NuGet package.
 assert "Release x64" in build_workflow
 assert "Release x86" in build_workflow
 assert "setup-dotnet-x86.ps1" in build_workflow

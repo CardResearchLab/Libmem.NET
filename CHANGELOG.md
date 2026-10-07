@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.2.0 - 2026-10-08
+
+### Platform support
+
+- Promote Windows x86 to a first-class supported release architecture alongside Windows x64 on .NET 8.
+- Add required x86 CI coverage for smoke, Hook/VMT, Injector, runtime packaging, and architecture-aware external-process tests.
+- Make the external-process TestTarget architecture-aware with isolated x64/x86 machine-code fixtures and an explicit extension seam for future ARM64 work.
+- Package x64 and x86 C++/CLI assemblies plus matching native runtimes in one NuGet package, selecting assets from explicit `Platform` / `PlatformTarget` and rejecting AnyCPU.
+- Extend formal Release output to include x64 and x86 runtime ZIPs/checksums plus one verified multi-architecture NuGet package.
+
+### Compatibility
+
+- Preserve the 2.1.1 Public API and pinned rdbo/libmem revision; 2.2.0 does not intentionally introduce managed API breaking changes.
+- Require consumers to select x64 or x86 explicitly. AnyCPU and cross-bitness operation remain unsupported.
+- Keep ARM64 outside the 2.2.0 production support scope while preserving architecture-neutral shared packaging/test structure for later enablement.
+
 ## 2.1.1 - 2026-10-07
 
 ### Fixed

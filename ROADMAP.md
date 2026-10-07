@@ -1,22 +1,21 @@
 # Libmem.NET 开发路线图
 
-`2.1.1` 已正式发布到 GitHub 与 nuget.org；当前主线进入稳定维护，并准备后续 **v2.2.0 Native API Coverage / Upstream Sync**。身份迁移历史见 [迁移指南](docs/MIGRATION.md)。
+`2.2.0` 已进入发布候选阶段：Windows x86 已完成运行时、外部进程、NuGet 与 Release 交付链路，并与 x64 一起成为正式支持目标。当前已发布稳定版仍为 `2.1.1`。身份迁移历史见 [迁移指南](docs/MIGRATION.md)。
 
-> 当前策略：**x64 主线优先，x86 延后。**
+> 当前策略：**Windows x64 与 x86 同级支持；共享设计保持架构中立，为后续 ARM64 留出扩展点。**
 
 ## 平台策略
 
-Libmem.NET 当前正式开发、默认 CI、运行时验收和 GitHub Release 均以 **Windows x64 / .NET 8** 为目标。
+Libmem.NET 2.2.0 的正式开发、默认 CI、运行时验收、NuGet 与 GitHub Release 均覆盖 **Windows x64 / x86 + .NET 8**。
 
-x86 现状：
+x86 状态：
 
-- 现有 x86 代码、解决方案配置、构建脚本兼容入口暂时保留；
-- x86 不再作为近期功能开发目标；
-- 新功能不要求同步完成 x86 适配；
-- x86 不作为默认 CI 合并门禁；
-- GitHub Release 暂不发布 x86 ZIP / checksum；
-- x86 若能继续手动构建，视为 best-effort compatibility，不构成稳定性承诺；
-- 后续恢复 x86 时，单独进行 pointer width、Hook/VMT、Assembler/Disassembler、Injector、打包与 Runtime Tests 全量审计。
+- Release x86 构建、Smoke、Hook/VMT、Injector 与 ExternalProcessTests 已进入默认验证；
+- Runtime ZIP、manifest 与 SHA-256 校验同时覆盖 x64 和 x86；
+- 一个 NuGet 包同时携带 `win-x64` 与 `win-x86` 的匹配 C++/CLI/native 资产；
+- `buildTransitive` 根据显式 `Platform` / `PlatformTarget` 选择架构；
+- `AnyCPU` 明确拒绝，跨位数操作不作为支持能力；
+- ARM64 暂不属于 2.2.0 正式支持范围，但共享测试与打包结构不得写死 x86。
 
 ## 架构原则
 
@@ -117,9 +116,19 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - XML IntelliSense / `docs/API.md` 与实现一致；
 - NuGet consumer restore/build/run smoke test 通过。
 
-## 后续：v2.2.0 — Native API Coverage / Upstream Sync
+## 当前：v2.2.0 — Windows x86 正式支持
 
-2.1.1 稳定发布后，再系统对照 pinned rdbo/libmem：
+2.2.0 的发布目标是把已经通过验证的 x86 能力正式交付给消费者：
+
+- x64 / x86 都通过默认 Release CI 与独立运行时测试；
+- ExternalProcessTests/TestTarget 使用架构 fixture 隔离机器码差异；
+- Runtime ZIP 与 checksum 对两个架构分别发布；
+- NuGet 以单包提供 x64/x86 架构匹配资产，并拒绝 AnyCPU；
+- 保持 2.1.1 Public API 与 pinned libmem revision 不变。
+
+## 后续：v2.3.0 — Native API Coverage / Upstream Sync
+
+2.2.0 稳定发布后，再系统对照 pinned rdbo/libmem：
 
 - 建立 native → managed API coverage 表；
 - 识别合理但尚未封装的 libmem API；

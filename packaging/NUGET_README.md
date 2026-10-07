@@ -4,15 +4,15 @@
 
 Libmem.NET is a Windows-focused C++/CLI wrapper for [rdbo/libmem](https://github.com/rdbo/libmem), providing managed APIs for process, thread, module, memory, scanning, symbols, assembly/disassembly, hooks, VMT, and DLL injection.
 
-> Current official support: **Windows x64 + .NET 8**.
+> Current official support: **Windows x64/x86 + .NET 8**.
 
 ## Installation
 
 ```powershell
-dotnet add package Libmem.NET --version 2.1.1
+dotnet add package Libmem.NET --version 2.2.0
 ```
 
-`2.1.1` is the current maintenance package line for the Libmem.NET identity and preserves the 2.1.0 Public API.
+`2.2.0` adds official Windows x86 delivery alongside x64 while preserving the 2.1.1 Public API and pinned native dependency.
 
 ## Highlights
 
@@ -53,13 +53,13 @@ foreach (var module in session.Modules.Enumerate())
 
 The package is currently intended for:
 
-- Windows x64
+- Windows x64 or Windows x86
 - .NET 8
 - C# / .NET consumers
 
-The package carries the managed assembly and the required Windows x64 native runtime assets.
+The package carries architecture-matched C++/CLI and native runtime assets for both Windows x64 and x86.
 
-x86 source/build configuration may exist in the repository, but x86 is not part of the current official NuGet support scope.
+Consumers must explicitly target x64 or x86. AnyCPU and cross-bitness operation are unsupported.
 
 ## 2.0 migration note
 
@@ -93,15 +93,15 @@ Third-party license information is available in [THIRD_PARTY_NOTICES.md](https:/
 
 Libmem.NET 是一个面向 Windows 的 [rdbo/libmem](https://github.com/rdbo/libmem) C++/CLI 封装，为 C# / .NET 提供进程、线程、模块、内存、扫描、符号、汇编/反汇编、Hook、VMT 与 DLL 注入等托管 API。
 
-> 当前正式支持范围：**Windows x64 + .NET 8**。
+> 当前正式支持范围：**Windows x64/x86 + .NET 8**。
 
 ## 安装
 
 ```powershell
-dotnet add package Libmem.NET --version 2.1.1
+dotnet add package Libmem.NET --version 2.2.0
 ```
 
-`2.1.1` 是 Libmem.NET 当前维护修复包版本，并保持与 2.1.0 Public API 兼容。
+`2.2.0` 在保持 2.1.1 Public API 与固定 native 依赖不变的前提下，将 Windows x86 与 x64 一起纳入正式交付。
 
 ## 主要功能
 
@@ -142,13 +142,13 @@ foreach (var module in session.Modules.Enumerate())
 
 当前 NuGet 包正式面向：
 
-- Windows x64
+- Windows x64 或 Windows x86
 - .NET 8
 - C# / .NET 消费者
 
-包内包含托管程序集以及 Windows x64 所需的原生运行时文件。
+包内同时包含 Windows x64 与 x86 的架构匹配 C++/CLI 程序集和原生运行时文件。
 
-仓库中可能仍保留 x86 源码或构建配置，但 x86 当前不属于 NuGet 正式支持范围。
+消费者必须显式选择 x64 或 x86；AnyCPU 与跨位数运行不属于支持范围。
 
 ## 2.0 迁移说明
 

@@ -1,24 +1,22 @@
 # Libmem.NET Consumption Guide
 
-> Current official target: Windows x64 / .NET 8.
+> Current 2.2.0 candidate target: Windows x64/x86 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. Stable `2.1.1` is published on both GitHub and nuget.org and uses the `Libmem.NET` managed assembly and namespace. `2.1.0` remains the previous stable release. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. The source candidate is `2.2.0`; stable `2.1.1` remains published on GitHub and nuget.org until the new release completes. Historical v1.0.0 uses `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
-Use published stable `2.1.1` for normal consumption. Pin `2.1.0` only when a consumer intentionally needs the previous stable release.
-
-Historical [v1.0.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v1.0.0) provides [LibmemCli-windows-x64.zip](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip) and its [SHA-256 file](https://github.com/CardResearchLab/Libmem.NET/releases/download/v1.0.0/LibmemCli-windows-x64.zip.sha256). Those assets contain `LibmemCli.dll`, not `Libmem.NET.dll`, and require the old namespace. Do not rename old binaries to use the new examples.
-
-Current build artifact names:
+The 2.2.0 release pipeline produces architecture-specific runtime archives:
 
 ```text
 Libmem.NET-windows-x64.zip
 Libmem.NET-windows-x64.zip.sha256
-Libmem.NET.2.1.1.nupkg
+Libmem.NET-windows-x86.zip
+Libmem.NET-windows-x86.zip.sha256
+Libmem.NET.2.2.0.nupkg
 ```
 
-The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. Stable 2.1.1 is available from nuget.org and GitHub; local packaging can still produce exact-version `.nupkg` files for acceptance and reproducibility checks.
+Each runtime directory contains the architecture-matched C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md`, `MIGRATION.md`, and a manifest.
 
 Minimum runtime files:
 
@@ -29,17 +27,16 @@ Ijwhost.dll
 libmem.dll
 ```
 
-The consumer should reference `Libmem.NET.dll` and keep the runtime files together with the executable. Do not mix files from different releases or build commits.
+For a .NET 8 application:
 
-For a .NET 8 x64 application:
+1. explicitly target `x64` or `x86`;
+2. use the runtime archive matching that process architecture;
+3. reference the matching `Libmem.NET.dll`;
+4. keep `Libmem.NET.dll`, `libmem.dll`, and `Ijwhost.dll` together in application output;
+5. keep `Libmem.NET.xml` beside the assembly for IntelliSense;
+6. do not mix assets from different architectures, versions, or build commits.
 
-1. build or extract the matching current runtime artifact;
-2. reference `Libmem.NET.dll`;
-3. copy `Libmem.NET.dll`, `libmem.dll`, and `Ijwhost.dll` into application output;
-4. keep `Libmem.NET.xml` beside the assembly for IntelliSense documentation;
-5. target x64 explicitly rather than AnyCPU.
-
-ZIP and source integration remain available independently of public NuGet setup.
+AnyCPU and cross-bitness operation are unsupported.
 
 ## 2. Git Submodule — source/build integration
 
@@ -52,79 +49,64 @@ This is useful when the consumer wants:
 - integration into an existing build pipeline;
 - direct access to wrapper source and tests.
 
-It is more operationally complex than consuming a prebuilt package.
-
 ## 3. NuGet package
 
-`Libmem.NET 2.1.1` is the current published stable package on nuget.org and uses the same Trusted Publishing (OIDC) release path:
+The 2.2.0 candidate uses one multi-architecture package:
 
 ```text
 Package ID: Libmem.NET
-Status: validated for Windows x64 / .NET 8
-Publication: nuget.org via Trusted Publishing (OIDC); 2.1.1 is the current public baseline
-Target: Windows x64 / .NET 8
+Candidate: 2.2.0
+Published public baseline until release: 2.1.1
+Target: Windows x64/x86 / .NET 8
+Architecture selection: explicit Platform / PlatformTarget
+Unsupported: AnyCPU
 ```
 
-The package ID is fixed as `Libmem.NET`. Development packages use a commit-qualified development version derived from `VERSION`; with the maintenance base this is `2.1.1-dev.<commit>`. CI stamps the package with the repository URL and exact Git commit, and the package verifier checks that provenance before the consumer test runs.
+Development packages use a commit-qualified version derived from `VERSION`, for example `2.2.0-dev.<commit>`. CI stamps repository URL and exact Git commit provenance into the package.
 
 ### Package layout
 
 | Package path | Files |
 | --- | --- |
-| `lib/net8.0/` | `Libmem.NET.dll`, `Libmem.NET.xml` |
+| `runtimes/win-x64/lib/net8.0/` | `Libmem.NET.dll`, `Libmem.NET.xml` |
 | `runtimes/win-x64/native/` | `libmem.dll`, `Ijwhost.dll` |
+| `runtimes/win-x86/lib/net8.0/` | `Libmem.NET.dll`, `Libmem.NET.xml` |
+| `runtimes/win-x86/native/` | `libmem.dll`, `Ijwhost.dll` |
 | `buildTransitive/` | `Libmem.NET.targets` |
 
-The mixed-mode `Libmem.NET.dll` is currently exposed from `lib/net8.0` so PackageReference can provide the compile-time reference directly.
+Because `Libmem.NET.dll` is a mixed-mode C++/CLI assembly, the package does not expose one architecture-neutral compile assembly. The transitive MSBuild target resolves the matching `win-x64` or `win-x86` managed/native assets from the consumer's explicit architecture and rejects AnyCPU early.
 
-The native runtime assets are stored under the portable RID `win-x64`.
+### Build the package locally
 
-A transitive MSBuild target:
-
-- rejects non-x64 consumers;
-- copies `libmem.dll` and `Ijwhost.dll` into build/publish output;
-- keeps the package usable for normal x64 PackageReference projects without requiring consumers to manually copy the two native runtime files.
-
-### Build the prototype locally
-
-After building Libmem.NET x64:
+Build both runtime architectures first, then compose the package:
 
 ```powershell
 .\build.ps1 -Configuration Release -Platform x64
-.\eng\package-nuget.ps1 -Configuration Release
+.\eng\package-runtime.ps1 -Configuration Release -Platform x64
+.\build.ps1 -Configuration Release -Platform x86
+.\eng\package-runtime.ps1 -Configuration Release -Platform x86
+.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.2.0
 ```
 
-For the exact stable package instead of a commit-qualified development package:
-
-```powershell
-.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.1.1
-```
-
-The automatic Build gate packages the exact `VERSION` and validates restore/run/publish against it. Default local development packages derived from the current maintenance base use `2.1.1-dev.<commit>`.
-
-The script reads `VERSION`, resolves the current Git commit, validates the required x64 binaries, creates the local package, and immediately runs the package layout/provenance verifier.
+The automatic Build gate performs the equivalent composition from verified x64/x86 runtime artifacts.
 
 ### Local package test
 
-The CI prototype performs the complete flow:
+CI verifies:
 
-1. Build Release x64 and pack the NuGet package.
-2. Verify `.nupkg` layout and commit provenance.
-3. Restore an independent PackageReference consumer from the local feed.
-4. Build/run the consumer, including `ProcessSession.Open` and Allocate / Write / Read / Dispose.
-5. Publish and verify the runtime dependencies.
-6. Reject a non-x64 consumer.
+1. Release x64 runtime build/tests/package.
+2. Release x86 runtime build/tests/package.
+3. Multi-architecture `.nupkg` layout and commit provenance.
+4. Independent x64 PackageReference restore/run/publish.
+5. Independent x86 PackageReference restore/run/publish.
+6. Correct managed/native assets in each publish output.
+7. Explicit AnyCPU rejection.
 
-The consumer test references **only the local NuGet package**. It does not use a project reference to Libmem.NET.
-
-This proves more than package creation: it verifies that the restored package is loadable and executable on Windows x64, that publish output receives the required native runtime files, and that unsupported non-x64 consumption fails early.
+The consumer tests reference only the local NuGet package, not the Libmem.NET project.
 
 ## Platform/runtime rationale
 
-Microsoft's modern .NET C++/CLI guidance documents two constraints that directly shape this package prototype:
-
-- C++/CLI targeting modern .NET is Windows-only.
-- `ijwhost.dll` must be copied from the .NET app host into the output directory for C++/CLI components.
+Modern .NET C++/CLI is Windows-only and requires architecture-matched mixed-mode/native assets. `Ijwhost.dll` must be present beside the application for C++/CLI hosting. The package therefore carries separate portable `win-x64` and `win-x86` runtime trees and selects one explicitly.
 
 References:
 
@@ -132,36 +114,28 @@ References:
 - [NuGet multi-targeting and architecture-specific assets](https://learn.microsoft.com/en-us/nuget/create-packages/supporting-multiple-target-frameworks)
 - [.NET Runtime Identifier catalog](https://learn.microsoft.com/en-us/dotnet/core/rid-catalog)
 
-The package therefore uses the portable `win-x64` RID for native assets and fails early outside Windows x64.
-
 ## NuGet platform constraints
 
-Libmem.NET is not a normal AnyCPU managed library:
+Libmem.NET is not an AnyCPU managed library:
 
-- `Libmem.NET.dll` is a Windows x64 C++/CLI mixed-mode assembly;
-- it depends on native `libmem.dll`;
-- it requires `Ijwhost.dll`;
-- architecture selection matters at compile and runtime;
-- the repository does not currently build a separate AnyCPU metadata/reference assembly.
-
-NuGet's conventional architecture-specific model supports RID-specific runtime assets, but architecture-specific compile-time assembly design needs careful validation for this mixed-mode case.
-
-For that reason, release publication remains gated by the independent PackageReference consumer tests, package provenance verification, and x64 runtime validation.
+- x64 consumers use the x64 C++/CLI assembly plus x64 `libmem.dll` / `Ijwhost.dll`;
+- x86 consumers use the x86 C++/CLI assembly plus x86 `libmem.dll` / `Ijwhost.dll`;
+- architecture must be explicit at build and runtime;
+- cross-bitness operation is not promised;
+- ARM64 is not a 2.2.0 production target.
 
 ## NuGet release acceptance criteria
 
-A public NuGet release requires all of the following:
+A public 2.2.0 NuGet release requires:
 
-1. local package layout verification passes;
-2. an independent x64 PackageReference consumer restores successfully;
-3. the consumer builds without a project reference;
-4. `Libmem.NET.dll`, `libmem.dll`, and `Ijwhost.dll` reach the consumer output correctly;
-5. `Libmem.NET.xml` is available for IDE documentation;
-6. the consumer runs real Libmem.NET API calls successfully;
-7. publish output also contains the native runtime dependencies;
-8. non-x64 consumers fail early with a clear diagnostic;
-9. package version/provenance matches the repository release;
-10. package publication does not replace ZIP releases until both paths are independently reliable.
+1. multi-architecture package layout/provenance verification;
+2. independent x64 restore/build/run/publish success;
+3. independent x86 restore/build/run/publish success;
+4. architecture-matched `Libmem.NET.dll`, `libmem.dll`, and `Ijwhost.dll` in output;
+5. XML documentation availability;
+6. AnyCPU rejection with a clear diagnostic;
+7. version/provenance agreement with the exact repository release;
+8. post-publication nuget.org smoke for both x64 and x86.
 
 ## Trusted Publishing setup
 
@@ -187,6 +161,6 @@ The successful `2.0.0-preview.1` publication proves the current Trusted Publishi
 
 ## Current recommendation
 
-For normal Windows x64 / .NET 8 PackageReference consumption, use published stable `Libmem.NET 2.1.1`. Runtime ZIP, source/submodule and reusable-workflow integration remain available for consumers that need binary bundles or exact source provenance. `2.1.0` remains the previous stable release, and historical v1.0.0 remains available under its original names.
+Until 2.2.0 is published, normal public PackageReference consumption should continue using stable `Libmem.NET 2.1.1`. The 2.2.0 candidate is validated for explicit x64 and x86 consumption through local CI. After publication, run exact-version nuget.org smoke tests for both architectures before advancing the documented public baseline.
 
 See [RELEASES.md](RELEASES.md) for release history, support boundaries and versioning, and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the next publication.

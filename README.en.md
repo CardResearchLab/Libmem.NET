@@ -6,22 +6,23 @@
 [![Release](https://img.shields.io/github/v/release/CardResearchLab/Libmem.NET)](https://github.com/CardResearchLab/Libmem.NET/releases/latest)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
-![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
+![Windows x64/x86](https://img.shields.io/badge/Windows-x64%20%7C%20x86-0078D4)
 
 **Libmem.NET** is a Windows C++/CLI wrapper around [rdbo/libmem](https://github.com/rdbo/libmem), exposing process, thread, module, memory, scanning, symbol, assembly/disassembly, Hook, VMT, and DLL injection capabilities to C# / .NET.
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The current published stable release is **2.1.1**. It is a backward-compatible maintenance patch that fixes VMT bad-address-sentinel validation and the untracked `VmtManager.Unhook` page-protection issue, strengthens regression coverage, and preserves the 2.1.0 Public API. Historical stable **v1.0.0** uses `LibmemCli`; see the [migration guide](docs/MIGRATION.md) for the identity transition.
+The current source is the **2.2.0 release candidate**. It preserves the 2.1.1 Public API and pinned rdbo/libmem revision while promoting Windows x86 to first-class support alongside x64, with dual-architecture CI, runtime ZIPs, NuGet packaging, and Release delivery. The currently published stable release remains **2.1.1** until 2.2.0 is formally published. Historical stable **v1.0.0** uses `LibmemCli`; see the [migration guide](docs/MIGRATION.md) for the identity transition.
 
 Official support target:
 
 - Windows x64
+- Windows x86
 - .NET 8
 - C# / .NET consumers
 - a pinned rdbo/libmem native backend
 
-> x86 source/build configuration is retained but is outside the current stable support and official Release scope. The public NuGet PackageReference path is validated on Windows x64 / .NET 8 through restore, build, run, and publish.
+> Libmem.NET 2.2.0 uses architecture-matched C++/CLI and native runtime assets for both x64 and x86. Consumers must explicitly select `x64` or `x86`; `AnyCPU` and cross-bitness operation are unsupported.
 
 ## Download
 
@@ -39,7 +40,7 @@ See the [Release & Versioning Guide](docs/RELEASES.md) for release and integrity
 
 ## Quick start
 
-Build current source or extract a current Build artifact, then reference this assembly from an x64 .NET 8 project:
+Build current source or extract a current Build artifact, then reference this assembly from a .NET 8 project that explicitly targets x64 or x86:
 
 ```text
 Libmem.NET.dll
@@ -279,7 +280,7 @@ For reproducible builds, pin both the workflow reference and `ref` to a reviewed
 
 ## NuGet status
 
-The package ID is `Libmem.NET`, targeting Windows x64 / .NET 8. CI validates pack, independent PackageReference restore/build/run/publish, native runtime asset copy, and rejection of non-x64 consumers.
+The package ID is `Libmem.NET`, targeting Windows x64/x86 / .NET 8. CI validates multi-architecture pack composition, independent x64 and x86 PackageReference restore/build/run/publish, architecture-matched runtime asset copy, and explicit AnyCPU rejection.
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 

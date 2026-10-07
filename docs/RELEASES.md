@@ -4,9 +4,9 @@ This document describes the official release channel, current stable release, su
 
 ## Current source and historical release
 
-The published stable line on GitHub and nuget.org is `2.1.1`, with numeric assembly/file versions `2.1.1.0`. `2.1.0` is the previous stable release.
+The current source line is the `2.2.0` release candidate, with numeric assembly/file versions `2.2.0.0`. The published stable line on GitHub and nuget.org remains `2.1.1` until the 2.2.0 publication is completed.
 
-2.1.1 preserves the 2.1.0 Public API and pinned native dependency. It fixes the missing bad-address-sentinel guard on `VmtManager` construction and the untracked `VmtManager.Unhook` page-protection issue, strengthens regression coverage, and advances public-NuGet smoke coverage to the published 2.1.1 baseline.
+2.2.0 preserves the 2.1.1 Public API and pinned native dependency while promoting Windows x86 to official support alongside x64. The candidate validates both runtime architectures, architecture-aware external-process coverage, dual runtime ZIP/checksum output, and one multi-architecture NuGet package.
 
 The historical `LibmemCli` → `Libmem.NET` identity migration remains documented in [MIGRATION.md](MIGRATION.md). Existing historical tags and assets remain immutable.
 
@@ -23,9 +23,9 @@ The historical `LibmemCli` → `Libmem.NET` identity migration remains documente
 
 ## Support boundary
 
-The supported target remains:
+The supported target for 2.2.0 is:
 
-- Windows x64;
+- Windows x64 and Windows x86;
 - .NET 8;
 - C# / .NET consumers using the C++/CLI wrapper;
 - the pinned rdbo/libmem native revision recorded by the release;
@@ -33,7 +33,7 @@ The supported target remains:
 
 The current target does **not** promise:
 
-- official x86 release assets;
+- ARM64 production support;
 - AnyCPU compatibility;
 - cross-bitness injection;
 - public NuGet availability before release setup and publication are verified;
@@ -51,13 +51,13 @@ The API baseline and behavior tests enforce:
 - ownership and deterministic Dispose behavior;
 - null / sentinel / exception distinctions;
 - target-process identity semantics;
-- Windows x64 packaging layout.
+- Windows x64/x86 packaging layout.
 
 The committed `api/Libmem.NET.PublicApi.txt` baseline is validated by CI. Intentional incompatible changes must be explicit, documented, reviewed, and versioned appropriately. The identity migration preserves member signatures and behavior while intentionally changing namespace, assembly, and file names.
 
 ## Current package contents
 
-The Windows x64 runtime package contains:
+Each Windows x64/x86 runtime package contains:
 
 ```text
 Libmem.NET.dll
@@ -95,7 +95,7 @@ Before publication, automation verifies:
 - package manifest version;
 - repository commit provenance;
 - pinned libmem commit;
-- Windows x64 platform and Release configuration;
+- matching Windows x64/x86 platform and Release configuration;
 - runtime package file list, file sizes, and SHA-256 hashes;
 - ZIP contents against the unpacked package;
 - external `.zip.sha256` checksum;
@@ -134,22 +134,23 @@ Use this when a consumer needs exact source provenance, reproducible native buil
 
 ### NuGet
 
-The `Libmem.NET` package path is validated both through local-feed CI and an independent public nuget.org consumer: restore/build/run/publish, native asset copy, XML documentation, provenance, and non-x64 rejection. Historical v1.0.0 did not ship an official NuGet asset.
+The `Libmem.NET` package path is validated through local-feed CI for both x64 and x86: restore/build/run/publish, architecture-matched managed/native asset copy, XML documentation, provenance, and AnyCPU rejection. The published nuget.org baseline remains 2.1.1 until 2.2.0 is released and post-publication smoke is advanced. Historical v1.0.0 did not ship an official NuGet asset.
 
 `2.0.0-preview.1` was successfully published through the account-side Trusted Publishing policy and `NUGET_USER` flow. Future publications must re-verify those settings if the repository, workflow, environment, or publishing account changes. See [CONSUMPTION.md](CONSUMPTION.md).
 
 ## Release workflow safety
 
-- `release/v<version>` branches build exact-version Release x64 ZIP and NuGet packages, validate them, and render formal notes from CHANGELOG. They do not log in to NuGet, push a package, create a GitHub Release, or delete the branch.
+- `release/v<version>` branches build exact-version Release x64 and x86 ZIPs plus the multi-architecture NuGet package, validate them, and render formal notes from CHANGELOG. They do not log in to NuGet, push a package, create a GitHub Release, or delete the branch.
 - Only `v<version>` tags enable GitHub downloads, including the exact-version `.nupkg`. Preview tags are marked as prereleases. OIDC login/push require a later manual Release run on the published tag with `publish-nuget` enabled. The tag, `VERSION`, assembly metadata, CHANGELOG and verified package version must agree.
 - A successful dry run is evidence of package and note readiness, not permission to publish. Select the version, verify all Release tests on the exact candidate, and follow [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) before creating a tag.
 - Keep existing tags and historical assets immutable. The breaking identity migration requires an explicit major-version decision.
-- Ordinary PR/push Build runs validate all Release x64 suites. Debug build and smoke tests are additional manual checks enabled with `workflow_dispatch` input `debug`.
+- Ordinary PR/push Build runs validate Release x64, Release x86, and the multi-architecture NuGet consumer gate. Debug build and smoke tests remain additional manual checks enabled with `workflow_dispatch` input `debug`.
 
 ## Release history
 
 | Version | Date | Status | Official platform |
 | --- | --- | --- | --- |
+| 2.2.0 | 2026-10-08 | Release candidate in source; not yet published | Windows x64/x86 / .NET 8 |
 | 2.0.0-preview.1 | 2026-10-05 | Published prerelease, Libmem.NET identity | Windows x64 / .NET 8 |
 | 2.1.1 | 2026-10-07 | Published stable on GitHub and nuget.org; current public PackageReference baseline | Windows x64 / .NET 8 |
 | 2.1.0 | 2026-10-07 | Previous stable release | Windows x64 / .NET 8 |
