@@ -2,7 +2,7 @@
 
 > Current official target: Windows x64 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. Published stable `2.1.0` uses the `Libmem.NET` managed assembly and namespace; current source is preparing the backward-compatible `2.1.1` maintenance patch. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. GitHub stable `2.1.0` uses the `Libmem.NET` managed assembly and namespace; nuget.org currently exposes `2.0.0` as the newest public package. Current source is preparing the backward-compatible `2.1.1` maintenance patch. Historical v1.0.0 uses `LibmemCli`; the identity migration requires updated references and recompilation. See [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
@@ -18,7 +18,7 @@ Libmem.NET-windows-x64.zip.sha256
 Libmem.NET.2.1.1.nupkg
 ```
 
-The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. Candidate builds produce an exact-version `.nupkg` for local acceptance; the published stable 2.1.0 package remains available on nuget.org until a later patch is formally published.
+The runtime directory contains the managed C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md` and `MIGRATION.md`. Candidate builds produce an exact-version `.nupkg` for local acceptance; nuget.org currently remains on 2.0.0, while GitHub v2.1.0 remains available as the stable runtime release.
 
 Minimum runtime files:
 
@@ -56,12 +56,12 @@ It is more operationally complex than consuming a prebuilt package.
 
 ## 3. NuGet package
 
-`Libmem.NET 2.1.0` is the published stable package. Candidate `2.1.1` uses the same Trusted Publishing (OIDC) path after release-branch validation:
+`Libmem.NET 2.0.0` is currently the newest package visible on nuget.org. GitHub v2.1.0 was released, but the independent nuget.org restore confirms that 2.1.0 was not published there. Candidate `2.1.1` should use the same Trusted Publishing (OIDC) path after release-branch validation:
 
 ```text
 Package ID: Libmem.NET
 Status: validated for Windows x64 / .NET 8
-Publication: nuget.org via Trusted Publishing (OIDC); 2.1.0 is the published baseline, 2.1.1 pending release gates
+Publication: nuget.org via Trusted Publishing (OIDC); 2.0.0 is the current public baseline, 2.1.1 pending release gates
 Target: Windows x64 / .NET 8
 ```
 
