@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The current stable candidate is **2.1.0**, while **2.0.0** remains the published stable release. 2.1.0 is a Public-API-compatible Hook / VMT hardening release focused on failure paths, ownership, external-process runtime coverage, and consumer documentation. Historical stable **v1.0.0** uses `LibmemCli`; see the [migration guide](docs/MIGRATION.md) for the identity transition.
+The current published stable release is **2.1.0**. Current source is preparing the backward-compatible **2.1.1** maintenance patch, fixing VMT bad-address-sentinel validation, adding regression coverage, and refreshing post-release verification/documentation while preserving the 2.1.0 Public API. Historical stable **v1.0.0** uses `LibmemCli`; see the [migration guide](docs/MIGRATION.md) for the identity transition.
 
 Official support target:
 
@@ -25,7 +25,7 @@ Official support target:
 
 ## Download
 
-The **Libmem.NET 2.0.0** stable candidate is under acceptance. Until the stable tag / GitHub Release / NuGet publication completes, the public package remains [v2.0.0-preview.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1), installable with `dotnet add package Libmem.NET --version 2.0.0-preview.1`.
+The published stable release is [Libmem.NET v2.1.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.1.0). Current source prepares the **2.1.1** patch and does not replace 2.1.0 until its release gates and publication complete.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
