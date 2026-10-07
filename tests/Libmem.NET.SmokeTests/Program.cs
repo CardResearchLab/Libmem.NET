@@ -533,13 +533,13 @@ Check(scanner.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.S
     "ScanManager.SigScan failed.");
 
 var noScanRange = scanner.SigScan(ownedSignature, ownedAllocation.Address, 0);
-Check(noScanRange == ulong.MaxValue,
-    "A valid non-empty signature with zero scan size should remain a normal miss sentinel.");
+Check(noScanRange == invalidAddress,
+    "A valid non-empty signature with zero scan size should remain the architecture-width native miss sentinel.");
 
 var missingPayload = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
 var missingScan = scanner.DataScan(missingPayload, ownedAllocation.Address, ownedAllocation.Size);
-Check(missingScan == ulong.MaxValue,
-    "A valid non-empty scan with no match should remain the native bad-address sentinel.");
+Check(missingScan == invalidAddress,
+    "A valid non-empty scan with no match should remain the architecture-width native bad-address sentinel.");
 
 Stage("deep-pointer");
 using (var pointerLayer0 = memory.Allocate(4096, MemoryProtection.ReadWrite)
