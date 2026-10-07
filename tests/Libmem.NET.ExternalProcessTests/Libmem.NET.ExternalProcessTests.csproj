@@ -12,16 +12,16 @@
 
   <ItemGroup>
     <Reference Include="Libmem.NET">
-      <HintPath>..\..\artifacts\managed\x64\$(Configuration)\Libmem.NET.dll</HintPath>
+      <HintPath>..\..\artifacts\managed\$(Platform)\$(Configuration)\Libmem.NET.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\artifacts\managed\x64\$(Configuration)\Ijwhost.dll"
+    <None Include="..\..\artifacts\managed\$(Platform)\$(Configuration)\Ijwhost.dll"
           Link="Ijwhost.dll"
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\artifacts\managed\x64\$(Configuration)\libmem.dll"
+    <None Include="..\..\artifacts\managed\$(Platform)\$(Configuration)\libmem.dll"
           Link="libmem.dll"
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
