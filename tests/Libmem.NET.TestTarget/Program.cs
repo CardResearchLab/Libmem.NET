@@ -7,10 +7,23 @@ const uint memRelease = 0x8000;
 const uint pageExecuteRead = 0x20;
 const uint pageExecuteReadWrite = 0x40;
 
+static IntPtr AddressPointer(ulong address)
+{
+    return IntPtr.Size == 4
+        ? new IntPtr(unchecked((int)(uint)address))
+        : new IntPtr(unchecked((long)address));
+}
+
+static ulong PointerAddress(IntPtr pointer)
+{
+    return IntPtr.Size == 4
+        ? unchecked((uint)pointer.ToInt32())
+        : unchecked((ulong)pointer.ToInt64());
+}
+
 static int CallAddress(ulong address)
 {
-    var pointer = new IntPtr(unchecked((long)address));
-    var function = Marshal.GetDelegateForFunctionPointer<NoArgsDelegate>(pointer);
+    var function = Marshal.GetDelegateForFunctionPointer<NoArgsDelegate>(AddressPointer(address));
     return function();
 }
 
@@ -77,9 +90,9 @@ try
     }
 
     Console.WriteLine(
-        $"READY pid={Environment.ProcessId} arch={architecture.Architecture} " +
-        $"address=0x{allocation.ToInt64():X} size={allocationSize} " +
-        $"hookSource=0x{hookSource.ToInt64():X} hookDestination=0x{hookDestination.ToInt64():X}");
+        $"READY pid={Environment.ProcessId} arch={architecture.ProcessArchitecture} " +
+        $"address=0x{PointerAddress(allocation):X} size={allocationSize} " +
+        $"hookSource=0x{PointerAddress(hookSource):X} hookDestination=0x{PointerAddress(hookDestination):X}");
     Console.Out.Flush();
 
     while (Console.ReadLine() is { } command)
@@ -122,7 +135,7 @@ try
                 CultureInfo.InvariantCulture);
 
             if (!NativeMethods.VirtualProtect(
-                    new IntPtr(unchecked((long)address)),
+                    AddressPointer(address),
                     1,
                     protection,
                     out var oldProtection))
