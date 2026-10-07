@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前正式版候选为 **2.0.0**。已发布的 **2.0.0-preview.1** 已通过 GitHub Release、NuGet Trusted Publishing 与独立 nuget.org PackageReference 验收；2.0.0 在完成 release dry run、tag 与 NuGet 发布门禁后才成为正式公开版本。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；迁移需要修改引用并重新编译，见 [迁移指南](docs/MIGRATION.md)。
+当前正式版候选为 **2.1.0**，已发布稳定版为 **2.0.0**。2.1.0 是保持 2.0.0 Public API 兼容的 Hook / VMT 加固版本，重点补齐失败路径、ownership、外部进程运行时覆盖与消费者文档。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
 
 正式支持范围：
 
@@ -25,7 +25,7 @@
 
 ## 下载
 
-正式版候选 **Libmem.NET 2.0.0** 正在验收。在正式 tag / GitHub Release / NuGet 发布完成前，公开可用版本仍是 [v2.0.0-preview.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.0.0-preview.1)，可使用 `dotnet add package Libmem.NET --version 2.0.0-preview.1` 安装。
+已发布稳定版 **Libmem.NET 2.0.0** 继续可用；当前 **2.1.0** 正在进行 release candidate 验收。2.1.0 在 release dry run、tag 与 NuGet 发布完成前不会替代 2.0.0。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -226,7 +226,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前 `VERSION` 为正式版候选 **2.0.0**。命名空间与程序集身份变化破坏旧名 v1.0.0 的兼容性，消费者必须重新编译。NuGet / informational version 使用 `2.0.0`，程序集数字版本与文件版本保持 `2.0.0.0`。候选 Build 会生成 Runtime ZIP、SHA-256 和 `Libmem.NET.2.0.0.nupkg`；候选产物通过验收不等于已公开发布。
+当前 `VERSION` 为正式版候选 **2.1.0**。NuGet / informational version 使用 `2.1.0`，程序集数字版本与文件版本为 `2.1.0.0`。候选 Build 会生成 Runtime ZIP、SHA-256 和 `Libmem.NET.2.1.0.nupkg`；候选产物通过验收不等于已公开发布。已发布稳定版 `2.0.0` 继续可用，直到 2.1.0 完成 tag 与 NuGet 发布。
 
 生成正式风格 Runtime ZIP：
 
