@@ -433,6 +433,7 @@ assert "pageExecuteRead = 0x20" in test_target_source
 assert "hookSource=0x" in test_target_source
 assert "hookDestination=0x" in test_target_source
 assert 'command.StartsWith("call "' in test_target_source
+assert 'command.StartsWith("protect "' in test_target_source
 assert "READY pid=" in test_target_source
 for required_call in [
     "ProcessSession.Open",
@@ -445,6 +446,11 @@ for required_call in [
     "session.Scanner.SigScan",
     "session.Hooks.Install",
     "remoteHook.Trampoline",
+    "ExpectedPatchedBytes",
+    "SetTargetProtection",
+    "pageNoAccess",
+    "retryHook.Remove",
+    "ProtectionOf(process!, ready.HookSource)",
     "exitReclaimedHook.Remove",
     "session.Memory.Free(exitReclaimedHook.Trampoline",
     "sourceProtectionAfterFailedRemove",
