@@ -19,7 +19,7 @@ Current source and published GitHub/nuget.org stable: `2.2.0`. Numeric assembly/
 | NuGet package layout | One package contains matching `win-x64` and `win-x86` managed/native assets, XML documentation, provenance, README, and buildTransitive selection logic. |
 | Independent NuGet consumers | PackageReference restore/build/run/publish passes for x64 and x86; native dependencies reach output; AnyCPU fails with a clear diagnostic. |
 | Release notes | Notes are rendered from the matching CHANGELOG section plus both architecture manifests/checksums. |
-| GitHub Release safety | `release/v*` is dry-run only; `gh release create` is tag-only; no automatic branch deletion. |
+| GitHub Release safety | `release/v*` is dry-run only; tag pushes create GitHub Releases; manual runs on an existing tag are NuGet-only and require `publish-nuget`; no automatic branch deletion. |
 | NuGet publish safety | OIDC login and push require a manual run on a published tag with `publish-nuget` enabled; same-ref Release runs are serialized without cancelling an in-flight publish; duplicate package pushes remain guarded by `--skip-duplicate`; branch validation requires no NuGet account credentials. |
 
 
