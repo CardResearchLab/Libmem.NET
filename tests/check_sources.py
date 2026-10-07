@@ -124,6 +124,16 @@ assert upstream_header_path.exists(), (
 )
 upstream_header = upstream_header_path.read_text(encoding="utf-8", errors="replace")
 
+upstream_vmt_path = root / "third_party/libmem/src/common/vmt.c"
+assert upstream_vmt_path.exists(), "Pinned libmem VMT source was not found."
+upstream_vmt_source = upstream_vmt_path.read_text(encoding="utf-8", errors="replace")
+upstream_unhook = upstream_vmt_source.split("LM_VmtUnhook(lm_vmt_t *vmt,", 1)[1].split("/********************************/", 1)[0]
+assert upstream_unhook.index("LM_ProtMemory") < upstream_unhook.index("entry = vmt_search")
+assert re.search(r"if \(!entry\)\s+return LM_TRUE;", upstream_unhook), (
+    "Pinned LM_VmtUnhook untracked-index behavior changed; review the Libmem.NET protection workaround."
+)
+print("PASS pinned LM_VmtUnhook untracked-index compatibility contract")
+
 without_comments = re.sub(r"/\*.*?\*/", "", upstream_header, flags=re.S)
 without_comments = re.sub(r"//.*", "", without_comments)
 
