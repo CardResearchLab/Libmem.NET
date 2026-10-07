@@ -25,11 +25,65 @@ jobs:
       configuration: Release
       platform: x64
       artifact-name: Libmem.NET-windows-x64
-      include-nuget: true
+
+  build-x86:
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      ref: ${{ github.ref_name }}
+      configuration: Release
+      platform: x86
+      artifact-name: Libmem.NET-windows-x86
+
+  package-nuget:
+    name: Package NuGet
+    needs: [build-x64, build-x86]
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Download x64 runtime artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Libmem.NET-windows-x64
+          path: artifacts/package
+
+      - name: Download x86 runtime artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Libmem.NET-windows-x86
+          path: artifacts/package
+
+      - name: Package exact-version NuGet
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\VERSION -Raw).Trim()
+          .\eng\package-nuget.ps1 -Configuration Release -PackageVersion $version
+
+      - name: Upload NuGet artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Libmem.NET-nuget
+          path: artifacts/nuget/*.nupkg
+          if-no-files-found: error
+          retention-days: 14
 
   release:
     name: Publish release
-    needs: [build-x64]
+    needs: [build-x64, build-x86, package-nuget]
     runs-on: ubuntu-latest
 
     steps:
@@ -71,7 +125,19 @@ jobs:
           name: Libmem.NET-windows-x64
           path: dist/x64
 
-      - name: Validate release package
+      - name: Download x86 build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Libmem.NET-windows-x86
+          path: dist/x86
+
+      - name: Download NuGet build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Libmem.NET-nuget
+          path: dist/nuget
+
+      - name: Validate release packages
         shell: bash
         run: |
           if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
@@ -81,7 +147,10 @@ jobs:
           fi
 
           EXPECTED_VERSION="${TAG_NAME#v}"
-          python eng/verify-package.py --package-dir dist/x64/Libmem.NET-windows-x64 --archive dist/x64/Libmem.NET-windows-x64.zip --checksum dist/x64/Libmem.NET-windows-x64.zip.sha256 --expected-version "$EXPECTED_VERSION" --expected-repository-commit "$GITHUB_SHA" --expected-platform win-x64 --expected-configuration Release
+
+          python eng/verify-package.py             --package-dir dist/x64/Libmem.NET-windows-x64             --archive dist/x64/Libmem.NET-windows-x64.zip             --checksum dist/x64/Libmem.NET-windows-x64.zip.sha256             --expected-version "$EXPECTED_VERSION"             --expected-repository-commit "$GITHUB_SHA"             --expected-platform win-x64             --expected-configuration Release
+
+          python eng/verify-package.py             --package-dir dist/x86/Libmem.NET-windows-x86             --archive dist/x86/Libmem.NET-windows-x86.zip             --checksum dist/x86/Libmem.NET-windows-x86.zip.sha256             --expected-version "$EXPECTED_VERSION"             --expected-repository-commit "$GITHUB_SHA"             --expected-platform win-x86             --expected-configuration Release
 
       - name: Download published NuGet asset for later push
         if: github.event_name == 'workflow_dispatch' && inputs.publish-nuget == true
@@ -91,7 +160,7 @@ jobs:
         run: |
           EXPECTED_VERSION="${GITHUB_REF_NAME#v}"
           gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
-            --pattern "Libmem.NET.${EXPECTED_VERSION}.nupkg" --dir dist/x64 --clobber
+            --pattern "Libmem.NET.${EXPECTED_VERSION}.nupkg" --dir dist/nuget --clobber
 
       - name: Validate NuGet package
         shell: bash
@@ -103,7 +172,7 @@ jobs:
           fi
 
           EXPECTED_VERSION="${TAG_NAME#v}"
-          PACKAGE="dist/x64/Libmem.NET.${EXPECTED_VERSION}.nupkg"
+          PACKAGE="dist/nuget/Libmem.NET.${EXPECTED_VERSION}.nupkg"
 
           test -f "$PACKAGE" || {
             echo "Expected NuGet package is missing: $PACKAGE"
@@ -150,7 +219,9 @@ jobs:
           gh release create "$TAG_NAME" \
             "dist/x64/Libmem.NET-windows-x64.zip" \
             "dist/x64/Libmem.NET-windows-x64.zip.sha256" \
-            "dist/x64/Libmem.NET.${TAG_NAME#v}.nupkg" \
+            "dist/x86/Libmem.NET-windows-x86.zip" \
+            "dist/x86/Libmem.NET-windows-x86.zip.sha256" \
+            "dist/nuget/Libmem.NET.${TAG_NAME#v}.nupkg" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "Libmem.NET $TAG_NAME" \
@@ -179,7 +250,7 @@ jobs:
           NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
           EXPECTED_VERSION="${GITHUB_REF_NAME#v}"
-          dotnet nuget push "dist/x64/Libmem.NET.${EXPECTED_VERSION}.nupkg" \
+          dotnet nuget push "dist/nuget/Libmem.NET.${EXPECTED_VERSION}.nupkg" \
             --api-key "$NUGET_API_KEY" \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
