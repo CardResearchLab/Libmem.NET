@@ -6,22 +6,23 @@
 [![Release](https://img.shields.io/github/v/release/CardResearchLab/Libmem.NET)](https://github.com/CardResearchLab/Libmem.NET/releases/latest)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
-![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
+![Windows x64/x86](https://img.shields.io/badge/Windows-x64%20%7C%20x86-0078D4)
 
 **Libmem.NET** 是 [rdbo/libmem](https://github.com/rdbo/libmem) 的 Windows C++/CLI 封装，为 C# / .NET 提供进程、线程、模块、内存、扫描、符号、汇编/反汇编、Hook、VMT 与 DLL 注入能力。
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前已发布稳定版为 **2.1.1**。2.1.1 是向后兼容的维护修复版，修复 VMT 基址 bad-address sentinel 参数校验与未跟踪 `VmtManager.Unhook` 页保护问题，补充回归测试，并保持与 2.1.0 的 Public API 兼容。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
+当前源码版本为 **2.2.0 发布候选**：在保持 2.1.1 Public API 与 pinned rdbo/libmem revision 不变的前提下，将 Windows x86 提升为与 x64 并列的正式支持架构，并完成双架构 CI、Runtime ZIP、NuGet 与 Release 流程。当前已发布稳定版仍为 **2.1.1**，直到 2.2.0 正式发布。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
 
 正式支持范围：
 
 - Windows x64
+- Windows x86
 - .NET 8
 - C# / .NET 消费者
 - 固定版本的 rdbo/libmem native backend
 
-> x86 代码与构建配置仍保留，但不属于当前稳定支持和正式 Release 范围。NuGet 公共 PackageReference 路径已经通过 Windows x64 / .NET 8 的 restore、build、run 与 publish 验收。
+> 2.2.0 的 x64 与 x86 都使用架构匹配的 C++/CLI 与 native runtime。消费者必须显式选择 `x64` 或 `x86`；`AnyCPU` 与跨位数运行不在支持范围内。
 
 ## 下载
 
@@ -39,7 +40,7 @@ GitHub 与 nuget.org 均已发布稳定版 **Libmem.NET 2.1.1**。`2.1.0` 作为
 
 ## 快速开始
 
-构建当前源码，或解压当前 Build 产物，在 x64 .NET 8 项目中引用：
+构建当前源码，或解压当前 Build 产物，在显式指定 x64 或 x86 的 .NET 8 项目中引用：
 
 ```text
 Libmem.NET.dll
