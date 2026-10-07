@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前源码版本为 **2.2.0 发布候选**：在保持 2.1.1 Public API 与 pinned rdbo/libmem revision 不变的前提下，将 Windows x86 提升为与 x64 并列的正式支持架构，并完成双架构 CI、Runtime ZIP、NuGet 与 Release 流程。当前已发布稳定版仍为 **2.1.1**，直到 2.2.0 正式发布。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
+当前源码与正式稳定版均为 **2.2.0**：在保持 2.1.1 Public API 与 pinned rdbo/libmem revision 不变的前提下，Windows x86 已提升为与 x64 并列的正式支持架构，双架构 CI、Runtime ZIP、NuGet 与 Release 交付链路均已完成并正式发布。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
 
 正式支持范围：
 
@@ -26,7 +26,7 @@
 
 ## 下载
 
-GitHub 与 nuget.org 均已发布稳定版 **Libmem.NET 2.1.1**。`2.1.0` 作为上一稳定版继续保留。
+GitHub 与 nuget.org 均已发布稳定版 **Libmem.NET 2.2.0**。`2.1.1` 作为上一稳定版继续保留。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -227,7 +227,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前稳定版为 **2.1.1**。NuGet / informational version 使用 `2.1.1`，程序集数字版本与文件版本为 `2.1.1.0`。正式 GitHub Release 提供 Runtime ZIP、SHA-256 和 `Libmem.NET.2.1.1.nupkg`，nuget.org 也提供 exact `2.1.1` PackageReference。
+当前稳定版为 **2.2.0**。NuGet / informational version 使用 `2.2.0`，程序集数字版本与文件版本为 `2.2.0.0`。正式 GitHub Release 提供 x64/x86 Runtime ZIP、对应 SHA-256 和 `Libmem.NET.2.2.0.nupkg`，nuget.org 也提供 exact `2.2.0` PackageReference。
 
 生成正式风格 Runtime ZIP：
 
@@ -278,11 +278,11 @@ jobs:
 
 ## NuGet 状态
 
-包 ID 为 `Libmem.NET`，目标是 Windows x64 / .NET 8。CI 验证 pack、独立 PackageReference restore/build/run/publish、native runtime 文件复制以及非 x64 consumer 拒绝。
+包 ID 为 `Libmem.NET`，目标是 Windows x64/x86 / .NET 8。CI 验证 pack、独立 x64/x86 PackageReference restore/build/run/publish、native runtime 文件复制以及 AnyCPU consumer 拒绝。
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-Trusted Publishing / OIDC、NuGet push 与公开 PackageReference 消费链路均已实际验证。稳定版 `2.1.1` 已发布到 GitHub 与 nuget.org，公开 NuGet smoke 基线推进到 2.1.1；`2.1.0` 作为上一稳定版保留。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+Trusted Publishing / OIDC、NuGet push 与公开 PackageReference 消费链路均已实际验证。稳定版 `2.2.0` 已发布到 GitHub 与 nuget.org，公开 NuGet smoke 基线推进到 2.2.0，并覆盖 x64/x86；`2.1.1` 作为上一稳定版保留。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 
@@ -297,7 +297,7 @@ Trusted Publishing / OIDC、NuGet push 与公开 PackageReference 消费链路�
 - pinned libmem public API coverage validation
 - Runtime package integrity validation
 
-PR 自动验证集中在 Build，默认只构建、测试 **Release x64**，保留以上全部 Release 测试与包验证。Actions → Build → Run workflow 中勾选 `debug`，会额外构建 Debug x64 并运行 Debug smoke tests。
+PR 自动验证集中在 Build，默认构建并验证 **Release x64 与 Release x86**，保留以上全部 Release 测试与多架构包验证。Actions → Build → Run workflow 中勾选 `debug`，会额外构建 Debug x64 并运行 Debug smoke tests。
 
 以下专项工作流保留为手动入口：
 
