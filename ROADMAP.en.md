@@ -1,22 +1,21 @@
 # Libmem.NET Development Roadmap
 
-`2.1.1` is published on GitHub and nuget.org; the main line now returns to stable maintenance and preparation for **v2.2.0 Native API Coverage / Upstream Sync**. See the [migration guide](docs/MIGRATION.md) for the historical identity transition.
+`2.2.0` is now a release candidate: Windows x86 has completed runtime, external-process, NuGet, and Release delivery enablement and is promoted alongside x64 as an official target. The currently published stable release remains `2.1.1`. See the [migration guide](docs/MIGRATION.md) for the historical identity transition.
 
-> Current strategy: **x64 first; x86 deferred.**
+> Current strategy: **Windows x64 and x86 are first-class targets; shared design stays architecture-neutral for a future ARM64 phase.**
 
 ## Platform policy
 
-Official Libmem.NET development, default CI, runtime acceptance, and GitHub Releases currently target **Windows x64 / .NET 8**.
+Libmem.NET 2.2.0 official development, default CI, runtime acceptance, NuGet, and GitHub Releases cover **Windows x64 / x86 + .NET 8**.
 
 x86 status:
 
-- existing x86 code, solution configurations, and build-script compatibility paths remain in the repository;
-- x86 is not a near-term feature-development target;
-- new features are not required to maintain immediate x86 parity;
-- x86 is not part of the default CI merge gate;
-- GitHub Releases do not currently publish x86 ZIP/checksum assets;
-- successful manual x86 builds are best-effort compatibility, not a stability commitment;
-- if x86 development resumes, pointer width, Hook/VMT, assembler/disassembler, injector, packaging, and runtime tests will receive a dedicated compatibility audit.
+- Release x86 build, smoke, Hook/VMT, Injector, and ExternalProcessTests are part of the default validation path;
+- runtime ZIP, manifest, and SHA-256 verification cover both x64 and x86;
+- one NuGet package carries matching `win-x64` and `win-x86` C++/CLI/native assets;
+- `buildTransitive` selects architecture from explicit `Platform` / `PlatformTarget`;
+- `AnyCPU` is rejected and cross-bitness operation is not supported;
+- ARM64 is outside the 2.2.0 production support scope, while shared test/package structure must remain extensible.
 
 ## Architecture principle
 
@@ -117,9 +116,19 @@ Those concerns belong to consumers such as StandaloneGameMod, not Libmem.NET.
 - XML IntelliSense / `docs/API.md` match implementation behavior;
 - NuGet consumer restore/build/run smoke passes.
 
-## Next: v2.2.0 — Native API Coverage / Upstream Sync
+## Current: v2.2.0 — Official Windows x86 support
 
-After the stable 2.1.1 publication, systematically compare against the pinned rdbo/libmem revision:
+The 2.2.0 release goal is to formally deliver the already validated x86 capability:
+
+- x64 and x86 both pass default Release CI and independent runtime tests;
+- ExternalProcessTests/TestTarget isolate machine-code differences behind architecture fixtures;
+- runtime ZIPs and checksums are published separately for both architectures;
+- one NuGet package provides architecture-matched x64/x86 assets and rejects AnyCPU;
+- the 2.1.1 Public API and pinned libmem revision remain unchanged.
+
+## Next: v2.3.0 — Native API Coverage / Upstream Sync
+
+After stable 2.2.0 publication, systematically compare against the pinned rdbo/libmem revision:
 
 - maintain a native → managed API coverage matrix;
 - identify appropriate upstream APIs not yet wrapped;
