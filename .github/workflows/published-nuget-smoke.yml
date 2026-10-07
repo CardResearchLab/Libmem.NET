@@ -92,6 +92,7 @@ jobs:
             --project .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             -c Release `
             --no-restore `
+            -p:Platform=x64 `
             -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
 
       - name: Publish and verify runtime assets
