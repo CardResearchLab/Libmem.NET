@@ -1,16 +1,21 @@
 <Project>
   <PropertyGroup>
-    <_LibmemNetNativeRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\runtimes\win-x64\native'))</_LibmemNetNativeRoot>
+    <_LibmemNetArchitecture Condition="'$(PlatformTarget)' == 'x64'">x64</_LibmemNetArchitecture>
+    <_LibmemNetArchitecture Condition="'$(_LibmemNetArchitecture)' == '' and '$(PlatformTarget)' == 'x86'">x86</_LibmemNetArchitecture>
+    <_LibmemNetArchitecture Condition="'$(_LibmemNetArchitecture)' == '' and '$(Platform)' == 'x64'">x64</_LibmemNetArchitecture>
+    <_LibmemNetArchitecture Condition="'$(_LibmemNetArchitecture)' == '' and ('$(Platform)' == 'x86' or '$(Platform)' == 'Win32')">x86</_LibmemNetArchitecture>
+
+    <_LibmemNetRuntimeRoot Condition="'$(_LibmemNetArchitecture)' != ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\runtimes\win-$(_LibmemNetArchitecture)'))</_LibmemNetRuntimeRoot>
+    <_LibmemNetManagedRoot Condition="'$(_LibmemNetRuntimeRoot)' != ''">$(_LibmemNetRuntimeRoot)\lib\net8.0</_LibmemNetManagedRoot>
+    <_LibmemNetNativeRoot Condition="'$(_LibmemNetRuntimeRoot)' != ''">$(_LibmemNetRuntimeRoot)\native</_LibmemNetNativeRoot>
   </PropertyGroup>
 
-  <Target Name="LibmemNetValidateX64" BeforeTargets="ResolveReferences">
-    <Error Condition="'$(OS)' != 'Windows_NT'"
-           Text="Libmem.NET currently supports only Windows x64." />
-    <Error Condition="'$(PlatformTarget)' != 'x64' and '$(Platform)' != 'x64'"
-           Text="Libmem.NET currently supports only Windows x64. Set PlatformTarget or Platform to x64." />
-  </Target>
+  <ItemGroup Condition="'$(_LibmemNetArchitecture)' != ''">
+    <Reference Include="Libmem.NET">
+      <HintPath>$(_LibmemNetManagedRoot)\Libmem.NET.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
 
-  <ItemGroup>
     <ContentWithTargetPath Include="$(_LibmemNetNativeRoot)\libmem.dll">
       <TargetPath>libmem.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -22,4 +27,17 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </ContentWithTargetPath>
   </ItemGroup>
+
+  <Target Name="LibmemNetValidateArchitecture" BeforeTargets="ResolveReferences">
+    <Error Condition="'$(OS)' != 'Windows_NT'"
+           Text="Libmem.NET currently supports only Windows x64 and x86." />
+    <Error Condition="'$(_LibmemNetArchitecture)' == ''"
+           Text="Libmem.NET requires an explicit x64 or x86 PlatformTarget/Platform. AnyCPU is not supported." />
+    <Error Condition="'$(_LibmemNetArchitecture)' != '' and !Exists('$(_LibmemNetManagedRoot)\Libmem.NET.dll')"
+           Text="Libmem.NET managed runtime asset for $(_LibmemNetArchitecture) is missing from the package." />
+    <Error Condition="'$(_LibmemNetArchitecture)' != '' and !Exists('$(_LibmemNetNativeRoot)\libmem.dll')"
+           Text="Libmem.NET native libmem asset for $(_LibmemNetArchitecture) is missing from the package." />
+    <Error Condition="'$(_LibmemNetArchitecture)' != '' and !Exists('$(_LibmemNetNativeRoot)\Ijwhost.dll')"
+           Text="Libmem.NET Ijwhost asset for $(_LibmemNetArchitecture) is missing from the package." />
+  </Target>
 </Project>
