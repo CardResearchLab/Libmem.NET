@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
+using Libmem.NET.TestTarget;
 
 const int allocationSize = 4096;
 const uint memCommitReserve = 0x3000;
