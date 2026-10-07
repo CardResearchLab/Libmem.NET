@@ -27,6 +27,17 @@
       <Private>true</Private>
     </Reference>
 
+    <ContentWithTargetPath Include="$(_LibmemNetManagedRoot)\Libmem.NET.dll">
+      <TargetPath>Libmem.NET.dll</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="$(_LibmemNetManagedRoot)\Libmem.NET.xml">
+      <TargetPath>Libmem.NET.xml</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </ContentWithTargetPath>
+
     <ContentWithTargetPath Include="$(_LibmemNetNativeRoot)\libmem.dll">
       <TargetPath>libmem.dll</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
