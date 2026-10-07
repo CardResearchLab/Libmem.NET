@@ -532,6 +532,28 @@ var ownedSignature = string.Join(" ", ownedPayload.Select(b => b.ToString("X2"))
 Check(scanner.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
     "ScanManager.SigScan failed.");
 
+// The pinned libmem scan loop omits the final legal candidate. Exact-window
+// scans therefore exercise the wrapper compatibility fallback directly.
+var exactScanSize = (ulong)ownedPayload.Length;
+Check(NativeApi.DataScan(ownedPayload, ownedAllocation.Address, exactScanSize) == ownedAllocation.Address,
+    "Static DataScan should match when the scan window exactly equals the pattern length.");
+Check(NativeApi.PatternScan(ownedPayload, ownedMask, ownedAllocation.Address, exactScanSize) == ownedAllocation.Address,
+    "Static PatternScan should match when the scan window exactly equals the pattern length.");
+Check(NativeApi.SigScan(ownedSignature, ownedAllocation.Address, exactScanSize) == ownedAllocation.Address,
+    "Static SigScan should match when the scan window exactly equals the signature length.");
+Check(scanner.DataScan(ownedPayload, ownedAllocation.Address, exactScanSize) == ownedAllocation.Address,
+    "Remote DataScan should recover the pinned final-candidate omission.");
+Check(scanner.PatternScan(ownedPayload, ownedMask, ownedAllocation.Address, exactScanSize) == ownedAllocation.Address,
+    "Remote PatternScan should recover the pinned final-candidate omission.");
+Check(scanner.SigScan(ownedSignature, ownedAllocation.Address, exactScanSize) == ownedAllocation.Address,
+    "Remote SigScan should recover the pinned final-candidate omission.");
+
+var wrappingScan = ExpectThrows<ArgumentOutOfRangeException>(
+    () => NativeApi.DataScan([0x90], invalidAddress - 1, 4),
+    "Scan ranges that wrap the architecture-width address space should be rejected.");
+Check(wrappingScan.ParamName == "scanSize",
+    "Wrapping scan range reported the wrong parameter name.");
+
 var noScanRange = scanner.SigScan(ownedSignature, ownedAllocation.Address, 0);
 Check(noScanRange == invalidAddress,
     "A valid non-empty signature with zero scan size should remain the architecture-width native miss sentinel.");
