@@ -25,7 +25,7 @@
 
 ## 下载
 
-已发布稳定版 **Libmem.NET 2.1.0** 可通过 GitHub Release 获取；NuGet 公共包路径由独立 smoke workflow 验证。当前源码准备 **2.1.1** patch，在完成 release dry run、tag 与 NuGet 发布前不会替代 2.1.0。
+GitHub 已发布稳定版 **Libmem.NET 2.1.0**。发布后独立验证发现 nuget.org 当前最新仍为 **2.0.0**，因此 2.1.0 不再视为已完成 NuGet 交付；当前源码准备 **2.1.1** patch，建议在完整验收后直接把 2.1.1 作为下一次 NuGet 发布版本。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
