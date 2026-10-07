@@ -401,10 +401,14 @@ nuget_verifier = nuget_verifier_path.read_text(encoding="utf-8")
 compile(nuget_verifier, str(nuget_verifier_path), "exec")
 for package_marker in [
     "<PackageId>Libmem.NET</PackageId>",
-    r"lib\net8.0\Libmem.NET.dll",
-    r"lib\net8.0\Libmem.NET.xml",
+    r"runtimes\win-x64\lib\net8.0\Libmem.NET.dll",
+    r"runtimes\win-x64\lib\net8.0\Libmem.NET.xml",
     r"runtimes\win-x64\native\libmem.dll",
     r"runtimes\win-x64\native\Ijwhost.dll",
+    r"runtimes\win-x86\lib\net8.0\Libmem.NET.dll",
+    r"runtimes\win-x86\lib\net8.0\Libmem.NET.xml",
+    r"runtimes\win-x86\native\libmem.dll",
+    r"runtimes\win-x86\native\Ijwhost.dll",
     r"buildTransitive\Libmem.NET.targets",
     "<RepositoryType>git</RepositoryType>",
     "<RepositoryCommit",
@@ -414,7 +418,9 @@ for package_marker in [
     )
 assert "ContentWithTargetPath" in nuget_targets
 assert "'$(OS)' != 'Windows_NT'" in nuget_targets
-assert "currently supports only Windows x64" in nuget_targets
+assert "currently supports only Windows x64 and x86" in nuget_targets
+assert "_LibmemNetArchitecture" in nuget_targets
+assert "AnyCPU is not supported" in nuget_targets
 for consumer_marker in [
     "ProcessSession.Open",
     "session.Memory.Allocate",
@@ -433,6 +439,10 @@ for package_script_marker in [
     "-dev.$shortCommit",
     "package-version.txt",
     "verify_nuget_package.py",
+    "Resolve-ArchitectureAssets",
+    "runtime-package",
+    "x64Assets",
+    "x86Assets",
 ]:
     assert package_script_marker in nuget_package_script, (
         f"NuGet packaging script lost required behavior: {package_script_marker}"
@@ -476,7 +486,8 @@ for project in [sample_project, smoke_project, hook_project, injector_project]:
 for project in [test_target_project, external_process_project]:
     assert "<Platforms>x64;x86</Platforms>" in project
     assert "<PlatformTarget>$(Platform)</PlatformTarget>" in project
-assert "<PlatformTarget>x64</PlatformTarget>" in nuget_consumer_project, "NuGetConsumer must remain x64-only."
+assert "<Platforms>x64;x86</Platforms>" in nuget_consumer_project
+assert "<PlatformTarget>$(Platform)</PlatformTarget>" in nuget_consumer_project
 assert "Libmem.NET" in nuget_consumer_project
 assert "lm_address_t native_address(UInt64 value" in source
 assert "lm_size_t native_size(UInt64 value" in source
@@ -609,7 +620,7 @@ assert "Libmem.NET.${EXPECTED_VERSION}.nupkg" in release_workflow
 assert "dotnet nuget push" in release_workflow
 assert "https://api.nuget.org/v3/index.json" in release_workflow
 assert "Libmem.NET-windows-x64.zip.sha256" in release_workflow
-assert "Libmem.NET-windows-x86.zip.sha256" not in release_workflow
+assert "Libmem.NET-windows-x86.zip.sha256" in release_workflow
 release_notes_script_path = root / "eng/render-release-notes.py"
 release_notes_script = release_notes_script_path.read_text(encoding="utf-8")
 compile(release_notes_script, str(release_notes_script_path), "exec")
@@ -684,11 +695,11 @@ for name in ["NuGet login (OIDC)", "Publish Libmem.NET to nuget.org"]:
 assert 'test "$GITHUB_REF_TYPE" = "tag"' in release_steps["Validate release ref"]
 assert 'gh release view "$TAG_NAME"' in release_steps["Validate release ref"]
 assert '--prerelease --latest=false' in release_steps["Publish GitHub Release"]
-assert 'artifacts/package/*.nupkg' in build_workflow
+assert 'artifacts/nuget/*.nupkg' in build_workflow
 assert 'artifacts/package/*.nupkg' in reusable_workflow
-assert 'artifacts/nuget/*.nupkg' not in reusable_workflow, "Mixed upload roots break release download paths."
+assert 'artifacts/nuget/*.nupkg' not in reusable_workflow, "Reusable artifact upload must keep the release download root stable."
 assert 'gh release download' in release_steps["Download published NuGet asset for later push"]
-for name in ["Validate release package", "Validate NuGet package", "Render formal release notes"]:
+for name in ["Validate release packages", "Validate NuGet package", "Render formal release notes"]:
     assert not re.search(r"^        if:", release_steps[name], re.MULTILINE), (
         f"Release branches must still perform {name}."
     )
@@ -720,7 +731,7 @@ print("PASS release documentation and historical identity contract")
 
 for suite in ["SmokeTests", "ExternalProcessTests", "HookVmtTests", "InjectorTests", "NuGetConsumer"]:
     assert f"Libmem.NET.{suite}" in build_workflow, f"Unified PR gate lost {suite}"
-for step in ["Run C# example", "Run Hook lifecycle sample", "Publish NuGet consumer", "Reject non-x64 NuGet consumer", "Verify runtime package"]:
+for step in ["Run C# example", "Run Hook lifecycle sample", "Publish NuGet consumers", "Reject AnyCPU NuGet consumer", "Verify runtime package"]:
     assert step in build_workflow, f"Unified PR gate lost {step}"
 for manual_workflow in [hook_workflow, injector_workflow, external_process_workflow, nuget_consumer_workflow]:
     assert "workflow_dispatch:" in manual_workflow
@@ -741,25 +752,28 @@ assert "inputs.platform == 'x86'" in external_process_workflow
 assert "Libmem.NET.TestTarget" in external_process_workflow
 assert "Libmem.NET.ExternalProcessTests" in external_process_workflow
 assert "LIBMEM_NET_TEST_TARGET:" in external_process_workflow
-assert "NuGet Consumer x64" in nuget_consumer_workflow
+assert "NuGet Consumer x64 + x86" in nuget_consumer_workflow
 assert "package-nuget.ps1" in nuget_consumer_workflow
 assert "package-version.txt" in nuget_consumer_workflow
 assert "Libmem.NET.NuGetConsumer" in nuget_consumer_workflow
-assert "Publish NuGet consumer" in nuget_consumer_workflow
-assert "Reject non-x64 NuGet consumer" in nuget_consumer_workflow
+assert "Publish NuGet consumers" in nuget_consumer_workflow
+assert "Reject AnyCPU NuGet consumer" in nuget_consumer_workflow
 assert "Libmem.NET.dll" in nuget_consumer_workflow
 assert "Ijwhost.dll" in nuget_consumer_workflow
 assert "nuget.org" not in nuget_consumer_workflow
-assert "setup-dotnet-x86.ps1" not in nuget_consumer_workflow
-assert "needs: [build-x64]" in release_workflow
-assert "build-x86:" not in release_workflow
+assert "setup-dotnet-x86.ps1" in nuget_consumer_workflow
+assert "Build Libmem.NET x64" in nuget_consumer_workflow
+assert "Build Libmem.NET x86" in nuget_consumer_workflow
+assert "needs: [build-x64, build-x86, package-nuget]" in release_workflow
+assert "build-x86:" in release_workflow
+assert "package-nuget:" in release_workflow
 
 # Keep the reusable/manual x86 path available alongside the unified x86 PR gate.
 assert "setup-dotnet-x86.ps1" in reusable_workflow
 assert "platform:" in reusable_workflow
-assert "x64 is the supported release target" in reusable_workflow
+assert "multi-architecture Libmem.NET NuGet package" in reusable_workflow
 assert "Release x86" in build_workflow
-print("PASS x64 release provenance with x86 runtime CI contract")
+print("PASS x64/x86 release provenance and multi-architecture NuGet contract")
 
 subprocess.run(
     [
