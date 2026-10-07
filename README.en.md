@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The current published stable release is **2.1.0**. Current source is preparing the backward-compatible **2.1.1** maintenance patch, fixing VMT bad-address-sentinel validation, adding regression coverage, and refreshing post-release verification/documentation while preserving the 2.1.0 Public API. Historical stable **v1.0.0** uses `LibmemCli`; see the [migration guide](docs/MIGRATION.md) for the identity transition.
+The current published stable release is **2.1.1**. It is a backward-compatible maintenance patch that fixes VMT bad-address-sentinel validation and the untracked `VmtManager.Unhook` page-protection issue, strengthens regression coverage, and preserves the 2.1.0 Public API. Historical stable **v1.0.0** uses `LibmemCli`; see the [migration guide](docs/MIGRATION.md) for the identity transition.
 
 Official support target:
 
@@ -25,7 +25,7 @@ Official support target:
 
 ## Download
 
-GitHub and nuget.org both publish stable **Libmem.NET 2.1.0**. Current source prepares the backward-compatible **2.1.1** maintenance patch, which will become the next stable package after full acceptance.
+GitHub and nuget.org both publish stable **Libmem.NET 2.1.1**. `2.1.0` remains available as the previous stable release.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
@@ -226,7 +226,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The current `VERSION` is the maintenance candidate **2.1.1**. NuGet and informational versions use `2.1.1`; numeric assembly/file versions are `2.1.1.0`. Candidate builds produce the runtime ZIP, SHA-256 and `Libmem.NET.2.1.1.nupkg`; passing candidate validation does not itself publish the release. Published stable `2.1.0` remains the public baseline until 2.1.1 completes tag and NuGet publication.
+The current stable version is **2.1.1**. NuGet and informational versions use `2.1.1`; numeric assembly/file versions are `2.1.1.0`. The official GitHub Release provides the runtime ZIP, SHA-256 and `Libmem.NET.2.1.1.nupkg`, and nuget.org provides exact `2.1.1` PackageReference consumption.
 
 Build the release-style runtime ZIP locally:
 
@@ -283,7 +283,7 @@ The package ID is `Libmem.NET`, targeting Windows x64 / .NET 8. CI validates pac
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-The Trusted Publishing / OIDC flow has been exercised successfully through public PackageReference consumption. Stable `2.1.0` is published on GitHub and nuget.org, and the public-NuGet smoke baseline now targets 2.1.0. The `2.1.1` maintenance release uses the same split flow: dry run first, then tag/GitHub Release, then explicit NuGet publication. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
+The Trusted Publishing / OIDC flow has been exercised successfully through public PackageReference consumption. Stable `2.1.1` is published on GitHub and nuget.org, and the public-NuGet smoke baseline advances to 2.1.1; `2.1.0` remains the previous stable release. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 
