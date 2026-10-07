@@ -2,6 +2,15 @@ name: Hook VMT Runtime Tests
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Target platform
+        type: choice
+        required: true
+        default: x64
+        options:
+          - x64
+          - x86
 
 permissions:
   contents: read
@@ -12,7 +21,7 @@ concurrency:
 
 jobs:
   hook-vmt:
-    name: Hook and VMT x64
+    name: Hook and VMT ${{ inputs.platform }}
     runs-on: windows-2022
 
     steps:
@@ -26,6 +35,11 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Setup .NET 8 x86 runtime
+        if: inputs.platform == 'x86'
+        shell: pwsh
+        run: .\eng\setup-dotnet-x86.ps1
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -37,8 +51,8 @@ jobs:
 
       - name: Build Libmem.NET
         shell: pwsh
-        run: .\build.ps1 -Configuration Release -Platform x64
+        run: '.\build.ps1 -Configuration Release -Platform "${{ inputs.platform }}"'
 
       - name: Run Hook and VMT runtime tests
         shell: pwsh
-        run: dotnet run --project .\tests\Libmem.NET.HookVmtTests\Libmem.NET.HookVmtTests.csproj -c Release -p:Platform=x64
+        run: 'dotnet run --project .\tests\Libmem.NET.HookVmtTests\Libmem.NET.HookVmtTests.csproj -c Release -p:Platform="${{ inputs.platform }}"'
