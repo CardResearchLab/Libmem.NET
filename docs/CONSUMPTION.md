@@ -2,18 +2,18 @@
 
 > Current stable target: Windows x64/x86 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. GitHub and nuget.org both publish stable `2.2.0`. Historical v1.0.0 uses `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. GitHub and nuget.org both publish stable `2.2.1`. Historical v1.0.0 uses `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
-The 2.2.0 release pipeline produces architecture-specific runtime archives:
+The 2.2.1 release pipeline produces architecture-specific runtime archives:
 
 ```text
 Libmem.NET-windows-x64.zip
 Libmem.NET-windows-x64.zip.sha256
 Libmem.NET-windows-x86.zip
 Libmem.NET-windows-x86.zip.sha256
-Libmem.NET.2.2.0.nupkg
+Libmem.NET.2.2.1.nupkg
 ```
 
 Each runtime directory contains the architecture-matched C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md`, `MIGRATION.md`, and a manifest.
@@ -51,18 +51,18 @@ This is useful when the consumer wants:
 
 ## 3. NuGet package
 
-The 2.2.0 stable release uses one multi-architecture package:
+The 2.2.1 stable release uses one multi-architecture package:
 
 ```text
 Package ID: Libmem.NET
-Stable version: 2.2.0
-Published public baseline: 2.2.0
+Stable version: 2.2.1
+Published public baseline: 2.2.1
 Target: Windows x64/x86 / .NET 8
 Architecture selection: explicit Platform / PlatformTarget
 Unsupported: AnyCPU
 ```
 
-Development packages use a commit-qualified version derived from `VERSION`, for example `2.2.1-dev.<commit>` on the current 2.2.1 candidate branch. CI stamps repository URL and exact Git commit provenance into the package.
+Development packages use a commit-qualified version derived from `VERSION`, for example `2.2.1-dev.<commit>`. CI stamps repository URL and exact Git commit provenance into the package.
 
 ### Package layout
 
@@ -164,6 +164,6 @@ The successful `2.0.0-preview.1` publication proves the current Trusted Publishi
 
 ## Current recommendation
 
-Normal public PackageReference consumption should use stable `Libmem.NET 2.2.0` with an explicit x64 or x86 target. The public nuget.org smoke baseline validates both supported architectures. During 2.2.1 maintenance development, keep production consumers on 2.2.0 until the patch release completes its release gates.
+Public PackageReference consumption should use stable `Libmem.NET 2.2.1` with an explicit x64 or x86 target. The nuget.org smoke baseline validates both supported architectures, including explicit unsupported PlatformTarget rejection. The previous stable 2.2.0 package remains available.
 
 See [RELEASES.md](RELEASES.md) for release history, support boundaries and versioning, and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the next publication.

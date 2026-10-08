@@ -2,7 +2,7 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Current source candidate: `2.2.1` (assembly/file `2.2.1.0`); latest published GitHub/nuget.org stable: `2.2.0`. This patch preserves the 2.2.0 Public API, pinned rdbo/libmem revision, and dual-architecture delivery.
+Current source and published stable: `2.2.1` (assembly/file `2.2.1.0`). GitHub Release #39 and nuget.org publication #40 succeeded. The patch preserves the 2.2.0 Public API, pinned rdbo/libmem revision, and dual-architecture delivery.
 
 ## Repository acceptance
 
@@ -43,20 +43,21 @@ Current source candidate: `2.2.1` (assembly/file `2.2.1.0`); latest published Gi
 - [x] Restore independent x64 and x86 consumers from nuget.org using exact version `2.2.0`, then build, run and publish both.
 - [x] Advance the automatic public-NuGet smoke baseline from 2.1.1 to 2.2.0 only after public x64/x86 validation succeeds.
 
-## 2.2.1 publication readiness (do not publish before all gates)
+## 2.2.1 publication record
 
-- [ ] Release-preparation PR passes required x64, x86, and multi-architecture NuGet gates using exact 2.2.1 metadata.
-- [ ] Merge the PR into `main` and confirm the resulting `main` Build passes all required jobs.
-- [ ] Create `release/v2.2.1` from the accepted main commit and confirm dry-run Release output, both ZIPs/checksums, the exact-version NuGet package, and generated notes.
-- [ ] Review the exact provenance and complete checksums; only then create `v2.2.1` (a separate, later publication step).
-- [ ] After GitHub Release, manually run tagged Release with `publish-nuget`; verify public NuGet x64/x86 consumers before advancing the smoke baseline.
+- [x] Release-preparation PR #126 passed required x64, x86, and multi-architecture NuGet gates using exact 2.2.1 metadata (Build #402).
+- [x] Merged PR #126 into `main`; exact commit `5e2b051a61943d0ac0825b2ac0125ffb29cf1721` passed Build #403.
+- [x] Created `release/v2.2.1` from the accepted commit; Release #38 dry run passed ZIP/checksum, exact-version NuGet, and generated release-note verification.
+- [x] Validated release provenance and checksums; created `v2.2.1` at the accepted commit and published GitHub Release with x64/x86 assets (Release #39).
+- [x] Published nuget.org package through tagged Release #40 (`NuGet login (OIDC)` and `Publish Libmem.NET to nuget.org` both passed).
+- [x] Verified published nuget.org-only 2.2.1 PackageReference restore/build/run/publish on x64 and x86, both architecture-matched runtime assets, and rejection of AnyCPU/arm64 explicit targets (Published NuGet Smoke #26).
 
 ## Compatibility boundary
 
-- x64 and x86 are supported release architectures in 2.2.0.
+- x64 and x86 are supported release architectures in 2.2.1.
 - Consumers must explicitly select x64 or x86; AnyCPU is unsupported.
 - Cross-bitness operation is not promised.
-- ARM64 remains a future architecture and is not a 2.2.0 production target.
+- ARM64 remains a future architecture and is not a 2.2.1 production target.
 - Game state, snapshots, IPC, Unity/Mono/Hearthstone policy and other application logic remain consumer responsibilities.
 
 See [RELEASES.md](RELEASES.md) and [CONSUMPTION.md](CONSUMPTION.md).

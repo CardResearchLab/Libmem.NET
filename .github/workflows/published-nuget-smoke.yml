@@ -6,9 +6,15 @@ on:
       package-version:
         description: Published Libmem.NET version to validate from nuget.org
         required: false
-        default: 2.2.0
+        default: 2.2.1
         type: string
   pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/published-nuget-smoke.yml'
+      - 'tests/Libmem.NET.NuGetConsumer/**'
+  push:
     branches:
       - main
     paths:
@@ -48,8 +54,8 @@ jobs:
             $version = "${{ inputs.package-version }}"
           }
           else {
-            # Pull requests validate the last known published package.
-            $version = "2.2.0"
+            # Pull requests and main pushes validate the last verified published baseline.
+            $version = "2.2.1"
           }
           if ([string]::IsNullOrWhiteSpace($version)) {
             throw "Package version is empty."
@@ -183,3 +189,21 @@ jobs:
           }
 
           $global:LASTEXITCODE = 0
+
+      - name: Reject unsupported explicit PlatformTarget from nuget.org
+        shell: pwsh
+        run: |
+          foreach ($unsupportedTarget in @("AnyCPU", "arm64")) {
+            dotnet build `
+              .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+              -c Release `
+              --no-restore `
+              -p:Platform=x64 `
+              -p:PlatformTarget=$unsupportedTarget `
+              -p:LibmemNetTestPackageVersion=${{ steps.version.outputs.version }}
+
+            if ($LASTEXITCODE -eq 0) {
+              throw "Published NuGet package unexpectedly accepted Platform=x64 with PlatformTarget=$unsupportedTarget."
+            }
+            $global:LASTEXITCODE = 0
+          }
