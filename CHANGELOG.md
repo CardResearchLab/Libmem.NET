@@ -1,6 +1,6 @@
 # Changelog
 
-## Planned (target: 2.4.0; not released)
+## 2.4.0 - 2026-10-09
 
 ### Added
 
