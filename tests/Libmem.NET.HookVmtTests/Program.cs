@@ -131,6 +131,14 @@ Check(CallNoArgs(hook.Trampoline) == 1, "Trampoline did not execute the original
 Check(hook.Remove(), "HookHandle.Remove failed.");
 Check(!hook.IsInstalled, "HookHandle should report uninstalled after Remove.");
 Check(CallNoArgs(source.Address) == 1, "Source behavior was not restored after Remove.");
+
+// Inspection helper must cover at least the hook's instruction-aligned patch span
+// without writing code or changing the existing hook ownership contract.
+var restoredAlignedCode = session.Assembly.ReadAlignedCode(source.Address, hook.PatchedBytes);
+Check((ulong)restoredAlignedCode.Length >= hook.PatchedBytes,
+    "ReadAlignedCode failed to cover the restored HookHandle patch span.");
+Check(restoredAlignedCode.Take(sourceCode.Length).SequenceEqual(sourceCode),
+    "ReadAlignedCode did not preserve original function bytes after Unhook.");
 Check(hook.Remove(), "HookHandle.Remove should be idempotent after a successful removal.");
 
 var disposeHook = session.Hooks.Install(source.Address, destination.Address);
