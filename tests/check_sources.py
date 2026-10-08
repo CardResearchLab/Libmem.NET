@@ -137,6 +137,24 @@ assert re.search(r"if \(!entry\)\s+return LM_TRUE;", upstream_unhook), (
 )
 print("PASS pinned LM_VmtUnhook untracked-index compatibility contract")
 
+upstream_scan_path = root / "third_party/libmem/src/common/scan.c"
+assert upstream_scan_path.exists(), "Pinned libmem scan source was not found."
+upstream_scan_source = upstream_scan_path.read_text(encoding="utf-8", errors="replace")
+assert "ptr != (lm_byte_t *)(address + scansize - datasize)" in upstream_scan_source
+assert "ptr != (lm_byte_t *)(address + scansize - masklen)" in upstream_scan_source
+scan_wrapper_source = (root / "src/Scanning/LibmemScan.cpp").read_text(encoding="utf-8")
+for scan_workaround_marker in [
+    "final_candidate_address",
+    "final_data_match",
+    "final_pattern_match",
+    "final_signature_match",
+    "Scan range exceeds the current process address space.",
+]:
+    assert scan_workaround_marker in scan_wrapper_source, (
+        f"Pinned scan final-candidate workaround lost required marker: {scan_workaround_marker}"
+    )
+print("PASS pinned scan final-candidate compatibility contract")
+
 without_comments = re.sub(r"/\*.*?\*/", "", upstream_header, flags=re.S)
 without_comments = re.sub(r"//.*", "", without_comments)
 
@@ -558,6 +576,16 @@ for required_call in [
         f"External-process runtime coverage lost required call: {required_call}"
     )
 print("PASS external-process runtime coverage contract")
+for exact_scan_marker in [
+    "exactRemoteScanSize",
+    "Remote DataScan missed the final candidate in an exact-size window.",
+    "Remote PatternScan missed the final candidate in an exact-size window.",
+    "Remote SigScan missed the final candidate in an exact-size window.",
+]:
+    assert exact_scan_marker in external_process_test_source, (
+        f"External-process tests lost exact-window scan coverage: {exact_scan_marker}"
+    )
+print("PASS exact-window remote scan coverage contract")
 
 readme_zh = (root / "README.md").read_text(encoding="utf-8")
 readme_en = (root / "README.en.md").read_text(encoding="utf-8")

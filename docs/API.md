@@ -455,6 +455,14 @@ Libmem.NET still calls `LM_GetProcessEx` for native metadata/API coverage, then 
 
 This preserves the wrapper's PID + start-time identity model rather than weakening process identity checks.
 
+### LM_DataScan / LM_PatternScan final candidate
+
+The pinned common scan loops stop when the candidate pointer becomes the calculated end pointer instead of evaluating that final legal start position. This means a native exact-window scan where the scan size equals the pattern length reports a miss, and matches located only at the last legal candidate are also skipped. `LM_SigScan` inherits the same boundary through `LM_PatternScan`.
+
+Libmem.NET preserves the pinned scanner for its original candidate order, then checks the omitted final candidate only when the native scan reports no match. Local fallback reads use the process-safe `LM_ReadMemoryEx` path against the current process; external scans read the same final candidate from the bound target. The wrapper also rejects scan ranges whose final candidate calculation would wrap the current architecture-width address space.
+
+This is an internal compatibility correction; the public scan API and bad-address-sentinel miss semantics are unchanged.
+
 ### LM_VmtUnhook untracked-index protection
 
 The pinned `LM_VmtUnhook` changes the target VTable slot page to executable/read/write protection before checking whether the index is present in its hook-entry list. If the index is not tracked, upstream returns success without restoring the previous protection.
