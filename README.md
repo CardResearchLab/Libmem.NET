@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前源码与 GitHub / nuget.org 正式稳定版均为 **2.2.1**。本次兼容性补丁在保持 2.2.0 Public API、固定 rdbo/libmem revision 及 x64/x86 包结构不变的前提下，修复扫描边界、注入异常分类、NuGet 架构选择及 Release 并发问题。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
+当前源码为 **2.3.0 发布候选**（尚未公开发布）：新增 x64/x86 的 64 位整数与目标位宽指针读写，并完成固定 native libmem API 覆盖审计。GitHub / nuget.org 当前正式稳定版仍为 **2.2.1**。
 
 正式支持范围：
 
@@ -22,11 +22,11 @@
 - C# / .NET 消费者
 - 固定版本的 rdbo/libmem native backend
 
-> 2.2.1 的 x64 与 x86 均使用架构匹配的 C++/CLI 与 native runtime。消费者必须显式选择 `x64` 或 `x86`；`AnyCPU` 与跨位数运行不在支持范围内。
+  2.3.0 候选仍只支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
 
 ## 下载
 
-GitHub 与 nuget.org 均已发布稳定版 **Libmem.NET 2.2.1**，上一稳定版 **2.2.0** 继续保留。
+GitHub 与 nuget.org 当前公开正式稳定版为 **2.2.1**。**2.3.0 仍处于发布候选阶段**，需通过正式发布和公网 NuGet 验证后才可使用。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -227,7 +227,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前稳定版为 **2.2.1**：`VERSION` / informational version 为 `2.2.1`，程序集及文件版本为 `2.2.1.0`。正式 [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.2.1) 提供 x64/x86 Runtime ZIP、对应 SHA-256 及 `Libmem.NET.2.2.1.nupkg`；nuget.org 支持 `Libmem.NET 2.2.1` 的精确版本 PackageReference。
+当前源码候选版的 `VERSION` / informational version 为 `2.3.0`，程序集及文件版本为 `2.3.0.0`。公开正式稳定版仍为 **2.2.1**，可从 [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.2.1) 获取现有 x64/x86 下载包及校验文件。
 
 生成正式风格 Runtime ZIP：
 
@@ -282,7 +282,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-Trusted Publishing / OIDC 登录和 NuGet 2.2.1 推送已由 Release #40 验证；公开 NuGet x64/x86 smoke 基线现为 2.2.1，覆盖恢复、构建、运行、发布产物及架构拒绝测试。2.2.0 继续保留为历史稳定版。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+Trusted Publishing / OIDC 已成功发布并验证 2.2.1；当前公网 NuGet x64/x86 smoke 基线保持 **2.2.1**，只有在 2.3.0 正式发布并经公网消费者测试通过后才推进。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 

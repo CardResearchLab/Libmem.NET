@@ -2,7 +2,7 @@
 
 > Current stable target: Windows x64/x86 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. GitHub and nuget.org both publish stable `2.2.1`. Historical v1.0.0 uses `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. Current source candidate: `2.3.0` (unpublished); published GitHub and nuget.org stable: `2.2.1`. Historical v1.0.0 used `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
@@ -62,7 +62,7 @@ Architecture selection: explicit Platform / PlatformTarget
 Unsupported: AnyCPU
 ```
 
-Development packages use a commit-qualified version derived from `VERSION`, for example `2.2.1-dev.<commit>`. CI stamps repository URL and exact Git commit provenance into the package.
+Development packages use a commit-qualified version derived from `VERSION`, for example `2.3.0-dev.<commit>`. CI stamps repository URL and exact Git commit provenance into the package.
 
 ### Package layout
 
@@ -85,7 +85,7 @@ Build both runtime architectures first, then compose the package:
 .\eng\package-runtime.ps1 -Configuration Release -Platform x64
 .\build.ps1 -Configuration Release -Platform x86
 .\eng\package-runtime.ps1 -Configuration Release -Platform x86
-.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.2.1
+.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.3.0
 ```
 
 The automatic Build gate performs the equivalent composition from verified x64/x86 runtime artifacts.
@@ -128,7 +128,7 @@ Libmem.NET is not an AnyCPU managed library:
 
 ## NuGet release acceptance criteria
 
-A public 2.2.1 NuGet release requires:
+A public 2.3.0 NuGet release requires:
 
 1. multi-architecture package layout/provenance verification;
 2. independent x64 restore/build/run/publish success;

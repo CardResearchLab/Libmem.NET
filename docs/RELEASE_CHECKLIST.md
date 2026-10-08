@@ -2,7 +2,18 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Current source and published stable: `2.2.1` (assembly/file `2.2.1.0`). GitHub Release #39 and nuget.org publication #40 succeeded. The patch preserves the 2.2.0 Public API, pinned rdbo/libmem revision, and dual-architecture delivery.
+Current source candidate: `2.3.0` (assembly/file `2.3.0.0`); latest public stable: `2.2.1`. Feature PR #128 added nonbreaking typed-memory APIs and native C API coverage audit.
+
+## 2.3.0 release gates
+
+- [x] PR #128 accepted, x64/x86 Release and multi-arch NuGet checks succeeded, and feature merged into main.
+- [ ] Exact-version 2.3.0 candidate metadata PR passes x64/x86 builds, runtime suites and local-feed NuGet consumer validation.
+- [ ] Candidate merged to main and merged-main CI verified.
+- [ ] Branch `release/v2.3.0` dry-run Release succeeds without publishing.
+- [ ] Tag `v2.3.0` at accepted commit and validate GitHub assets/checksums/source provenance.
+- [ ] Manually publish to nuget.org through tagged OIDC workflow; run public x64/x86 consumers.
+- [ ] Only after publication, advance public-NuGet baseline and mark docs stable.
+- [ ] Keep PR #129 (2.4.0) unmerged until 2.3.0 verification completes.
 
 ## Repository acceptance
 
