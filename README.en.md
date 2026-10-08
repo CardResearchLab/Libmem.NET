@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The source and latest published stable version on GitHub and nuget.org are **2.3.0**. This backward-compatible release adds 64-bit integer and target-process-width pointer helpers for Windows x64/x86 plus pinned native libmem API coverage auditing. Version 2.2.1 remains available.
+The current source is an **unpublished 2.4.0 release candidate**, adding read-only instruction-aligned code inspection and an ergonomic native symbol lookup helper. The latest published stable on GitHub and nuget.org remains **2.3.0**.
 
 Official support target:
 
@@ -22,7 +22,7 @@ Official support target:
 - C# / .NET consumers
 - a pinned rdbo/libmem native backend
 
-> Stable 2.3.0 remains Windows x64/x86 / .NET 8 only and requires matching managed/native binaries. Explicit x64/x86 platform selection is mandatory; AnyCPU, ARM64 and cross-bitness operation remain unsupported.
+> The 2.4.0 candidate remains Windows x64/x86 / .NET 8 only and requires matching managed/native binaries. Explicit x64/x86 platform selection is mandatory; AnyCPU, ARM64 and cross-bitness operation remain unsupported.
 
 ## Download
 
@@ -128,7 +128,7 @@ The lower-level static `NativeApi.*` (`global::Libmem.NET.Libmem`) surface remai
 
 - module enumeration, lookup, load, and unload
 - exported symbol enumeration
-- symbol address lookup
+- symbol address lookup; 2.4.0 adds `TryFindAddress` for normal misses
 - symbol demangling
 
 ### Memory / Scanning
@@ -147,6 +147,7 @@ The lower-level static `NativeApi.*` (`global::Libmem.NET.Libmem`) surface remai
 - Assemble
 - Disassemble
 - CodeLength
+- `ReadAlignedCode` (2.4.0 candidate: read-only instruction inspection, not automatic Hook installation)
 
 `AssemblyManager` defaults to the target process architecture.
 
@@ -227,7 +228,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-Stable 2.3.0 has `VERSION` / informational version `2.3.0` and numeric assembly/file version `2.3.0.0`. The [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) contains x64/x86 runtime ZIPs, checksums and `Libmem.NET.2.3.0.nupkg`.
+The unpublished source candidate has `VERSION` / informational version `2.4.0` and assembly/file version `2.4.0.0`. The latest [stable v2.3.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) still provides the public x64/x86 runtime ZIPs, checksums and NuGet package.
 
 Build the release-style runtime ZIP locally:
 
