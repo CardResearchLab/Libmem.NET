@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-`2.3.0` is formally published on GitHub and nuget.org and passed public x64/x86 NuGet consumer smoke #30. The next development stage is 2.4.0 Assembly/Symbol enhancements, beginning with PR #129.
+`2.4.0` is published on GitHub and nuget.org; Windows x64/x86 / .NET 8 and public NuGet consumer validation have passed. The project has entered **stability maintenance**: fixes, regression tests and documentation, without starting ARM64 or cross-platform work.
 
 > Current strategy: **Windows x64 and x86 are first-class targets; shared design stays architecture-neutral for a future ARM64 phase.**
 
@@ -125,6 +125,12 @@ The 2.2.0 release goal is to formally deliver the already validated x86 capabili
 - runtime ZIPs and checksums are published separately for both architectures;
 - one NuGet package provides architecture-matched x64/x86 assets and rejects AnyCPU;
 - the 2.1.1 Public API and pinned libmem revision remain unchanged.
+
+## Completed: v2.4.0 — Assembly / Symbols practical enhancements
+
+- Added read-only instruction-aligned `ReadAlignedCode` and normal-miss `TryFindAddress` without changing native ABI or existing managed Hook/VMT/Injector behavior.
+- PR #129/#132, main Build #425, dry run Release #44, GitHub Release #45, NuGet Trusted Publishing #46 and public x64/x86 consumer smoke #36 passed.
+- New feature development is paused after 2.4.0; prioritize maintenance, fixes and regression coverage.
 
 ## Completed: v2.3.0 — Native API coverage and typed pointer helpers
 
