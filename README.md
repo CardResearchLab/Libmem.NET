@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前源码及 GitHub / nuget.org 正式稳定版均为 **2.3.0**：新增 Windows x64/x86 的 64 位整数和目标位宽指针读写，完成固定 native libmem API 覆盖审计。2.2.1 作为上一稳定版保留。
+当前源码已进入 **2.4.0 发布候选阶段（尚未公开发布）**，新增指令对齐代码只读检查和更符合 .NET 习惯的符号查询接口；GitHub / nuget.org 当前正式稳定版仍为 **2.3.0**。
 
 正式支持范围：
 
@@ -22,7 +22,7 @@
 - C# / .NET 消费者
 - 固定版本的 rdbo/libmem native backend
 
-  2.3.0 正式版支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
+  2.4.0 候选仍只支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
 
 ## 下载
 
@@ -128,7 +128,7 @@ Console.WriteLine(string.Join(", ", data));
 
 - 模块枚举、查找、加载与卸载
 - 导出符号枚举
-- 符号地址查找
+- 符号地址查找；2.4.0 新增 `TryFindAddress`，正常未命中返回 `false`
 - 符号 demangle
 
 ### Memory / Scanning
@@ -147,6 +147,7 @@ Console.WriteLine(string.Join(", ", data));
 - Assemble
 - Disassemble
 - CodeLength
+- `ReadAlignedCode`（2.4.0 候选：只读、指令对齐，非自动 Hook 安装器）
 
 `AssemblyManager` 默认使用目标进程架构。
 
@@ -227,7 +228,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-正式稳定版 `VERSION` / informational version 为 `2.3.0`，程序集及文件版本为 `2.3.0.0`。正式 [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) 提供 x64/x86 Runtime ZIP、SHA-256 校验文件及 `Libmem.NET.2.3.0.nupkg`。
+当前源码候选版的 `VERSION` / informational version 为 `2.4.0`，程序集及文件版本为 `2.4.0.0`，尚未公开发布。现有正式 [GitHub Release v2.3.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) 继续提供稳定版 x64/x86 Runtime ZIP、SHA-256 和 NuGet 包。
 
 生成正式风格 Runtime ZIP：
 
