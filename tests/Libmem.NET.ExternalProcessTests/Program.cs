@@ -241,6 +241,11 @@ try
     // Installation failure must be atomic: an unreadable source cannot produce
     // a managed handle or leave patched bytes behind.
     var originalSourceBytes = session.Memory.Read(ready.HookSource, 24);
+    var alignedSource = session.Assembly.ReadAlignedCode(ready.HookSource, 1);
+    Check(alignedSource.Length >= 1
+          && originalSourceBytes.Length >= alignedSource.Length
+          && originalSourceBytes.Take(alignedSource.Length).SequenceEqual(alignedSource),
+        "ReadAlignedCode returned unexpected remote instruction bytes.");
     const uint pageNoAccess = 0x01;
     const uint pageExecuteRead = 0x20;
     const uint pageExecuteReadWrite = 0x40;

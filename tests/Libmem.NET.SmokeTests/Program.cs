@@ -447,6 +447,9 @@ Check(symbolModule is not null && exportedSymbol is not null,
 var resolvedSymbol = pidSession.Symbols.FindAddress(symbolModule!, exportedSymbol!.Name, demangle: false);
 Check(resolvedSymbol == exportedSymbol.Address,
     "SymbolManager.FindAddress disagreed with Enumerate for the selected loaded module.");
+Check(pidSession.Symbols.TryFindAddress(symbolModule!, exportedSymbol!.Name, demangle: false, out var tryResolvedSymbol)
+      && tryResolvedSymbol == resolvedSymbol,
+    "SymbolManager.TryFindAddress did not resolve an existing symbol.");
 
 // v0.x compatibility for the existing static symbol facade.
 Check(NativeApi.FindSymbolAddress(symbolModule!, exportedSymbol.Name, demangle: false) == exportedSymbol.Address,
@@ -455,6 +458,9 @@ Check(NativeApi.FindSymbolAddress(symbolModule!, exportedSymbol.Name, demangle: 
 var missingSymbolName = $"__libmemcli_missing_symbol_{Guid.NewGuid():N}";
 Check(pidSession.Symbols.FindAddress(symbolModule!, missingSymbolName, demangle: false) == invalidAddress,
     "SymbolManager.FindAddress miss should preserve the native bad-address sentinel.");
+Check(!pidSession.Symbols.TryFindAddress(symbolModule!, missingSymbolName, demangle: false, out var missingSymbolAddress)
+      && missingSymbolAddress == 0,
+    "SymbolManager.TryFindAddress should return false/zero for a normal symbol miss.");
 Check(NativeApi.FindSymbolAddress(symbolModule!, missingSymbolName, demangle: false) == invalidAddress,
     "Static FindSymbolAddress miss should preserve the native bad-address sentinel.");
 
@@ -752,6 +758,12 @@ try
 
     var remoteCodeLength = assembly.CodeLength(address, 1);
     Check(remoteCodeLength >= 1, "AssemblyManager.CodeLength failed for target memory.");
+    Check(assembly.ReadAlignedCode(address, 0).Length == 0,
+        "ReadAlignedCode with zero minimum should return an empty array.");
+    var alignedCode = assembly.ReadAlignedCode(address, 1);
+    Check(alignedCode.Length == (int)remoteCodeLength
+          && alignedCode[0] == machineCode[0],
+        "ReadAlignedCode did not return complete instructions from the target.");
 
     // v0.x compatibility for existing static assembly/disassembly APIs.
     var localCodeLength = NativeApi.CodeLength(address, 1);

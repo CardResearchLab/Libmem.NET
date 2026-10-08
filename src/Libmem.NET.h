@@ -351,6 +351,9 @@ namespace Libmem::NET {
         /// <summary>Finds a symbol address in the supplied module.</summary>
         /// <returns>The resolved address, or the libmem bad-address sentinel when the symbol is not found.</returns>
         UInt64 FindAddress(ModuleInfo^ module, String^ name, bool demangle);
+        /// <summary>Tries to find a symbol without requiring callers to inspect native miss sentinels.</summary>
+        /// <remarks>Returns false for a normal native miss, setting address to zero; input/identity errors still throw.</remarks>
+        bool TryFindAddress(ModuleInfo^ module, String^ name, bool demangle, [System::Runtime::InteropServices::Out] UInt64% address);
         /// <summary>Demangles one native symbol name.</summary>
         String^ Demangle(String^ name);
     };
@@ -376,6 +379,9 @@ namespace Libmem::NET {
         /// <summary>Calculates the amount of target code required to cover at least minimumLength bytes.</summary>
         /// <exception cref="LibmemException">Thrown when a non-zero query fails.</exception>
         UInt64 CodeLength(UInt64 address, UInt64 minimumLength);
+        /// <summary>Reads enough complete instructions from target memory to cover a requested byte length.</summary>
+        /// <remarks>Read-only; does not make patching atomic, change memory protection or relocate instructions.</remarks>
+        array<Byte>^ ReadAlignedCode(UInt64 address, UInt64 minimumLength);
     };
 
     /// <summary>Session-bound module enumeration, lookup, load, and unload operations.</summary>

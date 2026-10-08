@@ -122,6 +122,7 @@ TYPE public ref class ScanManager sealed
 TYPE public ref class SymbolManager sealed
   List<SymbolInfo^>^ Enumerate(ModuleInfo^ module, bool demangle);
   UInt64 FindAddress(ModuleInfo^ module, String^ name, bool demangle);
+  bool TryFindAddress(ModuleInfo^ module, String^ name, bool demangle, [System::Runtime::InteropServices::Out] UInt64% address);
   String^ Demangle(String^ name);
 TYPE public ref class AssemblyManager sealed
   property ::Libmem::NET::Architecture Architecture { ::Libmem::NET::Architecture get(); }
@@ -129,6 +130,7 @@ TYPE public ref class AssemblyManager sealed
   List<InstructionInfo^>^ Disassemble(array<Byte>^ code, UInt64 instructionCount, UInt64 runtimeAddress);
   List<InstructionInfo^>^ Disassemble(UInt64 address, UInt64 maxBytes, UInt64 instructionCount, UInt64 runtimeAddress);
   UInt64 CodeLength(UInt64 address, UInt64 minimumLength);
+  array<Byte>^ ReadAlignedCode(UInt64 address, UInt64 minimumLength);
 TYPE public ref class ModuleManager sealed
   List<ModuleInfo^>^ Enumerate();
   ModuleInfo^ Find(String^ name);

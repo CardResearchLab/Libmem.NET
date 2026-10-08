@@ -39,4 +39,22 @@ UInt64 AssemblyManager::CodeLength(UInt64 address,UInt64 minimumLength) {
     return length;
 }
 
+array<Byte>^ AssemblyManager::ReadAlignedCode(UInt64 address,UInt64 minimumLength) {
+    auto target=Target();
+    if(minimumLength==0) return gcnew array<Byte>(0);
+    if(minimumLength>static_cast<UInt64>(Int32::MaxValue))
+        throw gcnew ArgumentOutOfRangeException("minimumLength", "Requested code range exceeds managed array capacity.");
+
+    auto length=CodeLength(address,minimumLength);
+    if(length<minimumLength)
+        throw gcnew LibmemException("LM_CodeLengthEx", "Could not cover the minimum instruction-aligned code length.");
+    if(length>static_cast<UInt64>(Int32::MaxValue))
+        throw gcnew ArgumentOutOfRangeException("minimumLength", "Instruction-aligned code exceeds managed array capacity.");
+
+    auto bytes=Libmem::ReadMemory(target,address,static_cast<int>(length));
+    if(bytes->LongLength!=static_cast<Int64>(length))
+        throw gcnew LibmemException("LM_ReadMemoryEx", "Could not read the complete instruction-aligned code range.");
+    return bytes;
+}
+
 } // namespace Libmem::NET
