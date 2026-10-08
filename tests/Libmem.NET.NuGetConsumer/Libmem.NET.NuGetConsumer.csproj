@@ -9,7 +9,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LibmemNetTestPackageVersion Condition="'$(LibmemNetTestPackageVersion)' == ''">0.0.0-local</LibmemNetTestPackageVersion>
-    <DefineConstants Condition="'$(LibmemNetTestUnreleasedApis)' == 'true'">$(DefineConstants);LIBMEM_NET_TEST_UNRELEASED_APIS</DefineConstants>
+    <!-- Local candidate builds explicitly opt in; released 2.4.0 consumers compile the new API checks by default. -->
+    <DefineConstants Condition="'$(LibmemNetTestUnreleasedApis)' == 'true' Or '$(LibmemNetTestPackageVersion)' == '2.4.0'">$(DefineConstants);LIBMEM_NET_TEST_UNRELEASED_APIS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

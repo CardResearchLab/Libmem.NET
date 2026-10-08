@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The current source is an **unpublished 2.4.0 release candidate**, adding read-only instruction-aligned code inspection and an ergonomic native symbol lookup helper. The latest published stable on GitHub and nuget.org remains **2.3.0**.
+The current source and published GitHub stable version are **2.4.0**, adding read-only instruction-aligned inspection (`ReadAlignedCode`) and ergonomic symbol lookup (`TryFindAddress`). NuGet 2.4.0 Trusted Publishing / OIDC push succeeded in Release #46; independent published-feed consumer acceptance is tracked by the Published NuGet Smoke workflow.
 
 Official support target:
 
@@ -22,11 +22,11 @@ Official support target:
 - C# / .NET consumers
 - a pinned rdbo/libmem native backend
 
-> The 2.4.0 candidate remains Windows x64/x86 / .NET 8 only and requires matching managed/native binaries. Explicit x64/x86 platform selection is mandatory; AnyCPU, ARM64 and cross-bitness operation remain unsupported.
+> Stable 2.4.0 remains Windows x64/x86 / .NET 8 only and requires matching managed/native binaries. Explicit x64/x86 platform selection is mandatory; AnyCPU, ARM64 and cross-bitness operation remain unsupported.
 
 ## Download
 
-GitHub and nuget.org publish stable **Libmem.NET 2.3.0**. Get the [v2.3.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) or install `Libmem.NET 2.3.0` from nuget.org. Public x64/x86 consumer validation passed in [Published NuGet Smoke #30](https://github.com/CardResearchLab/Libmem.NET/actions/runs/37811680065).
+**Libmem.NET 2.4.0 is released.** Get the [v2.4.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0) with x64/x86 runtime ZIPs and SHA-256 checksums, or install `dotnet add package Libmem.NET --version 2.4.0`. GitHub Release #45 and NuGet Trusted Publishing #46 succeeded. The [Published NuGet Smoke workflow](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) independently tests public-feed x64/x86 consumers.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
@@ -147,7 +147,7 @@ The lower-level static `NativeApi.*` (`global::Libmem.NET.Libmem`) surface remai
 - Assemble
 - Disassemble
 - CodeLength
-- `ReadAlignedCode` (2.4.0 candidate: read-only instruction inspection, not automatic Hook installation)
+- `ReadAlignedCode` (2.4.0: read-only instruction inspection, not automatic Hook installation)
 
 `AssemblyManager` defaults to the target process architecture.
 
@@ -228,7 +228,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The unpublished source candidate has `VERSION` / informational version `2.4.0` and assembly/file version `2.4.0.0`. The latest [stable v2.3.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) still provides the public x64/x86 runtime ZIPs, checksums and NuGet package.
+Stable 2.4.0 has `VERSION` / informational version `2.4.0` and assembly/file version `2.4.0.0`. The official [v2.4.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0) includes x64/x86 runtime ZIPs, checksums and `Libmem.NET.2.4.0.nupkg`. Prior stable 2.3.0 remains available.
 
 Build the release-style runtime ZIP locally:
 
@@ -285,7 +285,7 @@ The package ID is `Libmem.NET`, targeting Windows x64/x86 / .NET 8. CI validates
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-Release #43 completed Trusted Publishing / OIDC for 2.3.0, and public x64/x86 NuGet consumer smoke #30 passed. The public-NuGet smoke baseline is **2.3.0**. See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
+Release #45 published the 2.4.0 GitHub assets and Release #46 completed Trusted Publishing / OIDC for NuGet 2.4.0. The public-NuGet smoke baseline is **2.4.0**, independently exercised by the [Published NuGet Smoke workflow](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml). See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 

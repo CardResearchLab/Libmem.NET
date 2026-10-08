@@ -1,6 +1,6 @@
 # Libmem.NET 开发路线图
 
-`2.3.0` 已正式发布；2.4.0 的 Assembly/Symbols 功能 PR #129、边界测试和示例 PR #132 均已合并。Build #422 完整通过，当前进入独立的 **2.4.0 发布候选及交付验收阶段**，尚未发布 2.4.0。
+`2.4.0` 已正式发布：功能 PR #129、回归与示例 PR #132、候选 PR #133 均已合并；main Build #425、Release 预演 #44、GitHub 正式 Release #45 与 NuGet OIDC 推送 #46 全部通过。当前进入公网消费验收和稳定性维护阶段。
 
 > 当前策略：**Windows x64 与 x86 同级支持；共享设计保持架构中立，为后续 ARM64 留出扩展点。**
 
@@ -133,7 +133,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - 扫描/注入/资源生命周期开展回归审计，完善异常与正常 miss 的区分；
 - 已通过 Windows x86/x64 Release CI、NuGet consumer、GitHub Release #42 和公网 NuGet Smoke #30。
 
-## 发布候选阶段：v2.4.0 — Assembly / Symbols / Hook 实用增强
+## 已发布：v2.4.0 — Assembly / Symbols / Hook 实用增强
 
 - 优先完善现有 AssemblyManager / SymbolManager 的实用辅助接口、参数边界和运行时覆盖；
 - Hook/VMT 继续验证指令边界、生命周期、trampoline/原始字节一致性，避免未审核的跳板重定位改写；

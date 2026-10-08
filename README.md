@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前源码已进入 **2.4.0 发布候选阶段（尚未公开发布）**，新增指令对齐代码只读检查和更符合 .NET 习惯的符号查询接口；GitHub / nuget.org 当前正式稳定版仍为 **2.3.0**。
+当前源码与 GitHub 正式稳定版为 **2.4.0**：新增只读指令对齐检查 `ReadAlignedCode` 与符号查找 `TryFindAddress`。NuGet 2.4.0 的 Trusted Publishing / OIDC 推送（Release #46）已成功，公网消费端验收由 Published NuGet Smoke 工作流独立验证。
 
 正式支持范围：
 
@@ -22,11 +22,11 @@
 - C# / .NET 消费者
 - 固定版本的 rdbo/libmem native backend
 
-  2.4.0 候选仍只支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
+  2.4.0 正式版仍只支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
 
 ## 下载
 
-GitHub 与 nuget.org 当前公开正式稳定版为 **2.3.0**。下载 [v2.3.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0)；NuGet 安装请使用 `Libmem.NET 2.3.0`。公开包 x64/x86 消费者测试见 [Published NuGet Smoke #30](https://github.com/CardResearchLab/Libmem.NET/actions/runs/37811680065)。
+**2.4.0 已正式发布**：[GitHub Release v2.4.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0) 提供双架构运行时 ZIP、SHA-256 与 NuGet 包；安装命令为 `dotnet add package Libmem.NET --version 2.4.0`。GitHub Release #45 与 NuGet OIDC 发布 #46 均成功；新版公网消费者验收由 [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) 负责。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -147,7 +147,7 @@ Console.WriteLine(string.Join(", ", data));
 - Assemble
 - Disassemble
 - CodeLength
-- `ReadAlignedCode`（2.4.0 候选：只读、指令对齐，非自动 Hook 安装器）
+- `ReadAlignedCode`（2.4.0：只读、指令对齐，非自动 Hook 安装器）
 
 `AssemblyManager` 默认使用目标进程架构。
 
@@ -228,7 +228,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前源码候选版的 `VERSION` / informational version 为 `2.4.0`，程序集及文件版本为 `2.4.0.0`，尚未公开发布。现有正式 [GitHub Release v2.3.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) 继续提供稳定版 x64/x86 Runtime ZIP、SHA-256 和 NuGet 包。
+2.4.0 正式版 `VERSION` / informational version 为 `2.4.0`，程序集及文件版本为 `2.4.0.0`。[GitHub Release v2.4.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0) 提供双架构 Runtime ZIP、SHA-256 和 `Libmem.NET.2.4.0.nupkg`；旧版本 2.3.0 保留。
 
 生成正式风格 Runtime ZIP：
 
@@ -283,7 +283,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-Trusted Publishing / OIDC 发布任务 Release #43 成功，nuget.org 公网 x64/x86 消费者测试 #30 成功；公开 NuGet smoke 基线已更新为 **2.3.0**。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+2.4.0 的 GitHub Release #45 与 Trusted Publishing / OIDC Release #46 已成功；公开 NuGet smoke 基线现已更新为 **2.4.0**，x64/x86 消费者测试通过 [Published NuGet Smoke 工作流](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) 独立运行。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 
