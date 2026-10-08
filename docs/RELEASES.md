@@ -4,9 +4,14 @@ This document describes the official release channel, current stable release, su
 
 ## Current stable release
 
-The current source and published stable release are **2.2.1**, with numeric assembly/file versions `2.2.1.0`. GitHub and nuget.org both provide the official 2.2.1 release.
+The current source and published stable GitHub/nuget.org release are **2.3.0** (assembly/file `2.3.0.0`).
 
-The 2.2.1 stable patch preserves the 2.2.0 Public API, pinned native dependency, and multi-architecture package layout. It fixes scan final-candidate handling, injector error reporting, unsupported explicit NuGet PlatformTarget selection, and Release concurrency.
+Stable 2.3.0 adds target-process-bitness-aware pointer and 64-bit integer memory helpers plus pinned native C API coverage checks, preserving existing 2.2.1 public signatures and pinned libmem dependency.
+
+### Libmem.NET v2.3.0
+
+- Release: https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0
+- Release commit: `561bf1dfa82b7df2da4dc649a016c103f3af71ff`; GitHub Release #42; NuGet Trusted Publishing #43; public x64/x86 NuGet consumer smoke #30 passed. Supported targets: Windows x64/x86 / .NET 8.
 
 ### Libmem.NET v2.2.1
 
@@ -41,7 +46,7 @@ The historical `LibmemCli` → `Libmem.NET` identity migration remains documente
 
 ## Support boundary
 
-The supported target for the current 2.2.1 stable release is:
+The supported target for the current 2.3.0 stable release is:
 
 - Windows x64 and Windows x86;
 - .NET 8;
@@ -151,7 +156,7 @@ Use this when a consumer needs exact source provenance, reproducible native buil
 
 ### NuGet
 
-The `Libmem.NET` package path is validated through local-feed CI for both x64 and x86: restore/build/run/publish, architecture-matched managed/native asset copy, XML documentation, provenance, and AnyCPU rejection. The public nuget.org smoke baseline is 2.2.1, validated for x64/x86 PackageReference consumers. Historical v1.0.0 did not ship an official NuGet asset.
+The `Libmem.NET` package is validated through local-feed CI and public nuget.org smoke for 2.3.0 on x64 and x86: restore/build/run/publish, native asset copy, XML documentation, provenance, and unsupported architecture rejection. Historical v1.0.0 did not ship an official NuGet asset.
 
 `2.0.0-preview.1` was successfully published through the account-side Trusted Publishing policy and `NUGET_USER` flow. Future publications must re-verify those settings if the repository, workflow, environment, or publishing account changes. See [CONSUMPTION.md](CONSUMPTION.md).
 
@@ -167,7 +172,8 @@ The `Libmem.NET` package path is validated through local-feed CI for both x64 an
 
 | Version | Date | Status | Official platform |
 | --- | --- | --- | --- |
-| 2.2.1 | 2026-10-08 | Published stable on GitHub and nuget.org; current public PackageReference baseline | Windows x64/x86 / .NET 8 |
+| 2.3.0 | 2026-10-08 | Published stable on GitHub and nuget.org; public x64/x86 smoke #30 passed | Windows x64/x86 / .NET 8 |
+| 2.2.1 | 2026-10-08 | Previous published stable | Windows x64/x86 / .NET 8 |
 | 2.2.0 | 2026-10-08 | Previous published stable | Windows x64/x86 / .NET 8 |
 | 2.0.0-preview.1 | 2026-10-05 | Published prerelease, Libmem.NET identity | Windows x64 / .NET 8 |
 | 2.1.1 | 2026-10-07 | Previous published stable | Windows x64 / .NET 8 |

@@ -9,10 +9,10 @@ Libmem.NET is a Windows-focused C++/CLI wrapper for [rdbo/libmem](https://github
 ## Installation
 
 ```powershell
-dotnet add package Libmem.NET --version 2.2.1
+dotnet add package Libmem.NET --version 2.3.0
 ```
 
-`2.2.1` is a stability patch for the supported x64/x86 package: safer Release concurrency, improved diagnostics, fixed scan end-boundary handling, injection failure classification, and strict explicit PlatformTarget validation. It preserves the 2.2.0 Public API and pinned native dependency.
+`2.3.0` adds nonbreaking Windows x64/x86 typed-memory helpers (`ReadInt64`/`WriteInt64`, `ReadPointer`/`WritePointer`) plus a pinned native API coverage audit. This candidate is not published yet; use stable 2.2.1 until release verification is complete.
 
 ## Highlights
 
@@ -98,10 +98,10 @@ Libmem.NET 是一个面向 Windows 的 [rdbo/libmem](https://github.com/rdbo/lib
 ## 安装
 
 ```powershell
-dotnet add package Libmem.NET --version 2.2.1
+dotnet add package Libmem.NET --version 2.3.0
 ```
 
-`2.2.1` 是 x64/x86 稳定性修复版本：改进 Release 并发安全与诊断，修复扫描末尾边界、DLL 注入异常归类，并严格校验显式 PlatformTarget。保持 2.2.0 Public API 和固定 native 依赖不变。
+`2.3.0` 为 Windows x64/x86 新增 64 位整数和目标位宽指针读写，以及固定上游 C API 覆盖审计，保持 2.2.1 接口兼容且不增加 ARM64。候选版尚未正式发布，请在完成验证之前使用稳定版 2.2.1。
 
 ## 主要功能
 

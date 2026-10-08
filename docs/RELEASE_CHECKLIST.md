@@ -2,7 +2,18 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Current source and published stable: `2.2.1` (assembly/file `2.2.1.0`). GitHub Release #39 and nuget.org publication #40 succeeded. The patch preserves the 2.2.0 Public API, pinned rdbo/libmem revision, and dual-architecture delivery.
+Current source and published stable: `2.3.0` (assembly/file `2.3.0.0`). Feature PR #128, candidate PR #130, Release #41/#42/#43, and public consumer smoke #30 are complete.
+
+## 2.3.0 release gates
+
+- [x] PR #128 accepted, x64/x86 Release and multi-arch NuGet checks succeeded, and feature merged into main.
+- [x] Candidate metadata PR #130 passed Release x64/x86 and multi-arch NuGet tests (Build #412).
+- [x] PR #130 merged to main; accepted commit `561bf1dfa82b7df2da4dc649a016c103f3af71ff` passed Build #413.
+- [x] Branch `release/v2.3.0` Release #41 dry run passed without publishing.
+- [x] Tag `v2.3.0` references the accepted commit; GitHub Release #42 published validated x64/x86 assets and checksums.
+- [x] Tagged Release #43 completed NuGet Trusted Publishing (OIDC and push), and public x64/x86 Published NuGet Smoke #30 passed.
+- [x] After public consumer validation, PR #131 advances the public NuGet CI baseline to 2.3.0 and updates stable documentation.
+- [x] PR #129 (2.4.0) remained unmerged throughout 2.3.0 release and public verification.
 
 ## Repository acceptance
 
@@ -54,10 +65,10 @@ Current source and published stable: `2.2.1` (assembly/file `2.2.1.0`). GitHub R
 
 ## Compatibility boundary
 
-- x64 and x86 are supported release architectures in 2.2.1.
+- x64 and x86 are supported release architectures in 2.3.0.
 - Consumers must explicitly select x64 or x86; AnyCPU is unsupported.
 - Cross-bitness operation is not promised.
-- ARM64 remains a future architecture and is not a 2.2.1 production target.
+- ARM64 remains a future architecture and is not a 2.3.0 production target.
 - Game state, snapshots, IPC, Unity/Mono/Hearthstone policy and other application logic remain consumer responsibilities.
 
 See [RELEASES.md](RELEASES.md) and [CONSUMPTION.md](CONSUMPTION.md).
