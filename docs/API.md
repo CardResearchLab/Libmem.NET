@@ -233,9 +233,12 @@ Primary operations:
 
 - `Enumerate`
 - `FindAddress`
+- `TryFindAddress`
 - `Demangle`
 
 `ModuleInfo` remains a value object; symbol behavior belongs to `SymbolManager`.
+
+`TryFindAddress(module, name, demangle, out ulong address)` returns `true` with the resolved address or `false` with `address = 0` for a normal native bad-address miss. It does not swallow bad arguments, stale/foreign module identities, or target-session disposal. The existing `FindAddress` sentinel contract is unchanged.
 
 ### InstructionInfo
 
@@ -251,10 +254,13 @@ Primary operations:
 - `Disassemble(byte[] ...)`
 - `Disassemble(address ...)`
 - `CodeLength`
+- `ReadAlignedCode`
 
 The session's target architecture is used automatically.
 
 The address-based `Disassemble` overload first reads bytes through the current session and then disassembles those bytes. It does not treat a remote address as a local pointer.
+
+`ReadAlignedCode(address, minimumLength)` uses the target architecture's native `CodeLength` to determine a complete-instruction span, then reads exactly that span through the target session. Zero length returns an empty array. A nonzero query that fails to calculate or fully read the range throws `LibmemException`. It is a **read-only inspection helper**, not an atomic snapshot, instruction-relocation engine, or patch installer. Callers must still synchronize target execution and validate address/protection before mutation.
 
 Zero-size / empty-input behavior:
 

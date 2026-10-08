@@ -1,5 +1,17 @@
 # Changelog
 
+## Planned (target: 2.4.0; not released)
+
+### Added
+
+- Add read-only `AssemblyManager.ReadAlignedCode` to inspect complete target instructions with explicit short-read protection.
+- Add `SymbolManager.TryFindAddress` for ordinary not-found results while preserving `FindAddress`'s existing native sentinel contract.
+- Exercise both features in self-process and external-process runtime tests.
+
+### Compatibility
+
+- No native ABI upgrades or 2.x breaking changes; x64/x86 remain the only supported targets.
+
 ## 2.3.0 - 2026-10-08
 
 ### Added
