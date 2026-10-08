@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前源码为 **2.3.0 发布候选**（尚未公开发布）：新增 x64/x86 的 64 位整数与目标位宽指针读写，并完成固定 native libmem API 覆盖审计。GitHub / nuget.org 当前正式稳定版仍为 **2.2.1**。
+当前源码及 GitHub / nuget.org 正式稳定版均为 **2.3.0**：新增 Windows x64/x86 的 64 位整数和目标位宽指针读写，完成固定 native libmem API 覆盖审计。2.2.1 作为上一稳定版保留。
 
 正式支持范围：
 
@@ -22,11 +22,11 @@
 - C# / .NET 消费者
 - 固定版本的 rdbo/libmem native backend
 
-  2.3.0 候选仍只支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
+  2.3.0 正式版支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
 
 ## 下载
 
-GitHub 与 nuget.org 当前公开正式稳定版为 **2.2.1**。**2.3.0 仍处于发布候选阶段**，需通过正式发布和公网 NuGet 验证后才可使用。
+GitHub 与 nuget.org 当前公开正式稳定版为 **2.3.0**。下载 [v2.3.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0)；NuGet 安装请使用 `Libmem.NET 2.3.0`。公开包 x64/x86 消费者测试见 [Published NuGet Smoke #30](https://github.com/CardResearchLab/Libmem.NET/actions/runs/37811680065)。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -227,7 +227,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前源码候选版的 `VERSION` / informational version 为 `2.3.0`，程序集及文件版本为 `2.3.0.0`。公开正式稳定版仍为 **2.2.1**，可从 [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.2.1) 获取现有 x64/x86 下载包及校验文件。
+正式稳定版 `VERSION` / informational version 为 `2.3.0`，程序集及文件版本为 `2.3.0.0`。正式 [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) 提供 x64/x86 Runtime ZIP、SHA-256 校验文件及 `Libmem.NET.2.3.0.nupkg`。
 
 生成正式风格 Runtime ZIP：
 
@@ -282,7 +282,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-Trusted Publishing / OIDC 已成功发布并验证 2.2.1；当前公网 NuGet x64/x86 smoke 基线保持 **2.2.1**，只有在 2.3.0 正式发布并经公网消费者测试通过后才推进。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+Trusted Publishing / OIDC 发布任务 Release #43 成功，nuget.org 公网 x64/x86 消费者测试 #30 成功；公开 NuGet smoke 基线已更新为 **2.3.0**。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 

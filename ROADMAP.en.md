@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-`2.2.0` is now formally released: Windows x86 has completed runtime, external-process, NuGet, and Release delivery enablement and is promoted alongside x64 as an official target. GitHub and nuget.org both publish `2.2.0` as the current stable release. See the [migration guide](docs/MIGRATION.md) for the historical identity transition.
+`2.3.0` is formally published on GitHub and nuget.org and passed public x64/x86 NuGet consumer smoke #30. The next development stage is 2.4.0 Assembly/Symbol enhancements, beginning with PR #129.
 
 > Current strategy: **Windows x64 and x86 are first-class targets; shared design stays architecture-neutral for a future ARM64 phase.**
 
@@ -116,7 +116,7 @@ Those concerns belong to consumers such as StandaloneGameMod, not Libmem.NET.
 - XML IntelliSense / `docs/API.md` match implementation behavior;
 - NuGet consumer restore/build/run smoke passes.
 
-## Current: v2.2.0 — Official Windows x86 support
+## Completed: v2.2.0 — Official Windows x86 support
 
 The 2.2.0 release goal is to formally deliver the already validated x86 capability:
 
@@ -126,7 +126,7 @@ The 2.2.0 release goal is to formally deliver the already validated x86 capabili
 - one NuGet package provides architecture-matched x64/x86 assets and rejects AnyCPU;
 - the 2.1.1 Public API and pinned libmem revision remain unchanged.
 
-## Next: v2.3.0 — Native API Coverage / Upstream Sync
+## Completed: v2.3.0 — Native API coverage and typed pointer helpers
 
 After stable 2.2.0 publication, systematically compare against the pinned rdbo/libmem revision:
 
