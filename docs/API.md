@@ -120,6 +120,10 @@ Primary operations:
 - `Write`
 - `ReadInt32`
 - `WriteInt32`
+- `ReadInt64`
+- `WriteInt64`
+- `ReadPointer`
+- `WritePointer`
 - `Set`
 - `Protect`
 - `Allocate`
@@ -134,6 +138,8 @@ Pointer resolution and scanning are owned by `ProcessSession.Scanner`. The tempo
 `Write(address, data)` returns the number of bytes actually written.
 
 Short operations are therefore observable results and are not automatically converted into exceptions.
+
+Typed `ReadInt32`/`WriteInt32` and `ReadInt64`/`WriteInt64` require a complete 4- or 8-byte transfer and throw `LibmemException` on a short transfer. `ReadPointer` and `WritePointer` follow the target session's 32- or 64-bit pointer size (not `IntPtr.Size` of an unrelated caller), return zero-extended `ulong` values, and likewise require a complete transfer. `WritePointer` rejects a value above `uint.MaxValue` for 32-bit targets with `ArgumentOutOfRangeException("value")`. Only supported x86/x64 target architectures are accepted; byte order follows the Windows runtime's little-endian representation.
 
 #### Zero-size memory operations
 

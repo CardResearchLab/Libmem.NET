@@ -106,6 +106,10 @@ TYPE public ref class MemoryManager sealed
   int Write(UInt64 address, array<Byte>^ data);
   Int32 ReadInt32(UInt64 address);
   void WriteInt32(UInt64 address, Int32 value);
+  Int64 ReadInt64(UInt64 address);
+  void WriteInt64(UInt64 address, Int64 value);
+  UInt64 ReadPointer(UInt64 address);
+  void WritePointer(UInt64 address, UInt64 value);
   UInt64 Set(UInt64 address, Byte value, UInt64 size);
   MemoryProtection Protect(UInt64 address, UInt64 size, MemoryProtection protection);
   RemoteAllocation^ Allocate(UInt64 size, MemoryProtection protection);

@@ -295,6 +295,16 @@ namespace Libmem::NET {
         Int32 ReadInt32(UInt64 address);
         /// <summary>Writes a 32-bit signed integer to the target process.</summary>
         void WriteInt32(UInt64 address, Int32 value);
+        /// <summary>Reads a 64-bit signed integer from the target process, or throws on a short read.</summary>
+        Int64 ReadInt64(UInt64 address);
+        /// <summary>Writes a 64-bit signed integer to the target process, or throws on a short write.</summary>
+        void WriteInt64(UInt64 address, Int64 value);
+        /// <summary>Reads a pointer using the target process bitness (32 or 64 bits).</summary>
+        /// <remarks>Returns the pointer zero-extended to UInt64. Throws on a short read.</remarks>
+        UInt64 ReadPointer(UInt64 address);
+        /// <summary>Writes a pointer using the target process bitness (32 or 64 bits).</summary>
+        /// <exception cref="ArgumentOutOfRangeException">A pointer value cannot fit in the 32-bit target.</exception>
+        void WritePointer(UInt64 address, UInt64 value);
         /// <summary>Fills a target-process memory range with one byte value.</summary>
         UInt64 Set(UInt64 address, Byte value, UInt64 size);
         /// <summary>Changes target-process memory protection and returns the previous protection.</summary>

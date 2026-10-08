@@ -523,6 +523,26 @@ Check(ownedWritten == ownedPayload.Length, "MemoryManager.Write failed.");
 var ownedRead = memory.Read(ownedAllocation.Address, ownedPayload.Length);
 Check(ownedRead.SequenceEqual(ownedPayload), "MemoryManager.Read returned different data.");
 
+// Typed reads/writes share Read/Write's partial-I/O contract but require a complete value.
+const long signedValue = -0x102030405060708L;
+memory.WriteInt64(ownedAllocation.Address + 64, signedValue);
+Check(memory.ReadInt64(ownedAllocation.Address + 64) == signedValue,
+    "MemoryManager.ReadInt64 / WriteInt64 round trip failed.");
+const ulong pointerValue = 0x12345678UL;
+memory.WritePointer(ownedAllocation.Address + 80, pointerValue);
+Check(memory.ReadPointer(ownedAllocation.Address + 80) == pointerValue,
+    "MemoryManager.ReadPointer / WritePointer round trip failed.");
+Check(memory.Read(ownedAllocation.Address + 80, IntPtr.Size).SequenceEqual(PointerBytes(pointerValue)),
+    "MemoryManager.WritePointer ignored the target architecture width.");
+if (IntPtr.Size == sizeof(uint))
+{
+    var pointerOverflow = ExpectThrows<ArgumentOutOfRangeException>(
+        () => memory.WritePointer(ownedAllocation.Address + 80, (ulong)uint.MaxValue + 1),
+        "WritePointer must reject values that cannot fit a 32-bit process.");
+    Check(pointerOverflow.ParamName == "value",
+        "WritePointer overflow reported the wrong parameter name.");
+}
+
 Check(scanner.DataScan(ownedPayload, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
     "ScanManager.DataScan failed.");
 var ownedMask = new string('x', ownedPayload.Length);
