@@ -7,6 +7,8 @@
 - Add read-only `AssemblyManager.ReadAlignedCode` to inspect complete target instructions with explicit short-read protection.
 - Add `SymbolManager.TryFindAddress` for ordinary not-found results while preserving `FindAddress`'s existing native sentinel contract.
 - Exercise both features in self-process and external-process runtime tests.
+- Add 2.4 API argument/identity regression coverage and independent NuGet consumer API checks.
+- Demonstrate native symbol discovery and read-only instruction inspection in C# consumer samples.
 
 ### Compatibility
 

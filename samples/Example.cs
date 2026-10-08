@@ -41,6 +41,36 @@ static void RunSample()
             $"First module: {first.Name}  Base=0x{first.Base:X}  Size=0x{first.Size:X}");
     }
 
+    // Native exports are optional: some PE modules have no enumerable symbols.
+    var displayedSymbol = false;
+    foreach (var module in modules)
+    {
+        SymbolInfo? exported;
+        try
+        {
+            exported = session.Symbols.Enumerate(module, demangle: false)
+                .FirstOrDefault(symbol => !string.IsNullOrWhiteSpace(symbol.Name)
+                    && symbol.Address != 0
+                    && symbol.Address != (session.Bits == 32 ? (ulong)uint.MaxValue : ulong.MaxValue));
+        }
+        catch (LibmemException)
+        {
+            continue;
+        }
+
+        if (exported is null)
+            continue;
+        if (!session.Symbols.TryFindAddress(module, exported.Name, demangle: false, out var resolved)
+            || resolved != exported.Address)
+            throw new InvalidOperationException("TryFindAddress disagreed with the enumerated export.");
+
+        Console.WriteLine($"Export: {exported.Name} @ 0x{resolved:X}");
+        displayedSymbol = true;
+        break;
+    }
+    if (!displayedSymbol)
+        Console.WriteLine("No enumerable native export found; symbol example skipped.");
+
     using var allocation = session.Memory.Allocate(
         4096,
         MemoryProtection.ReadWrite);

@@ -461,6 +461,17 @@ Check(pidSession.Symbols.FindAddress(symbolModule!, missingSymbolName, demangle:
 Check(!pidSession.Symbols.TryFindAddress(symbolModule!, missingSymbolName, demangle: false, out var missingSymbolAddress)
       && missingSymbolAddress == 0,
     "SymbolManager.TryFindAddress should return false/zero for a normal symbol miss.");
+
+var nullTrySymbolModule = ExpectThrows<ArgumentNullException>(
+    () => pidSession.Symbols.TryFindAddress(null!, "unused", demangle: false, out _),
+    "SymbolManager.TryFindAddress should reject a null module.");
+Check(nullTrySymbolModule.ParamName == "module",
+    "TryFindAddress(null module) reported the wrong parameter name.");
+var nullTrySymbolName = ExpectThrows<ArgumentNullException>(
+    () => pidSession.Symbols.TryFindAddress(symbolModule!, null!, demangle: false, out _),
+    "SymbolManager.TryFindAddress should reject a null name.");
+Check(nullTrySymbolName.ParamName == "name",
+    "TryFindAddress(null name) reported the wrong parameter name.");
 Check(NativeApi.FindSymbolAddress(symbolModule!, missingSymbolName, demangle: false) == invalidAddress,
     "Static FindSymbolAddress miss should preserve the native bad-address sentinel.");
 
@@ -764,6 +775,12 @@ try
     Check(alignedCode.Length == (int)remoteCodeLength
           && alignedCode[0] == machineCode[0],
         "ReadAlignedCode did not return complete instructions from the target.");
+
+    var oversizedAlignedRead = ExpectThrows<ArgumentOutOfRangeException>(
+        () => assembly.ReadAlignedCode(address, (ulong)int.MaxValue + 1UL),
+        "ReadAlignedCode should reject requests beyond managed array capacity.");
+    Check(oversizedAlignedRead.ParamName == "minimumLength",
+        "ReadAlignedCode oversized request reported the wrong parameter name.");
 
     // v0.x compatibility for existing static assembly/disassembly APIs.
     var localCodeLength = NativeApi.CodeLength(address, 1);

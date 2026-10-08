@@ -30,6 +30,13 @@ if (session.Memory.Write(source.Address, sourceCode) != sourceCode.Length ||
     session.Memory.Write(destination.Address, destinationCode) != destinationCode.Length)
     throw new InvalidOperationException("Could not write generated code.");
 
+// Read-only instruction inspection is not a hook installation or relocation step.
+var originalInstruction = session.Assembly.ReadAlignedCode(source.Address, 1);
+if (originalInstruction.Length == 0
+    || originalInstruction.Length > sourceCode.Length
+    || !originalInstruction.SequenceEqual(sourceCode.Take(originalInstruction.Length)))
+    throw new InvalidOperationException("Could not inspect the original complete instruction.");
+
 Console.WriteLine($"Before hook: {CallNoArgs(source.Address)}");
 
 try
@@ -42,6 +49,10 @@ try
 
     if (!hook.Remove())
         throw new InvalidOperationException("Hook removal failed; ownership is retained and may be retried.");
+
+    var restoredInstruction = session.Assembly.ReadAlignedCode(source.Address, 1);
+    if (!restoredInstruction.SequenceEqual(originalInstruction))
+        throw new InvalidOperationException("Hook removal did not restore the inspected instruction.");
 
     Console.WriteLine($"Restored:    {CallNoArgs(source.Address)}");
 }
