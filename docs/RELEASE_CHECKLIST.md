@@ -2,7 +2,7 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Current source and published GitHub/nuget.org stable: `2.2.0`. Numeric assembly/file versions are `2.2.0.0`. The release preserves the 2.1.1 Public API and pinned rdbo/libmem revision while promoting x86 to official support.
+Current source candidate: `2.2.1` (assembly/file `2.2.1.0`); latest published GitHub/nuget.org stable: `2.2.0`. This patch preserves the 2.2.0 Public API, pinned rdbo/libmem revision, and dual-architecture delivery.
 
 ## Repository acceptance
 
@@ -42,6 +42,14 @@ Current source and published GitHub/nuget.org stable: `2.2.0`. Numeric assembly/
 - [x] Manually run Release on the published tag with `publish-nuget` enabled.
 - [x] Restore independent x64 and x86 consumers from nuget.org using exact version `2.2.0`, then build, run and publish both.
 - [x] Advance the automatic public-NuGet smoke baseline from 2.1.1 to 2.2.0 only after public x64/x86 validation succeeds.
+
+## 2.2.1 publication readiness (do not publish before all gates)
+
+- [ ] Release-preparation PR passes required x64, x86, and multi-architecture NuGet gates using exact 2.2.1 metadata.
+- [ ] Merge the PR into `main` and confirm the resulting `main` Build passes all required jobs.
+- [ ] Create `release/v2.2.1` from the accepted main commit and confirm dry-run Release output, both ZIPs/checksums, the exact-version NuGet package, and generated notes.
+- [ ] Review the exact provenance and complete checksums; only then create `v2.2.1` (a separate, later publication step).
+- [ ] After GitHub Release, manually run tagged Release with `publish-nuget`; verify public NuGet x64/x86 consumers before advancing the smoke baseline.
 
 ## Compatibility boundary
 
