@@ -1,8 +1,8 @@
 # Libmem.NET Consumption Guide
 
-> Current 2.2.0 candidate target: Windows x64/x86 / .NET 8.
+> Current stable target: Windows x64/x86 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. The source candidate is `2.2.0`; stable `2.1.1` remains published on GitHub and nuget.org until the new release completes. Historical v1.0.0 uses `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. GitHub and nuget.org both publish stable `2.2.0`. Historical v1.0.0 uses `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
@@ -121,6 +121,8 @@ Libmem.NET is not an AnyCPU managed library:
 - x64 consumers use the x64 C++/CLI assembly plus x64 `libmem.dll` / `Ijwhost.dll`;
 - x86 consumers use the x86 C++/CLI assembly plus x86 `libmem.dll` / `Ijwhost.dll`;
 - architecture must be explicit at build and runtime;
+- when `PlatformTarget` is explicitly set, it must be `x64` or `x86`; unsupported values such as `AnyCPU` or `arm64` are rejected even if `Platform` is x64/x86;
+- `Platform` is used as the architecture fallback only when `PlatformTarget` is empty; `Win32` maps to x86;
 - cross-bitness operation is not promised;
 - ARM64 is not a 2.2.0 production target.
 
@@ -134,8 +136,9 @@ A public 2.2.0 NuGet release requires:
 4. architecture-matched `Libmem.NET.dll`, `libmem.dll`, and `Ijwhost.dll` in output;
 5. XML documentation availability;
 6. AnyCPU rejection with a clear diagnostic;
-7. version/provenance agreement with the exact repository release;
-8. post-publication nuget.org smoke for both x64 and x86.
+7. rejection of unsupported explicit `PlatformTarget` values even when `Platform` names a supported architecture;
+8. version/provenance agreement with the exact repository release;
+9. post-publication nuget.org smoke for both x64 and x86.
 
 ## Trusted Publishing setup
 
@@ -161,6 +164,6 @@ The successful `2.0.0-preview.1` publication proves the current Trusted Publishi
 
 ## Current recommendation
 
-Until 2.2.0 is published, normal public PackageReference consumption should continue using stable `Libmem.NET 2.1.1`. The 2.2.0 candidate is validated for explicit x64 and x86 consumption through local CI. After publication, run exact-version nuget.org smoke tests for both architectures before advancing the documented public baseline.
+Normal public PackageReference consumption should use stable `Libmem.NET 2.2.0` with an explicit x64 or x86 target. The public nuget.org smoke baseline validates both supported architectures. During 2.2.1 maintenance development, keep production consumers on 2.2.0 until the patch release completes its release gates.
 
 See [RELEASES.md](RELEASES.md) for release history, support boundaries and versioning, and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the next publication.

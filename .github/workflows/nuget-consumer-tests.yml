@@ -130,3 +130,24 @@ jobs:
             throw "NuGet package unexpectedly accepted an AnyCPU consumer."
           }
           $global:LASTEXITCODE = 0
+
+
+      - name: Reject unsupported explicit PlatformTarget
+        shell: pwsh
+        run: |
+          $version = (Get-Content .\artifacts\nuget\package-version.txt -Raw).Trim()
+          foreach ($unsupportedTarget in @("AnyCPU", "arm64")) {
+            dotnet build `
+              .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
+              -c Release `
+              --no-restore `
+              -p:Platform=x64 `
+              -p:PlatformTarget=$unsupportedTarget `
+              -p:LibmemNetTestPackageVersion=$version
+
+            if ($LASTEXITCODE -eq 0) {
+              throw "NuGet package unexpectedly accepted Platform=x64 with PlatformTarget=$unsupportedTarget."
+            }
+
+            $global:LASTEXITCODE = 0
+          }

@@ -2,8 +2,8 @@
   <PropertyGroup>
     <_LibmemNetPlatform Condition="'$(PlatformTarget)' == 'x64'">x64</_LibmemNetPlatform>
     <_LibmemNetPlatform Condition="'$(PlatformTarget)' == 'x86'">x86</_LibmemNetPlatform>
-    <_LibmemNetPlatform Condition="'$(_LibmemNetPlatform)' == '' and '$(Platform)' == 'x64'">x64</_LibmemNetPlatform>
-    <_LibmemNetPlatform Condition="'$(_LibmemNetPlatform)' == '' and ('$(Platform)' == 'x86' or '$(Platform)' == 'Win32')">x86</_LibmemNetPlatform>
+    <_LibmemNetPlatform Condition="'$(PlatformTarget)' == '' and '$(Platform)' == 'x64'">x64</_LibmemNetPlatform>
+    <_LibmemNetPlatform Condition="'$(PlatformTarget)' == '' and ('$(Platform)' == 'x86' or '$(Platform)' == 'Win32')">x86</_LibmemNetPlatform>
 
     <_LibmemNetRuntimeRoot Condition="'$(_LibmemNetPlatform)' != ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\runtimes\win-$(_LibmemNetPlatform)'))</_LibmemNetRuntimeRoot>
     <_LibmemNetManagedRoot Condition="'$(_LibmemNetPlatform)' != ''">$(_LibmemNetRuntimeRoot)\lib\net8.0</_LibmemNetManagedRoot>
@@ -13,6 +13,8 @@
   <Target Name="LibmemNetValidatePlatform" BeforeTargets="ResolveReferences">
     <Error Condition="'$(OS)' != 'Windows_NT'"
            Text="Libmem.NET currently supports only Windows x64/x86." />
+    <Error Condition="'$(PlatformTarget)' != '' and '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86'"
+           Text="Libmem.NET requires PlatformTarget x64 or x86 when PlatformTarget is set. AnyCPU, ARM64, and other targets are unsupported." />
     <Error Condition="'$(_LibmemNetPlatform)' == ''"
            Text="Libmem.NET requires an explicit Windows architecture. Set PlatformTarget or Platform to x64 or x86." />
     <Error Condition="!Exists('$(_LibmemNetManagedRoot)\Libmem.NET.dll')"
