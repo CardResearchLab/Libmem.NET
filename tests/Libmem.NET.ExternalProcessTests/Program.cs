@@ -368,6 +368,12 @@ try
     Check(foreignSymbolLookup.ParamName == "module",
         "SymbolManager.FindAddress reported the wrong parameter name for a foreign ModuleInfo.");
 
+    var foreignTrySymbolLookup = ExpectThrows<ArgumentException>(
+        () => session.Symbols.TryFindAddress(foreignModule, "unused", demangle: false, out _),
+        "SymbolManager.TryFindAddress should reject a ModuleInfo from another process.");
+    Check(foreignTrySymbolLookup.ParamName == "module",
+        "SymbolManager.TryFindAddress reported the wrong parameter name for a foreign ModuleInfo.");
+
     byte[] expected =
     [
         0x4C, 0x49, 0x42, 0x4D, 0x45, 0x4D,

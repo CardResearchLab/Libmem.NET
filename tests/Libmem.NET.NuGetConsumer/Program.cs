@@ -103,6 +103,22 @@ var process = NativeApi.CurrentProcess()
 using var session = ProcessSession.Open(process)
     ?? throw new InvalidOperationException("ProcessSession.Open failed through the NuGet package.");
 
+#if LIBMEM_NET_TEST_UNRELEASED_APIS
+// Verify both 2.4 APIs against the *local candidate*, not the published 2.3 baseline.
+if (session.Assembly.ReadAlignedCode(0, 0).Length != 0)
+    throw new InvalidOperationException("Zero-length instruction inspection should return no bytes.");
+
+try
+{
+    _ = session.Symbols.TryFindAddress(null!, "unused", false, out _);
+    throw new InvalidOperationException("TryFindAddress must reject a null module.");
+}
+catch (ArgumentNullException ex) when (ex.ParamName == "module")
+{
+    // Expected managed argument contract.
+}
+#endif
+
 using var allocation = session.Memory.Allocate(
     4096,
     MemoryProtection.ReadWrite);

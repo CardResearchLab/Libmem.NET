@@ -262,6 +262,17 @@ The address-based `Disassemble` overload first reads bytes through the current s
 
 `ReadAlignedCode(address, minimumLength)` uses the target architecture's native `CodeLength` to determine a complete-instruction span, then reads exactly that span through the target session. Zero length returns an empty array. A nonzero query that fails to calculate or fully read the range throws `LibmemException`. It is a **read-only inspection helper**, not an atomic snapshot, instruction-relocation engine, or patch installer. Callers must still synchronize target execution and validate address/protection before mutation.
 
+Typical consumers can combine these *read-only* inspection operations with explicit native symbol lookup:
+
+```csharp
+var code = session.Assembly.ReadAlignedCode(sourceAddress, minimumLength: 5);
+// code covers whole instructions, not necessarily exactly five bytes.
+if (session.Symbols.TryFindAddress(module, exportedName, demangle: false, out var address))
+    Console.WriteLine($"Export at 0x{address:X}");
+```
+
+The sample projects in `samples/Example.cs` and `samples/HookLifecycle/` demonstrate discovery, bounded inspection and explicit HookHandle removal. A successful code read alone does not certify trampoline relocation safety, concurrent thread safety or permission to modify the target.
+
 Zero-size / empty-input behavior:
 
 - `Disassemble(byte[0], ...)` returns an empty list.
