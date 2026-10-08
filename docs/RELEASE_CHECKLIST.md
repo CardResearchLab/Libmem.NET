@@ -50,7 +50,7 @@ Current source and published stable: `2.2.1` (assembly/file `2.2.1.0`). GitHub R
 - [x] Created `release/v2.2.1` from the accepted commit; Release #38 dry run passed ZIP/checksum, exact-version NuGet, and generated release-note verification.
 - [x] Validated release provenance and checksums; created `v2.2.1` at the accepted commit and published GitHub Release with x64/x86 assets (Release #39).
 - [x] Published nuget.org package through tagged Release #40 (`NuGet login (OIDC)` and `Publish Libmem.NET to nuget.org` both passed).
-- [ ] Verify public nuget.org-only PackageReference restore/build/run/publish on x64 and x86, and rejected AnyCPU/arm64 explicit targets; PR smoke CI must pass before merging the 2.2.1 baseline.
+- [x] Verified published nuget.org-only 2.2.1 PackageReference restore/build/run/publish on x64 and x86, both architecture-matched runtime assets, and rejection of AnyCPU/arm64 explicit targets (Published NuGet Smoke #26).
 
 ## Compatibility boundary
 
