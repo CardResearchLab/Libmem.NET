@@ -41,7 +41,7 @@ The historical `LibmemCli` → `Libmem.NET` identity migration remains documente
 
 ## Support boundary
 
-The supported target for 2.2.0 is:
+The supported target for the current 2.2.1 stable release is:
 
 - Windows x64 and Windows x86;
 - .NET 8;
