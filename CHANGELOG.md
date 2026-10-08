@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.2.1 - Unreleased (maintenance)
+
+### Fixed
+
+- Prevent duplicate Release workflow runs for the same ref from publishing concurrently; preserve duplicate-package safeguards.
+- Enable architecture-selectable x64/x86 manual Hook/VMT and Injector diagnostic workflows.
+- Report existing-but-unloadable DLL injection as `LM_LoadModuleEx` failure rather than a successful-enumeration `LM_EnumModulesEx` failure.
+- Recover the omitted final legal scan candidate for DataScan, PatternScan, and SigScan, including exact-size windows; reject address-width range wrap.
+- Reject unsupported explicit NuGet `PlatformTarget` values (including `AnyCPU` and `arm64`) instead of silently falling back to `Platform`.
+
+### Compatibility
+
+- Preserve the 2.2.0 Public API, pinned native libmem revision, and Windows x64/x86 package layout.
+- ARM64 and AnyCPU remain unsupported; x64/x86 consumers must select a supported architecture.
+- This section is a draft; do not publish or advance `VERSION` until the merged-main x64/x86 and multi-architecture NuGet gates pass.
+
 ## 2.2.0 - 2026-10-08
 
 ### Platform support
