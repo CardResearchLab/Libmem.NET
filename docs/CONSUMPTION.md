@@ -62,7 +62,7 @@ Architecture selection: explicit Platform / PlatformTarget
 Unsupported: AnyCPU
 ```
 
-Development packages use a commit-qualified version derived from `VERSION`, for example `2.2.0-dev.<commit>`. CI stamps repository URL and exact Git commit provenance into the package.
+Development packages use a commit-qualified version derived from `VERSION`, for example `2.2.1-dev.<commit>` on the current 2.2.1 candidate branch. CI stamps repository URL and exact Git commit provenance into the package.
 
 ### Package layout
 
@@ -85,7 +85,7 @@ Build both runtime architectures first, then compose the package:
 .\eng\package-runtime.ps1 -Configuration Release -Platform x64
 .\build.ps1 -Configuration Release -Platform x86
 .\eng\package-runtime.ps1 -Configuration Release -Platform x86
-.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.2.0
+.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.2.1
 ```
 
 The automatic Build gate performs the equivalent composition from verified x64/x86 runtime artifacts.
@@ -124,11 +124,11 @@ Libmem.NET is not an AnyCPU managed library:
 - when `PlatformTarget` is explicitly set, it must be `x64` or `x86`; unsupported values such as `AnyCPU` or `arm64` are rejected even if `Platform` is x64/x86;
 - `Platform` is used as the architecture fallback only when `PlatformTarget` is empty; `Win32` maps to x86;
 - cross-bitness operation is not promised;
-- ARM64 is not a 2.2.0 production target.
+- ARM64 is not a 2.2.1 production target.
 
 ## NuGet release acceptance criteria
 
-A public 2.2.0 NuGet release requires:
+A public 2.2.1 NuGet release requires:
 
 1. multi-architecture package layout/provenance verification;
 2. independent x64 restore/build/run/publish success;
