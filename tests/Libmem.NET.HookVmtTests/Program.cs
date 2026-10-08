@@ -137,8 +137,13 @@ Check(CallNoArgs(source.Address) == 1, "Source behavior was not restored after R
 var restoredAlignedCode = session.Assembly.ReadAlignedCode(source.Address, hook.PatchedBytes);
 Check((ulong)restoredAlignedCode.Length >= hook.PatchedBytes,
     "ReadAlignedCode failed to cover the restored HookHandle patch span.");
-Check(restoredAlignedCode.Take(sourceCode.Length).SequenceEqual(sourceCode),
-    "ReadAlignedCode did not preserve original function bytes after Unhook.");
+// The requested instruction-aligned span can be shorter than the entire source function.
+// Compare only bytes actually returned, then check the full original function independently.
+var comparedBytes = Math.Min(restoredAlignedCode.Length, sourceCode.Length);
+Check(restoredAlignedCode.Take(comparedBytes).SequenceEqual(sourceCode.Take(comparedBytes)),
+    "ReadAlignedCode returned unexpected restored instruction bytes after Unhook.");
+Check(memory.Read(source.Address, sourceCode.Length).SequenceEqual(sourceCode),
+    "HookHandle.Remove did not restore all original source function bytes.");
 Check(hook.Remove(), "HookHandle.Remove should be idempotent after a successful removal.");
 
 var disposeHook = session.Hooks.Install(source.Address, destination.Address);
