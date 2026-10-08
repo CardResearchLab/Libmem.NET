@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The current source version is **2.2.1 (unpublished release candidate)**, while the latest published stable release on GitHub and nuget.org remains **2.2.0**. Version 2.2.1 fixes scanning boundaries, injection error classification, NuGet architecture selection, and release workflow safety without changing the 2.2.0 Public API, pinned rdbo/libmem revision, or x64/x86 package layout. Historical stable **v1.0.0** uses `LibmemCli`; see the [migration guide](docs/MIGRATION.md).
+The current source and the published stable release on GitHub and nuget.org are both **2.2.1**. This compatible patch fixes scan boundaries, injection error classification, NuGet architecture selection, and Release concurrency while preserving the 2.2.0 Public API, pinned rdbo/libmem revision, and x64/x86 package layout. Historical **v1.0.0** used `LibmemCli`; see the [migration guide](docs/MIGRATION.md).
 
 Official support target:
 
@@ -22,11 +22,11 @@ Official support target:
 - C# / .NET consumers
 - a pinned rdbo/libmem native backend
 
-> Libmem.NET 2.2.0 uses architecture-matched C++/CLI and native runtime assets for both x64 and x86. Consumers must explicitly select `x64` or `x86`; `AnyCPU` and cross-bitness operation are unsupported.
+> Libmem.NET 2.2.1 uses architecture-matched C++/CLI and native runtime assets for both x64 and x86. Consumers must explicitly select `x64` or `x86`; `AnyCPU` and cross-bitness operation are unsupported.
 
 ## Download
 
-GitHub and nuget.org both publish stable **Libmem.NET 2.2.0**. `2.1.1` remains available as the previous stable release.
+GitHub and nuget.org both publish stable **Libmem.NET 2.2.1**. The previous stable **2.2.0** remains available.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
@@ -227,7 +227,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The current source candidate is **2.2.1**, with `VERSION` / informational version `2.2.1` and numeric assembly/file versions `2.2.1.0`. The latest published stable version is still **2.2.0**: its GitHub Release offers x64/x86 runtime ZIPs, checksums, and `Libmem.NET.2.2.0.nupkg`, and nuget.org provides `2.2.0` PackageReference consumption. Continue using the published 2.2.0 package until 2.2.1 is released.
+The current stable release is **2.2.1**, with `VERSION` / informational version `2.2.1` and numeric assembly/file versions `2.2.1.0`. The official [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.2.1) provides x64/x86 runtime ZIPs, checksums, and `Libmem.NET.2.2.1.nupkg`. Nuget.org provides exact-version `Libmem.NET 2.2.1` PackageReference consumption.
 
 Build the release-style runtime ZIP locally:
 
@@ -284,7 +284,7 @@ The package ID is `Libmem.NET`, targeting Windows x64/x86 / .NET 8. CI validates
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-The Trusted Publishing / OIDC flow has been exercised successfully through public PackageReference consumption. Stable `2.2.0` is published on GitHub and nuget.org, and the public-NuGet smoke baseline advances to 2.2.0 with x64/x86 coverage; `2.1.1` remains the previous stable release. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
+Trusted Publishing / OIDC login and the 2.2.1 NuGet push succeeded in Release #40. The public-NuGet smoke baseline is 2.2.1, covering x64/x86 restore, build, run, publish assets, and architecture rejection. Previous stable 2.2.0 remains available. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 
