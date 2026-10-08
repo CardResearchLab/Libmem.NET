@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前源码及 GitHub / nuget.org 正式稳定版均为 **2.3.0**：新增 Windows x64/x86 的 64 位整数和目标位宽指针读写，完成固定 native libmem API 覆盖审计。2.2.1 作为上一稳定版保留。
+当前源码正在准备 **2.4.0 发布候选**（尚未发布）；GitHub / nuget.org 当前正式稳定版仍为 **2.3.0**。2.4.0 新增只读指令对齐读取 `ReadAlignedCode` 和符号查询 `TryFindAddress`，维持 Windows x64/x86、.NET 8、现有 Hook/VMT/Injector 行为及固定原生依赖。
 
 正式支持范围：
 
@@ -227,7 +227,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-正式稳定版 `VERSION` / informational version 为 `2.3.0`，程序集及文件版本为 `2.3.0.0`。正式 [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) 提供 x64/x86 Runtime ZIP、SHA-256 校验文件及 `Libmem.NET.2.3.0.nupkg`。
+2.4.0 发布候选源码使用 `VERSION` / informational version `2.4.0`，程序集及文件版本 `2.4.0.0`；**尚未发布到 GitHub / nuget.org**。当前正式 [v2.3.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) 仍提供 x64/x86 Runtime ZIP、SHA-256 校验文件及 `Libmem.NET.2.3.0.nupkg`。
 
 生成正式风格 Runtime ZIP：
 

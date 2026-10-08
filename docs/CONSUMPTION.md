@@ -2,7 +2,7 @@
 
 > Current stable target: Windows x64/x86 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. Stable `2.3.0` is published on GitHub and nuget.org, and the exact-version public-feed x64/x86 consumer smoke has passed. Historical v1.0.0 used `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. The source is preparing 2.4.0 (not published); stable `2.3.0` remains available on GitHub and nuget.org, and the exact-version public-feed x64/x86 consumer smoke has passed. Historical v1.0.0 used `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
@@ -51,7 +51,7 @@ This is useful when the consumer wants:
 
 ## 3. NuGet package
 
-The 2.3.0 stable release uses one multi-architecture package:
+The current published 2.3.0 stable release uses one multi-architecture package; the 2.4.0 candidate retains the same layout:
 
 ```text
 Package ID: Libmem.NET
@@ -62,7 +62,7 @@ Architecture selection: explicit Platform / PlatformTarget
 Unsupported: AnyCPU
 ```
 
-Development packages use a commit-qualified version derived from `VERSION`, for example `2.3.0-dev.<commit>`. CI stamps repository URL and exact Git commit provenance into the package.
+Development packages use a commit-qualified version derived from `VERSION`, for example `2.4.0-dev.<commit>`. CI stamps repository URL and exact Git commit provenance into the package.
 
 ### Package layout
 
@@ -85,7 +85,7 @@ Build both runtime architectures first, then compose the package:
 .\eng\package-runtime.ps1 -Configuration Release -Platform x64
 .\build.ps1 -Configuration Release -Platform x86
 .\eng\package-runtime.ps1 -Configuration Release -Platform x86
-.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.3.0
+.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.4.0
 ```
 
 The automatic Build gate performs the equivalent composition from verified x64/x86 runtime artifacts.

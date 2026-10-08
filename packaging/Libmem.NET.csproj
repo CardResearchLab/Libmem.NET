@@ -7,7 +7,7 @@
     <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.0-local</PackageVersion>
     <Authors>xiaohei7972</Authors>
     <Description>Windows x64/x86 / .NET 8 C++/CLI wrapper for rdbo/libmem, providing managed process, memory, scanning, hooking, injection, assembly, and symbol APIs.</Description>
-    <PackageReleaseNotes>English: Libmem.NET 2.3.0 adds Windows x64/x86 and .NET 8 ReadInt64/WriteInt64, target-width ReadPointer/WritePointer, and an executable coverage audit of 71 pinned native C APIs (69 direct calls, 2 documented command-line alternatives). It preserves all 2.2.1 Public API signatures, supported platforms and pinned libmem commit. 中文：Libmem.NET 2.3.0 为 Windows x64/x86 和 .NET 8 添加 64 位整数读写、目标进程位宽指针读写，以及对固定 native libmem 71 个 C API 的覆盖审计（69 个直接调用、2 个命令行托管替代）。保持 2.2.1 公共 API、支持平台和固定 native 版本不变。Full notes / 完整说明: https://github.com/CardResearchLab/Libmem.NET/blob/main/docs/releases/v2.3.0.md</PackageReleaseNotes>
+    <PackageReleaseNotes>English: Libmem.NET 2.4.0 adds read-only AssemblyManager.ReadAlignedCode instruction-aligned memory inspection and SymbolManager.TryFindAddress for ordinary symbol misses. It improves Windows x64/x86 regression and C# consumer coverage without changing 2.3.0 APIs, Hook/VMT/Injector behavior or pinned native libmem. 中文：Libmem.NET 2.4.0 新增只读、按完整指令对齐的 ReadAlignedCode 和符号查询 TryFindAddress；加强 Windows x64/x86 回归及 C# 消费者验证，保持 2.3.0 公共 API、Hook/VMT/Injector 行为及固定原生依赖兼容。Full notes / 完整说明: https://github.com/CardResearchLab/Libmem.NET/blob/main/docs/releases/v2.4.0.md</PackageReleaseNotes>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/CardResearchLab/Libmem.NET</RepositoryUrl>

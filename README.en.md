@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The source and latest published stable version on GitHub and nuget.org are **2.3.0**. This backward-compatible release adds 64-bit integer and target-process-width pointer helpers for Windows x64/x86 plus pinned native libmem API coverage auditing. Version 2.2.1 remains available.
+The source is preparing the **2.4.0 release candidate (not published)**; the current GitHub and nuget.org stable release remains **2.3.0**. Version 2.4.0 adds read-only instruction-aligned inspection (`ReadAlignedCode`) and ergonomic symbol lookup (`TryFindAddress`) while preserving Windows x64/x86 / .NET 8, existing Hook/VMT/Injector behavior and the pinned native dependency.
 
 Official support target:
 
@@ -227,7 +227,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-Stable 2.3.0 has `VERSION` / informational version `2.3.0` and numeric assembly/file version `2.3.0.0`. The [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) contains x64/x86 runtime ZIPs, checksums and `Libmem.NET.2.3.0.nupkg`.
+The 2.4.0 release-candidate source uses `VERSION` / informational version `2.4.0` and assembly/file version `2.4.0.0`; it is **not yet published**. The current stable [v2.3.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.3.0) contains x64/x86 runtime ZIPs, checksums and `Libmem.NET.2.3.0.nupkg`.
 
 Build the release-style runtime ZIP locally:
 

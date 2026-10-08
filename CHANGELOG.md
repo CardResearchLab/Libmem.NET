@@ -1,6 +1,6 @@
 # Changelog
 
-## Planned (target: 2.4.0; not released)
+## 2.4.0 - 2026-10-09
 
 ### Added
 
@@ -10,9 +10,17 @@
 - Add 2.4 API argument/identity regression coverage and independent NuGet consumer API checks.
 - Demonstrate native symbol discovery and read-only instruction inspection in C# consumer samples.
 
+### Testing and documentation
+
+- Add x64/x86 regression checks for null symbol arguments, foreign module provenance, and oversized code ranges.
+- Validate the new managed members against locally packed candidate NuGet consumers while keeping published 2.3.0 smoke independent.
+- Document instruction relocation and thread-synchronization limits, with read-only inspection and HookHandle lifecycle examples.
+
 ### Compatibility
 
-- No native ABI upgrades or 2.x breaking changes; x64/x86 remain the only supported targets.
+- Additive managed API only; preserve 2.3.0 signatures and existing Hook/VMT/Injector semantics.
+- Keep the pinned native libmem revision and Windows x64/x86 / .NET 8 release targets unchanged.
+- AnyCPU, ARM64, Linux, macOS, and cross-bitness operation remain unsupported.
 
 ## 2.3.0 - 2026-10-08
 

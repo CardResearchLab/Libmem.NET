@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-`2.3.0` is formally published on GitHub and nuget.org and passed public x64/x86 NuGet consumer smoke #30. The next development stage is 2.4.0 Assembly/Symbol enhancements, beginning with PR #129.
+`2.3.0` is published and has passed public NuGet validation. Version 2.4.0 feature PR #129 and regression/sample PR #132 have merged, and main Build #422 passed. The next step is independent release-candidate review and dry-run validation; 2.4.0 has not been published.
 
 > Current strategy: **Windows x64 and x86 are first-class targets; shared design stays architecture-neutral for a future ARM64 phase.**
 

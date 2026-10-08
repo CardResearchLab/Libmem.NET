@@ -4,7 +4,14 @@ This document describes the official release channel, current stable release, su
 
 ## Current stable release
 
-The current source and published stable GitHub/nuget.org release are **2.3.0** (assembly/file `2.3.0.0`).
+Source is preparing the **2.4.0 release candidate** (assembly/file `2.4.0.0`), which is **not yet published**. The current GitHub/nuget.org stable release remains **2.3.0**.
+
+### Libmem.NET v2.4.0 — candidate (not released)
+
+- Adds `AssemblyManager.ReadAlignedCode` and `SymbolManager.TryFindAddress`, extending rather than breaking 2.3.0.
+- PR #129 and #132 merged; main Build #422 passed on Windows x64/x86 / .NET 8.
+- Next gates: independent 2.4 candidate PR CI, exact-commit `release/v2.4.0` dry run, verified x64/x86 assets, then tag and separate Trusted Publishing.
+- No version tag, GitHub Release, or nuget.org 2.4.0 publication has been created.
 
 Stable 2.3.0 adds target-process-bitness-aware pointer and 64-bit integer memory helpers plus pinned native C API coverage checks, preserving existing 2.2.1 public signatures and pinned libmem dependency.
 

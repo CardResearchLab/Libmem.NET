@@ -2,7 +2,20 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Current source and published stable: `2.3.0` (assembly/file `2.3.0.0`). Feature PR #128, candidate PR #130, Release #41/#42/#43, and public consumer smoke #30 are complete.
+The source is preparing **2.4.0** (assembly/file `2.4.0.0`); current published stable remains **2.3.0**. Prior 2.3.0 feature, candidate, tagged release, and public consumer smoke gates are complete.
+
+## 2.4.0 candidate and release gates
+
+- [x] PR #129 merged; main Build #419 passed (Windows x64/x86 Release and Multi-arch NuGet).
+- [x] PR #132 merged; main Build #422 and Published NuGet Smoke #35 passed.
+- [ ] Release-candidate PR passes exact 2.4.0 version metadata, x64/x86 runtime tests, Public API audit and local dual-arch NuGet consumers.
+- [ ] Merge release-candidate PR and verify post-merge main Build for its exact commit.
+- [ ] Create `release/v2.4.0` from accepted commit; complete Release dry run (ZIP manifests, SHA-256 checksums, exact-version NuGet package and rendered notes) without publishing.
+- [ ] Confirm both architectures and provenance match the accepted commit; review CHANGELOG, bilingual notes, API shape and pinned native libmem revision.
+- [ ] Only after dry run succeeds, create immutable `v2.4.0` tag and verify tagged GitHub Release assets.
+- [ ] Explicitly run NuGet Trusted Publishing on the published tag and verify nuget.org package.
+- [ ] Independently smoke-test published 2.4.0 on x64/x86 and update stable docs/public-feed smoke baseline in a post-release PR.
+- [ ] Freeze new feature development after 2.4.0 and switch to stability maintenance.
 
 ## 2.3.0 release gates
 
