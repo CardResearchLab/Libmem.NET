@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.2.1 - Unreleased (maintenance)
+## 2.2.1 - 2026-10-08
 
 ### Fixed
 
@@ -14,7 +14,7 @@
 
 - Preserve the 2.2.0 Public API, pinned native libmem revision, and Windows x64/x86 package layout.
 - ARM64 and AnyCPU remain unsupported; x64/x86 consumers must select a supported architecture.
-- This section is a draft; do not publish or advance `VERSION` until the merged-main x64/x86 and multi-architecture NuGet gates pass.
+- This patch release does not add ARM64 or change the supported Public API; publish only after exact-version release validation.
 
 ## 2.2.0 - 2026-10-08
 

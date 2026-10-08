@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前源码与正式稳定版均为 **2.2.0**：在保持 2.1.1 Public API 与 pinned rdbo/libmem revision 不变的前提下，Windows x86 已提升为与 x64 并列的正式支持架构，双架构 CI、Runtime ZIP、NuGet 与 Release 交付链路均已完成并正式发布。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
+当前源码版本为 **2.2.1（发布候选，尚未发布）**，GitHub 和 nuget.org 上最新正式稳定版仍为 **2.2.0**。2.2.1 在保持 2.2.0 Public API、固定 rdbo/libmem revision 及 x64/x86 包结构不变的前提下修复扫描边界、注入异常分类、NuGet 架构选择与发布工作流。历史稳定版本 **v1.0.0** 使用 `LibmemCli` 名称；身份迁移说明见 [迁移指南](docs/MIGRATION.md)。
 
 正式支持范围：
 
@@ -227,7 +227,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前稳定版为 **2.2.0**。NuGet / informational version 使用 `2.2.0`，程序集数字版本与文件版本为 `2.2.0.0`。正式 GitHub Release 提供 x64/x86 Runtime ZIP、对应 SHA-256 和 `Libmem.NET.2.2.0.nupkg`，nuget.org 也提供 exact `2.2.0` PackageReference。
+当前源码候选版为 **2.2.1**：源码 `VERSION` / informational version 为 `2.2.1`，程序集和文件版本为 `2.2.1.0`。正式发布版仍是 **2.2.0**；其 GitHub Release 提供 x64/x86 Runtime ZIP、对应 SHA-256 和 `Libmem.NET.2.2.0.nupkg`，nuget.org 提供 `2.2.0` PackageReference。2.2.1 发布前请继续使用 2.2.0 公开包。
 
 生成正式风格 Runtime ZIP：
 
