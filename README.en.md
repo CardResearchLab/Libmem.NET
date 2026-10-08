@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The current source and stable release are both **2.2.0**. It preserves the 2.1.1 Public API and pinned rdbo/libmem revision while promoting Windows x86 to first-class support alongside x64; the dual-architecture CI, runtime ZIP, NuGet, and Release delivery paths are now published and complete. Historical stable **v1.0.0** uses `LibmemCli`; see the [migration guide](docs/MIGRATION.md) for the identity transition.
+The current source version is **2.2.1 (unpublished release candidate)**, while the latest published stable release on GitHub and nuget.org remains **2.2.0**. Version 2.2.1 fixes scanning boundaries, injection error classification, NuGet architecture selection, and release workflow safety without changing the 2.2.0 Public API, pinned rdbo/libmem revision, or x64/x86 package layout. Historical stable **v1.0.0** uses `LibmemCli`; see the [migration guide](docs/MIGRATION.md).
 
 Official support target:
 
@@ -227,7 +227,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The current stable version is **2.2.0**. NuGet and informational versions use `2.2.0`; numeric assembly/file versions are `2.2.0.0`. The official GitHub Release provides x64/x86 runtime ZIPs, matching SHA-256 files and `Libmem.NET.2.2.0.nupkg`, and nuget.org provides exact `2.2.0` PackageReference consumption.
+The current source candidate is **2.2.1**, with `VERSION` / informational version `2.2.1` and numeric assembly/file versions `2.2.1.0`. The latest published stable version is still **2.2.0**: its GitHub Release offers x64/x86 runtime ZIPs, checksums, and `Libmem.NET.2.2.0.nupkg`, and nuget.org provides `2.2.0` PackageReference consumption. Continue using the published 2.2.0 package until 2.2.1 is released.
 
 Build the release-style runtime ZIP locally:
 
