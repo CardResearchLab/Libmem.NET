@@ -1,6 +1,6 @@
 # Libmem.NET 开发路线图
 
-`2.2.0` 已正式发布：Windows x86 已完成运行时、外部进程、NuGet 与 Release 交付链路，并与 x64 一起成为正式支持目标。GitHub 与 nuget.org 当前稳定版均为 `2.2.0`。身份迁移历史见 [迁移指南](docs/MIGRATION.md)。
+`2.2.1` 是当前 GitHub / nuget.org 稳定版；2.3.0 已完成首批功能 PR #128 的合并，正在进行正式候选版与双架构发布验收。2.4.0 的 PR #129 暂停至 2.3.0 发布完成。
 
 > 当前策略：**Windows x64 与 x86 同级支持；共享设计保持架构中立，为后续 ARM64 留出扩展点。**
 
@@ -116,7 +116,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - XML IntelliSense / `docs/API.md` 与实现一致；
 - NuGet consumer restore/build/run smoke test 通过。
 
-## 当前：v2.2.0 — Windows x86 正式支持
+## 已完成：v2.2.0 — Windows x86 正式支持
 
 2.2.0 的发布目标是把已经通过验证的 x86 能力正式交付给消费者：
 
@@ -126,7 +126,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - NuGet 以单包提供 x64/x86 架构匹配资产，并拒绝 AnyCPU；
 - 保持 2.1.1 Public API 与 pinned libmem revision 不变。
 
-## 进行中：v2.3.0 — Native API Coverage / 基础 API 补全
+## 发布候选验收中：v2.3.0 — Native API Coverage / 基础 API 补全
 
 - 对照 pinned upstream C API 建立可复查的 Native → Managed coverage 清单，不因为版本数字而强行更新依赖；
 - 补充 x86/x64 目标位宽的 Typed Memory/Pointer 读写，保持既有 Read/Write 短读短写契约不变；

@@ -4,9 +4,14 @@ This document describes the official release channel, current stable release, su
 
 ## Current stable release
 
-The current source and published stable release are **2.2.1**, with numeric assembly/file versions `2.2.1.0`. GitHub and nuget.org both provide the official 2.2.1 release.
+Current source: **unpublished 2.3.0 release candidate** (assembly/file `2.3.0.0`). The latest public stable on GitHub and nuget.org remains **2.2.1**.
 
-The 2.2.1 stable patch preserves the 2.2.0 Public API, pinned native dependency, and multi-architecture package layout. It fixes scan final-candidate handling, injector error reporting, unsupported explicit NuGet PlatformTarget selection, and Release concurrency.
+The 2.3.0 candidate adds target-bitness-aware pointer and 64-bit integer memory helpers plus pinned C API coverage checks, preserving existing 2.2.1 public signatures and native libmem dependency. Do not advertise public availability until release and NuGet verification have succeeded.
+
+### Libmem.NET v2.3.0 (unpublished candidate)
+
+- Source metadata: `2.3.0`; public GitHub Release and NuGet publication still pending.
+- Supported targets when released: Windows x64/x86 / .NET 8.
 
 ### Libmem.NET v2.2.1
 
@@ -167,6 +172,7 @@ The `Libmem.NET` package path is validated through local-feed CI for both x64 an
 
 | Version | Date | Status | Official platform |
 | --- | --- | --- | --- |
+| 2.3.0 | 2026-10-08 | Unpublished release candidate; waiting for exact-version CI and tagged Release | Windows x64/x86 / .NET 8 |
 | 2.2.1 | 2026-10-08 | Published stable on GitHub and nuget.org; current public PackageReference baseline | Windows x64/x86 / .NET 8 |
 | 2.2.0 | 2026-10-08 | Previous published stable | Windows x64/x86 / .NET 8 |
 | 2.0.0-preview.1 | 2026-10-05 | Published prerelease, Libmem.NET identity | Windows x64 / .NET 8 |

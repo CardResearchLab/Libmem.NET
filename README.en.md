@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The current source and the published stable release on GitHub and nuget.org are both **2.2.1**. This compatible patch fixes scan boundaries, injection error classification, NuGet architecture selection, and Release concurrency while preserving the 2.2.0 Public API, pinned rdbo/libmem revision, and x64/x86 package layout. Historical **v1.0.0** used `LibmemCli`; see the [migration guide](docs/MIGRATION.md).
+The current source is an **unpublished 2.3.0 release candidate** with new 64-bit integer and target-width pointer helpers for Windows x64/x86, plus native libmem API coverage auditing. The latest published GitHub and nuget.org stable version remains **2.2.1**.
 
 Official support target:
 
@@ -22,11 +22,11 @@ Official support target:
 - C# / .NET consumers
 - a pinned rdbo/libmem native backend
 
-> Libmem.NET 2.2.1 uses architecture-matched C++/CLI and native runtime assets for both x64 and x86. Consumers must explicitly select `x64` or `x86`; `AnyCPU` and cross-bitness operation are unsupported.
+> The 2.3.0 candidate remains Windows x64/x86 / .NET 8 only and requires matching managed/native binaries. Explicit x64/x86 platform selection is mandatory; AnyCPU, ARM64 and cross-bitness operation remain unsupported.
 
 ## Download
 
-GitHub and nuget.org both publish stable **Libmem.NET 2.2.1**. The previous stable **2.2.0** remains available.
+GitHub and nuget.org currently publish stable **Libmem.NET 2.2.1**. Version **2.3.0 is not publicly available yet**; wait for verified GitHub Release and nuget.org publication before consuming it.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
@@ -227,7 +227,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The current stable release is **2.2.1**, with `VERSION` / informational version `2.2.1` and numeric assembly/file versions `2.2.1.0`. The official [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.2.1) provides x64/x86 runtime ZIPs, checksums, and `Libmem.NET.2.2.1.nupkg`. Nuget.org provides exact-version `Libmem.NET 2.2.1` PackageReference consumption.
+The source candidate has `VERSION` / informational version `2.3.0` and numeric assembly/file version `2.3.0.0`. The current public stable is still **2.2.1**, with x64/x86 runtime ZIPs, checksums and the existing NuGet package available from [GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.2.1).
 
 Build the release-style runtime ZIP locally:
 
@@ -284,7 +284,7 @@ The package ID is `Libmem.NET`, targeting Windows x64/x86 / .NET 8. CI validates
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-Trusted Publishing / OIDC login and the 2.2.1 NuGet push succeeded in Release #40. The public-NuGet smoke baseline is 2.2.1, covering x64/x86 restore, build, run, publish assets, and architecture rejection. Previous stable 2.2.0 remains available. See the [Consumption Guide](docs/CONSUMPTION.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
+Trusted Publishing / OIDC and public x64/x86 consumer validation succeeded for 2.2.1; the public-NuGet smoke baseline stays **2.2.1** until 2.3.0 is independently published and verified. See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 
