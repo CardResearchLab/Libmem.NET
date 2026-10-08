@@ -129,6 +129,7 @@ assert upstream_header_path.exists(), (
     "libmem.h was not found. Initialize submodules first: "
     "git submodule update --init --recursive"
 )
+subprocess.run([sys.executable, str(root / "eng/audit-native-api.py")], cwd=root, check=True)
 upstream_header = upstream_header_path.read_text(encoding="utf-8", errors="replace")
 
 upstream_vmt_path = root / "third_party/libmem/src/common/vmt.c"
