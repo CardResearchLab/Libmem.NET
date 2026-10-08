@@ -113,6 +113,10 @@ for owner in ["Libmem", "ProcessInfo", "RemoteAllocation", "ProcessSession", "Me
     match = re.search(r"\bpublic ref class\s+" + re.escape(owner) + r"\b", header)
     assert match is not None, f"{owner} public class declaration not found"
     body = header[match.end():].split("\n    };", 1)[0]
+    # XML/C++ comments may contain prose that looks like a function call.
+    # Analyze declarations only; do not turn documentation into fake API methods.
+    body = re.sub(r"/\*.*?\*/", "", body, flags=re.S)
+    body = re.sub(r"//[^\n]*", "", body)
     declarations = re.findall(r"(?<!::)\b(\w+)\s*\([^;{}]*\)\s*;", body)
     declarations = {name for name in declarations if name not in {"get"}}
     implementations = set(re.findall(r"\b" + owner + r"::(\w+)\s*\(", source))
@@ -125,6 +129,7 @@ assert upstream_header_path.exists(), (
     "libmem.h was not found. Initialize submodules first: "
     "git submodule update --init --recursive"
 )
+subprocess.run([sys.executable, str(root / "eng/audit-native-api.py")], cwd=root, check=True)
 upstream_header = upstream_header_path.read_text(encoding="utf-8", errors="replace")
 
 upstream_vmt_path = root / "third_party/libmem/src/common/vmt.c"

@@ -404,6 +404,13 @@ try
             "Remote allocation Write did not write the full payload.");
         Check(session.Memory.Read(remoteAllocation.Address, remotePayload.Length).SequenceEqual(remotePayload),
             "Remote allocation Read returned different bytes.");
+        const long remoteSignedValue = -0x102030405060708L;
+        session.Memory.WriteInt64(remoteAllocation.Address + 64, remoteSignedValue);
+        Check(session.Memory.ReadInt64(remoteAllocation.Address + 64) == remoteSignedValue,
+            "Remote typed Int64 read/write did not round trip.");
+        session.Memory.WritePointer(remoteAllocation.Address + 80, remoteAllocation.Address);
+        Check(session.Memory.ReadPointer(remoteAllocation.Address + 80) == remoteAllocation.Address,
+            "Remote typed pointer read/write did not use the target architecture width.");
 
         var oldProtection = session.Memory.Protect(
             remoteAllocation.Address,

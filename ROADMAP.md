@@ -126,15 +126,19 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - NuGet 以单包提供 x64/x86 架构匹配资产，并拒绝 AnyCPU；
 - 保持 2.1.1 Public API 与 pinned libmem revision 不变。
 
-## 后续：v2.3.0 — Native API Coverage / Upstream Sync
+## 进行中：v2.3.0 — Native API Coverage / 基础 API 补全
 
-2.2.0 稳定发布后，再系统对照 pinned rdbo/libmem：
+- 对照 pinned upstream C API 建立可复查的 Native → Managed coverage 清单，不因为版本数字而强行更新依赖；
+- 补充 x86/x64 目标位宽的 Typed Memory/Pointer 读写，保持既有 Read/Write 短读短写契约不变；
+- 扫描/注入/资源生命周期开展回归审计，完善异常与正常 miss 的区分；
+- 需要真实 Windows x86/x64 Release CI 与 NuGet consumer 验证后才可发布。
 
-- 建立 native → managed API coverage 表；
-- 识别合理但尚未封装的 libmem API；
-- 评估并更新 pinned upstream revision；
-- 执行 ABI / interop / runtime regression；
-- 继续保持通用库边界，不引入业务模型。
+## 下一阶段：v2.4.0 — Assembly / Symbols / Hook 实用增强
+
+- 优先完善现有 AssemblyManager / SymbolManager 的实用辅助接口、参数边界和运行时覆盖；
+- Hook/VMT 继续验证指令边界、生命周期、trampoline/原始字节一致性，避免未审核的跳板重定位改写；
+- 必须继承 2.3.0 的公共 API 和 native ABI 验收，不再改变已正式支持的平台；
+- 2.4.0 发布即阶段性停止新功能，暂不进入 ARM64 或 3.0 的跨平台重构。
 
 ## 已完成：v2.0.0 — Stable Libmem.NET identity
 

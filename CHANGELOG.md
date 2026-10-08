@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased (target: 2.3.0)
+
+### Added
+
+- Extend `MemoryManager` with `ReadInt64` / `WriteInt64` and target-bitness-aware `ReadPointer` / `WritePointer` for Windows x64/x86 consumers.
+- Cover new typed memory operations in self-process and external-process runtime tests.
+
+### Compatibility
+
+- Add members without changing existing 2.2.1 signatures, pinned libmem revision, or supported Windows x64/x86 targets.
+
+
 ## 2.2.1 - 2026-10-08
 
 ### Fixed
