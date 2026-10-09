@@ -60,7 +60,12 @@ MemoryProtection Libmem::ProtectMemory(UInt64 a,UInt64 size,MemoryProtection pro
 MemoryProtection Libmem::ProtectMemory(ProcessInfo^ input,UInt64 a,UInt64 size,MemoryProtection prot) {
     native_protection(prot,"prot");
     auto p=proc(input); lm_prot_t old{};
-    if(!LM_ProtMemoryEx(&p,native_address(a,"address"),native_size(size,"size"),static_cast<lm_prot_t>(prot),&old)) throw gcnew LibmemException("LM_ProtMemoryEx", "LM_ProtMemoryEx failed.");
+    auto address=native_address(a,"address");
+    auto length=native_size(size,"size");
+    // The pinned native API reopens by PID without checking process start time.
+    if(!Libmem::IsProcessAlive(input))
+        throw gcnew InvalidOperationException("Target process is no longer alive.");
+    if(!LM_ProtMemoryEx(&p,address,length,static_cast<lm_prot_t>(prot),&old)) throw gcnew LibmemException("LM_ProtMemoryEx", "LM_ProtMemoryEx failed.");
     return static_cast<MemoryProtection>(old);
 }
 UInt64 Libmem::AllocateMemory(UInt64 size,MemoryProtection prot) { native_protection(prot,"prot"); return LM_AllocMemory(native_size(size,"size"),static_cast<lm_prot_t>(prot)); }
