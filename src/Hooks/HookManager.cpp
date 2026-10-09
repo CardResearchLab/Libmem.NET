@@ -67,7 +67,22 @@ bool HookHandle::Remove() {
 
         ok=LM_UnhookCodeEx(&p,source,trampoline,size)!=LM_FALSE;
     } else {
-        ok=LM_UnhookCode(native_address(from_,"source"),native_address(trampoline_,"trampoline"),native_size(size_,"size"))!=LM_FALSE;
+        auto source=native_address(from_,"source");
+        auto trampoline=native_address(trampoline_,"trampoline");
+        auto size=native_size(size_,"size");
+
+        // Pinned LM_UnhookCode does not check the source write count before
+        // reporting success and freeing the trampoline. Check readability
+        // through the safe process-read path first, rather than allowing an
+        // unreadable trampoline to be treated as a successful local unhook.
+        lm_process_t current{};
+        if(!LM_GetProcess(&current))
+            return false;
+        std::vector<lm_byte_t> trampolineProbe(size);
+        if(LM_ReadMemoryEx(&current,trampoline,trampolineProbe.data(),size)!=size)
+            return false;
+
+        ok=LM_UnhookCode(source,trampoline,size)!=LM_FALSE;
     }
 
     if(ok) installed_=false;
