@@ -391,6 +391,76 @@ finally
         VmtFailureNativeMethods.VirtualFree(remapped, 0, VmtFailureNativeMethods.MemRelease);
 }
 
+// Verify partial VMT reset when an earlier tracked entry can be restored,
+// but a later tracked slot lies on a decommitted page. Reset must retain only
+// the still-active entry, and a second attempt must finish after recommit.
+var pageSize = Environment.SystemPageSize;
+using (var partialPage = memory.Allocate(checked((ulong)pageSize * 2), MemoryProtection.ReadWrite)
+    ?? throw new InvalidOperationException("Could not allocate two-page partial VMT reset fixture."))
+{
+    var distantIndex = checked((ulong)pageSize / (ulong)IntPtr.Size);
+    var distantAddress = partialPage.Address + (ulong)pageSize;
+    const ulong nearOriginal = 0x13572468UL;
+    const ulong farOriginal = 0x24681357UL;
+    const ulong nearReplacement = 0xABCDEF01UL;
+    const ulong farReplacement = 0xDEADBEEFUL;
+
+    WritePointer(memory, partialPage.Address, nearOriginal);
+    WritePointer(memory, distantAddress, farOriginal);
+    using var partialVmt = new VmtManager(partialPage.Address);
+    // Native entries are prepended: hook distant first, near last, ensuring
+    // the near slot is restored before the distant decommitted slot fails.
+    partialVmt.Hook(distantIndex, farReplacement);
+    partialVmt.Hook(0, nearReplacement);
+    Check(ReadPointer(memory, partialPage.Address) == nearReplacement,
+        "Could not install near VMT partial-reset fixture.");
+    Check(ReadPointer(memory, distantAddress) == farReplacement,
+        "Could not install distant VMT partial-reset fixture.");
+
+    var distantPointer = new IntPtr(unchecked((long)distantAddress));
+    Check(VmtFailureNativeMethods.VirtualFree(
+            distantPointer, (nuint)pageSize, VmtFailureNativeMethods.MemDecommit),
+        "Could not decommit distant VMT slot page for partial-reset failure.");
+
+    try
+    {
+        var partialResetFailure = ExpectThrows<LibmemException>(
+            () => partialVmt.Reset(),
+            "VmtManager.Reset should fail only after restoring the accessible tracked entry.");
+        Check(partialResetFailure.Operation == "LM_VmtUnhook",
+            "Partial VMT reset reported the wrong native operation.");
+        Check(!partialVmt.IsDisposed,
+            "Partial VMT reset failure must retain ownership.");
+        Check(ReadPointer(memory, partialPage.Address) == nearOriginal,
+            "Partial VMT reset failed to restore the accessible slot first.");
+        Check(partialVmt.GetOriginal(0) == nearOriginal,
+            "Partial VMT reset must allow querying the restored untracked slot.");
+        Check(partialVmt.GetOriginal(distantIndex) == farOriginal,
+            "Partial VMT reset must retain the inaccessible tracked slot metadata.");
+    }
+    finally
+    {
+        var recommitted = VmtFailureNativeMethods.VirtualAlloc(
+            distantPointer, (nuint)pageSize,
+            VmtFailureNativeMethods.MemCommit,
+            VmtFailureNativeMethods.PageReadWrite);
+        Check(recommitted == distantPointer,
+            "Could not recommit distant VMT slot page for retry.");
+    }
+
+    // MEM_DECOMMIT discards page contents; reproduce the still-installed slot
+    // so native unhook can restore its recorded original on a safe retry.
+    WritePointer(memory, distantAddress, farReplacement);
+    partialVmt.Reset();
+    Check(ReadPointer(memory, partialPage.Address) == nearOriginal,
+        "Retrying partial VMT reset changed an already-restored slot.");
+    Check(ReadPointer(memory, distantAddress) == farOriginal,
+        "Retrying partial VMT reset did not restore the remaining tracked slot.");
+    partialVmt.Reset();
+    Check(!partialVmt.IsDisposed,
+        "Successful VMT reset retry must keep the manager reusable.");
+}
+
 Console.WriteLine("HOOK/VMT RUNTIME TESTS PASS");
 
 
@@ -398,6 +468,7 @@ internal static class VmtFailureNativeMethods
 {
     internal const uint MemCommit = 0x1000;
     internal const uint MemReserve = 0x2000;
+    internal const uint MemDecommit = 0x4000;
     internal const uint MemRelease = 0x8000;
     internal const uint PageReadWrite = 0x04;
 
