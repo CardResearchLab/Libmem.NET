@@ -173,7 +173,13 @@ using (var localHook = NativeApi.HookCode(source.Address, destination.Address)
 
     var sourceProtection = NativeApi.FindSegment(source.Address)?.Protection
         ?? throw new InvalidOperationException("Could not resolve source protection before local unhook failure.");
-    var priorTrampolineProtection = memory.Protect(localHook.Trampoline, 1, MemoryProtection.None);
+    var trampolinePointer = IntPtr.Size == 4
+        ? new IntPtr(unchecked((int)localHook.Trampoline))
+        : new IntPtr(unchecked((long)localHook.Trampoline));
+    Check(VmtFailureNativeMethods.VirtualProtect(
+            trampolinePointer, (nuint)1, VmtFailureNativeMethods.PageNoAccess,
+            out var priorTrampolineProtection),
+        "Could not set PAGE_NOACCESS on the local trampoline test page.");
     try
     {
         Check(memory.Read(localHook.Trampoline, checked((int)localHook.PatchedBytes)).Length == 0,
@@ -189,7 +195,9 @@ using (var localHook = NativeApi.HookCode(source.Address, destination.Address)
     }
     finally
     {
-        memory.Protect(localHook.Trampoline, 1, priorTrampolineProtection);
+        Check(VmtFailureNativeMethods.VirtualProtect(
+                trampolinePointer, (nuint)1, priorTrampolineProtection, out _),
+            "Could not restore local trampoline page protection for unhook retry.");
     }
 
     Check(localHook.Remove(),
@@ -470,7 +478,13 @@ internal static class VmtFailureNativeMethods
     internal const uint MemReserve = 0x2000;
     internal const uint MemDecommit = 0x4000;
     internal const uint MemRelease = 0x8000;
+    internal const uint PageNoAccess = 0x01;
     internal const uint PageReadWrite = 0x04;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool VirtualProtect(
+        IntPtr address, nuint size, uint newProtection, out uint oldProtection);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     internal static extern IntPtr VirtualAlloc(
