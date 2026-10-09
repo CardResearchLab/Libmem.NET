@@ -235,7 +235,7 @@ try
                         System.Reflection.BindingFlags.NonPublic;
     var infoConstructor = typeof(ProcessInfo).GetConstructor(
         internalFlags, binder: null,
-        types: [typeof(uint), typeof(uint), typeof(Architecture), typeof(ulong),
+        types: [typeof(uint), typeof(uint), typeof(global::Libmem.NET.Architecture), typeof(ulong),
                 typeof(ulong), typeof(string), typeof(string)],
         modifiers: null);
     Check(infoConstructor is not null, "Expected an internal ProcessInfo metadata constructor.");
