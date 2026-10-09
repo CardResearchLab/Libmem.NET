@@ -12,7 +12,7 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-当前源码正在准备 **2.4.1 稳定性补丁候选**（尚未发布）；GitHub / nuget.org 正式稳定版仍为 **2.4.0**。本次修复 `ReadAlignedCode` 可读页边界问题、增强远程修改前的进程身份校验，并稳定 Hook 回归测试；保持 Windows x64/x86、.NET 8、公共 API 和固定 native 版本不变。
+**2.4.1 稳定性补丁已正式发布**；GitHub Release 与 NuGet Trusted Publishing 已完成。本次修复 `ReadAlignedCode` 可读页边界问题、增强远程修改前的进程身份校验，并稳定 Hook 回归测试；保持 Windows x64/x86、.NET 8、公共 API 和固定 native 版本不变。
 
 正式支持范围：
 
@@ -22,11 +22,11 @@
 - C# / .NET 消费者
 - 固定版本的 rdbo/libmem native backend
 
-  2.4.0 正式版只支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
+  2.4.1 正式版只支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
 
 ## 下载
 
-GitHub 与 nuget.org 当前公开正式稳定版为 **2.4.0**。下载 [v2.4.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0)；NuGet 安装请使用 `Libmem.NET 2.4.0`。公开包 x64/x86 消费者验证见 [Published NuGet Smoke #36](https://github.com/CardResearchLab/Libmem.NET/actions/runs/37832462294)。
+正式稳定版为 **2.4.1**：[GitHub Release v2.4.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1)；NuGet 安装使用 `Libmem.NET 2.4.1`。主线 Build #445、正式发布 Release #48 与 Trusted Publishing #49 已成功；2.4.1 公网包独立 x64/x86 验收由 [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) 工作流负责。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -228,7 +228,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-当前 **2.4.1 发布候选源码**的 `VERSION` / informational version 为 `2.4.1`，程序集及文件版本为 `2.4.1.0`，尚未发布。公开稳定版 [GitHub Release v2.4.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0) 包含 x64/x86 Runtime ZIP、SHA-256 与 `Libmem.NET.2.4.0.nupkg`。
+**2.4.1 正式发布源码**的 `VERSION` / informational version 为 `2.4.1`，程序集及文件版本为 `2.4.1.0`。[GitHub Release v2.4.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1) 包含 x64/x86 Runtime ZIP、SHA-256 与 `Libmem.NET.2.4.1.nupkg`。
 
 生成正式风格 Runtime ZIP：
 
@@ -283,7 +283,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-Trusted Publishing / OIDC 任务 Release #46 成功，公网 x64/x86 消费者测试 #36 成功；公开 NuGet smoke 基线已更新为 **2.4.0**。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+Trusted Publishing / OIDC 任务 Release #46 成功，公网 x64/x86 消费者测试 #36 成功；2.4.1 发布后公网 NuGet smoke 目标基线已推进到 **2.4.1**（以工作流验收结果为准）。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 
