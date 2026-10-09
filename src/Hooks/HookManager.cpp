@@ -95,8 +95,14 @@ HookHandle^ Libmem::HookCode(UInt64 from,UInt64 to) {
     return n ? gcnew HookHandle(nullptr,from,to,trampoline,n) : nullptr;
 }
 HookHandle^ Libmem::HookCode(ProcessInfo^ input,UInt64 from,UInt64 to) {
-    auto p=proc(input); lm_address_t trampoline=LM_ADDRESS_BAD;
-    auto n=LM_HookCodeEx(&p,native_address(from,"source"),native_address(to,"destination"),&trampoline);
+    auto p=proc(input);
+    auto source=native_address(from,"source");
+    auto destination=native_address(to,"destination");
+    // Reject stale PID + start-time identities before remotely patching code.
+    if(!Libmem::IsProcessAlive(input))
+        throw gcnew InvalidOperationException("Target process is no longer alive.");
+    lm_address_t trampoline=LM_ADDRESS_BAD;
+    auto n=LM_HookCodeEx(&p,source,destination,&trampoline);
     return n ? gcnew HookHandle(input,from,to,trampoline,n) : nullptr;
 }
 
