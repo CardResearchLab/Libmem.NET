@@ -117,7 +117,9 @@ The type remains a pure query result; memory mutation continues through `MemoryM
 Primary operations:
 
 - `Read`
+- `TryRead`
 - `Write`
+- `TryWrite`
 - `ReadInt32`
 - `WriteInt32`
 - `ReadInt64`
@@ -139,6 +141,10 @@ Pointer resolution and scanning are owned by `ProcessSession.Scanner`. The tempo
 
 Short operations are therefore observable results and are not automatically converted into exceptions.
 
+`TryRead(address, count, out byte[] data)` returns `true` exactly when all `count` bytes were transferred. Even when it returns `false`, `data` contains the bytes actually read, just like `Read`. `TryWrite(address, byte[] data, out int bytesWritten)` returns `true` exactly when every input byte was written; `bytesWritten` reports the actual transferred count even on `false`. Partial writes may already have changed the target process and are **not rolled back**. These helpers perform one underlying read or write operation each; they do not retry, change memory protection or make the transfer atomic.
+
+Both helpers return `true` for valid zero-length operations (`data = Array.Empty<byte>()` for `TryRead`, `bytesWritten = 0` for `TryWrite`). Invalid count, null input, unrepresentable x86 addresses and detached sessions keep the underlying `Read` / `Write` exception semantics; ordinary incomplete transfers are reported as `false`, not `LibmemException`. These are additive unreleased 2.5.0 APIs, not present in 2.4.1 packages.
+
 Typed `ReadInt32`/`WriteInt32` and `ReadInt64`/`WriteInt64` require a complete 4- or 8-byte transfer and throw `LibmemException` on a short transfer. `ReadPointer` and `WritePointer` follow the target session's 32- or 64-bit pointer size (not `IntPtr.Size` of an unrelated caller), return zero-extended `ulong` values, and likewise require a complete transfer. `WritePointer` rejects a value above `uint.MaxValue` for 32-bit targets with `ArgumentOutOfRangeException("value")`. Only supported x86/x64 target architectures are accepted; byte order follows the Windows runtime's little-endian representation.
 
 #### Zero-size memory operations
@@ -146,7 +152,9 @@ Typed `ReadInt32`/`WriteInt32` and `ReadInt64`/`WriteInt64` require a complete 4
 Zero is not treated uniformly across all memory APIs because the pinned Windows libmem ABI assigns different meanings to it.
 
 - `Read(address, 0)` / static `ReadMemory(..., 0)` -> empty byte array.
+- `TryRead(address, 0, out data)` -> `true` and an empty byte array.
 - `Write(address, Array.Empty<byte>())` / static `WriteMemory(..., empty)` -> `0` bytes written.
+- `TryWrite(address, Array.Empty<byte>(), out bytesWritten)` -> `true` with `bytesWritten = 0`.
 - `Set(address, value, 0)` / static `SetMemory(..., 0)` -> `0` bytes set.
 - `Protect(address, 0, protection)` preserves the pinned Windows libmem behavior where zero means one system page.
 - Static `NativeApi.AllocateMemory(0, protection)` preserves the pinned Windows libmem behavior where zero requests one system page.
