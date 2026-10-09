@@ -2,7 +2,18 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Current source and published stable: `2.4.0` (assembly/file `2.4.0.0`). The 2.3.0 release remains available.
+Current source is preparing the **unpublished 2.4.1 maintenance candidate** (assembly/file `2.4.1.0`). Published stable remains **2.4.0** (assembly/file `2.4.0.0`). The 2.3.0 release also remains available.
+
+## 2.4.1 patch release gates
+
+- [x] PRs #137–#141 merged; main Build #443 succeeded for Release x64, Release x86 and local multi-arch NuGet.
+- [ ] Candidate metadata, bilingual docs and package notes PR passes Release x64/x86, external-process, Hook/VMT, Injector, Public API/source contract and multi-arch NuGet consumers.
+- [ ] Candidate PR merged; post-merge main Build succeeds for the exact accepted commit.
+- [ ] Create `release/v2.4.1` from that accepted commit; complete **dry run only**: matching VERSION, assembly/manifest metadata, x64/x86 ZIPs and SHA-256, commit provenance, NuGet and rendered release notes.
+- [ ] Review artifacts and verify that the pinned native libmem revision and Public API baseline have not changed.
+- [ ] Create `v2.4.1` only after explicit approval; verify tagged GitHub Release artifacts. Publish nuget.org only through separate manual Trusted Publishing on the existing tag.
+- [ ] Perform independent published-package x64/x86 restore/build/run/publish and unsupported AnyCPU verification; only then advance public NuGet smoke baseline and stable docs.
+- [ ] Retain documented TOCTOU limitation: process-identity prechecks do not make native PID-only operations atomic.
 
 ## 2.3.0 release gates
 
