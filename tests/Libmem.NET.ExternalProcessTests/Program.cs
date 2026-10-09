@@ -252,6 +252,13 @@ try
     Check(!staleSession.IsAlive(),
         "An identity with the current PID but a different start time must be stale.");
 
+    ExpectThrows<InvalidOperationException>(
+        () => staleSession.Memory.Allocate(4096, MemoryProtection.ReadWrite),
+        "A stale session must reject owned remote allocation.");
+    ExpectThrows<InvalidOperationException>(
+        () => NativeApi.AllocateMemory(staleInfo, 4096, MemoryProtection.ReadWrite),
+        "Static AllocateMemory(process) must reject a stale process identity.");
+
     using (var staleFreeProbe = session.Memory.Allocate(4096, MemoryProtection.ReadWrite))
     {
         byte[] sentinel = [0x4C, 0x69, 0x62, 0x6D, 0x65, 0x6D, 0x32, 0x34];
@@ -259,10 +266,29 @@ try
             "Could not initialize stale-free protection fixture.");
         Check(!staleSession.Memory.Free(staleFreeProbe.Address, staleFreeProbe.Size),
             "A stale session must never free an allocation in the live process sharing its PID.");
+        Check(!NativeApi.FreeMemory(staleInfo, staleFreeProbe.Address, staleFreeProbe.Size),
+            "Static FreeMemory(process) must not free another process's allocation through a stale PID.");
         Check(session.Memory.Read(staleFreeProbe.Address, sentinel.Length).SequenceEqual(sentinel),
             "Stale Memory.Free unexpectedly changed the live process allocation.");
         Check(staleFreeProbe.Free(),
             "The valid session must retain ownership and be able to free the allocation.");
+    }
+
+    var staticAllocation = NativeApi.AllocateMemory(process!, 4096, MemoryProtection.ReadWrite);
+    Check(staticAllocation != 0 && staticAllocation != invalidAddress,
+        "Static AllocateMemory(process) must continue allocating into a live target.");
+    try
+    {
+        byte[] staticSentinel = [0x41, 0x6C, 0x6C, 0x6F, 0x63];
+        Check(session.Memory.Write(staticAllocation, staticSentinel) == staticSentinel.Length,
+            "Could not initialize the live static allocation fixture.");
+        Check(session.Memory.Read(staticAllocation, staticSentinel.Length).SequenceEqual(staticSentinel),
+            "Static allocation must remain readable by the legitimate session.");
+    }
+    finally
+    {
+        Check(NativeApi.FreeMemory(process!, staticAllocation, 4096),
+            "Static FreeMemory(process) must continue releasing a live target allocation.");
     }
 
     // Session and static mutating APIs must validate PID + creation time, not
@@ -311,6 +337,14 @@ try
         "ModuleManager.Unload must not unload a live module through a stale process identity.");
     Check(!NativeApi.UnloadModule(staleInfo, staleModule),
         "Static UnloadModule(process) must not unload through a stale process identity.");
+    Check(!string.IsNullOrWhiteSpace(liveModule.Path),
+        "TestTarget module must expose a path for stale load protection tests.");
+    ExpectThrows<InvalidOperationException>(
+        () => staleSession.Modules.Load(liveModule.Path),
+        "ModuleManager.Load must refuse a stale PID before loading a module.");
+    ExpectThrows<InvalidOperationException>(
+        () => NativeApi.LoadModule(staleInfo, liveModule.Path),
+        "Static LoadModule(process) must refuse a stale PID before loading a module.");
     Check(CallTarget(child, ready.HookSource) == 1,
         "Stale module unload unexpectedly affected the live target process.");
 
