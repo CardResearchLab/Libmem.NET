@@ -80,7 +80,12 @@ RemoteAllocation^ MemoryManager::Allocate(UInt64 size,MemoryProtection protectio
     return gcnew RemoteAllocation(target,address,size);
 }
 bool MemoryManager::Free(UInt64 address,UInt64 size) {
-    return Libmem::FreeMemory(Target(),address,size);
+    auto target=Target();
+    // The pinned LM_FreeMemoryEx opens a process by PID, ignoring start_time.
+    // Refuse to free memory using a stale session identity: PID reuse must not
+    // permit a former session to release an allocation in a different process.
+    if(!Libmem::IsProcessAlive(target)) return false;
+    return Libmem::FreeMemory(target,address,size);
 }
 
 } // namespace Libmem::NET

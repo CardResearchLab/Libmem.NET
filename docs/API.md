@@ -102,7 +102,7 @@ Target exit does **not** implicitly detach or dispose a `ProcessSession`. The se
 
 Libmem.NET intentionally does not add an exact-identity liveness preflight to every Manager operation. For external processes, exact PID + start-time validation requires process enumeration; doing that before every read/write/scan would add material overhead and still could not eliminate the race between a preflight and the native operation.
 
-Manager operations therefore keep their documented per-operation result/error semantics after target exit unless the method has an explicit managed liveness precondition. In the current frozen contract, `MemoryManager.Allocate` and `InjectorManager.InjectLibrary` explicitly reject a dead target with `InvalidOperationException`. Independently owned handles keep their separate target-exit cleanup semantics.
+Manager operations therefore keep their documented per-operation result/error semantics after target exit unless the method has an explicit managed liveness precondition. In the current frozen contract, `MemoryManager.Allocate` and `InjectorManager.InjectLibrary` explicitly reject a dead target with `InvalidOperationException`. `MemoryManager.Free` additionally returns `false` if the process's PID + start-time identity is no longer alive, rather than passing a stale PID to native `LM_FreeMemoryEx`. This is an important safety preflight but does not eliminate the race between validation and the native operation. It does not add a liveness check to hot-path reads, writes or scans. Independently owned handles keep their separate target-exit cleanup semantics.
 
 ## Manager APIs
 
