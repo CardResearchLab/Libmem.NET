@@ -21,8 +21,16 @@ ProcessInfo^ MemoryManager::Target() {
 array<Byte>^ MemoryManager::Read(UInt64 address,int count) {
     return Libmem::ReadMemory(Target(),address,count);
 }
+bool MemoryManager::TryRead(UInt64 address,int count,array<Byte>^% data) {
+    data=Read(address,count);
+    return data->Length==count;
+}
 int MemoryManager::Write(UInt64 address,array<Byte>^ data) {
     return Libmem::WriteMemory(Target(),address,data);
+}
+bool MemoryManager::TryWrite(UInt64 address,array<Byte>^ data,int% bytesWritten) {
+    bytesWritten=Write(address,data);
+    return bytesWritten==data->Length;
 }
 Int32 MemoryManager::ReadInt32(UInt64 address) {
     auto bytes=Read(address,4);

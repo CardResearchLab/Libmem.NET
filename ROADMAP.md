@@ -150,7 +150,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 ## 进行中：v2.5.0（独立开发分支，未发布）
 
-已完成 2.4.1 公网 NuGet Smoke #41 验收；2.5.0 首个 PR 添加 `ScanManager.TryDataScan`、`TryPatternScan`、`TrySigScan`，保留原生扫描器和旧 API 语义。主线 Build #447 在功能分支创建时仍需最终核实，功能 PR 不应在主线验收和自身 CI 通过前合并。后续评估内存/Hook 生命周期等通用改进，仍保持 Windows x64/x86、.NET 8、独立 libmem 封装定位；不引入游戏业务或未经验证的平台支持。
+第一阶段 PR #144 已合并，新增 `ScanManager.TryDataScan`、`TryPatternScan`、`TrySigScan`；合并后的主线 Build #452 和 Published NuGet Smoke #45 均通过。第二阶段在 `feature/v2.5-memory-try-read-write` 独立分支开发 `MemoryManager.TryRead/TryWrite`，完整传输为 true，短读短写为 false，输出保留实际数据/数量，旧 `Read/Write` 语义不变。合并须通过 Windows x64/x86 Release、运行时测试、API 基线和本地 NuGet 消费者验收；版本仍保持 2.4.1，暂不发布 2.5.0。后续再评估 Hook/生命周期等通用改进；不引入游戏业务或未经验证的平台支持。
 
 ## 已完成：v2.0.0 — Stable Libmem.NET identity
 

@@ -292,6 +292,12 @@ catch (ObjectDisposedException)
     detachedManagerThrows = true;
 }
 Check(detachedManagerThrows, "MemoryManager should reject operations after its ProcessSession is detached.");
+ExpectThrows<ObjectDisposedException>(
+    () => { _ = detachedMemory.TryRead(0, -1, out _); },
+    "TryRead must preserve detached-session precedence over invalid count.");
+ExpectThrows<ObjectDisposedException>(
+    () => { _ = detachedMemory.TryWrite(0, null!, out _); },
+    "TryWrite must preserve detached-session precedence over null data.");
 
 var detachedModuleManagerThrows = false;
 try
@@ -528,6 +534,20 @@ Check(memory.Read(ownedAllocation.Address, 0).Length == 0,
     "MemoryManager.Read(count=0) should return an empty array.");
 Check(memory.Write(ownedAllocation.Address, []) == 0,
     "MemoryManager.Write(empty) should be a zero-byte no-op.");
+Check(memory.TryRead(ownedAllocation.Address, 0, out var zeroTryRead) && zeroTryRead.Length == 0,
+    "TryRead(count=0) must succeed with empty data.");
+Check(memory.TryWrite(ownedAllocation.Address, [], out var zeroTryWritten) && zeroTryWritten == 0,
+    "TryWrite(empty) must succeed with zero written bytes.");
+var negativeTryRead = ExpectThrows<ArgumentOutOfRangeException>(
+    () => { _ = memory.TryRead(ownedAllocation.Address, -1, out _); },
+    "TryRead must preserve the negative count validation.");
+Check(negativeTryRead.ParamName == "count",
+    "TryRead negative count reported the wrong parameter name.");
+var nullTryWrite = ExpectThrows<ArgumentNullException>(
+    () => { _ = memory.TryWrite(ownedAllocation.Address, null!, out _); },
+    "TryWrite must preserve null-data validation.");
+Check(nullTryWrite.ParamName == "data",
+    "TryWrite null data reported the wrong parameter name.");
 Check(memory.Set(ownedAllocation.Address, 0xA5, 0) == 0,
     "MemoryManager.Set(size=0) should be a zero-byte no-op.");
 var zeroProtectOld = memory.Protect(ownedAllocation.Address, 0, MemoryProtection.ReadWrite);
@@ -542,6 +562,12 @@ var ownedWritten = memory.Write(ownedAllocation.Address, ownedPayload);
 Check(ownedWritten == ownedPayload.Length, "MemoryManager.Write failed.");
 var ownedRead = memory.Read(ownedAllocation.Address, ownedPayload.Length);
 Check(ownedRead.SequenceEqual(ownedPayload), "MemoryManager.Read returned different data.");
+Check(memory.TryWrite(ownedAllocation.Address, ownedPayload, out var fullTryWritten)
+      && fullTryWritten == ownedPayload.Length,
+    "TryWrite must report complete self-process writes.");
+Check(memory.TryRead(ownedAllocation.Address, ownedPayload.Length, out var fullTryRead)
+      && fullTryRead.SequenceEqual(ownedPayload),
+    "TryRead must report complete self-process reads.");
 
 // Typed reads/writes share Read/Write's partial-I/O contract but require a complete value.
 const long signedValue = -0x102030405060708L;
@@ -860,6 +886,17 @@ Stage("assembly-page-boundary");
             "Could not create PAGE_NOACCESS fixture.");
         try
         {
+            Stage("memory-try-boundary");
+            Check(!pidSession.Memory.TryRead(lastReadableByte, 2, out var partialRead)
+                  && partialRead.Length < 2
+                  && partialRead.SequenceEqual(pidSession.Memory.Read(lastReadableByte, 2)),
+                "TryRead must return false and preserve actual bytes for a no-access page crossing.");
+            Check(!pidSession.Memory.TryWrite(lastReadableByte, [0x90, 0x90], out var partialWritten)
+                  && partialWritten >= 0 && partialWritten < 2,
+                "TryWrite must return false and expose the transferred count for a no-access page crossing.");
+            Check(NativeApi.WriteMemory(lastReadableByte, [0x90]) == 1,
+                "Could not restore the final NOP after the short-write fixture.");
+
             var lastInstruction = pidSession.Assembly.ReadAlignedCode(lastReadableByte, 1);
             Check(lastInstruction.SequenceEqual(new byte[] { 0x90 }),
                 "ReadAlignedCode must decode a complete NOP at the page boundary.");

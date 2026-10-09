@@ -288,9 +288,15 @@ namespace Libmem::NET {
         /// <summary>Reads up to count bytes from the target process.</summary>
         /// <returns>Only the bytes actually read.</returns>
         array<Byte>^ Read(UInt64 address, int count);
+        /// <summary>Tries to read exactly count bytes from the target process.</summary>
+        /// <remarks>Returns false on an incomplete read and still outputs the bytes actually read. Invalid arguments and detached sessions throw.</remarks>
+        bool TryRead(UInt64 address, int count, [System::Runtime::InteropServices::Out] array<Byte>^% data);
         /// <summary>Writes bytes to the target process.</summary>
         /// <returns>The number of bytes actually written.</returns>
         int Write(UInt64 address, array<Byte>^ data);
+        /// <summary>Tries to write every byte to the target process.</summary>
+        /// <remarks>Returns false on an incomplete write; bytesWritten always reports the actual byte count. A partial write is not rolled back.</remarks>
+        bool TryWrite(UInt64 address, array<Byte>^ data, [System::Runtime::InteropServices::Out] int% bytesWritten);
         /// <summary>Reads a 32-bit signed integer from the target process.</summary>
         Int32 ReadInt32(UInt64 address);
         /// <summary>Writes a 32-bit signed integer to the target process.</summary>

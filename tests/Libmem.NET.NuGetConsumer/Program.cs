@@ -150,6 +150,14 @@ if (!scanner.TrySigScan(signature, allocation.Address, exactWindow, out var sign
 if (scanner.TryDataScan([0xDE, 0xAD, 0xBE, 0xEF], allocation.Address, exactWindow, out var missAddress)
     || missAddress != 0)
     throw new InvalidOperationException("Local package TryDataScan miss must return false and zero.");
+if (!session.Memory.TryWrite(allocation.Address, payload, out var writeCount) || writeCount != payload.Length)
+    throw new InvalidOperationException("Local package TryWrite did not complete.");
+if (!session.Memory.TryRead(allocation.Address, payload.Length, out var readData) || !readData.SequenceEqual(payload))
+    throw new InvalidOperationException("Local package TryRead did not round trip.");
+if (!session.Memory.TryRead(allocation.Address, 0, out var emptyRead) || emptyRead.Length != 0)
+    throw new InvalidOperationException("Local package TryRead zero-length contract failed.");
+if (!session.Memory.TryWrite(allocation.Address, [], out var emptyWriteCount) || emptyWriteCount != 0)
+    throw new InvalidOperationException("Local package TryWrite empty-data contract failed.");
 #endif
 
 Console.WriteLine(
