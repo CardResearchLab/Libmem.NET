@@ -12,7 +12,9 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The **2.4.1 maintenance patch is officially published** on GitHub and the NuGet Trusted Publishing workflow has completed. This patch hardens `ReadAlignedCode` at unreadable page boundaries, remote mutation process identity checks and Hook regression tests while retaining Windows x64/x86 / .NET 8, the Public API and pinned native libmem.
+The **2.4.1 maintenance patch is officially published** on GitHub and nuget.org, and independent x64/x86 public-feed consumer verification passed. This patch hardens `ReadAlignedCode` at unreadable page boundaries, remote mutation process identity checks and Hook regression tests while retaining Windows x64/x86 / .NET 8, the Public API and pinned native libmem.
+
+**2.5.0 release candidate (not published):** PRs #144, #145, and #146 have merged five additive Try APIs, local Hook removal preflight and VMT multi-entry retry regression into main. Candidate source uses `VERSION=2.5.0` for exact-version preflight; **this is not evidence of a public package**. See [2.5.0 candidate notes](docs/releases/v2.5.0.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
 
 Official support target:
 
@@ -285,7 +287,7 @@ The package ID is `Libmem.NET`, targeting Windows x64/x86 / .NET 8. CI validates
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-Release #46 completed Trusted Publishing / OIDC for 2.4.0, and public x64/x86 NuGet consumer smoke #36 passed. The public-NuGet smoke target baseline in this repository is now **2.4.1**, pending CI verification. See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
+Release #46 completed Trusted Publishing / OIDC for 2.4.0, and public x64/x86 NuGet consumer smoke #36 passed. The public-NuGet smoke target baseline is **2.4.1** and public Smoke #40/#41 passed; 2.5.0 has not been published to nuget.org. See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 
