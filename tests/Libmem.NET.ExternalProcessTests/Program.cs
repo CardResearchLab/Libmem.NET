@@ -509,6 +509,12 @@ try
         "Remote Write did not write the full replacement payload.");
     Check(session.Memory.Read(ready.Address + 32, replacement.Length).SequenceEqual(replacement),
         "Remote Read after Write returned different bytes.");
+    Check(session.Memory.TryWrite(ready.Address + 32, replacement, out var remoteTryWritten)
+          && remoteTryWritten == replacement.Length,
+        "Remote TryWrite must report an exact transfer.");
+    Check(session.Memory.TryRead(ready.Address + 32, replacement.Length, out var remoteTryRead)
+          && remoteTryRead.SequenceEqual(replacement),
+        "Remote TryRead must report an exact transfer.");
 
     var signature = string.Join(" ", expected.Select(value => value.ToString("X2")));
     Check(session.Scanner.SigScan(signature, ready.Address, ready.Size) == ready.Address,
