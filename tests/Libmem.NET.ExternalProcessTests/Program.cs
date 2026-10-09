@@ -227,6 +227,44 @@ try
     Check(session.Pid == ready.Pid, "ProcessSession attached to the wrong PID.");
     Check(session.IsAlive(), "TestTarget should be alive after attach.");
 
+    // A stale process identity may carry a valid PID belonging to a different
+    // process. Construct that identity deterministically via the internal
+    // metadata/session constructors rather than relying on unpredictable PID reuse.
+    // The public Attach(ProcessInfo) path correctly refuses this identity.
+    var internalFlags = System.Reflection.BindingFlags.Instance |
+                        System.Reflection.BindingFlags.NonPublic;
+    var infoConstructor = typeof(ProcessInfo).GetConstructor(
+        internalFlags, binder: null,
+        types: [typeof(uint), typeof(uint), typeof(Architecture), typeof(ulong),
+                typeof(ulong), typeof(string), typeof(string)],
+        modifiers: null);
+    Check(infoConstructor is not null, "Expected an internal ProcessInfo metadata constructor.");
+    var staleInfo = (ProcessInfo)infoConstructor!.Invoke(
+        [process.Pid, process.ParentPid, process.Architecture, process.Bits,
+         process.StartTime ^ 1UL, process.Name, process.Path]);
+    Check(ProcessSession.Open(staleInfo) is null,
+        "Public session attach must reject stale process start times.");
+
+    var sessionConstructor = typeof(ProcessSession).GetConstructor(
+        internalFlags, binder: null, types: [typeof(ProcessInfo)], modifiers: null);
+    Check(sessionConstructor is not null, "Expected an internal ProcessSession constructor.");
+    using var staleSession = (ProcessSession)sessionConstructor!.Invoke([staleInfo]);
+    Check(!staleSession.IsAlive(),
+        "An identity with the current PID but a different start time must be stale.");
+
+    using (var staleFreeProbe = session.Memory.Allocate(4096, MemoryProtection.ReadWrite))
+    {
+        byte[] sentinel = [0x4C, 0x69, 0x62, 0x6D, 0x65, 0x6D, 0x32, 0x34];
+        Check(session.Memory.Write(staleFreeProbe.Address, sentinel) == sentinel.Length,
+            "Could not initialize stale-free protection fixture.");
+        Check(!staleSession.Memory.Free(staleFreeProbe.Address, staleFreeProbe.Size),
+            "A stale session must never free an allocation in the live process sharing its PID.");
+        Check(session.Memory.Read(staleFreeProbe.Address, sentinel.Length).SequenceEqual(sentinel),
+            "Stale Memory.Free unexpectedly changed the live process allocation.");
+        Check(staleFreeProbe.Free(),
+            "The valid session must retain ownership and be able to free the allocation.");
+    }
+
     // Real cross-process HookManager / HookHandle lifecycle.
     Check(CallTarget(child, ready.HookSource) == 1,
         "TestTarget Hook source did not return its original value.");
