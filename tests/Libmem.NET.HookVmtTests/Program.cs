@@ -157,6 +157,52 @@ Check(!disposeHook.IsInstalled, "HookHandle should report uninstalled after repe
 Check(disposeHook.Remove(), "HookHandle.Remove should remain idempotent after successful Dispose.");
 Check(CallNoArgs(source.Address) == 1, "HookHandle.Dispose did not restore source behavior.");
 
+// Static local HookCode follows LM_UnhookCode rather than LM_UnhookCodeEx.
+// The pinned local native path can report success without restoring bytes if
+// the trampoline is unreadable. Preserve ownership and source permissions so
+// callers can repair the trampoline and retry deterministic cleanup.
+using (var localHook = NativeApi.HookCode(source.Address, destination.Address)
+    ?? throw new InvalidOperationException("Could not install static local HookCode fixture."))
+{
+    Check(localHook.IsInstalled && !localHook.IsDisposed,
+        "Static local HookCode should return an active owned handle.");
+    Check(CallNoArgs(source.Address) == 2,
+        "Static local HookCode did not redirect source.");
+    Check(CallNoArgs(localHook.Trampoline) == 1,
+        "Static local HookCode trampoline did not preserve the original behavior.");
+
+    var sourceProtection = NativeApi.FindSegment(source.Address)?.Protection
+        ?? throw new InvalidOperationException("Could not resolve source protection before local unhook failure.");
+    var priorTrampolineProtection = memory.Protect(localHook.Trampoline, 1, MemoryProtection.None);
+    try
+    {
+        Check(memory.Read(localHook.Trampoline, checked((int)localHook.PatchedBytes)).Length == 0,
+            "Local trampoline must be unreadable for the failed-unhook fixture.");
+        Check(!localHook.Remove(),
+            "Static HookHandle.Remove must reject an unreadable local trampoline.");
+        Check(localHook.IsInstalled && !localHook.IsDisposed,
+            "Failed local Remove must retain active ownership for a retry.");
+        Check(CallNoArgs(source.Address) == 2,
+            "Failed local Remove must not change the existing source redirection.");
+        Check(NativeApi.FindSegment(source.Address)?.Protection == sourceProtection,
+            "Failed local Remove must preserve the source page protection.");
+    }
+    finally
+    {
+        memory.Protect(localHook.Trampoline, 1, priorTrampolineProtection);
+    }
+
+    Check(localHook.Remove(),
+        "Local HookHandle.Remove should succeed after trampoline access is restored.");
+    Check(!localHook.IsInstalled,
+        "Successful retry should clear local HookHandle installation state.");
+    Check(CallNoArgs(source.Address) == 1,
+        "Successful local Remove retry must restore source behavior.");
+    Check(memory.Read(source.Address, sourceCode.Length).SequenceEqual(sourceCode),
+        "Successful local Remove retry must restore the source bytes.");
+    Check(localHook.Remove(), "Repeated local Remove should remain idempotent.");
+}
+
 var disposedSession = NativeApi.Attach((uint)Environment.ProcessId)
     ?? throw new InvalidOperationException("Could not create disposed-session HookManager coverage.");
 var disposedHooks = disposedSession.Hooks;
