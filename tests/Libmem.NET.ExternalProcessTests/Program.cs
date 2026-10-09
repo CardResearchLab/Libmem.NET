@@ -265,6 +265,55 @@ try
             "The valid session must retain ownership and be able to free the allocation.");
     }
 
+    // Session and static mutating APIs must validate PID + creation time, not
+    // merely the PID that native libmem reopens. This deterministic fake identity
+    // represents a reused PID without needing OS PID reuse to happen in CI.
+    using (var staleProtectProbe = session.Memory.Allocate(4096, MemoryProtection.ReadWrite))
+    {
+        var protectionBefore = ProtectionOf(process!, staleProtectProbe.Address);
+        Check(protectionBefore == MemoryProtection.ReadWrite,
+            "Expected a writable allocation before stale page-protection probes.");
+
+        ExpectThrows<InvalidOperationException>(
+            () => staleSession.Memory.Protect(
+                staleProtectProbe.Address, staleProtectProbe.Size, MemoryProtection.Read),
+            "MemoryManager.Protect must reject a stale process identity.");
+        ExpectThrows<InvalidOperationException>(
+            () => NativeApi.ProtectMemory(
+                staleInfo, staleProtectProbe.Address, staleProtectProbe.Size, MemoryProtection.Read),
+            "Static ProtectMemory(process) must reject a stale process identity.");
+
+        Check(ProtectionOf(process!, staleProtectProbe.Address) == protectionBefore,
+            "A stale session unexpectedly changed the live process page protection.");
+    }
+
+    ExpectThrows<InvalidOperationException>(
+        () => staleSession.Hooks.Install(ready.HookSource, ready.HookDestination),
+        "HookManager.Install must reject a stale process identity.");
+    ExpectThrows<InvalidOperationException>(
+        () => NativeApi.HookCode(staleInfo, ready.HookSource, ready.HookDestination),
+        "Static HookCode(process) must reject a stale process identity.");
+    Check(CallTarget(child, ready.HookSource) == 1,
+        "Stale hook installation unexpectedly redirected live target code.");
+
+    var liveModule = session.Modules.Enumerate().FirstOrDefault(module => module is not null)
+        ?? throw new InvalidOperationException("TestTarget exposed no module for stale unload verification.");
+    var moduleConstructor = typeof(ModuleInfo).GetConstructor(
+        internalFlags, binder: null,
+        types: [typeof(ulong), typeof(ulong), typeof(ulong),
+                typeof(string), typeof(string), typeof(uint), typeof(ulong)],
+        modifiers: null);
+    Check(moduleConstructor is not null, "Expected an internal ModuleInfo provenance constructor.");
+    var staleModule = (ModuleInfo)moduleConstructor!.Invoke(
+        [liveModule.Base, liveModule.End, liveModule.Size, liveModule.Name, liveModule.Path,
+         staleInfo.Pid, staleInfo.StartTime]);
+    Check(!staleSession.Modules.Unload(staleModule),
+        "ModuleManager.Unload must not unload a live module through a stale process identity.");
+    Check(!NativeApi.UnloadModule(staleInfo, staleModule),
+        "Static UnloadModule(process) must not unload through a stale process identity.");
+    Check(CallTarget(child, ready.HookSource) == 1,
+        "Stale module unload unexpectedly affected the live target process.");
+
     // Real cross-process HookManager / HookHandle lifecycle.
     Check(CallTarget(child, ready.HookSource) == 1,
         "TestTarget Hook source did not return its original value.");
