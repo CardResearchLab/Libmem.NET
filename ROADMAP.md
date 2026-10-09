@@ -148,9 +148,9 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - 将 Hook 删除失败时的 trampoline 回归测试改为确定性的 `PAGE_NOACCESS` 场景。
 - 发布证据：主线 Build #445、Release 预演 #47、GitHub Release #48、NuGet OIDC #49；发布后公网消费测试以实际 CI 结果为准。
 
-## 下一规划：v2.5.0（尚未开始功能开发）
+## 进行中：v2.5.0（独立开发分支，未发布）
 
-优先完成 2.4.1 公网包验收，再根据兼容性与测试成本评估通用 API 改进。保持 Windows x64/x86、.NET 8、独立 libmem 封装定位；不引入游戏业务或未验证的架构支持。
+已完成 2.4.1 公网 NuGet Smoke #41 验收；2.5.0 首个 PR 添加 `ScanManager.TryDataScan`、`TryPatternScan`、`TrySigScan`，保留原生扫描器和旧 API 语义。主线 Build #447 在功能分支创建时仍需最终核实，功能 PR 不应在主线验收和自身 CI 通过前合并。后续评估内存/Hook 生命周期等通用改进，仍保持 Windows x64/x86、.NET 8、独立 libmem 封装定位；不引入游戏业务或未经验证的平台支持。
 
 ## 已完成：v2.0.0 — Stable Libmem.NET identity
 
