@@ -805,8 +805,13 @@ Stage("assembly-page-boundary");
         var lastReadableByte = guardedAddress + pageSize - 1UL;
         Check(NativeApi.WriteMemory(lastReadableByte, [0x90]) == 1,
             "Could not write the final readable NOP fixture.");
-        var oldGuardProtection = NativeApi.ProtectMemory(
-            guardedAddress + pageSize, pageSize, MemoryProtection.None);
+        // MemoryProtection.None is not supported by the pinned native
+        // LM_ProtMemory validation; use Windows VirtualProtect for this
+        // isolated test fixture without changing Libmem.NET's public API.
+        var guardPagePointer = unchecked((nint)(nuint)(guardedAddress + pageSize));
+        Check(NativePageProtection.VirtualProtect(
+                guardPagePointer, (nuint)pageSize, 0x01U, out var oldGuardProtection),
+            "Could not create PAGE_NOACCESS fixture.");
         try
         {
             var lastInstruction = pidSession.Assembly.ReadAlignedCode(lastReadableByte, 1);
@@ -819,7 +824,9 @@ Stage("assembly-page-boundary");
         }
         finally
         {
-            _ = NativeApi.ProtectMemory(guardedAddress + pageSize, pageSize, oldGuardProtection);
+            Check(NativePageProtection.VirtualProtect(
+                    guardPagePointer, (nuint)pageSize, oldGuardProtection, out _),
+                "Could not restore PAGE_NOACCESS fixture protection.");
         }
     }
     finally
@@ -856,3 +863,10 @@ if (IntPtr.Size == sizeof(uint))
 }
 
 Console.WriteLine("SMOKE TESTS PASS");
+
+internal static class NativePageProtection
+{
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+    internal static extern bool VirtualProtect(
+        nint address, nuint size, uint newProtection, out uint oldProtection);
+}
