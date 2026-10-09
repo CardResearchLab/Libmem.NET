@@ -69,9 +69,24 @@ MemoryProtection Libmem::ProtectMemory(ProcessInfo^ input,UInt64 a,UInt64 size,M
     return static_cast<MemoryProtection>(old);
 }
 UInt64 Libmem::AllocateMemory(UInt64 size,MemoryProtection prot) { native_protection(prot,"prot"); return LM_AllocMemory(native_size(size,"size"),static_cast<lm_prot_t>(prot)); }
-UInt64 Libmem::AllocateMemory(ProcessInfo^ input,UInt64 size,MemoryProtection prot) { native_protection(prot,"prot"); auto p=proc(input); return LM_AllocMemoryEx(&p,native_size(size,"size"),static_cast<lm_prot_t>(prot)); }
+UInt64 Libmem::AllocateMemory(ProcessInfo^ input,UInt64 size,MemoryProtection prot) {
+    native_protection(prot,"prot");
+    auto p=proc(input);
+    auto allocationSize=native_size(size,"size");
+    // LM_AllocMemoryEx reopens a process by PID without checking its start time.
+    if(!Libmem::IsProcessAlive(input))
+        throw gcnew InvalidOperationException("Target process is no longer alive.");
+    return LM_AllocMemoryEx(&p,allocationSize,static_cast<lm_prot_t>(prot));
+}
 bool Libmem::FreeMemory(UInt64 a,UInt64 size) { return LM_FreeMemory(native_address(a,"address"),native_size(size,"size"))!=LM_FALSE; }
-bool Libmem::FreeMemory(ProcessInfo^ input,UInt64 a,UInt64 size) { auto p=proc(input); return LM_FreeMemoryEx(&p,native_address(a,"address"),native_size(size,"size"))!=LM_FALSE; }
+bool Libmem::FreeMemory(ProcessInfo^ input,UInt64 a,UInt64 size) {
+    auto p=proc(input);
+    auto address=native_address(a,"address");
+    auto allocationSize=native_size(size,"size");
+    // Reject stale PID + start-time identities before native PID-only MEM_RELEASE.
+    if(!Libmem::IsProcessAlive(input)) return false;
+    return LM_FreeMemoryEx(&p,address,allocationSize)!=LM_FALSE;
+}
 UInt64 Libmem::DeepPointer(UInt64 a,array<UInt64>^ data) {
     auto off=offsets(data); return LM_DeepPointer(native_address(a,"address"),off.empty()?nullptr:off.data(),off.size());
 }
