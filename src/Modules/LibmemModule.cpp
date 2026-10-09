@@ -58,6 +58,9 @@ ModuleInfo^ Libmem::LoadModule(ProcessInfo^ input,String^ path) {
     auto p=proc(input);
     lm_module_t m{};
     auto s=utf8(path,"path");
+    // The pinned LM_LoadModuleEx opens the target by PID, not by creation time.
+    if(!Libmem::IsProcessAlive(input))
+        throw gcnew InvalidOperationException("Target process is no longer alive.");
     return LM_LoadModuleEx(&p,s.c_str(),&m) ? module(m,input) : nullptr;
 }
 bool Libmem::UnloadModule(ModuleInfo^ input) {
