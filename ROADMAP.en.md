@@ -149,9 +149,9 @@ After stable 2.2.0 publication, systematically compare against the pinned rdbo/l
 - Make failed `HookHandle.Remove` regression deterministic using `PAGE_NOACCESS` trampoline protection.
 - Evidence: main Build #445, Release dry run #47, GitHub Release #48 and NuGet OIDC push #49; independent public-consumer results are gated by post-release CI.
 
-## Next: v2.5.0 (feature work not yet started)
+## In progress: v2.5.0 (isolated feature branch, unpublished)
 
-Finish public 2.4.1 consumer verification first, then evaluate compatible, general-purpose API enhancements. Maintain Windows x64/x86 / .NET 8 and the libmem wrapper-only scope. No game-specific logic or unverified platform support.
+Public 2.4.1 NuGet Smoke #41 passed. The first isolated 2.5.0 PR introduces `ScanManager.TryDataScan`, `TryPatternScan`, and `TrySigScan` without changing existing scanning behavior. Main Build #447 was still pending when the feature branch was created; do not merge before it and the feature PR's own CI pass. Later evaluate generic Memory/Hook lifetime improvements while retaining Windows x64/x86 / .NET 8 and the wrapper-only scope.
 
 ## Completed: v2.0.0 — Stable Libmem.NET identity
 
