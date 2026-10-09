@@ -45,16 +45,58 @@ array<Byte>^ AssemblyManager::ReadAlignedCode(UInt64 address,UInt64 minimumLengt
     if(minimumLength>static_cast<UInt64>(Int32::MaxValue))
         throw gcnew ArgumentOutOfRangeException("minimumLength", "Requested code range exceeds managed array capacity.");
 
-    auto length=CodeLength(address,minimumLength);
-    if(length<minimumLength)
-        throw gcnew LibmemException("LM_CodeLengthEx", "Could not cover the minimum instruction-aligned code length.");
-    if(length>static_cast<UInt64>(Int32::MaxValue))
-        throw gcnew ArgumentOutOfRangeException("minimumLength", "Instruction-aligned code exceeds managed array capacity.");
+    // Fast path: retain the pinned native code-length behavior for ordinary readable code.
+    // LM_CodeLengthEx always requests LM_INST_MAX bytes, even for a one-byte NOP at
+    // the end of a readable page. That request crosses a PAGE_NOACCESS boundary
+    // and fails even though the complete requested instruction is readable.
+    UInt64 length=0;
+    try {
+        length=CodeLength(address,minimumLength);
+    } catch(LibmemException^) {
+        // Retry below using bounded reads when the native instruction probe fails.
+    }
 
-    auto bytes=Libmem::ReadMemory(target,address,static_cast<int>(length));
-    if(bytes->LongLength!=static_cast<Int64>(length))
+    if(length>=minimumLength) {
+        if(length>static_cast<UInt64>(Int32::MaxValue))
+            throw gcnew ArgumentOutOfRangeException("minimumLength", "Instruction-aligned code exceeds managed array capacity.");
+
+        auto bytes=Libmem::ReadMemory(target,address,static_cast<int>(length));
+        if(bytes->LongLength==static_cast<Int64>(length))
+            return bytes;
+    }
+
+    // Boundary fallback: read at most 15 bytes (the x86/x64 instruction maximum)
+    // and shrink the probe if ReadProcessMemory rejects a cross-page request.
+    // Decode only bytes that were actually read; never decode an uninitialized
+    // tail from the native code-length scratch buffer.
+    UInt64 alignedLength=0;
+    while(alignedLength<minimumLength) {
+        if(address>UInt64::MaxValue-alignedLength)
+            throw gcnew LibmemException("LM_CodeLengthEx", "Instruction address overflow.");
+        UInt64 current=address+alignedLength;
+        array<Byte>^ probe=nullptr;
+        for(int count=15;count>=1;--count) {
+            probe=Libmem::ReadMemory(target,current,count);
+            if(probe->Length>0) break;
+        }
+        if(probe==nullptr || probe->Length==0)
+            throw gcnew LibmemException("LM_ReadMemoryEx", "Could not read the instruction at the requested target address.");
+
+        auto instructions=Libmem::Disassemble(probe,target->Architecture,1,current);
+        if(instructions->Count!=1 || instructions[0]->Size==0 ||
+           instructions[0]->Size>static_cast<UInt64>(probe->Length))
+            throw gcnew LibmemException("LM_CodeLengthEx", "Could not decode a complete instruction from readable target bytes.");
+
+        auto instructionLength=instructions[0]->Size;
+        if(instructionLength>static_cast<UInt64>(Int32::MaxValue)-alignedLength)
+            throw gcnew ArgumentOutOfRangeException("minimumLength", "Instruction-aligned code exceeds managed array capacity.");
+        alignedLength+=instructionLength;
+    }
+
+    auto complete=Libmem::ReadMemory(target,address,static_cast<int>(alignedLength));
+    if(complete->LongLength!=static_cast<Int64>(alignedLength))
         throw gcnew LibmemException("LM_ReadMemoryEx", "Could not read the complete instruction-aligned code range.");
-    return bytes;
+    return complete;
 }
 
 } // namespace Libmem::NET
