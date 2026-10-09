@@ -73,19 +73,16 @@ RemoteAllocation^ MemoryManager::Allocate(UInt64 size,MemoryProtection protectio
     if(size==0) throw gcnew ArgumentOutOfRangeException("size");
     ::Libmem::NET::Interop::native_protection(protection,"protection");
     auto target=Target();
-    if(!Libmem::IsProcessAlive(target)) throw gcnew InvalidOperationException("Target process is no longer alive.");
+    // The static facade validates exact identity before calling native allocation.
     auto address=Libmem::AllocateMemory(target,size,protection);
     if(address==0 || IsBadAddress(address))
         throw gcnew LibmemException("LM_AllocMemoryEx", "Failed to allocate memory in the target process.");
     return gcnew RemoteAllocation(target,address,size);
 }
 bool MemoryManager::Free(UInt64 address,UInt64 size) {
-    auto target=Target();
-    // The pinned LM_FreeMemoryEx opens a process by PID, ignoring start_time.
-    // Refuse to free memory using a stale session identity: PID reuse must not
-    // permit a former session to release an allocation in a different process.
-    if(!Libmem::IsProcessAlive(target)) return false;
-    return Libmem::FreeMemory(target,address,size);
+    // Centralize the stale-identity guard in the static facade so callers
+    // cannot bypass it and Manager operations do not enumerate twice.
+    return Libmem::FreeMemory(Target(),address,size);
 }
 
 } // namespace Libmem::NET
