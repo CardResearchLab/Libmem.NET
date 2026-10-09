@@ -75,6 +75,8 @@ bool Libmem::UnloadModule(ProcessInfo^ input,ModuleInfo^ m) {
     if(!m->BelongsTo(input))
         throw gcnew ArgumentException("ModuleInfo belongs to a different process identity.", "module");
     auto native=mod(m);
+    // PID-only FreeLibrary in the pinned native API must not run for a stale owner.
+    if(!Libmem::IsProcessAlive(input)) return false;
     return LM_UnloadModuleEx(&p,&native)!=LM_FALSE;
 }
 
