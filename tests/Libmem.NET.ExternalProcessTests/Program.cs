@@ -579,8 +579,14 @@ try
     Check(sourceProtectionBeforeFailedRemove == MemoryProtection.ExecuteRead,
         "Hook installation should restore the source page to execute-read.");
 
-    Check(session.Memory.Free(exitReclaimedHook.Trampoline, exitReclaimedHook.PatchedBytes),
-        "Could not invalidate the remote trampoline for the unhook failure probe.");
+    // Freeing a trampoline is not a deterministic unreadable-memory fixture:
+    // Windows may reuse the released virtual address before the unhook probe.
+    // Protect the still-allocated page with PAGE_NOACCESS instead. The target
+    // owns this memory and its exit will reclaim it without an explicit unhook.
+    _ = SetTargetProtection(child, exitReclaimedHook.Trampoline, pageNoAccess);
+    Check(session.Memory.Read(
+            exitReclaimedHook.Trampoline, checked((int)exitReclaimedHook.PatchedBytes)).Length == 0,
+        "Trampoline must be unreadable before testing the failed unhook path.");
     Check(!exitReclaimedHook.Remove(),
         "HookHandle.Remove should report failure when the live target trampoline is no longer readable.");
     Check(exitReclaimedHook.IsInstalled,
