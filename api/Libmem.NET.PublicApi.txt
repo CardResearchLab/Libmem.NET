@@ -103,7 +103,9 @@ TYPE public ref class ProcessSession sealed : IDisposable
   ~ProcessSession();
 TYPE public ref class MemoryManager sealed
   array<Byte>^ Read(UInt64 address, int count);
+  bool TryRead(UInt64 address, int count, [System::Runtime::InteropServices::Out] array<Byte>^% data);
   int Write(UInt64 address, array<Byte>^ data);
+  bool TryWrite(UInt64 address, array<Byte>^ data, [System::Runtime::InteropServices::Out] int% bytesWritten);
   Int32 ReadInt32(UInt64 address);
   void WriteInt32(UInt64 address, Int32 value);
   Int64 ReadInt64(UInt64 address);
