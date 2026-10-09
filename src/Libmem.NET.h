@@ -490,7 +490,7 @@ namespace Libmem::NET {
     };
 
     /// <summary>Owns one installed native hook and its trampoline.</summary>
-    /// <remarks>Explicit removal/disposal restores original code. Failed removal retains ownership for retry while a live target still exists; target exit converges the handle to released. PatchedBytes is instruction-aligned, but trampoline relocation capabilities remain those of the pinned native libmem backend. Finalization never patches target-process code.</remarks>
+    /// <remarks>Explicit removal/disposal restores original code. Failed removal retains ownership for retry while a live target still exists; target exit converges the handle to released. Both local and remote removal preflight trampoline readability, but native unhooking is not atomic. PatchedBytes is instruction-aligned, but trampoline relocation capabilities remain those of the pinned native libmem backend. Finalization never patches target-process code.</remarks>
     public ref class HookHandle sealed : IDisposable {
     private:
         ProcessInfo^ target_;

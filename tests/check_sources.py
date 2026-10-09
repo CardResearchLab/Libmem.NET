@@ -277,6 +277,11 @@ assert "bool HookHandle::IsInstalled::get()" in source
 assert "bool HookHandle::IsDisposed::get()" in source
 assert "std::vector<lm_byte_t> trampolineProbe" in source
 assert "LM_ReadMemoryEx(&p,trampoline,trampolineProbe.data(),size)!=size" in source
+# Local and remote unhooks must preflight a readable trampoline before the
+# pinned native implementation can modify source code or discard ownership.
+hook_remove_source = source.split("bool HookHandle::Remove()", 1)[1].split("HookHandle::~HookHandle()", 1)[0]
+assert "LM_ReadMemoryEx(&current,trampoline,trampolineProbe.data(),size)!=size" in hook_remove_source
+assert hook_remove_source.index("LM_ReadMemoryEx(&current,trampoline,trampolineProbe.data(),size)!=size") < hook_remove_source.index("ok=LM_UnhookCode(source,trampoline,size)")
 hook_dispose = source.split("HookHandle::~HookHandle()", 1)[1].split("\n}", 1)[0]
 assert "installed_ && !Remove()" in hook_dispose
 assert "hook remains installed" in hook_dispose
@@ -342,6 +347,16 @@ for required_vmt_failure_probe in [
 ]:
     assert required_vmt_failure_probe in hook_runtime_source, (
         f"Hook/VMT runtime tests lost VMT failure-retry coverage: {required_vmt_failure_probe}"
+    )
+for required_retry_probe in [
+    "Static HookHandle.Remove must reject an unreadable local trampoline.",
+    "Successful local Remove retry must restore source behavior.",
+    "Partial VMT reset failure must retain ownership.",
+    "Retrying partial VMT reset did not restore the remaining tracked slot.",
+    "VmtFailureNativeMethods.MemDecommit",
+]:
+    assert required_retry_probe in hook_runtime_source, (
+        f"Hook/VMT runtime tests lost 2.5.0 failure/retry coverage: {required_retry_probe}"
     )
 injector_project = (root / "tests/Libmem.NET.InjectorTests/Libmem.NET.InjectorTests.csproj").read_text(encoding="utf-8")
 sample_project = (root / "samples/Example.csproj").read_text(encoding="utf-8")

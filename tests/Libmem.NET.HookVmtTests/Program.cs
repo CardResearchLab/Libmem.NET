@@ -157,6 +157,60 @@ Check(!disposeHook.IsInstalled, "HookHandle should report uninstalled after repe
 Check(disposeHook.Remove(), "HookHandle.Remove should remain idempotent after successful Dispose.");
 Check(CallNoArgs(source.Address) == 1, "HookHandle.Dispose did not restore source behavior.");
 
+// Static local HookCode follows LM_UnhookCode rather than LM_UnhookCodeEx.
+// The pinned local native path can report success without restoring bytes if
+// the trampoline is unreadable. Preserve ownership and source permissions so
+// callers can repair the trampoline and retry deterministic cleanup.
+using (var localHook = NativeApi.HookCode(source.Address, destination.Address)
+    ?? throw new InvalidOperationException("Could not install static local HookCode fixture."))
+{
+    Check(localHook.IsInstalled && !localHook.IsDisposed,
+        "Static local HookCode should return an active owned handle.");
+    Check(CallNoArgs(source.Address) == 2,
+        "Static local HookCode did not redirect source.");
+    Check(CallNoArgs(localHook.Trampoline) == 1,
+        "Static local HookCode trampoline did not preserve the original behavior.");
+
+    var sourceProtection = NativeApi.FindSegment(source.Address)?.Protection
+        ?? throw new InvalidOperationException("Could not resolve source protection before local unhook failure.");
+    var trampolinePointer = IntPtr.Size == 4
+        ? new IntPtr(unchecked((int)localHook.Trampoline))
+        : new IntPtr(unchecked((long)localHook.Trampoline));
+    Check(VmtFailureNativeMethods.VirtualProtect(
+            trampolinePointer, (nuint)1, VmtFailureNativeMethods.PageNoAccess,
+            out var priorTrampolineProtection),
+        "Could not set PAGE_NOACCESS on the local trampoline test page.");
+    try
+    {
+        Check(memory.Read(localHook.Trampoline, checked((int)localHook.PatchedBytes)).Length == 0,
+            "Local trampoline must be unreadable for the failed-unhook fixture.");
+        Check(!localHook.Remove(),
+            "Static HookHandle.Remove must reject an unreadable local trampoline.");
+        Check(localHook.IsInstalled && !localHook.IsDisposed,
+            "Failed local Remove must retain active ownership for a retry.");
+        Check(CallNoArgs(source.Address) == 2,
+            "Failed local Remove must not change the existing source redirection.");
+        Check(NativeApi.FindSegment(source.Address)?.Protection == sourceProtection,
+            "Failed local Remove must preserve the source page protection.");
+    }
+    finally
+    {
+        Check(VmtFailureNativeMethods.VirtualProtect(
+                trampolinePointer, (nuint)1, priorTrampolineProtection, out _),
+            "Could not restore local trampoline page protection for unhook retry.");
+    }
+
+    Check(localHook.Remove(),
+        "Local HookHandle.Remove should succeed after trampoline access is restored.");
+    Check(!localHook.IsInstalled,
+        "Successful retry should clear local HookHandle installation state.");
+    Check(CallNoArgs(source.Address) == 1,
+        "Successful local Remove retry must restore source behavior.");
+    Check(memory.Read(source.Address, sourceCode.Length).SequenceEqual(sourceCode),
+        "Successful local Remove retry must restore the source bytes.");
+    Check(localHook.Remove(), "Repeated local Remove should remain idempotent.");
+}
+
 var disposedSession = NativeApi.Attach((uint)Environment.ProcessId)
     ?? throw new InvalidOperationException("Could not create disposed-session HookManager coverage.");
 var disposedHooks = disposedSession.Hooks;
@@ -345,6 +399,76 @@ finally
         VmtFailureNativeMethods.VirtualFree(remapped, 0, VmtFailureNativeMethods.MemRelease);
 }
 
+// Verify partial VMT reset when an earlier tracked entry can be restored,
+// but a later tracked slot lies on a decommitted page. Reset must retain only
+// the still-active entry, and a second attempt must finish after recommit.
+var pageSize = Environment.SystemPageSize;
+using (var partialPage = memory.Allocate(checked((ulong)pageSize * 2), MemoryProtection.ReadWrite)
+    ?? throw new InvalidOperationException("Could not allocate two-page partial VMT reset fixture."))
+{
+    var distantIndex = checked((ulong)pageSize / (ulong)IntPtr.Size);
+    var distantAddress = partialPage.Address + (ulong)pageSize;
+    const ulong nearOriginal = 0x13572468UL;
+    const ulong farOriginal = 0x24681357UL;
+    const ulong nearReplacement = 0xABCDEF01UL;
+    const ulong farReplacement = 0xDEADBEEFUL;
+
+    WritePointer(memory, partialPage.Address, nearOriginal);
+    WritePointer(memory, distantAddress, farOriginal);
+    using var partialVmt = new VmtManager(partialPage.Address);
+    // Native entries are prepended: hook distant first, near last, ensuring
+    // the near slot is restored before the distant decommitted slot fails.
+    partialVmt.Hook(distantIndex, farReplacement);
+    partialVmt.Hook(0, nearReplacement);
+    Check(ReadPointer(memory, partialPage.Address) == nearReplacement,
+        "Could not install near VMT partial-reset fixture.");
+    Check(ReadPointer(memory, distantAddress) == farReplacement,
+        "Could not install distant VMT partial-reset fixture.");
+
+    var distantPointer = new IntPtr(unchecked((long)distantAddress));
+    Check(VmtFailureNativeMethods.VirtualFree(
+            distantPointer, (nuint)pageSize, VmtFailureNativeMethods.MemDecommit),
+        "Could not decommit distant VMT slot page for partial-reset failure.");
+
+    try
+    {
+        var partialResetFailure = ExpectThrows<LibmemException>(
+            () => partialVmt.Reset(),
+            "VmtManager.Reset should fail only after restoring the accessible tracked entry.");
+        Check(partialResetFailure.Operation == "LM_VmtUnhook",
+            "Partial VMT reset reported the wrong native operation.");
+        Check(!partialVmt.IsDisposed,
+            "Partial VMT reset failure must retain ownership.");
+        Check(ReadPointer(memory, partialPage.Address) == nearOriginal,
+            "Partial VMT reset failed to restore the accessible slot first.");
+        Check(partialVmt.GetOriginal(0) == nearOriginal,
+            "Partial VMT reset must allow querying the restored untracked slot.");
+        Check(partialVmt.GetOriginal(distantIndex) == farOriginal,
+            "Partial VMT reset must retain the inaccessible tracked slot metadata.");
+    }
+    finally
+    {
+        var recommitted = VmtFailureNativeMethods.VirtualAlloc(
+            distantPointer, (nuint)pageSize,
+            VmtFailureNativeMethods.MemCommit,
+            VmtFailureNativeMethods.PageReadWrite);
+        Check(recommitted == distantPointer,
+            "Could not recommit distant VMT slot page for retry.");
+    }
+
+    // MEM_DECOMMIT discards page contents; reproduce the still-installed slot
+    // so native unhook can restore its recorded original on a safe retry.
+    WritePointer(memory, distantAddress, farReplacement);
+    partialVmt.Reset();
+    Check(ReadPointer(memory, partialPage.Address) == nearOriginal,
+        "Retrying partial VMT reset changed an already-restored slot.");
+    Check(ReadPointer(memory, distantAddress) == farOriginal,
+        "Retrying partial VMT reset did not restore the remaining tracked slot.");
+    partialVmt.Reset();
+    Check(!partialVmt.IsDisposed,
+        "Successful VMT reset retry must keep the manager reusable.");
+}
+
 Console.WriteLine("HOOK/VMT RUNTIME TESTS PASS");
 
 
@@ -352,8 +476,15 @@ internal static class VmtFailureNativeMethods
 {
     internal const uint MemCommit = 0x1000;
     internal const uint MemReserve = 0x2000;
+    internal const uint MemDecommit = 0x4000;
     internal const uint MemRelease = 0x8000;
+    internal const uint PageNoAccess = 0x01;
     internal const uint PageReadWrite = 0x04;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool VirtualProtect(
+        IntPtr address, nuint size, uint newProtection, out uint oldProtection);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     internal static extern IntPtr VirtualAlloc(

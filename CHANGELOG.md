@@ -9,6 +9,11 @@
 - Add session-bound `MemoryManager.TryRead(address, count, out data)` and `TryWrite(address, data, out bytesWritten)`: the boolean indicates a full transfer, while outputs retain partial read bytes / actual written byte counts.
 - Cover complete, zero-length and page-boundary incomplete operations, argument errors, detached sessions, external-process round trips and local NuGet consumers on x64/x86.
 
+### Fixed / hardened
+
+- Preflight trampoline readability before the static local-process `HookHandle.Remove()` path enters pinned `LM_UnhookCode`, so an unreadable trampoline does not produce a false successful removal and discard the handle. Preserve live ownership, source bytes and page protection for retry.
+- Add deterministic VMT multi-entry partial-reset regression: a readable tracked slot is restored first, an inaccessible slot fails with ownership retained, and retry restores the remaining slot after recommit. No native VMT implementation change.
+
 ### Compatibility
 
 - Preserve existing `DataScan`, `PatternScan`, `SigScan`, `Read` and `Write` contracts, pinned native libmem, Windows x64/x86 / .NET 8 support and existing public API signatures. The new methods are additive and are not available in the published 2.4.1 package.
