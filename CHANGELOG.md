@@ -6,10 +6,12 @@
 
 - Add session-bound `ScanManager.TryDataScan`, `TryPatternScan` and `TrySigScan` with boolean match results and `out UInt64` addresses (zero on a normal miss), avoiding architecture-dependent bad-address sentinel checks in consumers.
 - Cover x64/x86 scan hits, misses, exact-window final candidates, invalid inputs and detached sessions in the runtime smoke suite.
+- Add session-bound `MemoryManager.TryRead(address, count, out data)` and `TryWrite(address, data, out bytesWritten)`: the boolean indicates a full transfer, while outputs retain partial read bytes / actual written byte counts.
+- Cover complete, zero-length and page-boundary incomplete operations, argument errors, detached sessions, external-process round trips and local NuGet consumers on x64/x86.
 
 ### Compatibility
 
-- Preserve existing `DataScan`, `PatternScan`, `SigScan` contracts, pinned native libmem, Windows x64/x86 / .NET 8 support and public API signatures. The new methods are additive and are not available in the published 2.4.1 package.
+- Preserve existing `DataScan`, `PatternScan`, `SigScan`, `Read` and `Write` contracts, pinned native libmem, Windows x64/x86 / .NET 8 support and existing public API signatures. The new methods are additive and are not available in the published 2.4.1 package.
 - Keep `VERSION` at `2.4.1` until a separate, approved 2.5.0 release-candidate PR.
 
 
