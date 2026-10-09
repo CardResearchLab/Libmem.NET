@@ -352,6 +352,8 @@ For a remote target, installation returns an owned handle only after native inst
 
 If explicit remote removal fails while the target is still alive, `Remove()` returns `false`, `IsInstalled` stays `true`, and ownership is retained so the caller can repair a transient condition and retry. Libmem.NET preflights the complete remote trampoline read before calling the pinned `LM_UnhookCodeEx` path so a definitely unreadable trampoline cannot leak a temporary source-page protection change.
 
+Starting in the *unreleased 2.5.0* source, handles created through static **local-process** `NativeApi.HookCode(source, destination)` also preflight the complete trampoline with a safe self-process read before entering pinned `LM_UnhookCode`. The pinned local native function does not verify the return count of its source-code write; without this guard an unreadable trampoline could appear to have been successfully removed while the source remained patched. A failed preflight now returns `false` and retains the handle for retry, leaving the source page and redirection unchanged. This check is only a preflight: concurrent changes, unrelated native write errors, and trampoline relocation limitations remain possible. It does **not** make unhooking atomic or implement a new native hook engine.
+
 If the remote target has exited, the target address space no longer exists; `Remove()` converges the handle to the released state and returns `true`. The finalizer never rewrites target code.
 
 #### Hook conflict and trampoline boundaries
@@ -398,7 +400,7 @@ Explicit disposal restores tracked entries deterministically. After successful c
 
 `VmtManager` is intentionally local-process only. The VTable storage and every replacement function pointer must remain valid for the manager lifetime.
 
-If `Reset()` or `Dispose()` cannot restore a tracked entry, the operation surfaces the native restoration failure and retains bookkeeping/ownership instead of pretending cleanup succeeded. The manager remains available for a later retry after the underlying condition is repaired.
+If `Reset()` or `Dispose()` cannot restore a tracked entry, the operation surfaces the native restoration failure and retains bookkeeping/ownership instead of pretending cleanup succeeded. The manager remains available for a later retry after the underlying condition is repaired. Restoration is **not transactional**: in a multi-entry VTable, a reset may already have restored some entries before encountering an inaccessible slot. Successfully restored entries stay restored; the remaining tracked entries are retained for a retry. Unreleased 2.5.0 regression tests cover this ordering across a decommitted page boundary.
 
 ## Exception model
 
