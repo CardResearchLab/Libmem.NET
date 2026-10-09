@@ -583,7 +583,6 @@ try
     // Windows may reuse the released virtual address before the unhook probe.
     // Protect the still-allocated page with PAGE_NOACCESS instead. The target
     // owns this memory and its exit will reclaim it without an explicit unhook.
-    const uint pageNoAccess = 0x01U;
     _ = SetTargetProtection(child, exitReclaimedHook.Trampoline, pageNoAccess);
     Check(session.Memory.Read(
             exitReclaimedHook.Trampoline, checked((int)exitReclaimedHook.PatchedBytes)).Length == 0,
