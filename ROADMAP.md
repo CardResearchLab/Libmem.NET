@@ -150,7 +150,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 ## 进行中：v2.5.0（独立开发分支，未发布）
 
-第一阶段 PR #144 已合并，新增 `ScanManager.TryDataScan`、`TryPatternScan`、`TrySigScan`；合并后的主线 Build #452 和 Published NuGet Smoke #45 均通过。第二阶段在 `feature/v2.5-memory-try-read-write` 独立分支开发 `MemoryManager.TryRead/TryWrite`，完整传输为 true，短读短写为 false，输出保留实际数据/数量，旧 `Read/Write` 语义不变。合并须通过 Windows x64/x86 Release、运行时测试、API 基线和本地 NuGet 消费者验收；版本仍保持 2.4.1，暂不发布 2.5.0。第三阶段在独立分支加固静态本进程 Hook 删除的 trampoline 可读性预检，并补充 VMT 多项部分恢复后重试回归；不重写 native Hook/VMT，不引入游戏业务或未经验证的平台支持。
+第一阶段 PR #144（ScanManager 三个 Try 方法）、第二阶段 PR #145（MemoryManager.TryRead/TryWrite）以及第三阶段 PR #146（本进程 Hook 卸载 trampoline 可读性预检、VMT 多条目部分恢复重试测试）均已合并。功能 PR 的 Windows x64/x86、多架构本地 NuGet 测试成功；发布前需确认第三阶段主线 Build #457 最终通过。第四阶段在独立候选分支整理 `VERSION=2.5.0`、公开 API 兼容性审计、NuGet 中英文说明、CHANGELOG、Release Notes 和发布清单，并通过候选及主线 CI。当前公网稳定版仍是 2.4.1；后续只在精确提交的 `release/v2.5.0` dry run 成功后，才考虑 tag、GitHub Release 及单独手动 NuGet 发布。继续不支持 ARM64、AnyCPU、跨位数及游戏业务。
 
 ## 已完成：v2.0.0 — Stable Libmem.NET identity
 
