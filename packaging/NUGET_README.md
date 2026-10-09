@@ -12,7 +12,7 @@ Libmem.NET is a Windows-focused C++/CLI wrapper for [rdbo/libmem](https://github
 dotnet add package Libmem.NET --version 2.4.1
 ```
 
-**2.4.1 is a release candidate and is not published yet.** The installation command above applies only after publication; until then install [stable 2.4.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0). This patch fixes `ReadAlignedCode` at unreadable page boundaries, adds stale-process identity guards around remote mutation APIs, and stabilizes failed-hook-removal regression tests. Public APIs, the pinned native library and Windows x64/x86 / .NET 8 support remain unchanged. Identity prechecks cannot eliminate native PID-only call races. See the [2.4.1 candidate notes](https://github.com/CardResearchLab/Libmem.NET/blob/main/docs/releases/v2.4.1.md).
+**2.4.1 is the published stable release.** Install using the command above or download [GitHub Release v2.4.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1). This patch fixes `ReadAlignedCode` at unreadable page boundaries, adds stale-process identity guards around remote mutation APIs, and stabilizes failed-hook-removal regression tests. Public APIs, the pinned native library and Windows x64/x86 / .NET 8 support remain unchanged. Identity prechecks cannot eliminate native PID-only call races. See the [2.4.1 release notes](https://github.com/CardResearchLab/Libmem.NET/blob/main/docs/releases/v2.4.1.md).
 
 ## Highlights
 
@@ -101,7 +101,7 @@ Libmem.NET 是一个面向 Windows 的 [rdbo/libmem](https://github.com/rdbo/lib
 dotnet add package Libmem.NET --version 2.4.1
 ```
 
-**2.4.1 目前只是发布候选，尚未正式发布。** 上面的安装命令需在发布完成后使用；目前应安装 [2.4.0 稳定版](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0)。此补丁修复 `ReadAlignedCode` 不可访问页边界问题、加强远程修改操作前的进程身份校验，并稳定 Hook 卸载失败测试。保持公共 API、固定 native 库和 Windows x64/x86 / .NET 8 支持不变；预检查无法彻底消除原生 PID 操作竞态。参见 [2.4.1 候选说明](https://github.com/CardResearchLab/Libmem.NET/blob/main/docs/releases/v2.4.1.md)。
+**2.4.1 已正式发布。** 可以使用上面的命令安装，或下载 [GitHub Release v2.4.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1)。此补丁修复 `ReadAlignedCode` 不可访问页边界问题、加强远程修改操作前的进程身份校验，并稳定 Hook 卸载失败测试。保持公共 API、固定 native 库和 Windows x64/x86 / .NET 8 支持不变；预检查无法彻底消除原生 PID 操作竞态。参见 [2.4.1 正式发布说明](https://github.com/CardResearchLab/Libmem.NET/blob/main/docs/releases/v2.4.1.md)。
 
 ## 主要功能
 
