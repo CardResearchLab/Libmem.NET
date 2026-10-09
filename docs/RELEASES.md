@@ -4,17 +4,17 @@ This document describes the official release channel, current stable release, su
 
 ## Current stable release
 
-The source is preparing the **unpublished 2.4.1 maintenance candidate** (assembly/file `2.4.1.0`). The latest officially published GitHub / nuget.org stable release remains **2.4.0** (assembly/file `2.4.0.0`).
+**2.4.1 is published stable** (assembly/file `2.4.1.0`); GitHub Release and NuGet Trusted Publishing completed. Public x64/x86 consumer verification remains a separate post-release CI gate.
 
-Stable 2.4.0 adds instruction-aligned read-only code inspection and normal-miss symbol lookup, preserving existing 2.3.0 APIs, Hook/VMT/Injector behavior, supported targets and pinned native libmem. Version 2.3.0 remains available.
+Stable 2.4.1 fixes accessible-page-boundary decoding, adds stale process identity preflights to remote mutations and stabilizes Hook removal regression tests without changing the Public API, Hook/VMT/Injector contract, native revision or supported targets. Stable 2.4.0 and 2.3.0 remain available.
 
-### Libmem.NET v2.4.1 — candidate (not published)
+### Libmem.NET v2.4.1 — published stable
 
 - Includes ReadAlignedCode readable-page-boundary handling, stale process identity guards for remote mutations, and deterministic failed HookHandle.Remove regression coverage (PRs #137–#141).
-- PRs #137–#141 have merged; main Build #443 passed Release x64, Release x86 and local multi-architecture NuGet consumer checks.
-- Next gates: 2.4.1 candidate PR CI; post-merge main CI; exact-commit `release/v2.4.1` dry run; explicit tag approval; tagged GitHub Release; separate manual NuGet Trusted Publishing; independent public x64/x86 consumers.
+- PRs #137–#142 merged; exact commit `036556f6a508edee9401fe02fe0a8f7cdca39083` passed main Build #445, Release #47 dry run, GitHub Release #48 and NuGet Trusted Publishing #49.
+- Independent public nuget.org restore/build/run/publish on x64/x86 and unsupported-platform rejection is a gate of the post-release Published NuGet Smoke CI.
 - Stale PID identity preflights cannot eliminate the race between validation and native PID-only operations; no native handle-bound redesign is included.
-- Full candidate notes: [releases/v2.4.1.md](releases/v2.4.1.md).
+- Full release notes: [releases/v2.4.1.md](releases/v2.4.1.md).
 
 ### Libmem.NET v2.4.0
 
@@ -61,7 +61,7 @@ The historical `LibmemCli` → `Libmem.NET` identity migration remains documente
 
 ## Support boundary
 
-The supported target for the current 2.4.0 stable release is:
+The supported target for the current 2.4.1 stable release is:
 
 - Windows x64 and Windows x86;
 - .NET 8;
@@ -171,7 +171,7 @@ Use this when a consumer needs exact source provenance, reproducible native buil
 
 ### NuGet
 
-The `Libmem.NET` package is validated through local-feed CI and public nuget.org smoke for 2.4.0 on x64 and x86: restore/build/run/publish, native asset copy, XML documentation, provenance, and unsupported architecture rejection. Historical v1.0.0 did not ship an official NuGet asset.
+The `Libmem.NET` package is covered by local-feed CI and post-release public nuget.org smoke for 2.4.1 on x64 and x86 (the latter must pass before this PR merges): restore/build/run/publish, native asset copy, XML documentation, provenance, and unsupported architecture rejection. Historical v1.0.0 did not ship an official NuGet asset.
 
 `2.0.0-preview.1` was successfully published through the account-side Trusted Publishing policy and `NUGET_USER` flow. Future publications must re-verify those settings if the repository, workflow, environment, or publishing account changes. See [CONSUMPTION.md](CONSUMPTION.md).
 
@@ -187,7 +187,8 @@ The `Libmem.NET` package is validated through local-feed CI and public nuget.org
 
 | Version | Date | Status | Official platform |
 | --- | --- | --- | --- |
-| 2.4.0 | 2026-10-09 | Published stable on GitHub and nuget.org; x64/x86 smoke #36 passed | Windows x64/x86 / .NET 8 |
+| 2.4.1 | 2026-10-10 | GitHub Release #48, NuGet #49; post-release public x64/x86 smoke to be verified | Windows x64/x86 / .NET 8 |
+| 2.4.0 | 2026-10-09 | Previous stable; x64/x86 smoke #36 passed | Windows x64/x86 / .NET 8 |
 | 2.3.0 | 2026-10-08 | Previous published stable; public x64/x86 smoke #30 passed | Windows x64/x86 / .NET 8 |
 | 2.2.1 | 2026-10-08 | Previous published stable | Windows x64/x86 / .NET 8 |
 | 2.2.0 | 2026-10-08 | Previous published stable | Windows x64/x86 / .NET 8 |

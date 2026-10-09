@@ -2,18 +2,18 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Current source is preparing the **unpublished 2.4.1 maintenance candidate** (assembly/file `2.4.1.0`). Published stable remains **2.4.0** (assembly/file `2.4.0.0`). The 2.3.0 release also remains available.
+**2.4.1 is published stable** (assembly/file `2.4.1.0`). GitHub Release and NuGet publishing steps succeeded; independent public-feed consumer smoke is the remaining post-release verification gate.
 
 ## 2.4.1 patch release gates
 
 - [x] PRs #137–#141 merged; main Build #443 succeeded for Release x64, Release x86 and local multi-arch NuGet.
-- [ ] Candidate metadata, bilingual docs and package notes PR passes Release x64/x86, external-process, Hook/VMT, Injector, Public API/source contract and multi-arch NuGet consumers.
-- [ ] Candidate PR merged; post-merge main Build succeeds for the exact accepted commit.
-- [ ] Create `release/v2.4.1` from that accepted commit; complete **dry run only**: matching VERSION, assembly/manifest metadata, x64/x86 ZIPs and SHA-256, commit provenance, NuGet and rendered release notes.
-- [ ] Review artifacts and verify that the pinned native libmem revision and Public API baseline have not changed.
-- [ ] Create `v2.4.1` only after explicit approval; verify tagged GitHub Release artifacts. Publish nuget.org only through separate manual Trusted Publishing on the existing tag.
-- [ ] Perform independent published-package x64/x86 restore/build/run/publish and unsupported AnyCPU verification; only then advance public NuGet smoke baseline and stable docs.
-- [ ] Retain documented TOCTOU limitation: process-identity prechecks do not make native PID-only operations atomic.
+- [x] Candidate PR #142 passed Build #444 including Release x64/x86 and multi-arch local consumer validation.
+- [x] Candidate PR merged; main Build #445 succeeded for accepted commit `036556f6a508edee9401fe02fe0a8f7cdca39083`.
+- [x] Release #47 on `release/v2.4.1` passed the exact-commit dry run without publication.
+- [x] Release validation steps succeeded for x64/x86 ZIPs, SHA-256, package provenance, NuGet and unchanged pinned native libmem/Public API.
+- [x] Tagged GitHub Release #48 published assets; separate explicit NuGet Trusted Publishing Release #49 succeeded (OIDC login and push).
+- [ ] Post-release PR must pass independent published `2.4.1` x64/x86 restore/build/run/publish, XML/native assets and unsupported AnyCPU/ARM64 checks; the baseline/docs updates must not merge beforehand.
+- [x] Retain documented TOCTOU limitation: process-identity prechecks do not make native PID-only operations atomic.
 
 ## 2.3.0 release gates
 

@@ -2,18 +2,18 @@
 
 > Current stable target: Windows x64/x86 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. The **2.4.1 source candidate is not yet published**; stable `2.4.0` remains available on GitHub and nuget.org with x64/x86 public-feed consumer validation. Historical v1.0.0 used `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. Stable `2.4.1` has shipped on GitHub and the NuGet push step succeeded; the independent public-feed x64/x86 smoke is a gate for the post-release PR. Historical v1.0.0 used `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
-The 2.4.0 release pipeline produces architecture-specific runtime archives:
+The 2.4.1 release pipeline produces architecture-specific runtime archives:
 
 ```text
 Libmem.NET-windows-x64.zip
 Libmem.NET-windows-x64.zip.sha256
 Libmem.NET-windows-x86.zip
 Libmem.NET-windows-x86.zip.sha256
-Libmem.NET.2.4.0.nupkg
+Libmem.NET.2.4.1.nupkg
 ```
 
 Each runtime directory contains the architecture-matched C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md`, `MIGRATION.md`, and a manifest.
@@ -51,18 +51,18 @@ This is useful when the consumer wants:
 
 ## 3. NuGet package
 
-The 2.4.0 stable release uses one multi-architecture package:
+The 2.4.1 stable release uses one multi-architecture package:
 
 ```text
 Package ID: Libmem.NET
-Stable version: 2.4.0
-Published public baseline: 2.4.0
+Stable version: 2.4.1
+Published public baseline: 2.4.1
 Target: Windows x64/x86 / .NET 8
 Architecture selection: explicit Platform / PlatformTarget
 Unsupported: AnyCPU
 ```
 
-Development packages use a commit-qualified version derived from `VERSION`, for example `2.4.1-dev.<commit>` on the candidate branch. CI stamps repository URL and exact Git commit provenance into the package.
+Development packages use a commit-qualified version derived from `VERSION`, for example `2.4.1-dev.<commit>` on a development branch. CI stamps repository URL and exact Git commit provenance into the package.
 
 ### Package layout
 
@@ -88,7 +88,7 @@ Build both runtime architectures first, then compose the package:
 .\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.4.1
 ```
 
-The automatic Build gate performs the equivalent composition from verified x64/x86 runtime artifacts. The above exact-version 2.4.1 command is for a **local candidate package** only, not public-feed installation.
+The automatic Build gate performs the equivalent composition from verified x64/x86 runtime artifacts. The above exact-version 2.4.1 command is for an **exact-version local package**; consumers should normally restore the published `2.4.1` package from nuget.org.
 
 ### Local package test
 
@@ -124,7 +124,7 @@ Libmem.NET is not an AnyCPU managed library:
 - when `PlatformTarget` is explicitly set, it must be `x64` or `x86`; unsupported values such as `AnyCPU` or `arm64` are rejected even if `Platform` is x64/x86;
 - `Platform` is used as the architecture fallback only when `PlatformTarget` is empty; `Win32` maps to x86;
 - cross-bitness operation is not promised;
-- ARM64 is not a 2.4.0 production target.
+- ARM64 is not a 2.4.1 production target.
 
 ## NuGet release acceptance criteria
 
@@ -164,6 +164,6 @@ The successful `2.0.0-preview.1` publication proves the current Trusted Publishi
 
 ## Current recommendation
 
-Public PackageReference consumption should use stable `Libmem.NET 2.4.0` with an explicit x64 or x86 target. The public nuget.org smoke baseline validates both architectures, including unsupported PlatformTarget rejection. Previous stable 2.3.0 remains available.
+Public PackageReference consumption should use stable `Libmem.NET 2.4.1` with an explicit x64 or x86 target. The public nuget.org smoke baseline validates both architectures, including unsupported PlatformTarget rejection. Previous stable 2.3.0 remains available.
 
 See [RELEASES.md](RELEASES.md) for release history, support boundaries and versioning, and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the next publication.

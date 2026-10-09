@@ -1,6 +1,6 @@
 # Libmem.NET 开发路线图
 
-`2.4.0` 已正式发布并通过 Windows x64/x86 / .NET 8 公网消费者验证。正在准备 **2.4.1 稳定性补丁候选（未发布）**，收录 PR #137–#141 的修复；主线 Build #443 已通过。继续暂停新功能、ARM64 与跨平台开发。
+**2.4.1 已正式发布**（2026-10-10，北京时间）；PR #137–#142 已合并，主线 Build #445、GitHub Release #48 与 NuGet Trusted Publishing #49 成功。公网 2.4.1 独立消费者验证由发布后 Smoke CI 负责。后续可规划 2.5.0，但 ARM64 与跨平台能力仍不属于当前支持范围。
 
 > 当前策略：**Windows x64 与 x86 同级支持；共享设计保持架构中立，为后续 ARM64 留出扩展点。**
 
@@ -140,6 +140,17 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - 必须继承 2.3.0 的公共 API 和 native ABI 验收，不再改变已正式支持的平台；
 - 2.4.0 已正式发布；阶段性停止新功能，转入问题修复、回归测试和文档维护。
 - PR #129/#132、主线 Build #425、发布预演 Release #44、GitHub Release #45、NuGet #46 及公网测试 #36 均已完成。
+
+## 已完成：v2.4.1 — 稳定性维护补丁
+
+- 修复 `ReadAlignedCode` 在不可读内存页边界的完整指令解析问题。
+- 远程 Allocate/Free/Protect/Hook/Load/Unload 增加 PID + 进程创建时间预检查；保留非原子 TOCTOU 风险说明。
+- 将 Hook 删除失败时的 trampoline 回归测试改为确定性的 `PAGE_NOACCESS` 场景。
+- 发布证据：主线 Build #445、Release 预演 #47、GitHub Release #48、NuGet OIDC #49；发布后公网消费测试以实际 CI 结果为准。
+
+## 下一规划：v2.5.0（尚未开始功能开发）
+
+优先完成 2.4.1 公网包验收，再根据兼容性与测试成本评估通用 API 改进。保持 Windows x64/x86、.NET 8、独立 libmem 封装定位；不引入游戏业务或未验证的架构支持。
 
 ## 已完成：v2.0.0 — Stable Libmem.NET identity
 

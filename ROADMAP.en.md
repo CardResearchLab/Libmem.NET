@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-`2.4.0` is published and has passed Windows x64/x86 / .NET 8 public NuGet consumer validation. The **unpublished 2.4.1 maintenance candidate** collects fixes from PRs #137–#141; main Build #443 passed. Feature development, ARM64 and cross-platform work remain paused.
+**2.4.1 is officially published** (2026-10-09 UTC). PRs #137–#142 are included; main Build #445, GitHub Release #48 and NuGet Trusted Publishing #49 succeeded. Independent public-NuGet consumers are checked in the post-release smoke CI. ARM64 and cross-platform support remain out of scope.
 
 > Current strategy: **Windows x64 and x86 are first-class targets; shared design stays architecture-neutral for a future ARM64 phase.**
 
@@ -141,6 +141,17 @@ After stable 2.2.0 publication, systematically compare against the pinned rdbo/l
 - evaluate and update the pinned upstream revision;
 - run ABI / interop / runtime regression;
 - preserve the general-purpose library boundary without application models.
+
+## Completed: v2.4.1 — stability patch
+
+- Fix complete-instruction reads at inaccessible memory page boundaries in `ReadAlignedCode`.
+- Preflight remote mutations against PID + process start time; the native PID-only TOCTOU limit remains documented.
+- Make failed `HookHandle.Remove` regression deterministic using `PAGE_NOACCESS` trampoline protection.
+- Evidence: main Build #445, Release dry run #47, GitHub Release #48 and NuGet OIDC push #49; independent public-consumer results are gated by post-release CI.
+
+## Next: v2.5.0 (feature work not yet started)
+
+Finish public 2.4.1 consumer verification first, then evaluate compatible, general-purpose API enhancements. Maintain Windows x64/x86 / .NET 8 and the libmem wrapper-only scope. No game-specific logic or unverified platform support.
 
 ## Completed: v2.0.0 — Stable Libmem.NET identity
 
