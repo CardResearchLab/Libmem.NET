@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — planned 2.5.0
+## 2.5.0
 
 ### Added
 
@@ -17,7 +17,7 @@
 ### Compatibility
 
 - Preserve existing `DataScan`, `PatternScan`, `SigScan`, `Read` and `Write` contracts, pinned native libmem, Windows x64/x86 / .NET 8 support and existing public API signatures. The new methods are additive and are not available in the published 2.4.1 package.
-- Keep `VERSION` at `2.4.1` until a separate, approved 2.5.0 release-candidate PR.
+- Version metadata is advanced to `2.5.0` for candidate verification; GitHub Release and nuget.org publication require separate explicit release gates. No ARM64, AnyCPU, cross-bitness, Linux/macOS, or game-specific functionality is added.
 
 
 ## 2.4.1 - 2026-10-10
