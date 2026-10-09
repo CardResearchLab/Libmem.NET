@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The source and latest published GitHub/nuget.org stable release are **2.4.0**. This backward-compatible update adds read-only instruction-aligned inspection (`ReadAlignedCode`) and ergonomic symbol lookup (`TryFindAddress`) while retaining Windows x64/x86 / .NET 8, existing Hook/VMT/Injector behavior and pinned native libmem.
+The source is preparing the **2.4.1 maintenance patch candidate (not published)**; the latest GitHub/nuget.org stable release remains **2.4.0**. This patch hardens `ReadAlignedCode` at unreadable page boundaries, remote mutation process identity checks and Hook regression tests while retaining Windows x64/x86 / .NET 8, the Public API and pinned native libmem.
 
 Official support target:
 
@@ -228,7 +228,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-Stable 2.4.0 has `VERSION` / informational version `2.4.0` and assembly/file version `2.4.0.0`. The [v2.4.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0) contains the x64/x86 runtime ZIPs, checksums and `Libmem.NET.2.4.0.nupkg`.
+The **unpublished 2.4.1 candidate source** uses `VERSION` / informational version `2.4.1` and assembly/file version `2.4.1.0`. The currently published [v2.4.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0) contains the x64/x86 runtime ZIPs, checksums and `Libmem.NET.2.4.0.nupkg`.
 
 Build the release-style runtime ZIP locally:
 
