@@ -4,14 +4,16 @@ This document describes the official release channel, current stable release, su
 
 ## Current stable release
 
-Current source: **unpublished 2.4.0 release candidate** (assembly/file `2.4.0.0`). The latest published GitHub/nuget.org stable release remains **2.3.0**.
+The current source and officially published GitHub / nuget.org stable release are **2.4.0** (assembly/file `2.4.0.0`).
 
-Stable 2.3.0 adds target-process-bitness-aware pointer and 64-bit integer memory helpers plus pinned native C API coverage checks, preserving existing 2.2.1 public signatures and pinned libmem dependency.
+Stable 2.4.0 adds instruction-aligned read-only code inspection and normal-miss symbol lookup, preserving existing 2.3.0 APIs, Hook/VMT/Injector behavior, supported targets and pinned native libmem. Version 2.3.0 remains available.
 
-### Libmem.NET v2.4.0 (unpublished candidate)
+### Libmem.NET v2.4.0
 
 - Adds `AssemblyManager.ReadAlignedCode` and `SymbolManager.TryFindAddress` without changing existing 2.3.0 public signatures, pinned libmem or supported platforms.
-- Exact-version candidate CI, release-branch dry run, tag publication and nuget.org validation are pending. See [releases/v2.4.0.md](releases/v2.4.0.md).
+- Release: https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0
+- Accepted commit: `e73393d9805862db32c4e58dba1eadd91a191e56`; main Build #425; dry run Release #44; tagged GitHub Release #45; NuGet OIDC publication Release #46; public x64/x86 NuGet Smoke #36.
+- Both runtime ZIP checksums and exact-version multi-architecture NuGet artifacts passed release verification. See [releases/v2.4.0.md](releases/v2.4.0.md).
 
 ### Libmem.NET v2.3.0
 
@@ -51,7 +53,7 @@ The historical `LibmemCli` → `Libmem.NET` identity migration remains documente
 
 ## Support boundary
 
-The supported target for the current 2.3.0 stable release is:
+The supported target for the current 2.4.0 stable release is:
 
 - Windows x64 and Windows x86;
 - .NET 8;
@@ -161,7 +163,7 @@ Use this when a consumer needs exact source provenance, reproducible native buil
 
 ### NuGet
 
-The `Libmem.NET` package is validated through local-feed CI and public nuget.org smoke for 2.3.0 on x64 and x86: restore/build/run/publish, native asset copy, XML documentation, provenance, and unsupported architecture rejection. Historical v1.0.0 did not ship an official NuGet asset.
+The `Libmem.NET` package is validated through local-feed CI and public nuget.org smoke for 2.4.0 on x64 and x86: restore/build/run/publish, native asset copy, XML documentation, provenance, and unsupported architecture rejection. Historical v1.0.0 did not ship an official NuGet asset.
 
 `2.0.0-preview.1` was successfully published through the account-side Trusted Publishing policy and `NUGET_USER` flow. Future publications must re-verify those settings if the repository, workflow, environment, or publishing account changes. See [CONSUMPTION.md](CONSUMPTION.md).
 
@@ -177,8 +179,8 @@ The `Libmem.NET` package is validated through local-feed CI and public nuget.org
 
 | Version | Date | Status | Official platform |
 | --- | --- | --- | --- |
-| 2.4.0 | — | Unpublished release candidate; exact-version validation pending | Windows x64/x86 / .NET 8 |
-| 2.3.0 | 2026-10-08 | Published stable on GitHub and nuget.org; public x64/x86 smoke #30 passed | Windows x64/x86 / .NET 8 |
+| 2.4.0 | 2026-10-09 | Published stable on GitHub and nuget.org; x64/x86 smoke #36 passed | Windows x64/x86 / .NET 8 |
+| 2.3.0 | 2026-10-08 | Previous published stable; public x64/x86 smoke #30 passed | Windows x64/x86 / .NET 8 |
 | 2.2.1 | 2026-10-08 | Previous published stable | Windows x64/x86 / .NET 8 |
 | 2.2.0 | 2026-10-08 | Previous published stable | Windows x64/x86 / .NET 8 |
 | 2.0.0-preview.1 | 2026-10-05 | Published prerelease, Libmem.NET identity | Windows x64 / .NET 8 |

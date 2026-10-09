@@ -12,7 +12,7 @@ Libmem.NET is a Windows-focused C++/CLI wrapper for [rdbo/libmem](https://github
 dotnet add package Libmem.NET --version 2.4.0
 ```
 
-`2.4.0` adds instruction-aligned read-only code inspection and TryFindAddress symbol lookup, without changing existing public signatures or native dependencies. **This is an unpublished release candidate**; use stable 2.3.0 until GitHub and nuget.org publication is verified.
+`2.4.0` is the officially published stable release. It adds instruction-aligned read-only code inspection and `TryFindAddress` symbol lookup without changing existing public signatures or native dependencies. Supported targets remain Windows x64/x86 / .NET 8. See the [v2.4.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0).
 
 ## Highlights
 
@@ -101,7 +101,7 @@ Libmem.NET 是一个面向 Windows 的 [rdbo/libmem](https://github.com/rdbo/lib
 dotnet add package Libmem.NET --version 2.4.0
 ```
 
-`2.4.0` 新增只读指令对齐代码读取和 TryFindAddress 符号查询，保留现有公共 API 与固定 native 依赖。**此版本仍为未发布的候选版**，GitHub 与 nuget.org 验证完成前请使用正式稳定版 2.3.0。
+`2.4.0` 已正式发布为稳定版：新增只读指令对齐代码读取和 `TryFindAddress` 符号查询，保留现有公共 API 与固定 native 依赖，正式支持 Windows x64/x86 / .NET 8。详见 [v2.4.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0)。
 
 ## 主要功能
 

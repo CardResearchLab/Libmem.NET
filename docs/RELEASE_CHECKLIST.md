@@ -2,7 +2,7 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-Current source candidate: `2.4.0` (assembly/file `2.4.0.0`, unpublished); published stable remains `2.3.0`. The 2.3.0 release and public consumer smoke were completed independently.
+Current source and published stable: `2.4.0` (assembly/file `2.4.0.0`). The 2.3.0 release remains available.
 
 ## 2.3.0 release gates
 
@@ -19,13 +19,13 @@ Current source candidate: `2.4.0` (assembly/file `2.4.0.0`, unpublished); publis
 
 - [x] Additive Assembly/Symbols feature PR #129 merged after x64/x86 Build #418; main Build #419 passed.
 - [x] API boundary tests and consumer examples PR #132 merged after Build #421; main Build #422 and public 2.3.0 NuGet smoke #35 passed.
-- [ ] Separate 2.4.0 candidate PR passes exact-version Windows x64/x86 Release, runtime regression, Public API baseline, packaging and local NuGet consumer CI.
-- [ ] Candidate PR merged; verify the merged main commit passes the full Build workflow.
-- [ ] Create `release/v2.4.0` from accepted main; Release workflow dry run validates exact-version x64/x86 ZIPs, SHA-256, manifest provenance, multi-architecture NuGet and bilingual release notes **without publishing**.
-- [ ] Create `v2.4.0` tag at accepted commit only after the dry run passes; verify the resulting GitHub Release assets.
-- [ ] On the published tag only, explicitly enable `publish-nuget` for OIDC NuGet publication, then validate exact-version public x64/x86 consumers.
-- [ ] After successful public validation, advance public NuGet smoke baseline to 2.4.0 and update documentation from candidate to stable in a separate PR.
-- [ ] Enter stability-maintenance mode; do not begin ARM64, Linux, macOS or new feature work.
+- [x] Candidate PR #133 passed Build #423 and merged; main Build #425 passed full Windows x64/x86 Release, regression, Public API baseline, packaging and local NuGet consumer CI.
+- [x] Candidate PR #133 merged as `e73393d9805862db32c4e58dba1eadd91a191e56`, verified by main Build #425.
+- [x] `release/v2.4.0` at accepted main commit passed Release #44 dry run: exact-version x64/x86 ZIPs, SHA-256, manifest provenance, multi-architecture NuGet and formal notes; no publication.
+- [x] Annotated `v2.4.0` tag resolves to accepted commit; tagged GitHub Release #45 published both runtime ZIPs, checksums and NuGet nupkg.
+- [x] Tagged Release #46 explicitly enabled `publish-nuget`: OIDC login and NuGet push succeeded; public-feed x64/x86 smoke #36 verified published 2.4.0.
+- [x] PR #135 advances the 2.4.0 public NuGet smoke baseline and updates Chinese/English stable documentation after public verification.
+- [x] Enter stability-maintenance mode; do not begin ARM64, Linux, macOS or new feature work.
 
 ## Repository acceptance
 
@@ -77,10 +77,10 @@ Current source candidate: `2.4.0` (assembly/file `2.4.0.0`, unpublished); publis
 
 ## Compatibility boundary
 
-- x64 and x86 are supported release architectures in 2.3.0.
+- x64 and x86 are supported release architectures in 2.4.0.
 - Consumers must explicitly select x64 or x86; AnyCPU is unsupported.
 - Cross-bitness operation is not promised.
-- ARM64 remains a future architecture and is not a 2.3.0 production target.
+- ARM64 remains a future architecture and is not a 2.4.0 production target.
 - Game state, snapshots, IPC, Unity/Mono/Hearthstone policy and other application logic remain consumer responsibilities.
 
 See [RELEASES.md](RELEASES.md) and [CONSUMPTION.md](CONSUMPTION.md).
