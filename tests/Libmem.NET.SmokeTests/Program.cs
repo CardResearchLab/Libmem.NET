@@ -791,6 +791,44 @@ finally
     Check(NativeApi.FreeMemory(address, allocationSize), "FreeMemory failed.");
 }
 
+Stage("assembly-page-boundary");
+{
+    // A complete one-byte instruction at the final readable page byte must not
+    // require libmem to read a full decoder window into the following no-access page.
+    var pageSize = (ulong)Environment.SystemPageSize;
+    var guardedSize = pageSize * 2UL;
+    var guardedAddress = NativeApi.AllocateMemory(guardedSize, MemoryProtection.ReadWrite);
+    Check(guardedAddress != 0 && guardedAddress != invalidAddress,
+        "Could not allocate guard-page instruction fixture.");
+    try
+    {
+        var lastReadableByte = guardedAddress + pageSize - 1UL;
+        Check(NativeApi.WriteMemory(lastReadableByte, [0x90]) == 1,
+            "Could not write the final readable NOP fixture.");
+        var oldGuardProtection = NativeApi.ProtectMemory(
+            guardedAddress + pageSize, pageSize, MemoryProtection.None);
+        try
+        {
+            var lastInstruction = pidSession.Assembly.ReadAlignedCode(lastReadableByte, 1);
+            Check(lastInstruction.SequenceEqual(new byte[] { 0x90 }),
+                "ReadAlignedCode must decode a complete NOP at the page boundary.");
+
+            _ = ExpectThrows<LibmemException>(
+                () => pidSession.Assembly.ReadAlignedCode(lastReadableByte, 2),
+                "ReadAlignedCode must reject a requested span extending into a no-access page.");
+        }
+        finally
+        {
+            _ = NativeApi.ProtectMemory(guardedAddress + pageSize, pageSize, oldGuardProtection);
+        }
+    }
+    finally
+    {
+        Check(NativeApi.FreeMemory(guardedAddress, guardedSize),
+            "Could not free guard-page instruction fixture.");
+    }
+}
+
 Stage("x86-overflow");
 if (IntPtr.Size == sizeof(uint))
 {
