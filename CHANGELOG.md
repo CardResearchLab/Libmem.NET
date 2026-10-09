@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased — planned 2.5.0
+
+### Added
+
+- Add session-bound `ScanManager.TryDataScan`, `TryPatternScan` and `TrySigScan` with boolean match results and `out UInt64` addresses (zero on a normal miss), avoiding architecture-dependent bad-address sentinel checks in consumers.
+- Cover x64/x86 scan hits, misses, exact-window final candidates, invalid inputs and detached sessions in the runtime smoke suite.
+
+### Compatibility
+
+- Preserve existing `DataScan`, `PatternScan`, `SigScan` contracts, pinned native libmem, Windows x64/x86 / .NET 8 support and public API signatures. The new methods are additive and are not available in the published 2.4.1 package.
+- Keep `VERSION` at `2.4.1` until a separate, approved 2.5.0 release-candidate PR.
+
+
 ## 2.4.1 - 2026-10-10
 
 ### Fixed
