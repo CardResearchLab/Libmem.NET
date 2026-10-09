@@ -12,7 +12,7 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The source is preparing the **2.4.1 maintenance patch candidate (not published)**; the latest GitHub/nuget.org stable release remains **2.4.0**. This patch hardens `ReadAlignedCode` at unreadable page boundaries, remote mutation process identity checks and Hook regression tests while retaining Windows x64/x86 / .NET 8, the Public API and pinned native libmem.
+The **2.4.1 maintenance patch is officially published** on GitHub and the NuGet Trusted Publishing workflow has completed. This patch hardens `ReadAlignedCode` at unreadable page boundaries, remote mutation process identity checks and Hook regression tests while retaining Windows x64/x86 / .NET 8, the Public API and pinned native libmem.
 
 Official support target:
 
@@ -22,11 +22,11 @@ Official support target:
 - C# / .NET consumers
 - a pinned rdbo/libmem native backend
 
-> Stable 2.4.0 remains Windows x64/x86 / .NET 8 only and requires matching managed/native binaries. Explicit x64/x86 platform selection is mandatory; AnyCPU, ARM64 and cross-bitness operation remain unsupported.
+> Stable 2.4.1 remains Windows x64/x86 / .NET 8 only and requires matching managed/native binaries. Explicit x64/x86 platform selection is mandatory; AnyCPU, ARM64 and cross-bitness operation remain unsupported.
 
 ## Download
 
-GitHub and nuget.org publish stable **Libmem.NET 2.4.0**. Get the [v2.4.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0) or install `Libmem.NET 2.4.0` from nuget.org. Public x64/x86 consumer validation passed in [Published NuGet Smoke #36](https://github.com/CardResearchLab/Libmem.NET/actions/runs/37832462294).
+Stable **Libmem.NET 2.4.1** is published: [v2.4.1 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1) and NuGet `Libmem.NET 2.4.1`. Main Build #445, GitHub Release #48 and Trusted Publishing #49 succeeded; independent public-feed x64/x86 verification is the responsibility of [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml).
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
@@ -228,7 +228,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The **unpublished 2.4.1 candidate source** uses `VERSION` / informational version `2.4.1` and assembly/file version `2.4.1.0`. The currently published [v2.4.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.0) contains the x64/x86 runtime ZIPs, checksums and `Libmem.NET.2.4.0.nupkg`.
+The **published 2.4.1 source** uses `VERSION` / informational version `2.4.1` and assembly/file version `2.4.1.0`. [v2.4.1 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1) contains the x64/x86 runtime ZIPs, checksums and `Libmem.NET.2.4.1.nupkg`.
 
 Build the release-style runtime ZIP locally:
 
@@ -285,7 +285,7 @@ The package ID is `Libmem.NET`, targeting Windows x64/x86 / .NET 8. CI validates
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-Release #46 completed Trusted Publishing / OIDC for 2.4.0, and public x64/x86 NuGet consumer smoke #36 passed. The public-NuGet smoke baseline is **2.4.0**. See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
+Release #46 completed Trusted Publishing / OIDC for 2.4.0, and public x64/x86 NuGet consumer smoke #36 passed. The public-NuGet smoke target baseline in this repository is now **2.4.1**, pending CI verification. See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 
