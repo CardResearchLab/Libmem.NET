@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.4.1 - 2026-10-10
+
+### Fixed
+
+- Keep `AssemblyManager.ReadAlignedCode` reliable when complete instructions end at a readable page boundary followed by `PAGE_NOACCESS`; use bounded partial-read decoding without changing `CodeLength`.
+- Reject stale process identities (PID plus process start time) before remote memory allocation/free, page protection, Hook installation, and module load/unload. Align static and session-Manager paths; add deterministic external-process regression coverage.
+- Make the failed `HookHandle.Remove` external-process trampoline regression deterministic by setting the still-allocated trampoline page to `PAGE_NOACCESS`, rather than relying on a freed address staying unreadable.
+
+### Compatibility and limitations
+
+- Compatible 2.4.x maintenance only: unchanged Public API, native libmem revision, Windows x64/x86 / .NET 8 targets, multi-architecture NuGet layout, and existing Hook/VMT/Injector APIs.
+- Process-identity preflights reduce stale-PID risk but do **not** make native PID-only calls atomic: target exit or PID reuse between validation and the native call remains possible. No handle-bound native redesign is included.
+- No ARM64, AnyCPU, cross-bitness or game-specific features are added.
+
 ## 2.4.0 - 2026-10-09
 
 ### Added

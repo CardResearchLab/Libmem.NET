@@ -4,9 +4,17 @@ This document describes the official release channel, current stable release, su
 
 ## Current stable release
 
-The current source and officially published GitHub / nuget.org stable release are **2.4.0** (assembly/file `2.4.0.0`).
+The source is preparing the **unpublished 2.4.1 maintenance candidate** (assembly/file `2.4.1.0`). The latest officially published GitHub / nuget.org stable release remains **2.4.0** (assembly/file `2.4.0.0`).
 
 Stable 2.4.0 adds instruction-aligned read-only code inspection and normal-miss symbol lookup, preserving existing 2.3.0 APIs, Hook/VMT/Injector behavior, supported targets and pinned native libmem. Version 2.3.0 remains available.
+
+### Libmem.NET v2.4.1 — candidate (not published)
+
+- Includes ReadAlignedCode readable-page-boundary handling, stale process identity guards for remote mutations, and deterministic failed HookHandle.Remove regression coverage (PRs #137–#141).
+- PRs #137–#141 have merged; main Build #443 passed Release x64, Release x86 and local multi-architecture NuGet consumer checks.
+- Next gates: 2.4.1 candidate PR CI; post-merge main CI; exact-commit `release/v2.4.1` dry run; explicit tag approval; tagged GitHub Release; separate manual NuGet Trusted Publishing; independent public x64/x86 consumers.
+- Stale PID identity preflights cannot eliminate the race between validation and native PID-only operations; no native handle-bound redesign is included.
+- Full candidate notes: [releases/v2.4.1.md](releases/v2.4.1.md).
 
 ### Libmem.NET v2.4.0
 
