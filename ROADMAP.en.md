@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-`2.4.0` is published on GitHub and nuget.org; Windows x64/x86 / .NET 8 and public NuGet consumer validation have passed. The project has entered **stability maintenance**: fixes, regression tests and documentation, without starting ARM64 or cross-platform work.
+`2.4.0` is published and has passed Windows x64/x86 / .NET 8 public NuGet consumer validation. The **unpublished 2.4.1 maintenance candidate** collects fixes from PRs #137–#141; main Build #443 passed. Feature development, ARM64 and cross-platform work remain paused.
 
 > Current strategy: **Windows x64 and x86 are first-class targets; shared design stays architecture-neutral for a future ARM64 phase.**
 
