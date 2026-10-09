@@ -151,7 +151,7 @@ After stable 2.2.0 publication, systematically compare against the pinned rdbo/l
 
 ## In progress: v2.5.0 (isolated feature branch, unpublished)
 
-Public 2.4.1 NuGet Smoke #41 passed. The first isolated 2.5.0 PR introduces `ScanManager.TryDataScan`, `TryPatternScan`, and `TrySigScan` without changing existing scanning behavior. Main Build #447 was still pending when the feature branch was created; do not merge before it and the feature PR's own CI pass. Later evaluate generic Memory/Hook lifetime improvements while retaining Windows x64/x86 / .NET 8 and the wrapper-only scope.
+Stage 1 PR #144 merged the additive `ScanManager.TryDataScan`, `TryPatternScan`, and `TrySigScan` APIs; post-merge main Build #452 and Published NuGet Smoke #45 both passed. Stage 2 develops `MemoryManager.TryRead` and `TryWrite` on the isolated `feature/v2.5-memory-try-read-write` branch, reporting exact-transfer success without discarding partial read bytes or written counts and preserving the existing `Read`/`Write` contract. Merge requires Windows x64/x86 Release, runtime regression, public API baseline and local NuGet consumer validation. Keep VERSION=2.4.1; no 2.5.0 publication yet. Later evaluate generic Hook/lifetime improvements while retaining Windows x64/x86 / .NET 8 and wrapper-only scope.
 
 ## Completed: v2.0.0 — Stable Libmem.NET identity
 
