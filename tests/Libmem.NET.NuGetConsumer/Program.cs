@@ -132,5 +132,25 @@ var copy = session.Memory.Read(allocation.Address, payload.Length);
 if (!copy.SequenceEqual(payload))
     throw new InvalidOperationException("NuGet consumer read-back mismatch.");
 
+#if LIBMEM_NET_TEST_V25_SCAN_APIS
+// Compiled only for local 2.5 development packages; never for published 2.4.x smoke.
+var scanner = session.Scanner;
+string mask = new('x', payload.Length);
+string signature = string.Join(" ", payload.Select(b => b.ToString("X2")));
+ulong exactWindow = (ulong)payload.Length;
+if (!scanner.TryDataScan(payload, allocation.Address, exactWindow, out var dataAddress)
+    || dataAddress != allocation.Address)
+    throw new InvalidOperationException("Local package TryDataScan exact-window hit failed.");
+if (!scanner.TryPatternScan(payload, mask, allocation.Address, exactWindow, out var patternAddress)
+    || patternAddress != allocation.Address)
+    throw new InvalidOperationException("Local package TryPatternScan exact-window hit failed.");
+if (!scanner.TrySigScan(signature, allocation.Address, exactWindow, out var signatureAddress)
+    || signatureAddress != allocation.Address)
+    throw new InvalidOperationException("Local package TrySigScan exact-window hit failed.");
+if (scanner.TryDataScan([0xDE, 0xAD, 0xBE, 0xEF], allocation.Address, exactWindow, out var missAddress)
+    || missAddress != 0)
+    throw new InvalidOperationException("Local package TryDataScan miss must return false and zero.");
+#endif
+
 Console.WriteLine(
     $"NUGET CONSUMER PASS pid={session.Pid} allocation=0x{allocation.Address:X}");

@@ -175,13 +175,21 @@ Operation = "LM_AllocMemoryEx"
 Primary operations:
 
 - `DeepPointer`
-- `DataScan`
-- `PatternScan`
-- `SigScan`
+- `DataScan` / `TryDataScan`
+- `PatternScan` / `TryPatternScan`
+- `SigScan` / `TrySigScan`
 
-Scan misses keep libmem-style sentinel semantics. A normal miss is not an exception.
+Existing `DataScan`, `PatternScan`, and `SigScan` methods keep their original libmem-style miss sentinel semantics; a normal miss is not an exception. On x64, the bad-address sentinel corresponds to `UInt64.MaxValue`; on x86 it is `UInt32.MaxValue` widened to `UInt64`.
 
-On x64, the bad-address sentinel corresponds to `UInt64.MaxValue`.
+The **2.5.0 additive `Try*` overloads** return `true` and set `out ulong foundAddress` to the matching address, or return `false` and set it to `0` for a normal miss (including an empty scan window). They call the same underlying remote scan logic, including the final legal candidate fallback. Invalid data/signatures/masks, invalid address ranges and detached sessions retain their existing exception behavior. No additional remote reads, preflight, global state, native ABI change or scanner algorithm is introduced by the `Try*` surface.
+
+```csharp
+if (session.Scanner.TryDataScan(pattern, startAddress, scanLength, out ulong matchAddress))
+{
+    Console.WriteLine($"Match at 0x{matchAddress:X}");
+}
+```
+
 
 ### ModuleInfo
 

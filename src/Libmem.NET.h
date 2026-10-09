@@ -330,12 +330,21 @@ namespace Libmem::NET {
         /// <summary>Scans the target process for an exact byte sequence.</summary>
         /// <returns>The matching address, or the libmem bad-address sentinel when no match is found.</returns>
         UInt64 DataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize);
+        /// <summary>Tries an exact-data scan without exposing the native miss sentinel.</summary>
+        /// <remarks>A normal miss returns false with foundAddress set to zero; invalid arguments and disposed sessions still throw.</remarks>
+        bool TryDataScan(array<Byte>^ data, UInt64 address, UInt64 scanSize, [System::Runtime::InteropServices::Out] UInt64% foundAddress);
         /// <summary>Scans the target process for a byte pattern and mask.</summary>
         /// <returns>The matching address, or the libmem bad-address sentinel when no match is found.</returns>
         UInt64 PatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize);
+        /// <summary>Tries a pattern-and-mask scan without exposing the native miss sentinel.</summary>
+        /// <remarks>A normal miss returns false with foundAddress set to zero; invalid arguments and disposed sessions still throw.</remarks>
+        bool TryPatternScan(array<Byte>^ pattern, String^ mask, UInt64 address, UInt64 scanSize, [System::Runtime::InteropServices::Out] UInt64% foundAddress);
         /// <summary>Scans the target process for a libmem signature string.</summary>
         /// <returns>The matching address, or the libmem bad-address sentinel when no match is found.</returns>
         UInt64 SigScan(String^ signature, UInt64 address, UInt64 scanSize);
+        /// <summary>Tries a libmem signature scan without exposing the native miss sentinel.</summary>
+        /// <remarks>A normal miss returns false with foundAddress set to zero; invalid arguments and disposed sessions still throw.</remarks>
+        bool TrySigScan(String^ signature, UInt64 address, UInt64 scanSize, [System::Runtime::InteropServices::Out] UInt64% foundAddress);
     };
 
     /// <summary>Session-bound symbol enumeration, lookup, and demangling operations.</summary>

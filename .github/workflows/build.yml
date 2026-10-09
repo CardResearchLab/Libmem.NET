@@ -226,6 +226,7 @@ jobs:
           dotnet restore .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             --source .\artifacts\nuget `
             -p:LibmemNetTestUnreleasedApis=true `
+            -p:LibmemNetTestV25ScanApis=true `
             -p:LibmemNetTestPackageVersion=$version `
             -p:Platform=x64 `
             -p:NuGetAudit=false
@@ -240,6 +241,7 @@ jobs:
             --no-restore `
             -p:Platform=x64 `
             -p:LibmemNetTestUnreleasedApis=true `
+            -p:LibmemNetTestV25ScanApis=true `
             -p:LibmemNetTestPackageVersion=$version
 
       - name: Publish x64 NuGet consumer
@@ -253,6 +255,7 @@ jobs:
             --no-restore `
             -p:Platform=x64 `
             -p:LibmemNetTestUnreleasedApis=true `
+            -p:LibmemNetTestV25ScanApis=true `
             -p:LibmemNetTestPackageVersion=$version `
             -o $output
 
@@ -269,6 +272,7 @@ jobs:
           dotnet restore .\tests\Libmem.NET.NuGetConsumer\Libmem.NET.NuGetConsumer.csproj `
             --source .\artifacts\nuget `
             -p:LibmemNetTestUnreleasedApis=true `
+            -p:LibmemNetTestV25ScanApis=true `
             -p:LibmemNetTestPackageVersion=$version `
             -p:Platform=x86 `
             -p:NuGetAudit=false
@@ -283,6 +287,7 @@ jobs:
             --no-restore `
             -p:Platform=x86 `
             -p:LibmemNetTestUnreleasedApis=true `
+            -p:LibmemNetTestV25ScanApis=true `
             -p:LibmemNetTestPackageVersion=$version
 
       - name: Publish x86 NuGet consumer
@@ -296,6 +301,7 @@ jobs:
             --no-restore `
             -p:Platform=x86 `
             -p:LibmemNetTestUnreleasedApis=true `
+            -p:LibmemNetTestV25ScanApis=true `
             -p:LibmemNetTestPackageVersion=$version `
             -o $output
 

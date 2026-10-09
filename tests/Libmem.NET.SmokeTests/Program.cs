@@ -325,6 +325,9 @@ catch (ObjectDisposedException)
     detachedScanManagerThrows = true;
 }
 Check(detachedScanManagerThrows, "ScanManager should reject operations after its ProcessSession is detached.");
+ExpectThrows<ObjectDisposedException>(
+    () => { _ = detachedScanner.TrySigScan("90", 0, 1, out _); },
+    "TrySigScan must reject a detached ProcessSession.");
 
 var detachedSymbolManagerThrows = false;
 try
@@ -569,6 +572,17 @@ var ownedSignature = string.Join(" ", ownedPayload.Select(b => b.ToString("X2"))
 Check(scanner.SigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size) == ownedAllocation.Address,
     "ScanManager.SigScan failed.");
 
+// 2.5.0 additive managed Try* APIs preserve native scanning and report normal misses as false.
+Check(scanner.TryDataScan(ownedPayload, ownedAllocation.Address, ownedAllocation.Size, out var tryDataAddress)
+      && tryDataAddress == ownedAllocation.Address,
+    "TryDataScan should return true and the found address.");
+Check(scanner.TryPatternScan(ownedPayload, ownedMask, ownedAllocation.Address, ownedAllocation.Size, out var tryPatternAddress)
+      && tryPatternAddress == ownedAllocation.Address,
+    "TryPatternScan should return true and the found address.");
+Check(scanner.TrySigScan(ownedSignature, ownedAllocation.Address, ownedAllocation.Size, out var trySigAddress)
+      && trySigAddress == ownedAllocation.Address,
+    "TrySigScan should return true and the found address.");
+
 // The pinned libmem scan loop omits the final legal candidate. Exact-window
 // scans therefore exercise the wrapper compatibility fallback directly.
 var exactScanSize = (ulong)ownedPayload.Length;
@@ -584,6 +598,15 @@ Check(scanner.PatternScan(ownedPayload, ownedMask, ownedAllocation.Address, exac
     "Remote PatternScan should recover the pinned final-candidate omission.");
 Check(scanner.SigScan(ownedSignature, ownedAllocation.Address, exactScanSize) == ownedAllocation.Address,
     "Remote SigScan should recover the pinned final-candidate omission.");
+Check(scanner.TryDataScan(ownedPayload, ownedAllocation.Address, exactScanSize, out tryDataAddress)
+      && tryDataAddress == ownedAllocation.Address,
+    "TryDataScan must preserve exact-window boundary fallback.");
+Check(scanner.TryPatternScan(ownedPayload, ownedMask, ownedAllocation.Address, exactScanSize, out tryPatternAddress)
+      && tryPatternAddress == ownedAllocation.Address,
+    "TryPatternScan must preserve exact-window boundary fallback.");
+Check(scanner.TrySigScan(ownedSignature, ownedAllocation.Address, exactScanSize, out trySigAddress)
+      && trySigAddress == ownedAllocation.Address,
+    "TrySigScan must preserve exact-window boundary fallback.");
 
 var wrappingScan = ExpectThrows<ArgumentOutOfRangeException>(
     () => NativeApi.DataScan([0x90], invalidAddress - 1, 4),
@@ -599,6 +622,29 @@ var missingPayload = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
 var missingScan = scanner.DataScan(missingPayload, ownedAllocation.Address, ownedAllocation.Size);
 Check(missingScan == invalidAddress,
     "A valid non-empty scan with no match should remain the architecture-width native bad-address sentinel.");
+
+Check(!scanner.TryDataScan(missingPayload, ownedAllocation.Address, ownedAllocation.Size, out tryDataAddress)
+      && tryDataAddress == 0,
+    "TryDataScan should return false and zero for a normal miss on either architecture.");
+Check(!scanner.TryPatternScan(missingPayload, "xxxx", ownedAllocation.Address, ownedAllocation.Size, out tryPatternAddress)
+      && tryPatternAddress == 0,
+    "TryPatternScan should return false and zero for a normal miss on either architecture.");
+Check(!scanner.TrySigScan("DE AD BE EF", ownedAllocation.Address, ownedAllocation.Size, out trySigAddress)
+      && trySigAddress == 0,
+    "TrySigScan should return false and zero for a normal miss on either architecture.");
+Check(!scanner.TrySigScan(ownedSignature, ownedAllocation.Address, 0, out trySigAddress)
+      && trySigAddress == 0,
+    "TrySigScan should preserve the zero-size scan miss contract.");
+var tryInvalidMask = ExpectThrows<ArgumentException>(
+    () => { _ = scanner.TryPatternScan(ownedPayload, "x", ownedAllocation.Address, ownedAllocation.Size, out _); },
+    "TryPatternScan must preserve the existing mask-length validation.");
+ExpectThrows<ArgumentNullException>(
+    () => { _ = scanner.TryDataScan(null!, ownedAllocation.Address, ownedAllocation.Size, out _); },
+    "TryDataScan must reject null data.");
+ExpectThrows<ArgumentNullException>(
+    () => { _ = scanner.TrySigScan(null!, ownedAllocation.Address, ownedAllocation.Size, out _); },
+    "TrySigScan must reject null signatures.");
+Check(tryInvalidMask is not null, "TryPatternScan invalid mask did not throw.");
 
 Stage("deep-pointer");
 using (var pointerLayer0 = memory.Allocate(4096, MemoryProtection.ReadWrite)
