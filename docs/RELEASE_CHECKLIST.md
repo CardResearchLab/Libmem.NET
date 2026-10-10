@@ -2,7 +2,7 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-**2.5.0 is now published stable** (assembly/file `2.5.0.0`); exact-commit main Build #461, Release #50 dry run, tagged GitHub Release #51 and NuGet OIDC push #52 succeeded. Independent nuget.org-only x64/x86 consumer validation remains a gate of the post-release PR.
+**2.5.0 is now published stable** (assembly/file `2.5.0.0`); exact-commit main Build #461, Release #50 dry run, tagged GitHub Release #51 and NuGet OIDC push #52 succeeded. Independent nuget.org-only x64/x86 consumer acceptance passed PR #148 Published NuGet Smoke #48; main-branch CI must still be checked after merge.
 
 ## 2.4.1 patch release gates
 
@@ -15,7 +15,7 @@ Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate com
 - [x] Post-release PR #143 passed public 2.4.1 x64/x86 PackageReference restore/build/run/publish, XML/native assets and unsupported AnyCPU/ARM64 checks (Published NuGet Smoke #40), then merged; main public smoke #41 also passed.
 - [x] Retain documented TOCTOU limitation: process-identity prechecks do not make native PID-only operations atomic.
 
-## 2.5.0 release gates (publication complete; public-feed acceptance pending)
+## 2.5.0 release gates (publication and PR public-feed acceptance passed)
 
 - [x] Additive ScanManager Try API PR #144 merged; feature Build #451 and main Build #452 passed, including x64/x86 and local multiarch NuGet.
 - [x] Additive MemoryManager TryRead/TryWrite PR #145 merged; feature Build #453 and main Build #454 passed.
@@ -28,8 +28,8 @@ Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate com
 - [x] Formal release notes rendered from 2.5.0 CHANGELOG and validated architecture manifest/checksum provenance in Release #50; tagged release notes contain the matching checksums.
 - [x] Annotated tag `v2.5.0` targets accepted main commit; tagged GitHub Release #51 succeeded and published five assets.
 - [x] NuGet was separately pushed on the published tag by Release #52 with OIDC; log confirms `Your package was pushed`.
-- [ ] Validate independently from nuget.org only: x64/x86 consumer restore/build/run/publish, XML/native assets, and AnyCPU/ARM64 rejection; do not merge this post-release PR without green public Smoke.
-- [ ] Advance default public NuGet Smoke to 2.5.0 and promote stable docs **through this PR only after its public-feed CI succeeds**.
+- [x] PR #148 Published NuGet Smoke #48 passed independent nuget.org-only x64/x86 restore/build/run/publish, XML/native assets, all five new Try API consumer checks and AnyCPU/ARM64 rejection.
+- [ ] Merge PR #148 only after final x64/x86 Build passes; then verify the new main Build and main Published NuGet Smoke on 2.5.0 (the PR CI already passed).
 - [x] Preserve Windows x64/x86 / .NET 8 only, pinned native libmem, no AnyCPU/ARM64/cross-bitness or game-specific business logic.
 
 ## 2.3.0 release gates
