@@ -1,6 +1,6 @@
 # Libmem.NET 开发路线图
 
-**2.5.0 已正式发布**（2026-10-11 北京时间）：主线 Build #461、发布预演 #50、GitHub Release #51、NuGet Trusted Publishing #52 完成；发布后独立 NuGet x64/x86 Smoke 正在本 PR 验收。现阶段优先稳定性维护，不扩展 ARM64 或跨平台范围。
+**2.5.0 已正式发布**（2026-10-11 北京时间）：主线 Build #461、发布预演 #50、GitHub Release #51、NuGet Trusted Publishing #52 完成；发布后独立 NuGet x64/x86 Smoke #48 已在 PR #148 通过。现阶段优先稳定性维护，不扩展 ARM64 或跨平台范围。
 
 > 当前策略：**Windows x64 与 x86 同级支持；共享设计保持架构中立，为后续 ARM64 留出扩展点。**
 
@@ -150,7 +150,7 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 
 ## 已完成：v2.5.0 — Try API 与 Hook/VMT 稳定性增强
 
-PR #144 新增 ScanManager 三个 Try 扫描方法，#145 新增 MemoryManager.TryRead/TryWrite，#146 加固本地 Hook 卸载并补充 VMT 重试测试；PR #147 整理发布候选元数据。主线 Build #461 与发布预演 #50 全绿，GitHub Release #51 和 NuGet #52 发布成功。后续在独立 PR 验证来自 nuget.org 的 x64/x86 消费者、XML/native 资产和不支持平台拒绝行为。继续不支持 ARM64、AnyCPU、跨位数和游戏业务。
+PR #144 新增 ScanManager 三个 Try 扫描方法，#145 新增 MemoryManager.TryRead/TryWrite，#146 加固本地 Hook 卸载并补充 VMT 重试测试；PR #147 整理发布候选元数据。主线 Build #461 与发布预演 #50 全绿，GitHub Release #51 和 NuGet #52 发布成功。PR #148 的 Published NuGet Smoke #48 已确认来自 nuget.org 的 x64/x86 消费者、XML/native 资产和不支持平台拒绝行为，合并后继续核查主线 Smoke。继续不支持 ARM64、AnyCPU、跨位数和游戏业务。
 
 ## 已完成：v2.0.0 — Stable Libmem.NET identity
 
