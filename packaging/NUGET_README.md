@@ -9,10 +9,10 @@ Libmem.NET is a Windows-focused C++/CLI wrapper for [rdbo/libmem](https://github
 ## Installation
 
 ```powershell
-dotnet add package Libmem.NET --version 2.4.1
+dotnet add package Libmem.NET --version 2.5.0
 ```
 
-**2.4.1 is the published stable release.** Install using the command above or download [GitHub Release v2.4.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1). This patch fixes `ReadAlignedCode` at unreadable page boundaries, adds stale-process identity guards around remote mutation APIs, and stabilizes failed-hook-removal regression tests. Public APIs, the pinned native library and Windows x64/x86 / .NET 8 support remain unchanged. Identity prechecks cannot eliminate native PID-only call races. See the [2.4.1 release notes](https://github.com/CardResearchLab/Libmem.NET/blob/main/docs/releases/v2.4.1.md).
+**Libmem.NET 2.5.0** adds `ScanManager.TryDataScan/TryPatternScan/TrySigScan` and `MemoryManager.TryRead/TryWrite` for clear match/full-transfer results. Local Hook removal now preflights trampoline readability; regression coverage also exercises partial VMT reset and retry. Existing APIs and the pinned native libmem revision remain compatible. Supported targets: Windows x64/x86 with .NET 8; AnyCPU, ARM64 and cross-bitness are unsupported. Native Hook removal remains non-atomic. This README describes the 2.5.0 package **when it is published**; until then, the latest published stable release is [2.4.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1). See [2.5.0 release notes](https://github.com/CardResearchLab/Libmem.NET/blob/main/docs/releases/v2.5.0.md).
 
 ## Highlights
 
@@ -98,10 +98,10 @@ Libmem.NET 是一个面向 Windows 的 [rdbo/libmem](https://github.com/rdbo/lib
 ## 安装
 
 ```powershell
-dotnet add package Libmem.NET --version 2.4.1
+dotnet add package Libmem.NET --version 2.5.0
 ```
 
-**2.4.1 已正式发布。** 可以使用上面的命令安装，或下载 [GitHub Release v2.4.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1)。此补丁修复 `ReadAlignedCode` 不可访问页边界问题、加强远程修改操作前的进程身份校验，并稳定 Hook 卸载失败测试。保持公共 API、固定 native 库和 Windows x64/x86 / .NET 8 支持不变；预检查无法彻底消除原生 PID 操作竞态。参见 [2.4.1 正式发布说明](https://github.com/CardResearchLab/Libmem.NET/blob/main/docs/releases/v2.4.1.md)。
+**Libmem.NET 2.5.0** 新增 `ScanManager.TryDataScan/TryPatternScan/TrySigScan` 和 `MemoryManager.TryRead/TryWrite`，使未命中、完整及部分传输结果更容易判断。本地 Hook 卸载增加 trampoline 可读性预检查，并新增 VMT 部分恢复及重试回归测试。保留旧 API 与固定 native libmem 版本，仅支持 Windows x64/x86 与 .NET 8；不支持 AnyCPU、ARM64 和跨位数，Hook 卸载并非原子操作。本 README 描述的是**正式发布后的 2.5.0 包**；发布前现行稳定版本仍是 [2.4.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1)。详见 [2.5.0 发布说明](https://github.com/CardResearchLab/Libmem.NET/blob/main/docs/releases/v2.5.0.md)。
 
 ## 主要功能
 

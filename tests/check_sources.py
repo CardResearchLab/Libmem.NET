@@ -692,6 +692,12 @@ subprocess.run(
     check=True,
 )
 print("PASS formal GitHub Release notes contract")
+subprocess.run(
+    [sys.executable, str(root / "tests/check_release_metadata.py")],
+    cwd=root,
+    check=True,
+)
+print("PASS release-candidate version metadata contract")
 x86_runtime_setup = (root / "eng/setup-dotnet-x86.ps1").read_text(encoding="utf-8")
 assert "-Architecture x86" in x86_runtime_setup
 assert "DOTNET_ROOT_X86" in x86_runtime_setup

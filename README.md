@@ -12,7 +12,9 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-**2.4.1 稳定性补丁已正式发布**；GitHub Release 与 NuGet Trusted Publishing 已完成。本次修复 `ReadAlignedCode` 可读页边界问题、增强远程修改前的进程身份校验，并稳定 Hook 回归测试；保持 Windows x64/x86、.NET 8、公共 API 和固定 native 版本不变。
+**2.4.1 稳定性补丁已正式发布**；GitHub Release、NuGet Trusted Publishing 及公网 x64/x86 消费者验收均已完成。本次修复 `ReadAlignedCode` 可读页边界问题、增强远程修改前的进程身份校验，并稳定 Hook 回归测试；保持 Windows x64/x86、.NET 8、公共 API 和固定 native 版本不变。
+
+**2.5.0 发布候选（尚未发布）：** PR #144、#145、#146 已将 5 个新增 Try API、Hook 本地卸载预检及 VMT 多项重试测试合并入 main；当前候选源码的 `VERSION=2.5.0` 用于发布前的精确版本验证，**不表示公网已经可用**。参见 [2.5.0 候选说明](docs/releases/v2.5.0.md)与[发布清单](docs/RELEASE_CHECKLIST.md)。
 
 正式支持范围：
 
@@ -283,7 +285,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-Trusted Publishing / OIDC 任务 Release #46 成功，公网 x64/x86 消费者测试 #36 成功；2.4.1 发布后公网 NuGet smoke 目标基线已推进到 **2.4.1**（以工作流验收结果为准）。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+Trusted Publishing / OIDC 任务 Release #46 成功，公网 x64/x86 消费者测试 #36 成功；2.4.1 发布后公网 NuGet smoke 目标基线已推进到 **2.4.1**，且 Smoke #40/#41 已通过；2.5.0 尚未推送公网。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 

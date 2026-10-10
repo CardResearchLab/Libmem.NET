@@ -2,7 +2,7 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-**2.4.1 is published stable** (assembly/file `2.4.1.0`). GitHub Release and NuGet publishing steps succeeded; independent public-feed consumer smoke is the remaining post-release verification gate.
+**2.4.1 is the latest published stable release** (assembly/file `2.4.1.0`); GitHub Release, NuGet and independent x64/x86 public-feed smoke have succeeded. **2.5.0 is a release candidate only**, not yet tagged or published.
 
 ## 2.4.1 patch release gates
 
@@ -12,8 +12,24 @@ Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate com
 - [x] Release #47 on `release/v2.4.1` passed the exact-commit dry run without publication.
 - [x] Release validation steps succeeded for x64/x86 ZIPs, SHA-256, package provenance, NuGet and unchanged pinned native libmem/Public API.
 - [x] Tagged GitHub Release #48 published assets; separate explicit NuGet Trusted Publishing Release #49 succeeded (OIDC login and push).
-- [ ] Post-release PR must pass independent published `2.4.1` x64/x86 restore/build/run/publish, XML/native assets and unsupported AnyCPU/ARM64 checks; the baseline/docs updates must not merge beforehand.
+- [x] Post-release PR #143 passed public 2.4.1 x64/x86 PackageReference restore/build/run/publish, XML/native assets and unsupported AnyCPU/ARM64 checks (Published NuGet Smoke #40), then merged; main public smoke #41 also passed.
 - [x] Retain documented TOCTOU limitation: process-identity prechecks do not make native PID-only operations atomic.
+
+## 2.5.0 release-candidate gates (not a publication record)
+
+- [x] Additive ScanManager Try API PR #144 merged; feature Build #451 and main Build #452 passed, including x64/x86 and local multiarch NuGet.
+- [x] Additive MemoryManager TryRead/TryWrite PR #145 merged; feature Build #453 and main Build #454 passed.
+- [x] Hook/VMT lifecycle PR #146 merged after the fixed fixture passed feature Build #456, including both Hook/VMT suites and local NuGet.
+- [ ] Confirm post-merge main Build #457 passes Release x64, x86, external process, Hook/VMT, Injector, source/public API and multiarch NuGet.
+- [x] Public API diff relative to the published v2.4.1 baseline: exactly five added declarations, zero removed declarations.
+- [ ] Candidate metadata PR passes all Windows x64/x86 Build and local NuGet consumer checks with `VERSION=2.5.0`, bilingual package notes, renderable CHANGELOG section and candidate metadata consistency check.
+- [ ] Candidate PR merges; the exact accepted main commit passes the post-merge Build.
+- [ ] Create `release/v2.5.0` **from the accepted main commit** and confirm the Release dry run succeeds; verify both ZIPs/SHA-256/manifest provenance and exact 2.5.0 NuGet package. This step must not publish anything.
+- [ ] Compare the formal generated GitHub release notes to the 2.5.0 CHANGELOG, README, compatibility guidance, and exact package checksums.
+- [ ] Only after the dry run is green, create `v2.5.0` tag and verify GitHub Release artifacts; **no tag or publication as part of this candidate PR**.
+- [ ] Independently publish NuGet on the existing published tag via manual `publish-nuget=true` (OIDC), then verify public nuget.org x64/x86 consumers and unsupported-target rejection.
+- [ ] After nuget.org verification, update default published smoke version to 2.5.0 and promote stable-readme status in a separate PR.
+- [x] Preserve Windows x64/x86 / .NET 8 only, pinned native libmem, no AnyCPU/ARM64/cross-bitness or game-specific business logic.
 
 ## 2.3.0 release gates
 
