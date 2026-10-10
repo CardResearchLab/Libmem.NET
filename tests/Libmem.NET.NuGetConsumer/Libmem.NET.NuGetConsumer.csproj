@@ -9,8 +9,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LibmemNetTestPackageVersion Condition="'$(LibmemNetTestPackageVersion)' == ''">0.0.0-local</LibmemNetTestPackageVersion>
-    <DefineConstants Condition="'$(LibmemNetTestUnreleasedApis)' == 'true' Or '$(LibmemNetTestPackageVersion)' == '2.4.0'">$(DefineConstants);LIBMEM_NET_TEST_UNRELEASED_APIS</DefineConstants>
-    <DefineConstants Condition="'$(LibmemNetTestV25ScanApis)' == 'true'">$(DefineConstants);LIBMEM_NET_TEST_V25_SCAN_APIS</DefineConstants>
+    <DefineConstants Condition="'$(LibmemNetTestUnreleasedApis)' == 'true' Or '$(LibmemNetTestPackageVersion)' == '2.4.0' Or '$(LibmemNetTestPackageVersion)' == '2.5.0'">$(DefineConstants);LIBMEM_NET_TEST_UNRELEASED_APIS</DefineConstants>
+    <DefineConstants Condition="'$(LibmemNetTestV25ScanApis)' == 'true' Or '$(LibmemNetTestPackageVersion)' == '2.5.0'">$(DefineConstants);LIBMEM_NET_TEST_V25_SCAN_APIS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
