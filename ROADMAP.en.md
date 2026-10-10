@@ -1,6 +1,6 @@
 # Libmem.NET Development Roadmap
 
-**2.5.0 is officially published** (2026-10-10 UTC): main Build #461, Release dry run #50, GitHub Release #51 and NuGet Trusted Publishing #52 succeeded. Independent public NuGet x64/x86 consumer smoke is being verified in this post-release PR. Focus remains on stability; ARM64 and cross-platform targets are out of scope.
+**2.5.0 is officially published** (2026-10-10 UTC): main Build #461, Release dry run #50, GitHub Release #51 and NuGet Trusted Publishing #52 succeeded. Independent public NuGet x64/x86 consumer tests passed Published NuGet Smoke #48 on PR #148. Focus remains on stability; ARM64 and cross-platform targets are out of scope.
 
 > Current strategy: **Windows x64 and x86 are first-class targets; shared design stays architecture-neutral for a future ARM64 phase.**
 
@@ -151,7 +151,7 @@ After stable 2.2.0 publication, systematically compare against the pinned rdbo/l
 
 ## Completed: v2.5.0 — Try APIs and Hook/VMT lifecycle hardening
 
-PR #144 added three ScanManager Try methods; #145 added MemoryManager.TryRead/TryWrite; #146 hardened local Hook removal and VMT retry regression tests; #147 prepared candidate metadata. Main Build #461, Release dry run #50, GitHub Release #51 and separate NuGet OIDC publication #52 succeeded. Independent nuget.org x64/x86 consumers, XML/native assets and unsupported-target rejection are the post-release PR gate. ARM64, AnyCPU, cross-bitness and game-specific features remain unsupported.
+PR #144 added three ScanManager Try methods; #145 added MemoryManager.TryRead/TryWrite; #146 hardened local Hook removal and VMT retry regression tests; #147 prepared candidate metadata. Main Build #461, Release dry run #50, GitHub Release #51 and separate NuGet OIDC publication #52 succeeded. Independent nuget.org x64/x86 consumers, XML/native assets and unsupported-target rejection passed Published NuGet Smoke #48 in PR #148; main smoke is verified separately after merge. ARM64, AnyCPU, cross-bitness and game-specific features remain unsupported.
 
 ## Completed: v2.0.0 — Stable Libmem.NET identity
 
