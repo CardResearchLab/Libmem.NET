@@ -1,6 +1,6 @@
 # Libmem.NET 开发路线图
 
-**2.4.1 已正式发布**（2026-10-10，北京时间）；PR #137–#142 已合并，主线 Build #445、GitHub Release #48 与 NuGet Trusted Publishing #49 成功。公网 2.4.1 独立消费者验证由发布后 Smoke CI 负责。后续可规划 2.5.0，但 ARM64 与跨平台能力仍不属于当前支持范围。
+**2.5.0 已正式发布**（2026-10-11 北京时间）：主线 Build #461、发布预演 #50、GitHub Release #51、NuGet Trusted Publishing #52 完成；发布后独立 NuGet x64/x86 Smoke #48 已在 PR #148 通过。现阶段优先稳定性维护，不扩展 ARM64 或跨平台范围。
 
 > 当前策略：**Windows x64 与 x86 同级支持；共享设计保持架构中立，为后续 ARM64 留出扩展点。**
 
@@ -148,9 +148,9 @@ Snapshot、缓存、Entity、GameState、事件状态、IPC 和游戏版本适�
 - 将 Hook 删除失败时的 trampoline 回归测试改为确定性的 `PAGE_NOACCESS` 场景。
 - 发布证据：主线 Build #445、Release 预演 #47、GitHub Release #48、NuGet OIDC #49；发布后公网消费测试以实际 CI 结果为准。
 
-## 进行中：v2.5.0（独立开发分支，未发布）
+## 已完成：v2.5.0 — Try API 与 Hook/VMT 稳定性增强
 
-第一阶段 PR #144（ScanManager 三个 Try 方法）、第二阶段 PR #145（MemoryManager.TryRead/TryWrite）以及第三阶段 PR #146（本进程 Hook 卸载 trampoline 可读性预检、VMT 多条目部分恢复重试测试）均已合并。功能 PR 的 Windows x64/x86、多架构本地 NuGet 测试成功；发布前需确认第三阶段主线 Build #457 最终通过。第四阶段在独立候选分支整理 `VERSION=2.5.0`、公开 API 兼容性审计、NuGet 中英文说明、CHANGELOG、Release Notes 和发布清单，并通过候选及主线 CI。当前公网稳定版仍是 2.4.1；后续只在精确提交的 `release/v2.5.0` dry run 成功后，才考虑 tag、GitHub Release 及单独手动 NuGet 发布。继续不支持 ARM64、AnyCPU、跨位数及游戏业务。
+PR #144 新增 ScanManager 三个 Try 扫描方法，#145 新增 MemoryManager.TryRead/TryWrite，#146 加固本地 Hook 卸载并补充 VMT 重试测试；PR #147 整理发布候选元数据。主线 Build #461 与发布预演 #50 全绿，GitHub Release #51 和 NuGet #52 发布成功。PR #148 的 Published NuGet Smoke #48 已确认来自 nuget.org 的 x64/x86 消费者、XML/native 资产和不支持平台拒绝行为，合并后继续核查主线 Smoke。继续不支持 ARM64、AnyCPU、跨位数和游戏业务。
 
 ## 已完成：v2.0.0 — Stable Libmem.NET identity
 

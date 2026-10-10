@@ -4,9 +4,9 @@ This document describes the official release channel, current stable release, su
 
 ## Current stable release
 
-**2.4.1 remains the published stable release** (assembly/file `2.4.1.0`); GitHub Release, NuGet Trusted Publishing and independent public x64/x86 consumer verification completed. **2.5.0 is in release-candidate preparation**; the candidate branch does not constitute publication.
+**2.5.0 is now the published stable release** (assembly/file `2.5.0.0`). Exact source `190ed68e3d420932e19a724edfdc0e9482518e14` passed main Build #461 and Release dry run #50; GitHub Release #51 published five public assets and NuGet OIDC Release #52 pushed the package. Independent nuget.org-only x64/x86 consumers passed Published NuGet Smoke #48 on PR #148; the main-branch smoke remains a post-merge check.
 
-Stable 2.4.1 fixes accessible-page-boundary decoding, adds stale process identity preflights to remote mutations and stabilizes Hook removal regression tests without changing the Public API, Hook/VMT/Injector contract, native revision or supported targets. Stable 2.4.0 and 2.3.0 remain available.
+Stable 2.5.0 adds five managed Try APIs, hardens local Hook removal and covers VMT partial-reset retry, without breaking existing managed signatures or changing the pinned native libmem revision. Version 2.4.1 remains an available previous stable patch.
 
 ### Libmem.NET v2.4.1 — published stable
 
@@ -16,12 +16,12 @@ Stable 2.4.1 fixes accessible-page-boundary decoding, adds stale process identit
 - Stale PID identity preflights cannot eliminate the race between validation and native PID-only operations; no native handle-bound redesign is included.
 - Full release notes: [releases/v2.4.1.md](releases/v2.4.1.md).
 
-### Libmem.NET v2.5.0 — release candidate (unpublished)
+### Libmem.NET v2.5.0 — published stable
 
 - Five additive public methods: `MemoryManager.TryRead`, `TryWrite`, and `ScanManager.TryDataScan`, `TryPatternScan`, `TrySigScan`. No existing public declarations were removed relative to v2.4.1.
 - Local Hook removal now preflights a readable trampoline; VMT multi-entry partial Reset failure/retry is covered by deterministic tests. Native libmem remains pinned.
-- Feature PRs #144 (Scan), #145 (Memory), #146 (Hook/VMT) merged into main. The metadata candidate uses `VERSION=2.5.0` and is validated through the regular dual-architecture CI; it is not the currently published stable package.
-- Acceptance and publication must follow [the 2.5.0 release checklist](RELEASE_CHECKLIST.md) and the [2.5.0 candidate notes](releases/v2.5.0.md). Do not use candidate CI as evidence of a published tag or nuget.org package.
+- Feature PRs #144 (Scan), #145 (Memory), #146 (Hook/VMT), plus candidate PR #147 merged; main Build #461 succeeded. `release/v2.5.0` exact-commit Release #50 completed dry-run validation, and tagged GitHub Release #51 published both ZIPs, checksum files and the 2.5.0 NuGet asset.
+- Separate NuGet Trusted Publishing/OIDC Release #52 pushed `Libmem.NET.2.5.0.nupkg` successfully. Independent nuget.org-only consumer restore/build/run/publish on x64/x86, XML/native assets and unsupported-target rejection passed independently in PR #148 Published NuGet Smoke #48; main-branch follow-up is required after merge. See [the release checklist](RELEASE_CHECKLIST.md) and the [2.5.0 release notes](releases/v2.5.0.md).
 
 ### Libmem.NET v2.4.0
 
@@ -68,7 +68,7 @@ The historical `LibmemCli` → `Libmem.NET` identity migration remains documente
 
 ## Support boundary
 
-The supported target for published 2.4.1 and unreleased 2.5.0 candidate is:
+The supported target for published 2.5.0 is:
 
 - Windows x64 and Windows x86;
 - .NET 8;
@@ -178,7 +178,7 @@ Use this when a consumer needs exact source provenance, reproducible native buil
 
 ### NuGet
 
-The published 2.4.1 `Libmem.NET` package has passed independent nuget.org x64/x86 PackageReference restore/build/run/publish, native asset copy, XML documentation, provenance and unsupported-architecture rejection. The 2.5.0 candidate must pass local multi-architecture NuGet before being considered for publication. Historical v1.0.0 did not ship an official NuGet asset.
+The published 2.5.0 `Libmem.NET` package was pushed by NuGet OIDC Release #52 and passed independent nuget.org-only x64/x86 PackageReference restore/build/run/publish, XML/native asset checks and unsupported target rejection in PR #148 Published NuGet Smoke #48. Confirm the main-branch CI after merge. Historical v1.0.0 did not ship an official NuGet asset.
 
 `2.0.0-preview.1` was successfully published through the account-side Trusted Publishing policy and `NUGET_USER` flow. Future publications must re-verify those settings if the repository, workflow, environment, or publishing account changes. See [CONSUMPTION.md](CONSUMPTION.md).
 
@@ -194,6 +194,7 @@ The published 2.4.1 `Libmem.NET` package has passed independent nuget.org x64/x8
 
 | Version | Date | Status | Official platform |
 | --- | --- | --- | --- |
+| 2.5.0 | 2026-10-11 | Published stable; GitHub #51 and NuGet #52 succeeded; independent public x64/x86 Smoke #48 passed on PR #148; post-merge main run pending | Windows x64/x86 / .NET 8 |
 | 2.4.1 | 2026-10-10 | Published stable; GitHub Release #48, NuGet #49, public smoke #40/#41 passed | Windows x64/x86 / .NET 8 |
 | 2.4.0 | 2026-10-09 | Previous stable; x64/x86 smoke #36 passed | Windows x64/x86 / .NET 8 |
 | 2.3.0 | 2026-10-08 | Previous published stable; public x64/x86 smoke #30 passed | Windows x64/x86 / .NET 8 |

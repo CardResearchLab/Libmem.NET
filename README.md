@@ -12,9 +12,9 @@
 
 作者与维护者：[xiaohei7972](https://github.com/xiaohei7972)。项目组织：[CardResearchLab](https://github.com/CardResearchLab)。
 
-**2.4.1 稳定性补丁已正式发布**；GitHub Release、NuGet Trusted Publishing 及公网 x64/x86 消费者验收均已完成。本次修复 `ReadAlignedCode` 可读页边界问题、增强远程修改前的进程身份校验，并稳定 Hook 回归测试；保持 Windows x64/x86、.NET 8、公共 API 和固定 native 版本不变。
+**Libmem.NET 2.5.0 已正式发布**：GitHub Release #51 和 NuGet Trusted Publishing #52 均成功。本版新增 5 个 Scan/Memory Try API，强化本地 Hook 卸载预检查和 VMT 重试回归测试；保持 Windows x64/x86、.NET 8、既有 API 和固定 native 版本兼容。独立公网 x64/x86 消费者验收已通过 PR #148 的 Published NuGet Smoke #48。
 
-**2.5.0 发布候选（尚未发布）：** PR #144、#145、#146 已将 5 个新增 Try API、Hook 本地卸载预检及 VMT 多项重试测试合并入 main；当前候选源码的 `VERSION=2.5.0` 用于发布前的精确版本验证，**不表示公网已经可用**。参见 [2.5.0 候选说明](docs/releases/v2.5.0.md)与[发布清单](docs/RELEASE_CHECKLIST.md)。
+**2.5.0 正式版：** PR #144–#146 的功能及修复、候选 PR #147、主线 Build #461、Release 预演 #50、正式 GitHub Release #51、NuGet 发布 #52 全部完成。详见 [2.5.0 发行说明](docs/releases/v2.5.0.md)与[发布清单](docs/RELEASE_CHECKLIST.md)。
 
 正式支持范围：
 
@@ -24,11 +24,11 @@
 - C# / .NET 消费者
 - 固定版本的 rdbo/libmem native backend
 
-  2.4.1 正式版只支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
+  2.5.0 正式版只支持 Windows x64/x86 与 .NET 8；消费者必须显式选择 x64 或 x86，不支持 AnyCPU、ARM64 或跨位数操作。
 
 ## 下载
 
-正式稳定版为 **2.4.1**：[GitHub Release v2.4.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1)；NuGet 安装使用 `Libmem.NET 2.4.1`。主线 Build #445、正式发布 Release #48 与 Trusted Publishing #49 已成功；2.4.1 公网包独立 x64/x86 验收由 [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) 工作流负责。
+正式稳定版为 **2.5.0**：[GitHub Release v2.5.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.5.0)；NuGet 包为 `Libmem.NET 2.5.0`。GitHub Release #51 和 NuGet OIDC #52 均成功。发布后公网 x64/x86 消费者验证由 [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) 执行，PR #148 的 Smoke #48 已通过；合并后还需核验 main 的公网 Smoke。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -230,7 +230,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime Package
 
-**2.4.1 正式发布源码**的 `VERSION` / informational version 为 `2.4.1`，程序集及文件版本为 `2.4.1.0`。[GitHub Release v2.4.1](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1) 包含 x64/x86 Runtime ZIP、SHA-256 与 `Libmem.NET.2.4.1.nupkg`。
+**2.5.0 正式发布源码**的 `VERSION` / informational version 为 `2.5.0`，程序集及文件版本为 `2.5.0.0`。[GitHub Release v2.5.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.5.0) 包含 x64/x86 Runtime ZIP、SHA-256 与 `Libmem.NET.2.5.0.nupkg`。
 
 生成正式风格 Runtime ZIP：
 
@@ -285,7 +285,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-Trusted Publishing / OIDC 任务 Release #46 成功，公网 x64/x86 消费者测试 #36 成功；2.4.1 发布后公网 NuGet smoke 目标基线已推进到 **2.4.1**，且 Smoke #40/#41 已通过；2.5.0 尚未推送公网。见 [消费指南](docs/CONSUMPTION.md) 与 [发布清单](docs/RELEASE_CHECKLIST.md)。
+**2.5.0** 已经 GitHub Release #51 正式发行、NuGet OIDC #52 推送。公网 NuGet Smoke 默认目标在本 PR 切换到 **2.5.0**，PR #148 的 Published NuGet Smoke #48 已完成独立 x64/x86 验证；合并后还需核验 main 工作流。2.4.1 的历史公网验收 #40/#41 保留。见 [消费指南](docs/CONSUMPTION.md)与[发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 

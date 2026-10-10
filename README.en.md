@@ -12,9 +12,9 @@
 
 Author and maintainer: [xiaohei7972](https://github.com/xiaohei7972). Project organization: [CardResearchLab](https://github.com/CardResearchLab).
 
-The **2.4.1 maintenance patch is officially published** on GitHub and nuget.org, and independent x64/x86 public-feed consumer verification passed. This patch hardens `ReadAlignedCode` at unreadable page boundaries, remote mutation process identity checks and Hook regression tests while retaining Windows x64/x86 / .NET 8, the Public API and pinned native libmem.
+**Libmem.NET 2.5.0 is officially published** through GitHub Release #51 and NuGet Trusted Publishing #52. This release adds five Scan/Memory Try APIs and strengthens local Hook removal preflight and VMT retry regression coverage. Windows x64/x86, .NET 8, existing public APIs and pinned native libmem remain supported. Independent public-feed x64/x86 consumer verification passed Published NuGet Smoke #48 on PR #148.
 
-**2.5.0 release candidate (not published):** PRs #144, #145, and #146 have merged five additive Try APIs, local Hook removal preflight and VMT multi-entry retry regression into main. Candidate source uses `VERSION=2.5.0` for exact-version preflight; **this is not evidence of a public package**. See [2.5.0 candidate notes](docs/releases/v2.5.0.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
+**2.5.0 stable release:** feature PRs #144–#146 and release-candidate PR #147 merged. Main Build #461, dry-run Release #50, tagged GitHub Release #51 and NuGet OIDC publication #52 completed. See [2.5.0 release notes](docs/releases/v2.5.0.md) and [release checklist](docs/RELEASE_CHECKLIST.md).
 
 Official support target:
 
@@ -24,11 +24,11 @@ Official support target:
 - C# / .NET consumers
 - a pinned rdbo/libmem native backend
 
-> Stable 2.4.1 remains Windows x64/x86 / .NET 8 only and requires matching managed/native binaries. Explicit x64/x86 platform selection is mandatory; AnyCPU, ARM64 and cross-bitness operation remain unsupported.
+> Stable 2.5.0 supports Windows x64/x86 and .NET 8 with matching managed/native binaries. Explicit x64/x86 platform selection is mandatory; AnyCPU, ARM64 and cross-bitness operation remain unsupported.
 
 ## Download
 
-Stable **Libmem.NET 2.4.1** is published: [v2.4.1 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1) and NuGet `Libmem.NET 2.4.1`. Main Build #445, GitHub Release #48 and Trusted Publishing #49 succeeded; independent public-feed x64/x86 verification is the responsibility of [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml).
+Stable **Libmem.NET 2.5.0** is published: [v2.5.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.5.0) and NuGet `Libmem.NET 2.5.0`. Release #51 and NuGet OIDC #52 succeeded. The independent x64/x86 [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) for 2.5.0 passed in PR #148's Published NuGet Smoke #48; the post-merge main smoke remains to be checked.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
@@ -230,7 +230,7 @@ artifacts/managed/x64/Release/Ijwhost.dll
 
 ## Runtime package
 
-The **published 2.4.1 source** uses `VERSION` / informational version `2.4.1` and assembly/file version `2.4.1.0`. [v2.4.1 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.4.1) contains the x64/x86 runtime ZIPs, checksums and `Libmem.NET.2.4.1.nupkg`.
+The **published 2.5.0 source** uses `VERSION` / informational version `2.5.0` and assembly/file version `2.5.0.0`. [v2.5.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.5.0) includes the x64/x86 runtime ZIPs, checksums and `Libmem.NET.2.5.0.nupkg`.
 
 Build the release-style runtime ZIP locally:
 
@@ -287,7 +287,7 @@ The package ID is `Libmem.NET`, targeting Windows x64/x86 / .NET 8. CI validates
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-Release #46 completed Trusted Publishing / OIDC for 2.4.0, and public x64/x86 NuGet consumer smoke #36 passed. The public-NuGet smoke target baseline is **2.4.1** and public Smoke #40/#41 passed; 2.5.0 has not been published to nuget.org. See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
+**2.5.0** was published by GitHub Release #51 and separate NuGet Trusted Publishing/OIDC Release #52. This PR advances the default public NuGet Smoke baseline to **2.5.0**; independent published-feed x64/x86 consumer checks passed in PR #148's Smoke #48; verify main smoke after merge. Historical 2.4.1 public smoke #40/#41 remains documented. See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 

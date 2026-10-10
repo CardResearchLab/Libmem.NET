@@ -104,7 +104,7 @@ using var session = ProcessSession.Open(process)
     ?? throw new InvalidOperationException("ProcessSession.Open failed through the NuGet package.");
 
 #if LIBMEM_NET_TEST_UNRELEASED_APIS
-// Verify both 2.4 APIs against the *local candidate*, not the published 2.3 baseline.
+// Verify the 2.4 additive APIs on official published 2.5.0 and local feature candidates.
 if (session.Assembly.ReadAlignedCode(0, 0).Length != 0)
     throw new InvalidOperationException("Zero-length instruction inspection should return no bytes.");
 
@@ -133,7 +133,7 @@ if (!copy.SequenceEqual(payload))
     throw new InvalidOperationException("NuGet consumer read-back mismatch.");
 
 #if LIBMEM_NET_TEST_V25_SCAN_APIS
-// Compiled only for local 2.5 development packages; never for published 2.4.x smoke.
+// Verify all five 2.5 Try methods for published 2.5.0 and local 2.5 development packages.
 var scanner = session.Scanner;
 string mask = new('x', payload.Length);
 string signature = string.Join(" ", payload.Select(b => b.ToString("X2")));

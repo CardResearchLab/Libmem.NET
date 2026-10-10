@@ -2,18 +2,18 @@
 
 > Current stable target: Windows x64/x86 / .NET 8.
 
-Libmem.NET supports Runtime ZIP, Git Submodule/source integration, and NuGet PackageReference consumption. Stable `2.4.1` has shipped on GitHub and nuget.org, and the independent public-feed x64/x86 smoke has passed (#40/#41). Unreleased 2.5.0 candidate packages must be validated from the CI local feed, not presented as already available from nuget.org. Historical v1.0.0 used `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
+Libmem.NET supports Runtime ZIP, Git submodule/source integration, and NuGet PackageReference consumption. Stable `2.5.0` is published via GitHub Release #51 and NuGet OIDC Release #52. Independent nuget.org-only x64/x86 consumer verification passed in PR #148 Published NuGet Smoke #48; the main-branch run must also be verified after merge. Historical v1.0.0 used `LibmemCli`; see [MIGRATION.md](MIGRATION.md).
 
 ## 1. Runtime ZIP — official release consumption
 
-The 2.4.1 release pipeline produces architecture-specific runtime archives:
+The 2.5.0 release pipeline produces architecture-specific runtime archives:
 
 ```text
 Libmem.NET-windows-x64.zip
 Libmem.NET-windows-x64.zip.sha256
 Libmem.NET-windows-x86.zip
 Libmem.NET-windows-x86.zip.sha256
-Libmem.NET.2.4.1.nupkg
+Libmem.NET.2.5.0.nupkg
 ```
 
 Each runtime directory contains the architecture-matched C++/CLI assembly, XML IntelliSense documentation, native libmem runtime, Ijwhost, package metadata, licensing notices, `CHANGELOG.md`, `MIGRATION.md`, and a manifest.
@@ -51,18 +51,18 @@ This is useful when the consumer wants:
 
 ## 3. NuGet package
 
-The 2.4.1 stable release uses one multi-architecture package:
+The 2.5.0 stable release uses one multi-architecture package:
 
 ```text
 Package ID: Libmem.NET
-Stable version: 2.4.1
-Published public baseline: 2.4.1
+Stable version: 2.5.0
+Published public baseline: 2.5.0 (PR #148 public Smoke #48 passed)
 Target: Windows x64/x86 / .NET 8
 Architecture selection: explicit Platform / PlatformTarget
 Unsupported: AnyCPU
 ```
 
-Development packages use a commit-qualified version derived from `VERSION`, for example `2.5.0-dev.<commit>` on the 2.5.0 candidate branch. CI stamps repository URL and exact Git commit provenance into the package.
+Development packages use commit-qualified prerelease versions based on `VERSION`, for example `2.5.0-dev.<commit>` on the historic 2.5 candidate branch. Published stable consumers should use exact version `2.5.0`. CI stamps repository URL and commit provenance into packages.
 
 ### Package layout
 
@@ -85,10 +85,10 @@ Build both runtime architectures first, then compose the package:
 .\eng\package-runtime.ps1 -Configuration Release -Platform x64
 .\build.ps1 -Configuration Release -Platform x86
 .\eng\package-runtime.ps1 -Configuration Release -Platform x86
-.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.4.1
+.\eng\package-nuget.ps1 -Configuration Release -PackageVersion 2.5.0
 ```
 
-The automatic Build gate performs the equivalent composition from verified x64/x86 runtime artifacts. The above exact-version 2.4.1 command is for an **exact-version local package**; consumers should normally restore the published `2.4.1` package from nuget.org.
+The automatic Build gate performs equivalent composition from verified x64/x86 runtime artifacts. The above exact-version 2.5.0 command builds an **exact-version local package**; consumers can use published `2.5.0` from nuget.org; independent x64/x86 Smoke #48 passed on PR #148.
 
 ### Local package test
 
@@ -124,11 +124,11 @@ Libmem.NET is not an AnyCPU managed library:
 - when `PlatformTarget` is explicitly set, it must be `x64` or `x86`; unsupported values such as `AnyCPU` or `arm64` are rejected even if `Platform` is x64/x86;
 - `Platform` is used as the architecture fallback only when `PlatformTarget` is empty; `Win32` maps to x86;
 - cross-bitness operation is not promised;
-- ARM64 is not a 2.4.1 production target.
+- ARM64 is not a 2.5.0 production target.
 
 ## NuGet release acceptance criteria
 
-The current public baseline is 2.4.1 (post-release x64/x86 smoke #40/#41 passed). Historical 2.4.0 NuGet checks passed in [Published NuGet Smoke #36](https://github.com/CardResearchLab/Libmem.NET/actions/runs/37832462294), alongside tagged NuGet Release #46:
+The public NuGet Smoke baseline in this post-release PR targets `2.5.0` with x64/x86 NuGet-only restore, build, run, publish and unsupported-target rejection; its public-feed x64/x86 acceptance passed in PR #148 Smoke #48; post-merge main CI remains to verify. Historical 2.4.1 public smoke #40/#41 and 2.4.0 smoke #36 passed.
 
 1. multi-architecture package layout/provenance verification;
 2. independent x64 restore/build/run/publish success;
@@ -164,6 +164,6 @@ The successful `2.0.0-preview.1` publication proves the current Trusted Publishi
 
 ## Current recommendation
 
-Public PackageReference consumption should use published stable `Libmem.NET 2.4.1` with an explicit x64 or x86 target until 2.5.0 is independently published and validated. The public nuget.org smoke baseline validates both architectures, including unsupported PlatformTarget rejection. Previous stable 2.3.0 remains available.
+Public PackageReference consumption should use published stable `Libmem.NET 2.5.0` with explicit x64 or x86 PlatformTarget. PR #148 Published NuGet Smoke #48 validated both architectures and unsupported PlatformTarget rejection directly from nuget.org; post-merge main CI is the final confirmation. The prior 2.4.1 stable version remains available.
 
 See [RELEASES.md](RELEASES.md) for release history, support boundaries and versioning, and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the next publication.
