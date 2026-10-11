@@ -192,6 +192,20 @@ using (var localHook = NativeApi.HookCode(source.Address, destination.Address)
             "Failed local Remove must not change the existing source redirection.");
         Check(NativeApi.FindSegment(source.Address)?.Protection == sourceProtection,
             "Failed local Remove must preserve the source page protection.");
+
+        // Failed explicit Dispose must surface the native operation without
+        // invalidating ownership; a later Remove/Dispose is still required.
+        var failedDispose = ExpectThrows<LibmemException>(
+            () => ((IDisposable)localHook).Dispose(),
+            "HookHandle.Dispose must report an unreadable trampoline rather than discard ownership.");
+        Check(failedDispose.Operation == "LM_UnhookCode",
+            "Failed local HookHandle.Dispose reported the wrong native operation.");
+        Check(localHook.IsInstalled && !localHook.IsDisposed,
+            "Failed local HookHandle.Dispose must preserve the installed, retryable handle.");
+        Check(CallNoArgs(source.Address) == 2,
+            "Failed local HookHandle.Dispose must keep the source redirected.");
+        Check(NativeApi.FindSegment(source.Address)?.Protection == sourceProtection,
+            "Failed local HookHandle.Dispose must preserve the source page protection.");
     }
     finally
     {
@@ -209,6 +223,10 @@ using (var localHook = NativeApi.HookCode(source.Address, destination.Address)
     Check(memory.Read(source.Address, sourceCode.Length).SequenceEqual(sourceCode),
         "Successful local Remove retry must restore the source bytes.");
     Check(localHook.Remove(), "Repeated local Remove should remain idempotent.");
+    ((IDisposable)localHook).Dispose();
+    ((IDisposable)localHook).Dispose();
+    Check(localHook.IsDisposed && !localHook.IsInstalled,
+        "Disposing after a successful removal retry must be idempotent.");
 }
 
 var disposedSession = NativeApi.Attach((uint)Environment.ProcessId)
@@ -218,6 +236,34 @@ disposedSession.Dispose();
 ExpectThrows<ObjectDisposedException>(
     () => disposedHooks.Install(0, 0),
     "Disposed HookManager should reject use before validating hook addresses.");
+
+// An installed HookHandle owns its own copied process identity. Detaching its
+// parent session must not abandon the still-installed patch or trampoline.
+using (var ownershipSession = NativeApi.Attach((uint)Environment.ProcessId)
+    ?? throw new InvalidOperationException("Could not attach HookHandle lifetime test session."))
+using (var ownershipHook = ownershipSession.Hooks.Install(source.Address, destination.Address))
+{
+    Check(ownershipHook.IsInstalled && !ownershipHook.IsDisposed,
+        "Session-owned HookHandle should start installed.");
+    Check(CallNoArgs(source.Address) == 2,
+        "HookHandle lifetime fixture failed to redirect the source before session detach.");
+    ownershipSession.Detach();
+    Check(ownershipSession.IsDisposed,
+        "ProcessSession.Detach must mark the parent session disposed.");
+    Check(ownershipHook.IsInstalled && !ownershipHook.IsDisposed,
+        "Detaching the parent session must not invalidate an independently owned HookHandle.");
+    Check(CallNoArgs(source.Address) == 2,
+        "Session detach must not silently remove the independently owned hook.");
+    ((IDisposable)ownershipHook).Dispose();
+    Check(ownershipHook.IsDisposed && !ownershipHook.IsInstalled,
+        "HookHandle.Dispose must still restore and release after its parent session detaches.");
+    Check(CallNoArgs(source.Address) == 1,
+        "HookHandle.Dispose after session detach did not restore source behavior.");
+    Check(memory.Read(source.Address, sourceCode.Length).SequenceEqual(sourceCode),
+        "HookHandle.Dispose after session detach did not restore source bytes.");
+    Check(ownershipHook.Remove(),
+        "HookHandle.Remove must remain idempotent after successful independent disposal.");
+}
 
 // VmtManager lifecycle on an isolated page owned by this test process.
 using var vtablePage = memory.Allocate(4096, MemoryProtection.ReadWrite)
