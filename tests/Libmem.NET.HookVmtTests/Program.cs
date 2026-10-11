@@ -515,6 +515,114 @@ using (var partialPage = memory.Allocate(checked((ulong)pageSize * 2), MemoryPro
         "Successful VMT reset retry must keep the manager reusable.");
 }
 
+// Explicit Dispose must retain the unremoved entry after partial restoration.
+// Exercise both list orders: failure at the first entry, and failure after an
+// accessible entry was restored. Decommit preserves the reserved address so
+// recovery does not depend on winning a VirtualAlloc address-reuse race.
+foreach (var restoreNearFirst in new[] { true, false })
+{
+    using var partialDisposePage = memory.Allocate(
+        checked((ulong)pageSize * 2), MemoryProtection.ReadWrite)
+        ?? throw new InvalidOperationException("Could not allocate partial VMT Dispose fixture.");
+    var farIndex = checked((ulong)pageSize / (ulong)IntPtr.Size);
+    var farAddress = partialDisposePage.Address + (ulong)pageSize;
+    var farPointer = new IntPtr(unchecked((long)farAddress));
+    const ulong disposeNearOriginal = 0x12345678UL;
+    const ulong disposeFarOriginal = 0x23456789UL;
+    const ulong disposeNearReplacement = 0xABCDEF01UL;
+    const ulong disposeFarReplacement = 0xDEADBEEFUL;
+    const ulong restoredSlotMarker = 0x3456789AUL;
+
+    WritePointer(memory, partialDisposePage.Address, disposeNearOriginal);
+    WritePointer(memory, farAddress, disposeFarOriginal);
+    using var partialDisposeVmt = new VmtManager(partialDisposePage.Address);
+    // Native tracked entries are prepended, making both traversal orders deterministic.
+    if (restoreNearFirst)
+    {
+        partialDisposeVmt.Hook(farIndex, disposeFarReplacement);
+        partialDisposeVmt.Hook(0, disposeNearReplacement);
+    }
+    else
+    {
+        partialDisposeVmt.Hook(0, disposeNearReplacement);
+        partialDisposeVmt.Hook(farIndex, disposeFarReplacement);
+    }
+    Check(ReadPointer(memory, partialDisposePage.Address) == disposeNearReplacement
+          && ReadPointer(memory, farAddress) == disposeFarReplacement,
+        "Partial VMT Dispose fixture did not install both replacements.");
+    var nearProtection = NativeApi.FindSegment(partialDisposePage.Address)?.Protection
+        ?? throw new InvalidOperationException("Could not query partial Dispose fixture protection.");
+    Check(VmtFailureNativeMethods.VirtualFree(
+            farPointer, (nuint)pageSize, VmtFailureNativeMethods.MemDecommit),
+        "Could not decommit the far VMT Dispose slot.");
+
+    try
+    {
+        var partialDisposeFailure = ExpectThrows<LibmemException>(
+            () => ((IDisposable)partialDisposeVmt).Dispose(),
+            "VmtManager.Dispose must report the inaccessible tracked slot.");
+        Check(partialDisposeFailure.Operation == "LM_VmtUnhook",
+            "Partial VMT Dispose reported the wrong native operation.");
+        Check(!partialDisposeVmt.IsDisposed,
+            "Partial VMT Dispose failure must retain an active manager.");
+        Check(partialDisposeVmt.GetOriginal(farIndex) == disposeFarOriginal,
+            "Partial VMT Dispose must retain the inaccessible slot's original metadata.");
+        Check(ReadPointer(memory, partialDisposePage.Address)
+              == (restoreNearFirst ? disposeNearOriginal : disposeNearReplacement),
+            "Partial VMT Dispose restored an unexpected set of accessible entries.");
+        Check(partialDisposeVmt.GetOriginal(0) == disposeNearOriginal,
+            "Partial VMT Dispose lost the near slot's original value.");
+
+        // Once restored, the near entry must no longer be owned by this manager.
+        // A later retry must preserve a caller's subsequent edit to that slot.
+        if (restoreNearFirst)
+            WritePointer(memory, partialDisposePage.Address, restoredSlotMarker);
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            var repeatedFailure = ExpectThrows<LibmemException>(
+                () => ((IDisposable)partialDisposeVmt).Dispose(),
+                "Repeated partial VMT Dispose must continue reporting the unresolved slot.");
+            Check(repeatedFailure.Operation == "LM_VmtUnhook" && !partialDisposeVmt.IsDisposed,
+                "Repeated failed Dispose must retain the manager and native failure contract.");
+            Check(partialDisposeVmt.GetOriginal(farIndex) == disposeFarOriginal,
+                "Repeated failed Dispose lost the remaining original metadata.");
+            Check(ReadPointer(memory, partialDisposePage.Address)
+                  == (restoreNearFirst ? restoredSlotMarker : disposeNearReplacement),
+                "Repeated failed Dispose rewrote an already-restored or not-yet-visited slot.");
+            Check(NativeApi.FindSegment(partialDisposePage.Address)?.Protection == nearProtection,
+                "Partial VMT Dispose failure changed the accessible page protection.");
+        }
+    }
+    finally
+    {
+        var recommitted = VmtFailureNativeMethods.VirtualAlloc(
+            farPointer, (nuint)pageSize, VmtFailureNativeMethods.MemCommit,
+            VmtFailureNativeMethods.PageReadWrite);
+        Check(recommitted == farPointer,
+            "Could not recommit the far VMT Dispose slot for recovery.");
+        // Decommit discards contents; recreate the still-owned replacement.
+        WritePointer(memory, farAddress, disposeFarReplacement);
+    }
+
+    ((IDisposable)partialDisposeVmt).Dispose();
+    ((IDisposable)partialDisposeVmt).Dispose();
+    Check(partialDisposeVmt.IsDisposed,
+        "Recovered partial VMT Dispose must finish and remain idempotent.");
+    Check(ReadPointer(memory, farAddress) == disposeFarOriginal,
+        "Recovered partial VMT Dispose did not restore the remaining far slot.");
+    Check(ReadPointer(memory, partialDisposePage.Address)
+          == (restoreNearFirst ? restoredSlotMarker : disposeNearOriginal),
+        "Recovered partial VMT Dispose rewrote a released slot or missed an owned slot.");
+    Check(NativeApi.FindSegment(partialDisposePage.Address)?.Protection == nearProtection,
+        "Recovered partial VMT Dispose changed the accessible page protection.");
+    ExpectThrows<ObjectDisposedException>(
+        () => partialDisposeVmt.Reset(),
+        "Successfully recovered VMT Dispose must reject later Reset.");
+    ExpectThrows<ObjectDisposedException>(
+        () => { _ = partialDisposeVmt.GetOriginal(farIndex); },
+        "Successfully recovered VMT Dispose must reject later metadata queries.");
+}
+
 Console.WriteLine("HOOK/VMT RUNTIME TESTS PASS");
 
 
