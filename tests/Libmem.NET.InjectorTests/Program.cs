@@ -84,6 +84,50 @@ try
     }
     Check(missingThrows, "Injector should reject a library path that does not exist.");
 
+    var nullPathRejected = false;
+    try
+    {
+        _ = injector.InjectLibrary(null!);
+    }
+    catch (ArgumentNullException ex) when (ex.ParamName == "path")
+    {
+        nullPathRejected = true;
+    }
+    Check(nullPathRejected, "Injector should reject a null path before invoking the native loader.");
+
+    foreach (var blankPath in new[] { "", "   " })
+    {
+        var blankPathRejected = false;
+        try
+        {
+            _ = injector.InjectLibrary(blankPath);
+        }
+        catch (ArgumentException ex) when (ex.ParamName == "path")
+        {
+            blankPathRejected = true;
+        }
+        Check(blankPathRejected, "Injector should reject empty or whitespace paths before loading.");
+    }
+
+    using (var detachedSession = NativeApi.Attach((uint)Environment.ProcessId)
+        ?? throw new InvalidOperationException("Could not attach injector detach test session."))
+    {
+        var detachedInjector = detachedSession.Injector;
+        detachedSession.Detach();
+
+        var detachedRejected = false;
+        try
+        {
+            _ = detachedInjector.InjectLibrary(sourceLibrary);
+        }
+        catch (ObjectDisposedException)
+        {
+            detachedRejected = true;
+        }
+        Check(detachedRejected, "Injector must reject an operation after its session is detached.");
+    }
+
+
     invalidFixture = Path.Combine(
         fixtureDirectory,
         $"Libmem.NET.InjectorFixture.invalid.{Guid.NewGuid():N}.dll");
