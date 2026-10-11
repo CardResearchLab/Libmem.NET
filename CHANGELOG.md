@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased (post-2.5.0 maintenance)
+
+### Fixed / hardened
+
+- Retry an exact-full-path-verified module-name lookup when `InjectorManager.InjectLibrary` successfully launches the native loader but the full module enumeration cannot resolve its loaded DLL. Never adopt a same-named DLL from another directory.
+- Extend Injector runtime coverage for null/whitespace inputs and use after a detached process session.
+- Document the remaining nontransactional native load/discovery failure boundary; no speculative unload, public API change, pinned native update, or release publication.
+
 ## 2.5.0
 
 ### Added
