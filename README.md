@@ -28,7 +28,7 @@
 
 ## 下载
 
-正式稳定版为 **2.5.0**：[GitHub Release v2.5.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.5.0)；NuGet 包为 `Libmem.NET 2.5.0`。GitHub Release #51 和 NuGet OIDC #52 均成功。发布后公网 x64/x86 消费者验证由 [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) 执行，PR #148 的 Smoke #48 已通过；合并后还需核验 main 的公网 Smoke。
+正式稳定版为 **2.5.0**：[GitHub Release v2.5.0](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.5.0)；NuGet 包为 `Libmem.NET 2.5.0`。GitHub Release #51 和 NuGet OIDC #52 均成功。发布后公网 x64/x86 消费者验证由 [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) 执行，PR #148 的 Smoke #48 已通过；合并后 main 的 Smoke #53 与 Build #467 均已通过。
 
 历史 v1.0.0 继续提供以下旧名称资产，不能用于下面的新命名示例：
 
@@ -285,7 +285,7 @@ jobs:
 
 本地包通过 `eng/package-nuget.ps1` 生成；开发包使用 commit 限定的预发布版本。`v*` tag 创建 GitHub 下载，预览版本标记为 prerelease；后续手动选择已发布 tag 并启用 `publish-nuget` 才执行 NuGet OIDC 登录与 push。`release/v*` 分支只验证产物并生成发布说明。
 
-**2.5.0** 已经 GitHub Release #51 正式发行、NuGet OIDC #52 推送。公网 NuGet Smoke 默认目标在本 PR 切换到 **2.5.0**，PR #148 的 Published NuGet Smoke #48 已完成独立 x64/x86 验证；合并后还需核验 main 工作流。2.4.1 的历史公网验收 #40/#41 保留。见 [消费指南](docs/CONSUMPTION.md)与[发布清单](docs/RELEASE_CHECKLIST.md)。
+**2.5.0** 已经 GitHub Release #51 正式发行、NuGet OIDC #52 推送。公网 NuGet Smoke 默认目标已经切换到 **2.5.0**，PR #148 的 Published NuGet Smoke #48 已完成独立 x64/x86 验证；main 的 Smoke #53 和 Build #467 也已通过。2.4.1 的历史公网验收 #40/#41 保留。见 [消费指南](docs/CONSUMPTION.md)与[发布清单](docs/RELEASE_CHECKLIST.md)。
 
 ## 测试与 CI
 

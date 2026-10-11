@@ -2,7 +2,7 @@
 
 Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate commit for each new release. Repository checks and account-side publication setup are separate evidence.
 
-**2.5.0 is now published stable** (assembly/file `2.5.0.0`); exact-commit main Build #461, Release #50 dry run, tagged GitHub Release #51 and NuGet OIDC push #52 succeeded. Independent nuget.org-only x64/x86 consumer acceptance passed PR #148 Published NuGet Smoke #48; main-branch CI must still be checked after merge.
+**2.5.0 is now published stable** (assembly/file `2.5.0.0`); exact-commit main Build #461, Release #50 dry run, tagged GitHub Release #51 and NuGet OIDC push #52 succeeded. Independent nuget.org-only x64/x86 consumer acceptance passed PR #148 Published NuGet Smoke #48; main Build #467 and Published NuGet Smoke #53 passed after merging PR #148.
 
 ## 2.4.1 patch release gates
 
@@ -29,7 +29,7 @@ Scope: Windows x64/x86 / .NET 8. Apply this checklist to the exact candidate com
 - [x] Annotated tag `v2.5.0` targets accepted main commit; tagged GitHub Release #51 succeeded and published five assets.
 - [x] NuGet was separately pushed on the published tag by Release #52 with OIDC; log confirms `Your package was pushed`.
 - [x] PR #148 Published NuGet Smoke #48 passed independent nuget.org-only x64/x86 restore/build/run/publish, XML/native assets, all five new Try API consumer checks and AnyCPU/ARM64 rejection.
-- [ ] Merge PR #148 only after final x64/x86 Build passes; then verify the new main Build and main Published NuGet Smoke on 2.5.0 (the PR CI already passed).
+- [x] PR #148 merged as `6d64c24916a394a96548e8db6d4fe4547eccb06e` after Build #466 and Published NuGet Smoke #52 passed; post-merge main Build #467 and Published NuGet Smoke #53 passed on 2.5.0.
 - [x] Preserve Windows x64/x86 / .NET 8 only, pinned native libmem, no AnyCPU/ARM64/cross-bitness or game-specific business logic.
 
 ## 2.3.0 release gates

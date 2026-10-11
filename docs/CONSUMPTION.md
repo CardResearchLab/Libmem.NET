@@ -128,7 +128,7 @@ Libmem.NET is not an AnyCPU managed library:
 
 ## NuGet release acceptance criteria
 
-The public NuGet Smoke baseline in this post-release PR targets `2.5.0` with x64/x86 NuGet-only restore, build, run, publish and unsupported-target rejection; its public-feed x64/x86 acceptance passed in PR #148 Smoke #48; post-merge main CI remains to verify. Historical 2.4.1 public smoke #40/#41 and 2.4.0 smoke #36 passed.
+The public NuGet Smoke baseline in this post-release PR targets `2.5.0` with x64/x86 NuGet-only restore, build, run, publish and unsupported-target rejection; its public-feed x64/x86 acceptance passed in PR #148 Smoke #48; post-merge main Build #467 and Smoke #53 passed. Historical 2.4.1 public smoke #40/#41 and 2.4.0 smoke #36 passed.
 
 1. multi-architecture package layout/provenance verification;
 2. independent x64 restore/build/run/publish success;
@@ -164,6 +164,6 @@ The successful `2.0.0-preview.1` publication proves the current Trusted Publishi
 
 ## Current recommendation
 
-Public PackageReference consumption should use published stable `Libmem.NET 2.5.0` with explicit x64 or x86 PlatformTarget. PR #148 Published NuGet Smoke #48 validated both architectures and unsupported PlatformTarget rejection directly from nuget.org; post-merge main CI is the final confirmation. The prior 2.4.1 stable version remains available.
+Public PackageReference consumption should use published stable `Libmem.NET 2.5.0` with explicit x64 or x86 PlatformTarget. PR #148 Published NuGet Smoke #48 validated both architectures and unsupported PlatformTarget rejection directly from nuget.org; post-merge main Build #467 and Smoke #53 also passed. The prior 2.4.1 stable version remains available.
 
 See [RELEASES.md](RELEASES.md) for release history, support boundaries and versioning, and [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the next publication.
