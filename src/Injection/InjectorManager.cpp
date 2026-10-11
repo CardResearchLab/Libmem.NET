@@ -104,6 +104,23 @@ InjectedModuleHandle^ InjectorManager::InjectLibrary(String^ path) {
         }
     }
 
+    if(loaded==nullptr) {
+        // A full module enumeration may miss a newly loaded mapping during a
+        // transient snapshot. Retry a targeted lookup, but never accept the
+        // native name-only result without checking the entire normalized path:
+        // another directory may contain a DLL with the same file name.
+        auto candidate=Libmem::FindModule(target,System::IO::Path::GetFileName(fullPath));
+        if(candidate!=nullptr && !String::IsNullOrWhiteSpace(candidate->Path)) {
+            try {
+                auto candidatePath=System::IO::Path::GetFullPath(candidate->Path);
+                if(String::Equals(candidatePath,fullPath,StringComparison::OrdinalIgnoreCase))
+                    loaded=candidate;
+            } catch(Exception^) {
+                // Invalid candidate metadata is not evidence of a successful load.
+            }
+        }
+    }
+
     if(loaded==nullptr)
         throw gcnew LibmemException(
             "LM_LoadModuleEx",
