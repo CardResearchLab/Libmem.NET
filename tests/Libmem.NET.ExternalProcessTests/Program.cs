@@ -438,6 +438,20 @@ try
                 "Failed HookHandle.Remove must preserve managed ownership.");
             Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
                 "Failed HookHandle.Remove must not change source protection.");
+
+            // Explicit disposal must surface failed remote restoration without
+            // abandoning the still-installed patch or its owned trampoline.
+            var disposeFailure = ExpectThrows<LibmemException>(
+                () => ((IDisposable)retryHook).Dispose(),
+                "Remote HookHandle.Dispose must report an unreadable trampoline.");
+            Check(disposeFailure.Operation == "LM_UnhookCodeEx",
+                "Failed remote HookHandle.Dispose reported the wrong native operation.");
+            Check(retryHook.IsInstalled && !retryHook.IsDisposed,
+                "Failed remote HookHandle.Dispose must preserve ownership for retry.");
+            Check(CallTarget(child, ready.HookSource) == 2,
+                "Failed remote Dispose must leave the source redirected.");
+            Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+                "Failed remote Dispose must leave the source page protection unchanged.");
         }
         finally
         {
@@ -452,6 +466,44 @@ try
             "Retried HookHandle.Remove did not restore source protection.");
         Check(CallTarget(child, ready.HookSource) == 1,
             "Retried HookHandle.Remove did not restore source behavior.");
+        ((IDisposable)retryHook).Dispose();
+        ((IDisposable)retryHook).Dispose();
+        Check(retryHook.IsDisposed && !retryHook.IsInstalled,
+            "Remote HookHandle.Dispose after a successful Remove retry must be idempotent.");
+        Check(retryHook.Remove(),
+            "Remote HookHandle.Remove must remain idempotent after successful Dispose.");
+    }
+
+    // A remote HookHandle owns an independent target identity and must remain
+    // removable even if the ProcessSession that installed it is detached.
+    using (var hookOwnerSession = NativeApi.Attach(ready.Pid)
+        ?? throw new InvalidOperationException("Could not attach remote HookHandle lifetime test session."))
+    using (var detachedSessionHook = hookOwnerSession.Hooks.Install(
+        ready.HookSource, ready.HookDestination))
+    {
+        Check(detachedSessionHook.IsInstalled && !detachedSessionHook.IsDisposed,
+            "Remote HookHandle should own an active patch before session detach.");
+        Check(CallTarget(child, ready.HookSource) == 2,
+            "Remote HookHandle lifetime fixture failed to redirect the source.");
+        hookOwnerSession.Detach();
+        Check(hookOwnerSession.IsDisposed,
+            "Detaching the remote hook owner session must mark it disposed.");
+        Check(detachedSessionHook.IsInstalled && !detachedSessionHook.IsDisposed,
+            "Remote HookHandle must survive its originating ProcessSession.Detach.");
+        Check(CallTarget(child, ready.HookSource) == 2,
+            "Remote session detach must not silently remove an independently owned patch.");
+        ((IDisposable)detachedSessionHook).Dispose();
+        Check(detachedSessionHook.IsDisposed && !detachedSessionHook.IsInstalled,
+            "Remote HookHandle.Dispose must release the hook after parent session detach.");
+        Check(CallTarget(child, ready.HookSource) == 1,
+            "Remote HookHandle.Dispose after session detach did not restore source behavior.");
+        Check(session.Memory.Read(ready.HookSource, originalSourceBytes.Length)
+            .SequenceEqual(originalSourceBytes),
+            "Remote HookHandle.Dispose after session detach did not restore source bytes.");
+        Check(ProtectionOf(process!, ready.HookSource) == MemoryProtection.ExecuteRead,
+            "Remote HookHandle.Dispose after session detach did not restore source protection.");
+        Check(detachedSessionHook.Remove(),
+            "Remote HookHandle.Remove after successful independent disposal must be idempotent.");
     }
 
     var foreignModule = NativeApi.EnumModules().FirstOrDefault(module => module is not null)
@@ -644,6 +696,10 @@ try
         "HookHandle should become inactive after target-process exit is observed during Remove.");
     Check(exitReclaimedHook.Remove(),
         "HookHandle.Remove should remain idempotent after target-process exit.");
+    ((IDisposable)exitReclaimedHook).Dispose();
+    ((IDisposable)exitReclaimedHook).Dispose();
+    Check(exitReclaimedHook.IsDisposed && !exitReclaimedHook.IsInstalled,
+        "Remote HookHandle.Dispose after target exit must finish ownership release idempotently.");
 
     Check(exitReclaimedAllocation.Free(),
         "RemoteAllocation.Free should treat target-process exit as OS-reclaimed ownership.");
