@@ -158,6 +158,80 @@ if (!session.Memory.TryRead(allocation.Address, 0, out var emptyRead) || emptyRe
     throw new InvalidOperationException("Local package TryRead zero-length contract failed.");
 if (!session.Memory.TryWrite(allocation.Address, [], out var emptyWriteCount) || emptyWriteCount != 0)
     throw new InvalidOperationException("Local package TryWrite empty-data contract failed.");
+
+// Test the last legal candidate of a scan window, not just a match at its start.
+// The marker is unique in this freshly allocated buffer and ends at the window boundary.
+byte[] tailMarker = [0xA4, 0xC7, 0x31, 0xF9, 0x8D];
+const int tailOffset = 64;
+ulong tailAddress = allocation.Address + (ulong)tailOffset;
+if (!session.Memory.TryWrite(tailAddress, tailMarker, out var tailWritten)
+    || tailWritten != tailMarker.Length)
+    throw new InvalidOperationException("Could not initialize the published-package scan-boundary fixture.");
+ulong tailScanSize = (ulong)(tailOffset + tailMarker.Length);
+string tailMask = new('x', tailMarker.Length);
+string tailSignature = string.Join(" ", tailMarker.Select(b => b.ToString("X2")));
+if (!scanner.TryDataScan(tailMarker, allocation.Address, tailScanSize, out var tailDataAddress)
+    || tailDataAddress != tailAddress)
+    throw new InvalidOperationException("Published package TryDataScan missed the final legal scan candidate.");
+if (!scanner.TryPatternScan(tailMarker, tailMask, allocation.Address, tailScanSize, out var tailPatternAddress)
+    || tailPatternAddress != tailAddress)
+    throw new InvalidOperationException("Published package TryPatternScan missed the final legal scan candidate.");
+if (!scanner.TrySigScan(tailSignature, allocation.Address, tailScanSize, out var tailSigAddress)
+    || tailSigAddress != tailAddress)
+    throw new InvalidOperationException("Published package TrySigScan missed the final legal scan candidate.");
+
+// Normal misses must consistently clear the out address for all three API variants.
+byte[] absentMarker = [0xDE, 0xAD, 0xBE, 0xEF, 0x15];
+if (scanner.TryDataScan(absentMarker, allocation.Address, tailScanSize, out var absentDataAddress)
+    || absentDataAddress != 0)
+    throw new InvalidOperationException("Published package TryDataScan miss must output zero.");
+if (scanner.TryPatternScan(absentMarker, new string('x', absentMarker.Length),
+        allocation.Address, tailScanSize, out var absentPatternAddress)
+    || absentPatternAddress != 0)
+    throw new InvalidOperationException("Published package TryPatternScan miss must output zero.");
+if (scanner.TrySigScan("DE AD BE EF 15", allocation.Address, tailScanSize, out var absentSigAddress)
+    || absentSigAddress != 0)
+    throw new InvalidOperationException("Published package TrySigScan miss must output zero.");
+if (scanner.TrySigScan(tailSignature, allocation.Address, 0, out var emptyScanAddress)
+    || emptyScanAddress != 0)
+    throw new InvalidOperationException("Published package zero-length scan must return false and zero.");
+
+// New Try wrappers must preserve the established managed argument exceptions.
+bool negativeReadRejected = false;
+try
+{
+    _ = session.Memory.TryRead(allocation.Address, -1, out _);
+}
+catch (ArgumentOutOfRangeException ex) when (ex.ParamName == "count")
+{
+    negativeReadRejected = true;
+}
+if (!negativeReadRejected)
+    throw new InvalidOperationException("Published package TryRead must reject a negative count.");
+
+bool nullWriteRejected = false;
+try
+{
+    _ = session.Memory.TryWrite(allocation.Address, null!, out _);
+}
+catch (ArgumentNullException ex) when (ex.ParamName == "data")
+{
+    nullWriteRejected = true;
+}
+if (!nullWriteRejected)
+    throw new InvalidOperationException("Published package TryWrite must reject null data.");
+
+bool invalidMaskRejected = false;
+try
+{
+    _ = scanner.TryPatternScan(tailMarker, "x", allocation.Address, tailScanSize, out _);
+}
+catch (ArgumentException)
+{
+    invalidMaskRejected = true;
+}
+if (!invalidMaskRejected)
+    throw new InvalidOperationException("Published package TryPatternScan must reject a mismatched mask.");
 #endif
 
 Console.WriteLine(
