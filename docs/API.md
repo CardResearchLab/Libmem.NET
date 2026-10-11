@@ -400,7 +400,7 @@ Explicit disposal restores tracked entries deterministically. After successful c
 
 `VmtManager` is intentionally local-process only. The VTable storage and every replacement function pointer must remain valid for the manager lifetime.
 
-If `Reset()` or `Dispose()` cannot restore a tracked entry, the operation surfaces the native restoration failure and retains bookkeeping/ownership instead of pretending cleanup succeeded. The manager remains available for a later retry after the underlying condition is repaired. Restoration is **not transactional**: in a multi-entry VTable, a reset may already have restored some entries before encountering an inaccessible slot. Successfully restored entries stay restored; the remaining tracked entries are retained for a retry. Unreleased 2.5.0 regression tests cover this ordering across a decommitted page boundary.
+If `Reset()` or `Dispose()` cannot restore a tracked entry, the operation surfaces the native restoration failure and retains bookkeeping/ownership instead of pretending cleanup succeeded. The manager remains available for a later retry after the underlying condition is repaired. Restoration is **not transactional**: in a multi-entry VTable, `Reset()` or `Dispose()` may already have restored some entries before encountering an inaccessible slot. Successfully restored entries are no longer tracked; the remaining entries retain ownership and their original values for a retry. Later retries do not rewrite a slot that has already been restored, including subsequent edits made by the caller. Regression tests cover partial Reset and repeated failed Dispose across a decommitted page boundary, followed by recovery and idempotent disposal.
 
 ## Exception model
 
