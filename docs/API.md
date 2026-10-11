@@ -326,6 +326,8 @@ Relevant state:
 
 `Free()` exposes the release result directly. A successful release, a prior release, or target-process exit leaves the handle released; repeated `Free()` / `Dispose()` calls are idempotent. If native cleanup fails while the target is still alive, ownership is preserved so the caller can retry.
 
+The handle retains its own copied target identity. Detaching or disposing the originating `ProcessSession` does not free the allocation or prevent later `Free()` / `Dispose()` through the handle.
+
 Explicit disposal performs deterministic cleanup. The finalizer does **not** mutate another process from the GC thread.
 
 ### HookHandle
@@ -379,7 +381,9 @@ Relevant state:
 
 `Unload()` releases the reference owned by this handle. After a successful release or target-process exit, repeated `Unload()` / `Dispose()` calls are idempotent.
 
-A successful unload request does not guarantee the DLL disappears from the target process, because Windows DLL loading is reference-counted.
+A successful unload request does not guarantee the DLL disappears from the target process, because Windows DLL loading is reference-counted. Two successful injections of the same DLL own separate load references: releasing one does not release the other.
+
+The handle retains its own copied target identity and module metadata. Detaching or disposing the originating `ProcessSession` does not unload the owned reference or prevent explicit cleanup through the handle. Direct `Dispose()` after target-process exit marks the handle inactive and disposed without accessing the reclaimed address space. `Module` continues returning independent metadata snapshots, and `RequestedPath` remains available after cleanup.
 
 If the requested file exists but the target process cannot load it, or the load does not produce a module that can be resolved by the normalized requested full path, `InjectorManager.InjectLibrary` reports `LibmemException("LM_LoadModuleEx", ...)`. Module enumeration failures raised by `Libmem::EnumModules` remain `LM_EnumModulesEx`; a successful enumeration that simply cannot confirm the injected module is not misreported as an enumeration failure.
 

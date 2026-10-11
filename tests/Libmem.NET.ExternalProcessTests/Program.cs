@@ -162,6 +162,13 @@ static MemoryProtection ProtectionOf(ProcessInfo process, ulong address) =>
     NativeApi.FindSegment(process, address)?.Protection
     ?? throw new InvalidOperationException($"Could not resolve protection for 0x{address:X}.");
 
+static string CreateLibraryFixture(string directory, string source, string suffix)
+{
+    var path = Path.Combine(directory, $"Libmem.NET.RemoteFixture.{suffix}.{Guid.NewGuid():N}.dll");
+    File.Copy(source, path, overwrite: false);
+    return path;
+}
+
 Console.WriteLine("Libmem.NET external-process runtime tests");
 
 var invalidAddress = IntPtr.Size == sizeof(ulong) ? ulong.MaxValue : uint.MaxValue;
@@ -170,6 +177,9 @@ var startInfo = CreateTargetStartInfo(targetPath);
 
 using var child = Process.Start(startInfo)
     ?? throw new InvalidOperationException("Could not start Libmem.NET.TestTarget.");
+
+var fixtureDirectory = Path.Combine(
+    Path.GetTempPath(), "Libmem.NET.ExternalProcessTests", Guid.NewGuid().ToString("N"));
 
 try
 {
@@ -620,6 +630,99 @@ try
         }
     }
 
+    // Real remote loader ownership: two handles own two references to the same
+    // uniquely named DLL in the independently launched target process.
+    Directory.CreateDirectory(fixtureDirectory);
+    var fixtureSource = Path.Combine(AppContext.BaseDirectory, "libmem.dll");
+    Check(File.Exists(fixtureSource), "Could not find the architecture-matched remote DLL fixture.");
+    var referenceFixture = CreateLibraryFixture(fixtureDirectory, fixtureSource, "references");
+    var referenceName = Path.GetFileName(referenceFixture);
+    Check(session.Modules.Find(referenceName) is null,
+        "Reference-count fixture must not already be loaded in the target.");
+    using (var firstReference = session.Injector.InjectLibrary(referenceFixture))
+    using (var secondReference = session.Injector.InjectLibrary(referenceFixture))
+    {
+        Check(firstReference.IsActive && secondReference.IsActive
+              && !firstReference.IsDisposed && !secondReference.IsDisposed,
+            "Both remote injection handles must own active loader references.");
+        Check(firstReference.Module.Base == secondReference.Module.Base,
+            "Loading the same remote DLL twice must resolve the same module.");
+        var firstSnapshot = firstReference.Module;
+        var secondSnapshot = firstReference.Module;
+        Check(!ReferenceEquals(firstSnapshot, secondSnapshot)
+              && firstSnapshot.Base == secondSnapshot.Base
+              && firstSnapshot.Size == secondSnapshot.Size,
+            "InjectedModuleHandle.Module must return independent snapshots of the target module.");
+        Check(string.Equals(firstReference.RequestedPath, Path.GetFullPath(referenceFixture),
+                            StringComparison.OrdinalIgnoreCase)
+              && string.Equals(firstSnapshot.Path, Path.GetFullPath(referenceFixture),
+                               StringComparison.OrdinalIgnoreCase),
+            "Remote injected module metadata must resolve the requested full path.");
+
+        ((IDisposable)firstReference).Dispose();
+        ((IDisposable)firstReference).Dispose();
+        Check(firstReference.IsDisposed && !firstReference.IsActive && firstReference.Unload(),
+            "Disposing the first remote loader reference must be idempotent.");
+        Check(secondReference.IsActive && !secondReference.IsDisposed,
+            "Disposing one loader reference must not invalidate another handle.");
+        Check(session.Modules.Find(referenceName) is not null,
+            "The remote DLL must remain loaded while the second owned reference exists.");
+        Check(secondReference.Unload() && secondReference.Unload(),
+            "Releasing the final remote loader reference must be idempotent.");
+        Check(!secondReference.IsActive && !secondReference.IsDisposed,
+            "Explicit Unload must release ownership without implicitly disposing the handle.");
+        Check(session.Modules.Find(referenceName) is null,
+            "The uniquely named remote DLL must disappear after its last reference is released.");
+        ((IDisposable)secondReference).Dispose();
+        Check(secondReference.IsDisposed && secondReference.Unload(),
+            "Dispose after remote Unload must complete idempotently.");
+        Check(firstReference.Module.Base == firstSnapshot.Base,
+            "Disposal must retain the injected module metadata snapshot.");
+    }
+
+    // Allocation and module handles own copied target identities independently
+    // of the ProcessSession that created them.
+    var detachedFixture = CreateLibraryFixture(fixtureDirectory, fixtureSource, "detached");
+    var detachedName = Path.GetFileName(detachedFixture);
+    using (var resourceOwner = NativeApi.Attach(ready.Pid)
+        ?? throw new InvalidOperationException("Could not attach detached-resource fixture session."))
+    using (var detachedAllocation = resourceOwner.Memory.Allocate(4096, MemoryProtection.ReadWrite))
+    using (var detachedModule = resourceOwner.Injector.InjectLibrary(detachedFixture))
+    {
+        byte[] ownedPayload = [0x4F, 0x57, 0x4E, 0x45, 0x44];
+        Check(resourceOwner.Memory.Write(detachedAllocation.Address, ownedPayload) == ownedPayload.Length,
+            "Could not initialize the independently owned allocation.");
+        resourceOwner.Detach();
+        Check(resourceOwner.IsDisposed
+              && !detachedAllocation.IsDisposed
+              && detachedModule.IsActive && !detachedModule.IsDisposed,
+            "Session detach must leave independently owned allocations and modules active.");
+        Check(session.Memory.Read(detachedAllocation.Address, ownedPayload.Length).SequenceEqual(ownedPayload),
+            "Session detach unexpectedly invalidated the owned remote allocation.");
+        Check(session.Modules.Find(detachedName) is not null,
+            "Session detach unexpectedly unloaded the owned remote DLL.");
+        ((IDisposable)detachedAllocation).Dispose();
+        ((IDisposable)detachedAllocation).Dispose();
+        Check(detachedAllocation.IsDisposed && detachedAllocation.Free(),
+            "RemoteAllocation.Dispose after session detach must release ownership idempotently.");
+        ((IDisposable)detachedModule).Dispose();
+        ((IDisposable)detachedModule).Dispose();
+        Check(detachedModule.IsDisposed && !detachedModule.IsActive && detachedModule.Unload(),
+            "InjectedModuleHandle.Dispose after session detach must release ownership idempotently.");
+        Check(session.Modules.Find(detachedName) is null,
+            "Disposal after session detach did not release the remote DLL reference.");
+    }
+
+    // Keep live resources until target exit; dispose directly afterwards rather
+    // than first normalizing their states with Free/Unload.
+    using var directlyDisposedExitAllocation = session.Memory.Allocate(4096, MemoryProtection.ReadWrite);
+    var exitFixture = CreateLibraryFixture(fixtureDirectory, fixtureSource, "exit");
+    using var exitModule = session.Injector.InjectLibrary(exitFixture);
+    var exitModuleSnapshot = exitModule.Module;
+    Check(exitModule.IsActive && !exitModule.IsDisposed
+          && session.Modules.Find(Path.GetFileName(exitFixture)) is not null,
+        "Target-exit injection fixture must own a loaded remote module.");
+
     Check(SendCommand(child, "ping") == "PONG",
         "TestTarget control channel did not respond to ping.");
 
@@ -708,6 +811,19 @@ try
     ((IDisposable)exitReclaimedAllocation).Dispose();
     ((IDisposable)exitReclaimedAllocation).Dispose();
 
+    ((IDisposable)directlyDisposedExitAllocation).Dispose();
+    ((IDisposable)directlyDisposedExitAllocation).Dispose();
+    Check(directlyDisposedExitAllocation.IsDisposed && directlyDisposedExitAllocation.Free(),
+        "Direct RemoteAllocation.Dispose after target exit must finish ownership release idempotently.");
+    ((IDisposable)exitModule).Dispose();
+    ((IDisposable)exitModule).Dispose();
+    Check(exitModule.IsDisposed && !exitModule.IsActive && exitModule.Unload(),
+        "Direct InjectedModuleHandle.Dispose after target exit must finish ownership release idempotently.");
+    Check(exitModule.Module.Base == exitModuleSnapshot.Base
+          && string.Equals(exitModule.RequestedPath, Path.GetFullPath(exitFixture),
+                           StringComparison.OrdinalIgnoreCase),
+        "Target-exit disposal must retain remote module diagnostic metadata.");
+
     Console.WriteLine("EXTERNAL PROCESS TESTS PASS");
 }
 finally
@@ -716,5 +832,15 @@ finally
     {
         child.Kill(entireProcessTree: true);
         child.WaitForExit(5_000);
+    }
+
+    try
+    {
+        if (Directory.Exists(fixtureDirectory))
+            Directory.Delete(fixtureDirectory, recursive: true);
+    }
+    catch
+    {
+        // Preserve the test failure if a fixture file cannot be removed.
     }
 }
