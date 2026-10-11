@@ -28,7 +28,7 @@ Official support target:
 
 ## Download
 
-Stable **Libmem.NET 2.5.0** is published: [v2.5.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.5.0) and NuGet `Libmem.NET 2.5.0`. Release #51 and NuGet OIDC #52 succeeded. The independent x64/x86 [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) for 2.5.0 passed in PR #148's Published NuGet Smoke #48; the post-merge main smoke remains to be checked.
+Stable **Libmem.NET 2.5.0** is published: [v2.5.0 GitHub Release](https://github.com/CardResearchLab/Libmem.NET/releases/tag/v2.5.0) and NuGet `Libmem.NET 2.5.0`. Release #51 and NuGet OIDC #52 succeeded. The independent x64/x86 [Published NuGet Smoke](https://github.com/CardResearchLab/Libmem.NET/actions/workflows/published-nuget-smoke.yml) for 2.5.0 passed in PR #148's Published NuGet Smoke #48; post-merge main Smoke #53 and Build #467 also passed.
 
 Historical v1.0.0 still provides these old-name assets. They do not support the new-name examples below:
 
@@ -287,7 +287,7 @@ The package ID is `Libmem.NET`, targeting Windows x64/x86 / .NET 8. CI validates
 
 Create local packages with `eng/package-nuget.ps1`; development versions include the commit identifier. `v*` tags create GitHub downloads, marking preview versions as prereleases. A later manual run on the published tag with `publish-nuget` enabled performs NuGet OIDC login and push. `release/v*` branches validate packages and render release notes without publication.
 
-**2.5.0** was published by GitHub Release #51 and separate NuGet Trusted Publishing/OIDC Release #52. This PR advances the default public NuGet Smoke baseline to **2.5.0**; independent published-feed x64/x86 consumer checks passed in PR #148's Smoke #48; verify main smoke after merge. Historical 2.4.1 public smoke #40/#41 remains documented. See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
+**2.5.0** was published by GitHub Release #51 and separate NuGet Trusted Publishing/OIDC Release #52. Post-release PR #148 advanced the default public NuGet Smoke baseline to **2.5.0**; independent published-feed x64/x86 consumer checks passed in PR #148's Smoke #48; main Smoke #53 and Build #467 also passed. Historical 2.4.1 public smoke #40/#41 remains documented. See [Consumption Guide](docs/CONSUMPTION.md) and [Release Checklist](docs/RELEASE_CHECKLIST.md).
 
 ## Tests and CI
 

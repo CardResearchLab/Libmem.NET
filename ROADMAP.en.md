@@ -151,7 +151,7 @@ After stable 2.2.0 publication, systematically compare against the pinned rdbo/l
 
 ## Completed: v2.5.0 — Try APIs and Hook/VMT lifecycle hardening
 
-PR #144 added three ScanManager Try methods; #145 added MemoryManager.TryRead/TryWrite; #146 hardened local Hook removal and VMT retry regression tests; #147 prepared candidate metadata. Main Build #461, Release dry run #50, GitHub Release #51 and separate NuGet OIDC publication #52 succeeded. Independent nuget.org x64/x86 consumers, XML/native assets and unsupported-target rejection passed Published NuGet Smoke #48 in PR #148; main smoke is verified separately after merge. ARM64, AnyCPU, cross-bitness and game-specific features remain unsupported.
+PR #144 added three ScanManager Try methods; #145 added MemoryManager.TryRead/TryWrite; #146 hardened local Hook removal and VMT retry regression tests; #147 prepared candidate metadata. Main Build #461, Release dry run #50, GitHub Release #51 and separate NuGet OIDC publication #52 succeeded. Independent nuget.org x64/x86 consumers, XML/native assets and unsupported-target rejection passed Published NuGet Smoke #48 in PR #148; merged main Build #467 and public Smoke #53 both passed. ARM64, AnyCPU, cross-bitness and game-specific features remain unsupported.
 
 ## Completed: v2.0.0 — Stable Libmem.NET identity
 

@@ -4,7 +4,7 @@ This document describes the official release channel, current stable release, su
 
 ## Current stable release
 
-**2.5.0 is now the published stable release** (assembly/file `2.5.0.0`). Exact source `190ed68e3d420932e19a724edfdc0e9482518e14` passed main Build #461 and Release dry run #50; GitHub Release #51 published five public assets and NuGet OIDC Release #52 pushed the package. Independent nuget.org-only x64/x86 consumers passed Published NuGet Smoke #48 on PR #148; the main-branch smoke remains a post-merge check.
+**2.5.0 is now the published stable release** (assembly/file `2.5.0.0`). Exact source `190ed68e3d420932e19a724edfdc0e9482518e14` passed main Build #461 and Release dry run #50; GitHub Release #51 published five public assets and NuGet OIDC Release #52 pushed the package. Independent nuget.org-only x64/x86 consumers passed Published NuGet Smoke #48 on PR #148; post-merge main Build #467 and Smoke #53 also passed.
 
 Stable 2.5.0 adds five managed Try APIs, hardens local Hook removal and covers VMT partial-reset retry, without breaking existing managed signatures or changing the pinned native libmem revision. Version 2.4.1 remains an available previous stable patch.
 
@@ -194,7 +194,7 @@ The published 2.5.0 `Libmem.NET` package was pushed by NuGet OIDC Release #52 an
 
 | Version | Date | Status | Official platform |
 | --- | --- | --- | --- |
-| 2.5.0 | 2026-10-11 | Published stable; GitHub #51 and NuGet #52 succeeded; independent public x64/x86 Smoke #48 passed on PR #148; post-merge main run pending | Windows x64/x86 / .NET 8 |
+| 2.5.0 | 2026-10-11 | Published stable; GitHub #51 and NuGet #52 succeeded; independent public x64/x86 Smoke #48 passed on PR #148; main Build #467 / Smoke #53 passed | Windows x64/x86 / .NET 8 |
 | 2.4.1 | 2026-10-10 | Published stable; GitHub Release #48, NuGet #49, public smoke #40/#41 passed | Windows x64/x86 / .NET 8 |
 | 2.4.0 | 2026-10-09 | Previous stable; x64/x86 smoke #36 passed | Windows x64/x86 / .NET 8 |
 | 2.3.0 | 2026-10-08 | Previous published stable; public x64/x86 smoke #30 passed | Windows x64/x86 / .NET 8 |
